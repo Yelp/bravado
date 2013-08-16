@@ -1,6 +1,16 @@
 About
 -----
-Swagger.py is a Python library to writing Swagger clients and servers.
+Swagger.py is a Python library for using [Swagger][] defined API's.
+
+Swagger itself is best described on the Swagger home page:
+
+> Swagger is a specification and complete framework implementation for
+> describing, producing, consuming, and visualizing RESTful web
+> services.
+
+* The [Swagger specification][] defines how API's may be described using
+  Swagger.
+
 
 Development
 -----------
@@ -42,4 +52,6 @@ Swagger.py is licensed with a [BSD 3-Clause License][BSD].
  [intellij idea]: http://confluence.jetbrains.net/display/PYH/
  [nose]: http://nose.readthedocs.org/en/latest/
  [setuptools]: http://pypi.python.org/pypi/setuptools
+ [swagger]: https://developers.helloreverb.com/swagger/
  [virtualenv]: http://www.virtualenv.org/
+ [Swagger specification]: https://github.com/wordnik/swagger-core/wiki

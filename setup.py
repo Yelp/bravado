@@ -8,18 +8,17 @@ import os
 
 from setuptools import setup, find_packages
 
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
     name="swaggerpy",
     version="0.0.1",
     license="BSD 3-Clause License",
     description="Swagger code generator, using Python and mustache templates",
-    long_description=read("README.md"),
+    long_description=open(os.path.join(os.path.dirname(__file__),
+                                       "README.md")).read(),
     author="Digium, Inc.",
     url="https://github.com/leedm777/swaggerpy",
-    packages=['swagger'],
+    packages=['swaggerpy'],
     classifiers=[
         "Development Status :: 1 - Planning",
         "Intended Audience :: Developers",
@@ -28,11 +27,11 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
     ],
-    setup_requires = ['nose>=1.3'],
-    tests_require = ['coverage'],
-    install_requires = [
+    setup_requires=['nose>=1.3'],
+    tests_require=['coverage', 'tissue'],
+    install_requires=[
     ],
-    entry_points = """
+    entry_points="""
     [console_scripts]
     swagger-codegen = swaggerpy.codegen:main
     """

@@ -5,13 +5,18 @@
 #
 
 import logging
+import sys
+
+LOG_FORMAT =
+"%(asctime)s %(levelname)-8s %(message)-70s\t[ %(name)s:%(funcName)s ]"
+
 
 def main():
     """Main method, as invoked by setuptools launcher script
     """
-    logging.basicConfig(level = logging.INFO,
-                        format = "%(asctime)s %(levelname)-8s %(message)-70s\t[ %(name)s:%(funcName)s ]",
-                        stream = sys.stdout)
+    logging.basicConfig(level=logging.INFO,
+                        format=LOG_FORMAT,
+                        stream=sys.stdout)
     log = logging.getLogger('swagger.py')
 
     print "Hello, swagger"
