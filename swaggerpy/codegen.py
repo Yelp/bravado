@@ -4,23 +4,33 @@
 # Copyright (c) 2013, Digium, Inc.
 #
 
-import logging
 import sys
 
-LOG_FORMAT = "%(asctime)s %(levelname)-8s %(message)-70s" + \
-             "\t[ %(name)s:%(funcName)s ]"
+from optparse import OptionParser
+
+USAGE = "usage: %prog [options] template-dir output-dir"
 
 
-def main():
-    """Main method, as invoked by setuptools launcher script
-    """
-    logging.basicConfig(level=logging.INFO,
-                        format=LOG_FORMAT,
-                        stream=sys.stdout)
-    log = logging.getLogger('swagger.py')
+def main(argv=None):
+    '''Main method, as invoked by setuptools launcher script.
+    '''
+    if argv is None:
+        argv = sys.argv
 
-    print "Hello, swagger"
+    parser = OptionParser(usage=USAGE)
+    parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
+                      default=False, help="Verbose output")
+
+    (options, args) = parser.parse_args(argv)
+
+    if len(args) < 3:
+        parser.error("Missing arguments")
+    elif len(args) > 3:
+        parser.error("Too many arguments")
+
+    template_dir = args[1]
+    output_dir = args[2]
 
 # And sometimes you just want to run the script...
 if __name__ == "__main__":
-    main()
+    sys.exit(main() or 0)
