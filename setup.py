@@ -12,13 +12,13 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-    name="swagger.py",
+    name="swaggerpy",
     version="0.0.1",
     license="BSD 3-Clause License",
     description="Swagger code generator, using Python and mustache templates",
     long_description=read("README.md"),
     author="Digium, Inc.",
-    url="https://github.com/leedm777/swagger.py",
+    url="https://github.com/leedm777/swaggerpy",
     packages=['swagger'],
     classifiers=[
         "Development Status :: 1 - Planning",
@@ -28,12 +28,12 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
     ],
-    setup_requires = ['nose>=1.1'],
+    setup_requires = ['nose>=1.3'],
     tests_require = ['coverage'],
     install_requires = [
     ],
     entry_points = """
     [console_scripts]
-    swagger.py = swagger:main
+    swagger-codegen = swaggerpy.codegen:main
     """
 )
