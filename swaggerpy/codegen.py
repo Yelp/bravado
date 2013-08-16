@@ -7,8 +7,8 @@
 import logging
 import sys
 
-LOG_FORMAT =
-"%(asctime)s %(levelname)-8s %(message)-70s\t[ %(name)s:%(funcName)s ]"
+LOG_FORMAT = "%(asctime)s %(levelname)-8s %(message)-70s" + \
+             "\t[ %(name)s:%(funcName)s ]"
 
 
 def main():

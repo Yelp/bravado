@@ -6,9 +6,9 @@
 
 import unittest
 
+
 class UtilTest(unittest.TestCase):
-    def test_fail(self):
-        self.assertEqual(True, False)
+    pass
 
 if __name__ == '__main__':
     unittest.main()
