@@ -19,7 +19,6 @@ class Jsonified(object):
     def __init__(self, json):
         self.json = json
 
-
     def __getattr__(self, name):
         if not name in self.json:
             raise AttributeError("Unknown field '%s'" % name)

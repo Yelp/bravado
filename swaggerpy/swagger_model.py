@@ -71,7 +71,8 @@ class ParsingContext(object):
         """
         if id_field not in json:
             raise SwaggerError("Missing id_field: %s" % id_field, self)
-        self.push_str(obj_type, json, '%s=%s' % (obj_type, str(json[id_field])))
+        id_string = '%s=%s' % (obj_type, str(json[id_field]))
+        self.push_str(obj_type, json, id_string)
 
     def push_str(self, obj_type, json, id_string):
         """Pushes a new  object into the context.
@@ -90,6 +91,7 @@ class ParsingContext(object):
     def pop(self):
         self.type_stack.pop()
         del self.args[self.type_stack.pop()]
+
 
 class SwaggerError(Exception):
     """Raised when an error is encountered mapping the JSON objects into the
@@ -173,8 +175,8 @@ class SwaggerProcessor(object):
     def process_api_declaration(self, resources, api_declaration, context):
         """Post process a resource object.
 
-        This is parsed from a .json file reference by a resource listing's 'api'
-        array.
+        This is parsed from a .json file reference by a resource listing's
+        'api' array.
 
         @param api_declaration: resource object.
         @type context: ParsingContext
@@ -333,6 +335,8 @@ class Loader(object):
         api.file = (resources.base_dir + api.path).replace('{format}', 'json')
         with open(api.file) as fp:
             api.api_declaration = Jsonified(json.load(fp))
+
+
 def validate_required_fields(json, required_fields, context):
     """Checks a JSON object for a set of required fields.
 
