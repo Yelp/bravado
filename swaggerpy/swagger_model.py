@@ -57,7 +57,12 @@ class ParsingContext(object):
         self.args = {}
 
     def __repr__(self):
-        return "ParsingContext(stack=%s)" % self.type_stack
+        zipped = zip(self.type_stack, self.id_stack)
+        strs = ["%s=%s" % (t, i) for (t, i) in zipped]
+        return "ParsingContext(stack=%r)" % strs
+
+    def is_empty(self):
+        return not self.type_stack and not self.id_stack and not self.args
 
     def push(self, obj_type, json, id_field):
         """Pushes a new self-identifying object into the context.
@@ -71,11 +76,10 @@ class ParsingContext(object):
         """
         if id_field not in json:
             raise SwaggerError("Missing id_field: %s" % id_field, self)
-        id_string = '%s=%s' % (obj_type, str(json[id_field]))
-        self.push_str(obj_type, json, id_string)
+        self.push_str(obj_type, json, str(json[id_field]))
 
     def push_str(self, obj_type, json, id_string):
-        """Pushes a new  object into the context.
+        """Pushes a new object into the context.
 
         @type obj_type: str
         @param obj_type: Specifies type of object json represents
@@ -89,6 +93,8 @@ class ParsingContext(object):
         self.args[obj_type] = json
 
     def pop(self):
+        """Pops the most recent object out of the context
+        """
         self.type_stack.pop()
         del self.args[self.type_stack.pop()]
 
@@ -153,6 +159,8 @@ class SwaggerProcessor(object):
                     self.process_property(**context.args)
                     context.pop()
             context.pop()
+        context.pop()
+        assert context.is_empty()
 
     def process_resource_listing(self, resources, context):
         """Post process a resources.json object.
