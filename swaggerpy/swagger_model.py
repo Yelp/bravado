@@ -54,7 +54,7 @@ class ParsingContext(object):
     def __init__(self):
         self.type_stack = []
         self.id_stack = []
-        self.args = {}
+        self.args = {'context': self}
 
     def __repr__(self):
         zipped = zip(self.type_stack, self.id_stack)
@@ -62,7 +62,7 @@ class ParsingContext(object):
         return "ParsingContext(stack=%r)" % strs
 
     def is_empty(self):
-        return not self.type_stack and not self.id_stack and not self.args
+        return not self.type_stack and not self.id_stack
 
     def push(self, obj_type, json, id_field):
         """Pushes a new self-identifying object into the context.
@@ -74,7 +74,7 @@ class ParsingContext(object):
         @type id_field: str
         @param id_field: Field name in json that identifies it.
         """
-        if id_field not in json:
+        if id_field not in json.get_field_names():
             raise SwaggerError("Missing id_field: %s" % id_field, self)
         self.push_str(obj_type, json, str(json[id_field]))
 
@@ -126,7 +126,7 @@ class SwaggerProcessor(object):
         context.push_str('resources', resources, resources.file)
         self.process_resource_listing(**context.args)
         for api in resources.apis:
-            context.push('api', api, api.path)
+            context.push('listing_api', api, 'path')
             self.process_resource_listing_api(**context.args)
             context.pop()
 
@@ -171,10 +171,11 @@ class SwaggerProcessor(object):
         """
         pass
 
-    def process_resource_listing_api(self, resources, resource_api, context):
+    def process_resource_listing_api(self, resources, listing_api, context):
         """Post process entries in a resource.json's api array.
 
-        @param resource_api: ResourceApi object.
+        @param resources: Resource listing object
+        @param listing_api: ResourceApi object.
         @type context: ParsingContext
         @param context: Current context in the API.
         """
@@ -258,7 +259,7 @@ class SwaggerProcessor(object):
         pass
 
 
-class PrimaryProcessor(SwaggerProcessor):
+class DefaultProcessor(SwaggerProcessor):
     def process_resource_listing(self, resources, context):
         required_fields = ['apiVersion', 'basePath', 'apis', 'swaggerVersion']
         validate_required_fields(resources, required_fields, context)
@@ -271,11 +272,11 @@ class PrimaryProcessor(SwaggerProcessor):
         for api in resources.apis:
             self.process_resource_listing_api(resources, api, context)
 
-    def process_resource_listing_api(self, resources, api, context):
-        context = context.next_stack(api, 'path')
-        validate_required_fields(api, ['path', 'description'], context)
+    def process_resource_listing_api(self, resources, listing_api, context):
+        context = context.next_stack(listing_api, 'path')
+        validate_required_fields(listing_api, ['path', 'description'], context)
 
-        if not api.path.startswith("/"):
+        if not listing_api.path.startswith("/"):
             raise SwaggerError("Path must start with /", context)
 
     def process_api_declaration(self, resources, api_declaration, context):
@@ -313,8 +314,6 @@ class Loader(object):
     def __init__(self, processors=None):
         if processors is None:
             processors = []
-            # Always go through primary processing first
-        processors.insert(0, PrimaryProcessor())
         self.processors = processors
 
     def load_resource_listing(self, resources_file):
@@ -339,10 +338,14 @@ class Loader(object):
         for processor in self.processors:
             processor.apply(resources)
 
+        return resources
+
     def load_api_declaration(self, resources, api):
         api.file = (resources.base_dir + api.path).replace('{format}', 'json')
         with open(api.file) as fp:
+            print "Adding api_declaration to %r" % api
             api.api_declaration = Jsonified(json.load(fp))
+            print " done: %r" % api
 
 
 def validate_required_fields(json, required_fields, context):
@@ -350,11 +353,12 @@ def validate_required_fields(json, required_fields, context):
 
     If any required field is missing, a SwaggerError is raised.
 
+    @type json: Jsonified
     @param json: JSON object to check.
     @param required_fields: List of required fields.
     @param context: Current context in the API.
     """
-    missing_fields = [f for f in required_fields if not f in json]
+    missing_fields = [f for f in required_fields if not f in json.get_field_names()]
 
     if missing_fields:
         raise SwaggerError(

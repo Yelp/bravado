@@ -1,0 +1,10 @@
+{
+    "swaggerVersion": "1.1",
+    "basePath": "http://localhost/swagger/test",
+    "apis": [
+        {
+            "path": "/missing.json",
+            "description": "Test loader when missing a file"
+        }
+    ]
+}

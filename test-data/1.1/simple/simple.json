@@ -1,0 +1,7 @@
+{
+    "swaggerVersion": "1.1",
+    "basePath": "http://localhost/swagger/test",
+    "resourcePath": "simple.{format}",
+    "apis": [],
+    "models": {}
+}
