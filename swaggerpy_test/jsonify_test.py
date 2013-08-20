@@ -49,6 +49,19 @@ class JsonifyTest(unittest.TestCase):
         uut = jsonify(j)
         self.assertEqual([1, 2, 3], sorted(uut.values()))
 
+    def test_iter(self):
+        j = json.loads("""{ "a": 1, "b": 2, "c": 3 }""")
+        uut = jsonify(j)
+        for (k, v) in uut:
+            if k == 'a':
+                self.assertEqual(1, v)
+            elif k == 'b':
+                self.assertEqual(2, v)
+            elif k == 'c':
+                self.assertEqual(3, v)
+            else:
+                self.fail("Unexpected entry (%r, %r)" % (k, v))
+
 
 if __name__ == '__main__':
     unittest.main()

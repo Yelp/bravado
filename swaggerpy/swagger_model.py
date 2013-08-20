@@ -74,7 +74,7 @@ class DefaultProcessor(SwaggerProcessor):
         ]
         validate_required_fields(api_declaration, required_fields, context)
         # Check model name and id consistency
-        for (model_name, model) in api_declaration.models.items():
+        for (model_name, model) in api_declaration.models:
             if model_name != model.id:
                 raise SwaggerError("Model id doesn't match name", context)
                 # Convert models dict to list
@@ -89,7 +89,10 @@ class DefaultProcessor(SwaggerProcessor):
 
     def process_parameter(self, resources, resource, api, operation, parameter,
                           context):
-        pass
+        if 'allowedValues' in parameter:
+            raise SwaggerError(
+                "Field 'allowedValues' invalid; use 'allowableValues'",
+                context)
 
     def process_error_response(self, resources, resource, api, operation,
                                response, context):
@@ -97,7 +100,7 @@ class DefaultProcessor(SwaggerProcessor):
 
     def process_model(self, resources, api_declaration, model, context):
         # Move property field name into the object
-        for (prop_name, prop) in model.properties.items():
+        for (prop_name, prop) in model.properties:
             prop.name = prop_name
             # Convert properties dict to list
         model.properties = model.properties.values()

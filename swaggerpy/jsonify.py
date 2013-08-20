@@ -53,6 +53,12 @@ class Jsonified(object):
         """
         return self[item] is not None
 
+    def __iter__(self):
+        """Allow iterator syntax
+        """
+        for kv in self.items():
+            yield kv
+
     def get_field_names(self):
         """Returns a list of the field names for this JSON object.
 
