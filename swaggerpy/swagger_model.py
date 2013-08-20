@@ -148,21 +148,17 @@ class SwaggerProcessor(object):
                         context.pop()
                     context.pop()
                 context.pop()
-            decl = api.api_declaration
-            models = decl.models
-            for (model_name, model) in models.items():
+            for model in api.api_declaration.models:
                 context.push('model', model, 'id')
                 self.process_model(**context.args)
-                if model_name != model.id:
-                    raise SwaggerError("Model id doesn't match name", context)
-                for (prop_name, prop) in model.properties:
-                    context.push_str('property', prop, prop_name)
-                    prop.name = prop_name
+                for prop in model.properties:
+                    context.push('prop', prop, 'name')
                     self.process_property(**context.args)
                     context.pop()
+                context.pop()
             context.pop()
         context.pop()
-        assert context.is_empty()
+        assert context.is_empty(), "Expected %r to be empty" % context
 
     def process_resource_listing(self, resources, context):
         """Post process a resources.json object.
@@ -233,7 +229,7 @@ class SwaggerProcessor(object):
         """
         pass
 
-    def process_model(self, resources, resource, model, context):
+    def process_model(self, resources, api_declaration, model, context):
         """Post process a model from a resources model dictionary.
 
         @param model: Model object.
@@ -242,7 +238,8 @@ class SwaggerProcessor(object):
         """
         pass
 
-    def process_property(self, resources, resource, model, prop, context):
+    def process_property(self, resources, api_declaration, model, prop,
+                         context):
         """Post process a property from a model.
 
         @param prop: Property object.
@@ -345,7 +342,24 @@ class Loader(object):
     def load_api_declaration(self, resources, api):
         api.file = (resources.base_dir + api.path).replace('{format}', 'json')
         with open(api.file) as fp:
-            api.api_declaration = jsonify(json.load(fp))
+            decl = jsonify(json.load(fp))
+
+        # We need to convert the model and properties maps to lists
+        api.api_declaration = decl
+
+        context = ParsingContext()
+        context.push_str('resources', resources, resources.file)
+        context.push_str('api_declaration', api.api_declaration, api.file)
+
+        for (model_name, model) in decl.models.items():
+            context.push('model', model, 'id')
+            if model_name != model.id:
+                raise SwaggerError("Model id doesn't match name", context)
+            for (prop_name, prop) in model.properties.items():
+                prop.name = prop_name
+            model.properties = model.properties.values()
+            context.pop()
+        decl.models = decl.models.values()
 
 
 def validate_required_fields(json, required_fields, context):

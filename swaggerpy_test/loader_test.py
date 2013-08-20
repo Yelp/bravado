@@ -20,6 +20,10 @@ class LoaderTest(unittest.TestCase):
         uut = swaggerpy.load('test-data/1.1/simple/resources.json',
                              processors=[])
         self.assertEqual('1.1', uut.swaggerVersion)
+        self.assertEqual(1, len(uut.apis[0].api_declaration.models))
+        self.assertEqual(1, len(uut.apis[0].api_declaration.models))
+        self.assertEqual(1, len(
+            uut.apis[0].api_declaration.models[0].properties))
 
     def test_processor(self):
         uut = swaggerpy.load('test-data/1.1/simple/resources.json',
@@ -29,7 +33,7 @@ class LoaderTest(unittest.TestCase):
 
     def test_missing(self):
         try:
-            swaggerpy.load('test-data/1.1/missing/resources.json',
+            swaggerpy.load('test-data/1.1/missing_resource/resources.json',
                            processors=[])
             self.fail("Expected load failure b/c of missing file")
         except IOError:

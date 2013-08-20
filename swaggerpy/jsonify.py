@@ -47,3 +47,6 @@ class Jsonified(object):
 
     def items(self):
         return [(k, v) for (k, v) in self.__dict__.items() if k != '_json']
+
+    def values(self):
+        return [v for (k, v) in self.__dict__.items() if k != '_json']

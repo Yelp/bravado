@@ -3,5 +3,14 @@
     "basePath": "http://localhost/swagger/test",
     "resourcePath": "simple.{format}",
     "apis": [],
-    "models": {}
+    "models": {
+        "simple": {
+            "id": "simple",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        }
+    }
 }
