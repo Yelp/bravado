@@ -15,12 +15,14 @@
     <option name="TEST_TYPE" value="TEST_FOLDER" />
     <option name="PATTERN" value="" />
     <option name="USE_PATTERN" value="false" />
-    <option name="PARAMS" value="-s --with-tissue --tissue-package=swaggerpy_test,swaggerpy" />
+    <option name="PARAMS" value="--with-tissue --tissue-package=swaggerpy_test,swaggerpy" />
     <option name="USE_PARAM" value="true" />
     <RunnerSettings RunnerId="PyDebugRunner" />
     <RunnerSettings RunnerId="Run" />
     <ConfigurationWrapper RunnerId="PyDebugRunner" />
     <ConfigurationWrapper RunnerId="Run" />
-    <method />
+    <method>
+      <option name="Make" enabled="false" />
+    </method>
   </configuration>
 </component>

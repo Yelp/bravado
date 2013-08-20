@@ -17,8 +17,7 @@ class TestProcessor(swagger_model.SwaggerProcessor):
 
 class LoaderTest(unittest.TestCase):
     def test_simple(self):
-        uut = swaggerpy.load('test-data/1.1/simple/resources.json',
-                             processors=[])
+        uut = swaggerpy.load('test-data/1.1/simple/resources.json')
         self.assertEqual('1.1', uut.swaggerVersion)
         self.assertEqual(1, len(uut.apis[0].api_declaration.models))
         self.assertEqual(1, len(uut.apis[0].api_declaration.models))

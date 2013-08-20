@@ -260,7 +260,7 @@ class SwaggerProcessor(object):
 
 class DefaultProcessor(SwaggerProcessor):
     def process_resource_listing(self, resources, context):
-        required_fields = ['apiVersion', 'basePath', 'apis', 'swaggerVersion']
+        required_fields = ['basePath', 'apis', 'swaggerVersion']
         validate_required_fields(resources, required_fields, context)
 
         if not resources.swaggerVersion in SWAGGER_VERSIONS:
@@ -272,7 +272,6 @@ class DefaultProcessor(SwaggerProcessor):
             self.process_resource_listing_api(resources, api, context)
 
     def process_resource_listing_api(self, resources, listing_api, context):
-        context = context.next_stack(listing_api, 'path')
         validate_required_fields(listing_api, ['path', 'description'], context)
 
         if not listing_api.path.startswith("/"):
@@ -280,10 +279,16 @@ class DefaultProcessor(SwaggerProcessor):
 
     def process_api_declaration(self, resources, api_declaration, context):
         required_fields = [
-            'swaggerVersion', 'apiVersion', 'basePath', 'resourcePath', 'apis',
+            'swaggerVersion', 'basePath', 'resourcePath', 'apis',
             'models'
         ]
         validate_required_fields(api_declaration, required_fields, context)
+        # Check model name and id consistency
+        for (model_name, model) in api_declaration.models.items():
+            if model_name != model.id:
+                raise SwaggerError("Model id doesn't match name", context)
+        # Convert models dict to list
+        api_declaration.models = api_declaration.models.values()
 
     def process_resource_api(self, resources, api_declaration, api, context):
         pass
@@ -299,10 +304,15 @@ class DefaultProcessor(SwaggerProcessor):
                                response, context):
         pass
 
-    def process_model(self, resources, resource, model, context):
-        pass
+    def process_model(self, resources, api_declaration, model, context):
+        # Move property field name into the object
+        for (prop_name, prop) in model.properties.items():
+            prop.name = prop_name
+        # Convert properties dict to list
+        model.properties = model.properties.values()
 
-    def process_property(self, resources, resource, model, prop, context):
+    def process_property(self, resources, api_declaration, model, prop,
+                         context):
         pass
 
     def process_type(self, swagger_type, context):
@@ -313,7 +323,9 @@ class Loader(object):
     def __init__(self, processors=None):
         if processors is None:
             processors = []
-        self.processors = processors
+        # always go through the default processor first
+        self.processors = [DefaultProcessor()]
+        self.processors.extend(processors)
 
     def load_resource_listing(self, resources_file):
         """Load a resource listing.
@@ -342,24 +354,7 @@ class Loader(object):
     def load_api_declaration(self, resources, api):
         api.file = (resources.base_dir + api.path).replace('{format}', 'json')
         with open(api.file) as fp:
-            decl = jsonify(json.load(fp))
-
-        # We need to convert the model and properties maps to lists
-        api.api_declaration = decl
-
-        context = ParsingContext()
-        context.push_str('resources', resources, resources.file)
-        context.push_str('api_declaration', api.api_declaration, api.file)
-
-        for (model_name, model) in decl.models.items():
-            context.push('model', model, 'id')
-            if model_name != model.id:
-                raise SwaggerError("Model id doesn't match name", context)
-            for (prop_name, prop) in model.properties.items():
-                prop.name = prop_name
-            model.properties = model.properties.values()
-            context.pop()
-        decl.models = decl.models.values()
+            api.api_declaration = jsonify(json.load(fp))
 
 
 def validate_required_fields(json, required_fields, context):

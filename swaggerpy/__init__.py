@@ -15,7 +15,5 @@ def load(resource_listing_file, processors=None):
     @return: Processed object model from
     @raise IOError: On error reading api-docs.
     """
-    if processors is None:
-        processors = [swagger_model.DefaultProcessor()]
     loader = swagger_model.Loader(processors)
     return loader.load_resource_listing(resource_listing_file)
