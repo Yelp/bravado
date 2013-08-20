@@ -358,7 +358,8 @@ def validate_required_fields(json, required_fields, context):
     @param required_fields: List of required fields.
     @param context: Current context in the API.
     """
-    missing_fields = [f for f in required_fields if not f in json.get_field_names()]
+    missing_fields = [f for f in required_fields
+                      if not f in json.get_field_names()]
 
     if missing_fields:
         raise SwaggerError(
