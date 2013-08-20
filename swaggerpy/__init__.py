@@ -12,7 +12,6 @@ def load(resource_listing_file, processors=None):
     @param resource_listing_file: File name for a resource listing.
     @param processors: List of SwaggerProcessors to apply to the resulting
                        resource.
-    @rtype: jsonify.Jsonified
     @return: Processed object model from
     @raise IOError: On error reading api-docs.
     """

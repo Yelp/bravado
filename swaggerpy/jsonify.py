@@ -17,31 +17,33 @@ class Jsonified(object):
     """
 
     def __init__(self, json):
-        """ ctor
+        """ctor
 
         @type json: dict
         @param json: JSON object (results from json.load)
         """
-        self.json = json
+        self._json = json
+        # recursively promote fields from the json object to this one
+        for (field, value) in json.iteritems():
+            setattr(self, field, jsonify(value))
 
     def __repr__(self):
         return "%s(%r)" % (self.__class__.__name__, self.__dict__)
 
-    def __getattr__(self, name):
-        if not name in self.json:
-            raise AttributeError("Unknown field '%s' on %r" % (name, self))
-
-        return jsonify(self.json[name])
-
     def __getitem__(self, item):
-        return jsonify(self.json[item])
+        """Allow subscript syntax.
 
-    def get_field(self, field_name):
-        return jsonify(self.json.get(field_name))
+        @param item: Field name to look up
+        @return:
+        """
+        return getattr(self, item)
 
     def get_field_names(self):
         """Returns a list of the field names for this JSON object.
 
         @return: List of field names
         """
-        return self.json.keys()
+        return self.__dict__.keys()
+
+    def items(self):
+        return [(k,v) for (k, v) in self.__dict__.items() if k != '_json']

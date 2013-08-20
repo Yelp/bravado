@@ -5,7 +5,7 @@
 import json
 import os
 
-from jsonify import Jsonified
+from jsonify import jsonify
 
 SWAGGER_VERSIONS = ["1.1", "1.2"]
 
@@ -95,8 +95,8 @@ class ParsingContext(object):
     def pop(self):
         """Pops the most recent object out of the context
         """
-        self.type_stack.pop()
         del self.args[self.type_stack.pop()]
+        self.id_stack.pop()
 
 
 class SwaggerError(Exception):
@@ -148,7 +148,9 @@ class SwaggerProcessor(object):
                         context.pop()
                     context.pop()
                 context.pop()
-            for (model_name, model) in api.api_declaration.models:
+            decl = api.api_declaration
+            models = decl.models
+            for (model_name, model) in models.items():
                 context.push('model', model, 'id')
                 self.process_model(**context.args)
                 if model_name != model.id:
@@ -324,7 +326,7 @@ class Loader(object):
 
         # Load the resource listing
         with open(resources_file) as fp:
-            resources = Jsonified(json.load(fp))
+            resources = jsonify(json.load(fp))
 
         # Some extra data only known about at load time
         resources.file = resources_file
@@ -343,9 +345,7 @@ class Loader(object):
     def load_api_declaration(self, resources, api):
         api.file = (resources.base_dir + api.path).replace('{format}', 'json')
         with open(api.file) as fp:
-            print "Adding api_declaration to %r" % api
-            api.api_declaration = Jsonified(json.load(fp))
-            print " done: %r" % api
+            api.api_declaration = jsonify(json.load(fp))
 
 
 def validate_required_fields(json, required_fields, context):

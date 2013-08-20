@@ -6,7 +6,8 @@
 
 import unittest
 import swaggerpy
-import swagger_model
+
+from swaggerpy import swagger_model
 
 
 class TestProcessor(swagger_model.SwaggerProcessor):
