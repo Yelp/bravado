@@ -12,6 +12,10 @@ def jsonify(obj):
         return obj
 
 
+def _is_valid_field(field_name):
+    return field_name != '_json'
+
+
 class Jsonified(object):
     """A thin object wrapper around JSON
     """
@@ -34,19 +38,31 @@ class Jsonified(object):
         """Allow subscript syntax.
 
         @param item: Field name to look up
-        @return:
+        @return: the named field, or None
         """
-        return getattr(self, item)
+        try:
+            return getattr(self, item)
+        except AttributeError:
+            return None
+
+    def __contains__(self, item):
+        """Implement the 'in' keyword.
+
+        @param item: Field name to look up
+        @return: True if item names a field; False otherwise
+        """
+        return self[item] is not None
 
     def get_field_names(self):
         """Returns a list of the field names for this JSON object.
 
         @return: List of field names
         """
-        return self.__dict__.keys()
+        return filter(_is_valid_field, self.__dict__.keys())
 
     def items(self):
-        return [(k, v) for (k, v) in self.__dict__.items() if k != '_json']
+        return [(k, v) for (k, v) in self.__dict__.items()
+                if _is_valid_field(k)]
 
     def values(self):
-        return [v for (k, v) in self.__dict__.items() if k != '_json']
+        return [v for (k, v) in self.items()]
