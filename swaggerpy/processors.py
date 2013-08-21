@@ -85,14 +85,14 @@ class SwaggerProcessor(object):
 
     def apply(self, resources):
         context = ParsingContext()
-        context.push_str('resources', resources, resources.file)
+        context.push_str('resources', resources, resources.url)
         self.process_resource_listing(**context.args)
         for api in resources.apis:
             context.push('listing_api', api, 'path')
             self.process_resource_listing_api(**context.args)
             context.pop()
 
-            context.push_str('api_declaration', api.api_declaration, api.file)
+            context.push_str('api_declaration', api.api_declaration, api.url)
             self.process_api_declaration(**context.args)
             for resource_api in api.api_declaration.apis:
                 context.push('resource_api', resource_api, 'path')

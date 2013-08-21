@@ -2,8 +2,12 @@
 # Copyright (c) 2013, Digium, Inc.
 #
 
+import json
+
 
 def jsonify(obj):
+    """Wraps parse JSON in in a Jsonify.
+    """
     if isinstance(obj, list):
         return [jsonify(x) for x in obj]
     elif isinstance(obj, dict):
@@ -12,8 +16,19 @@ def jsonify(obj):
         return obj
 
 
-def _is_valid_field(field_name):
-    return field_name != '_json'
+def jsonify_url(opener, url):
+    """Download and parse JSON from a URL, wrapping in a Jsonify.
+
+    @type opener: urllib2.OpenerDirector
+    @param opener: Opener for requesting JSON.
+    @param url: URL for JSON to parse
+    @return: Jsonified
+    """
+    fp = opener.open(url)
+    try:
+        return jsonify(json.load(fp))
+    finally:
+        fp.close()
 
 
 class Jsonified(object):
@@ -72,3 +87,7 @@ class Jsonified(object):
 
     def values(self):
         return [v for (k, v) in self.items()]
+
+
+def _is_valid_field(field_name):
+    return field_name != '_json'

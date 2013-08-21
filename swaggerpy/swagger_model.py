@@ -5,11 +5,11 @@
 """Code for handling the base Swagger API model.
 """
 
-import json
-import os
+import urllib2
+import urlparse
 
+from swaggerpy.jsonify import jsonify_url
 from swaggerpy.processors import SwaggerProcessor, SwaggerError
-from swaggerpy.jsonify import jsonify
 
 SWAGGER_VERSIONS = ["1.1", "1.2"]
 
@@ -121,23 +121,29 @@ class Loader(object):
         self.processors = [DefaultProcessor()]
         self.processors.extend(processors)
 
-    def load_resource_listing(self, resources_file):
+    def load_resource_listing(self, resources_url, opener=None, base_url=None):
         """Load a resource listing.
 
-        @param resources_file: File name for resources.json
+        @param resources_url:   File name for resources.json
+        @param base_url:    Optional URL to be the base URL for finding API
+                            declarations. If not specified, 'basePath' from the
+                            resource listing is used.
         """
 
+        if not opener:
+            opener = urllib2.build_opener()
+
         # Load the resource listing
-        with open(resources_file) as fp:
-            resources = jsonify(json.load(fp))
+        resources = jsonify_url(opener, resources_url)
 
         # Some extra data only known about at load time
-        resources.file = resources_file
-        resources.base_dir = os.path.dirname(resources_file)
+        resources.url = resources_url
+        if not base_url:
+            base_url = resources.basePath
 
         # Load the API declarations
         for api in resources.apis:
-            self.load_api_declaration(resources, api)
+            self.load_api_declaration(opener, base_url, api)
 
         # Now that the raw object model has been loaded, apply the processors
         for processor in self.processors:
@@ -145,10 +151,10 @@ class Loader(object):
 
         return resources
 
-    def load_api_declaration(self, resources, api):
-        api.file = (resources.base_dir + api.path).replace('{format}', 'json')
-        with open(api.file) as fp:
-            api.api_declaration = jsonify(json.load(fp))
+    def load_api_declaration(self, opener, base_url, api):
+        path = api.path.replace('{format}', 'json')
+        api.url = urlparse.urljoin(base_url + '/', path.strip('/'))
+        api.api_declaration = jsonify_url(opener, api.url)
 
 
 def validate_required_fields(json, required_fields, context):
