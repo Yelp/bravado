@@ -49,7 +49,7 @@ def compare_versions(lhs, rhs):
     return cmp(lhs, rhs)
 
 
-class DefaultProcessor(SwaggerProcessor):
+class ValidationProcessor(SwaggerProcessor):
     def process_resource_listing(self, resources, context):
         required_fields = ['basePath', 'apis', 'swaggerVersion']
         validate_required_fields(resources, required_fields, context)
@@ -58,9 +58,6 @@ class DefaultProcessor(SwaggerProcessor):
             raise SwaggerError(
                 "Unsupported Swagger version %s" % resources.swaggerVersion,
                 context)
-
-        for api in resources.apis:
-            self.process_resource_listing_api(resources, api, context)
 
     def process_resource_listing_api(self, resources, listing_api, context):
         validate_required_fields(listing_api, ['path', 'description'], context)
@@ -144,8 +141,8 @@ class Loader(object):
     def __init__(self, processors=None):
         if processors is None:
             processors = []
-            # always go through the default processor first
-        self.processors = [DefaultProcessor()]
+        # always go through the validation processor first
+        self.processors = [ValidationProcessor()]
         self.processors.extend(processors)
 
     def load_resource_listing(self, resources_url, opener=None, base_url=None):
