@@ -88,34 +88,35 @@ class SwaggerProcessor(object):
         resources_url = resources['url'] or 'json:resource_listing'
         context.push_str('resources', resources, resources_url)
         self.process_resource_listing(**context.args)
-        for api in resources.apis:
-            context.push('listing_api', api, 'path')
+        for listing_api in resources.apis:
+            context.push('listing_api', listing_api, 'path')
             self.process_resource_listing_api(**context.args)
             context.pop()
 
-            api_url = api['url'] or 'json:api_declaration'
-            context.push_str('api_declaration', api.api_declaration, api_url)
+            api_url = listing_api['url'] or 'json:api_declaration'
+            context.push_str('resource', listing_api.api_declaration,
+                             api_url)
             self.process_api_declaration(**context.args)
-            for resource_api in api.api_declaration.apis:
-                context.push('resource_api', resource_api, 'path')
+            for api in listing_api.api_declaration.apis:
+                context.push('api', api, 'path')
                 self.process_resource_api(**context.args)
-                for operation in resource_api.operations:
+                for operation in api.operations:
                     context.push('operation', operation, 'nickname')
                     self.process_operation(**context.args)
-                    for parameter in operation.parameters:
+                    for parameter in operation['parameters'] or []:
                         context.push('parameter', parameter, 'name')
                         self.process_parameter(**context.args)
                         context.pop()
-                    for response in operation.error_responses:
+                    for response in operation['error_responses'] or []:
                         context.push('error_response', response, 'code')
                         self.process_error_response(**context.args)
                         context.pop()
                     context.pop()
                 context.pop()
-            for model in api.api_declaration.models:
+            for (id, model) in listing_api.api_declaration['models'] or []:
                 context.push('model', model, 'id')
                 self.process_model(**context.args)
-                for prop in model.properties:
+                for (name, prop) in model.properties:
                     context.push('prop', prop, 'name')
                     self.process_property(**context.args)
                     context.pop()
@@ -143,19 +144,19 @@ class SwaggerProcessor(object):
         """
         pass
 
-    def process_api_declaration(self, resources, api_declaration, context):
+    def process_api_declaration(self, resources, resource, context):
         """Post process a resource object.
 
         This is parsed from a .json file reference by a resource listing's
         'api' array.
 
-        @param api_declaration: resource object.
+        @param resource: resource object.
         @type context: ParsingContext
         @param context: Current context in the API.
         """
         pass
 
-    def process_resource_api(self, resources, api_declaration, api, context):
+    def process_resource_api(self, resources, resource, api, context):
         """Post process entries in a resource's api array
 
         @param api: API object
@@ -193,7 +194,7 @@ class SwaggerProcessor(object):
         """
         pass
 
-    def process_model(self, resources, api_declaration, model, context):
+    def process_model(self, resources, resource, model, context):
         """Post process a model from a resources model dictionary.
 
         @param model: Model object.
@@ -202,8 +203,7 @@ class SwaggerProcessor(object):
         """
         pass
 
-    def process_property(self, resources, api_declaration, model, prop,
-                         context):
+    def process_property(self, resources, resource, model, prop, context):
         """Post process a property from a model.
 
         @param prop: Property object.
@@ -226,7 +226,7 @@ class WebsocketProcessor(SwaggerProcessor):
     """Process the WebSocket extension for Swagger
     """
 
-    def process_resource_api(self, resources, api_declaration, api, context):
+    def process_resource_api(self, resources, resource, api, context):
         is_websocket = lambda op: op.is_websocket
         api.has_websocket = filter(is_websocket, api.operations) != []
 

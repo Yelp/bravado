@@ -2,10 +2,37 @@
     "swaggerVersion": "1.1",
     "basePath": "http://localhost/swagger/test",
     "resourcePath": "simple.{format}",
-    "apis": [],
+    "apis": [
+        {
+            "path": "/test",
+            "description": "Test resource",
+            "operations": [
+                {
+                    "httpMethod": "GET",
+                    "summary": "Gets Asterisk system information.",
+                    "nickname": "getAsteriskInfo",
+                    "responseClass": "Simple",
+                    "parameters": [
+                        {
+                            "name": "test_param",
+                            "paramType": "query",
+                            "dataType": "string",
+                            "allowableValues": {
+                                "valueType": "LIST",
+                                "values": [
+                                    "foo",
+                                    "bar"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
     "models": {
-        "simple": {
-            "id": "simple",
+        "Simple": {
+            "id": "Simple",
             "properties": {
                 "id": {
                     "type": "string"

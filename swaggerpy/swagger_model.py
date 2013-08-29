@@ -68,20 +68,20 @@ class DefaultProcessor(SwaggerProcessor):
         if not listing_api.path.startswith("/"):
             raise SwaggerError("Path must start with /", context)
 
-    def process_api_declaration(self, resources, api_declaration, context):
+    def process_api_declaration(self, resources, resource, context):
         required_fields = [
             'swaggerVersion', 'basePath', 'resourcePath', 'apis',
             'models'
         ]
-        validate_required_fields(api_declaration, required_fields, context)
+        validate_required_fields(resource, required_fields, context)
         # Check model name and id consistency
-        for (model_name, model) in api_declaration.models:
+        for (model_name, model) in resource.models:
             if model_name != model.id:
                 raise SwaggerError("Model id doesn't match name", context)
                 # Convert models dict to list
-        api_declaration.models = api_declaration.models.values()
+        resource.model_list = resource.models.values()
 
-    def process_resource_api(self, resources, api_declaration, api, context):
+    def process_resource_api(self, resources, resource, api, context):
         required_fields = ['path', 'operations']
         validate_required_fields(api, required_fields, context)
 
@@ -99,14 +99,14 @@ class DefaultProcessor(SwaggerProcessor):
                                response, context):
         pass
 
-    def process_model(self, resources, api_declaration, model, context):
+    def process_model(self, resources, resource, model, context):
         # Move property field name into the object
         for (prop_name, prop) in model.properties:
             prop.name = prop_name
             # Convert properties dict to list
-        model.properties = model.properties.values()
+        model.property_list = model.properties.values()
 
-    def process_property(self, resources, api_declaration, model, prop,
+    def process_property(self, resources, resource, model, prop,
                          context):
         pass
 
