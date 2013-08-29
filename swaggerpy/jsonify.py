@@ -57,6 +57,11 @@ class Jsonified(object):
         for kv in self.items():
             yield kv
 
+    def __len__(self):
+        """Allow len(jsonified)
+        """
+        return len(self.get_field_names())
+
     def get_field_names(self):
         """Returns a list of the field names for this JSON object.
 

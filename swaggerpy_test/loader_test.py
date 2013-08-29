@@ -20,10 +20,9 @@ class LoaderTest(unittest.TestCase):
     def test_simple(self):
         uut = swaggerpy.load_file('test-data/1.1/simple/resources.json')
         self.assertEqual('1.1', uut.swaggerVersion)
-        self.assertEqual(1, len(uut.apis[0].api_declaration.model_list))
-        self.assertEqual(1, len(uut.apis[0].api_declaration.model_list))
+        self.assertEqual(1, len(uut.apis[0].api_declaration.models))
         self.assertEqual(1, len(
-            uut.apis[0].api_declaration.model_list[0].property_list))
+            uut.apis[0].api_declaration.models.Simple.properties))
 
     def test_processor(self):
         uut = swaggerpy.load_file('test-data/1.1/simple/resources.json',

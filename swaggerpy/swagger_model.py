@@ -79,7 +79,6 @@ class DefaultProcessor(SwaggerProcessor):
             if model_name != model.id:
                 raise SwaggerError("Model id doesn't match name", context)
                 # Convert models dict to list
-        resource.model_list = resource.models.values()
 
     def process_resource_api(self, resources, resource, api, context):
         required_fields = ['path', 'operations']
@@ -104,7 +103,6 @@ class DefaultProcessor(SwaggerProcessor):
         for (prop_name, prop) in model.properties:
             prop.name = prop_name
             # Convert properties dict to list
-        model.property_list = model.properties.values()
 
     def process_property(self, resources, resource, model, prop,
                          context):
@@ -112,6 +110,19 @@ class DefaultProcessor(SwaggerProcessor):
 
     def process_type(self, swagger_type, context):
         pass
+
+
+class FlatenningProcessor(SwaggerProcessor):
+    """Flattens model and property dictionaries into lists.
+
+    Makes Mustache possible to have a regular schema.
+    """
+    def process_api_declaration(self, resources, resource, context):
+        resource.model_list = resource.models.values()
+
+    def process_model(self, resources, resource, model, context):
+        # Convert properties dict to list
+        model.property_list = model.properties.values()
 
 
 def load_url(opener, url):
