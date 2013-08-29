@@ -25,6 +25,12 @@
                                 ]
                             }
                         }
+                    ],
+                    "errorResponses": [
+                        {
+                            "code": 404,
+                            "reason": "Not Found"
+                        }
                     ]
                 }
             ]

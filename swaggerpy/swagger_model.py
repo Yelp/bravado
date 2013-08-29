@@ -95,7 +95,7 @@ class DefaultProcessor(SwaggerProcessor):
                 context)
 
     def process_error_response(self, resources, resource, api, operation,
-                               response, context):
+                               error_response, context):
         pass
 
     def process_model(self, resources, resource, model, context):

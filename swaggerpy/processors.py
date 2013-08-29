@@ -107,13 +107,13 @@ class SwaggerProcessor(object):
                         context.push('parameter', parameter, 'name')
                         self.process_parameter(**context.args)
                         context.pop()
-                    for response in operation['error_responses'] or []:
+                    for response in operation['errorResponses'] or []:
                         context.push('error_response', response, 'code')
                         self.process_error_response(**context.args)
                         context.pop()
                     context.pop()
                 context.pop()
-            for (id, model) in listing_api.api_declaration['models'] or []:
+            for (name, model) in listing_api.api_declaration['models'] or []:
                 context.push('model', model, 'id')
                 self.process_model(**context.args)
                 for (name, prop) in model.properties:
