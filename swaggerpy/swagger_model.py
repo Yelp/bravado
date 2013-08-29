@@ -5,10 +5,11 @@
 """Code for handling the base Swagger API model.
 """
 
+import json
 import urllib2
 import urlparse
 
-from swaggerpy.jsonify import jsonify_url
+from swaggerpy.jsonify import jsonify
 from swaggerpy.processors import SwaggerProcessor, SwaggerError
 
 SWAGGER_VERSIONS = ["1.1", "1.2"]
@@ -113,6 +114,21 @@ class DefaultProcessor(SwaggerProcessor):
         pass
 
 
+def load_url(opener, url):
+    """Download and parse JSON from a URL, wrapping in a Jsonify.
+
+    @type opener: urllib2.OpenerDirector
+    @param opener: Opener for requesting JSON.
+    @param url: URL for JSON to parse
+    @return: Jsonified
+    """
+    fp = opener.open(url)
+    try:
+        return json.load(fp)
+    finally:
+        fp.close()
+
+
 class Loader(object):
     def __init__(self, processors=None):
         if processors is None:
@@ -134,27 +150,33 @@ class Loader(object):
             opener = urllib2.build_opener()
 
         # Load the resource listing
-        resources = jsonify_url(opener, resources_url)
+        resource_listing_dict = load_url(opener, resources_url)
 
         # Some extra data only known about at load time
-        resources.url = resources_url
+        resource_listing_dict['url'] = resources_url
         if not base_url:
-            base_url = resources.basePath
+            base_url = resource_listing_dict.basePath
 
         # Load the API declarations
-        for api in resources.apis:
+        for api in resource_listing_dict.get('apis'):
             self.load_api_declaration(opener, base_url, api)
 
         # Now that the raw object model has been loaded, apply the processors
+        resource_listing_json = self.process_resource_listing(
+            resource_listing_dict)
+
+        return resource_listing_json
+
+    def load_api_declaration(self, opener, base_url, api_dict):
+        path = api_dict.get('path').replace('{format}', 'json')
+        api_dict['url'] = urlparse.urljoin(base_url + '/', path.strip('/'))
+        api_dict['api_declaration'] = load_url(opener, api_dict['url'])
+
+    def process_resource_listing(self, resources):
+        jsonified = jsonify(resources)
         for processor in self.processors:
-            processor.apply(resources)
-
-        return resources
-
-    def load_api_declaration(self, opener, base_url, api):
-        path = api.path.replace('{format}', 'json')
-        api.url = urlparse.urljoin(base_url + '/', path.strip('/'))
-        api.api_declaration = jsonify_url(opener, api.url)
+            processor.apply(jsonified)
+        return jsonified
 
 
 def validate_required_fields(json, required_fields, context):

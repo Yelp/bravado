@@ -2,8 +2,6 @@
 # Copyright (c) 2013, Digium, Inc.
 #
 
-import json
-
 
 def jsonify(obj):
     """Wraps parse JSON in in a Jsonify.
@@ -14,21 +12,6 @@ def jsonify(obj):
         return Jsonified(obj)
     else:
         return obj
-
-
-def jsonify_url(opener, url):
-    """Download and parse JSON from a URL, wrapping in a Jsonify.
-
-    @type opener: urllib2.OpenerDirector
-    @param opener: Opener for requesting JSON.
-    @param url: URL for JSON to parse
-    @return: Jsonified
-    """
-    fp = opener.open(url)
-    try:
-        return jsonify(json.load(fp))
-    finally:
-        fp.close()
 
 
 class Jsonified(object):
