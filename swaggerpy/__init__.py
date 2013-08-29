@@ -5,8 +5,9 @@
 import urllib
 import urlparse
 import os
-import swagger_model
 import jsonify
+
+from swagger_model import Loader
 
 
 def load_file(resource_listing_file, processors=None, opener=None):
@@ -41,6 +42,11 @@ def load_url(resource_listing_url, processors=None, opener=None,
     @return: Processed object model from
     @raise IOError, URLError: On error reading api-docs.
     """
-    loader = swagger_model.Loader(processors)
+    loader = Loader(processors)
     return loader.load_resource_listing(
         resource_listing_url, opener=opener, base_url=base_url)
+
+
+def load_json(resource_listing, processors=None):
+    loader = Loader(processors)
+    return loader.process_resource_listing(resource_listing)

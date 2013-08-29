@@ -227,13 +227,13 @@ class WebsocketProcessor(SwaggerProcessor):
     """
 
     def process_resource_api(self, resources, resource, api, context):
-        is_websocket = lambda op: op.is_websocket
-        api.has_websocket = filter(is_websocket, api.operations) != []
+        api.has_websocket = api['has_websocket'] or False
 
     def process_operation(self, resources, resource, api, operation, context):
         operation.is_websocket = operation['upgrade'] == 'websocket'
 
         if operation.is_websocket:
+            api.has_websocket = True
             if operation.httpMethod != 'GET':
                 raise SwaggerError(
                     "upgrade: websocket is only valid on GET operations",
