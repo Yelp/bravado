@@ -4,22 +4,30 @@
 # Copyright (c) 2013, Digium, Inc.
 #
 
+import requests
+from swaggerpy.client import SwaggerClient
 import unittest
-import swaggerpy.requests
 
 
-class MyTestCase(unittest.TestCase):
+class ClientTest(unittest.TestCase):
+    def test_something(self):
+        try:
+            self.uut.apis.pet.listPets()
+            self.fail("Should have gotten a connection failure")
+        except requests.ConnectionError:
+            pass
+
     def setUp(self):
         self.resource_listing = {
             "swaggerVersion": "1.1",
-            "basePath": "json:api-docs",
+            "basePath": "http://localhost:8000/swagger-test",
             "apis": [
                 {
                     "path": "/api-docs/pet.json",
                     "description": "Test loader when missing a file",
                     "api_declaration": {
                         "swaggerVersion": "1.1",
-                        "basePath": "json:api-docs",
+                        "basePath": "http://localhost:8000/swagger-test",
                         "resourcePath": "/pet.json",
                         "apis": [
                             {
@@ -37,11 +45,8 @@ class MyTestCase(unittest.TestCase):
                 }
             ]
         }
-        self.uut = swaggerpy.requests.client.SwaggerClient(
+        self.uut = SwaggerClient(
             resource_listing=self.resource_listing)
-
-    def test_something(self):
-        self.uut.apis.pet.listPets()
 
 
 if __name__ == '__main__':

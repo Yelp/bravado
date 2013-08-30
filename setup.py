@@ -28,8 +28,7 @@ setup(
     ],
     setup_requires=['nose>=1.3'],
     tests_require=['coverage', 'tissue'],
-    install_requires=[
-    ],
+    install_requires=['requests'],
     entry_points="""
     [console_scripts]
     swagger-codegen = swaggerpy.codegen:main
