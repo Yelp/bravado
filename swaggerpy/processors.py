@@ -238,3 +238,16 @@ class WebsocketProcessor(SwaggerProcessor):
                 raise SwaggerError(
                     "upgrade: websocket is only valid on GET operations",
                     context)
+
+
+class FlatenningProcessor(SwaggerProcessor):
+    """Flattens model and property dictionaries into lists.
+
+    Makes Mustache possible to have a regular schema.
+    """
+    def process_api_declaration(self, resources, resource, context):
+        resource.model_list = resource.models.values()
+
+    def process_model(self, resources, resource, model, context):
+        # Convert properties dict to list
+        model.property_list = model.properties.values()

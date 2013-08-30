@@ -26,6 +26,7 @@ class MyTestCase(unittest.TestCase):
                                 "path": "/pet",
                                 "operations": [
                                     {
+                                        "httpMethod": "GET",
                                         "nickname": "listPets"
                                     }
                                 ]
@@ -36,7 +37,7 @@ class MyTestCase(unittest.TestCase):
                 }
             ]
         }
-        self.uut = swaggerpy.requests.SwaggerClient(
+        self.uut = swaggerpy.requests.client.SwaggerClient(
             resource_listing=self.resource_listing)
 
     def test_something(self):

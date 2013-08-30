@@ -50,6 +50,8 @@ def compare_versions(lhs, rhs):
 
 
 class ValidationProcessor(SwaggerProcessor):
+    """A processor that validates the Swagger model.
+    """
     def process_resource_listing(self, resources, context):
         required_fields = ['basePath', 'apis', 'swaggerVersion']
         validate_required_fields(resources, required_fields, context)
@@ -82,10 +84,13 @@ class ValidationProcessor(SwaggerProcessor):
         validate_required_fields(api, required_fields, context)
 
     def process_operation(self, resources, resource, api, operation, context):
-        pass
+        required_fields = ['httpMethod', 'nickname']
+        validate_required_fields(operation, required_fields, context)
 
     def process_parameter(self, resources, resource, api, operation, parameter,
                           context):
+        required_fields = ['name', 'dataType']
+        validate_required_fields(parameter, required_fields, context)
         if 'allowedValues' in parameter:
             raise SwaggerError(
                 "Field 'allowedValues' invalid; use 'allowableValues'",
@@ -93,33 +98,20 @@ class ValidationProcessor(SwaggerProcessor):
 
     def process_error_response(self, resources, resource, api, operation,
                                error_response, context):
-        pass
+        required_fields = ['code', 'reason']
+        validate_required_fields(error_response, required_fields, context)
 
     def process_model(self, resources, resource, model, context):
+        required_fields = ['id', 'properties']
+        validate_required_fields(model, required_fields, context)
         # Move property field name into the object
         for (prop_name, prop) in model.properties:
             prop.name = prop_name
-            # Convert properties dict to list
 
     def process_property(self, resources, resource, model, prop,
                          context):
-        pass
-
-    def process_type(self, swagger_type, context):
-        pass
-
-
-class FlatenningProcessor(SwaggerProcessor):
-    """Flattens model and property dictionaries into lists.
-
-    Makes Mustache possible to have a regular schema.
-    """
-    def process_api_declaration(self, resources, resource, context):
-        resource.model_list = resource.models.values()
-
-    def process_model(self, resources, resource, model, context):
-        # Convert properties dict to list
-        model.property_list = model.properties.values()
+        required_fields = ['type']
+        validate_required_fields(prop, required_fields, context)
 
 
 def load_url(opener, url):

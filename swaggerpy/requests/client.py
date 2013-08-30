@@ -4,8 +4,11 @@
 
 import swaggerpy
 import os.path
+import logging
 
 from swaggerpy.processors import WebsocketProcessor, SwaggerProcessor
+
+log = logging.getLogger(__name__)
 
 
 class ClientProcessor(SwaggerProcessor):
@@ -16,11 +19,13 @@ class ClientProcessor(SwaggerProcessor):
 
 class Resource(object):
     def __init__(self, resource):
-        for api in resource.api_declaration.apis:
+        decl = resource.api_declaration
+        for api in decl.apis:
             for operation in api.operations:
                 def invoke_oper(*args, **kwargs):
-                    print "Invoking %s(%r, %r)" % (
-                        operation.nickname, args, kwargs)
+                    method = operation.httpMethod
+                    uri = decl.basePath + api.path
+
                 setattr(self, operation.nickname, invoke_oper)
 
 
