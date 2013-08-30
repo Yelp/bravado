@@ -12,5 +12,8 @@
     <orderEntry type="jdk" jdkName="Python 2.7.2 virtualenv at ~/virtualenv/swagger" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
+  <component name="PackageRequirementsSettings">
+    <option name="requirementsPath" value="" />
+  </component>
 </module>
 

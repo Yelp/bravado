@@ -40,11 +40,11 @@ def compare_versions(lhs, rhs):
       1.0 < 1.0.1
       1.2 < 1.10
 
-    @param lhs Left hand side of the comparison
-    @param rhs Right hand side of the comparison
-    @return  < 0 if lhs  < rhs
-    @return == 0 if lhs == rhs
-    @return  > 0 if lhs  > rhs
+    :param lhs: Left hand side of the comparison
+    :param rhs: Right hand side of the comparison
+    :return:  < 0 if lhs  < rhs
+    :return: == 0 if lhs == rhs
+    :return:  > 0 if lhs  > rhs
     """
     lhs = [int(v) for v in lhs.split('.')]
     rhs = [int(v) for v in rhs.split('.')]
@@ -119,10 +119,10 @@ class ValidationProcessor(SwaggerProcessor):
 def json_load_url(opener, url):
     """Download and parse JSON from a URL, wrapping in a Jsonify.
 
-    @type opener: urllib2.OpenerDirector
-    @param opener: Opener for requesting JSON.
-    @param url: URL for JSON to parse
-    @return: Parse JSON dict
+    :type opener: urllib2.OpenerDirector
+    :param opener: Opener for requesting JSON.
+    :param url: URL for JSON to parse
+    :return: Parse JSON dict
     """
     fp = opener.open(url)
     try:
@@ -142,8 +142,8 @@ class Loader(object):
     def load_resource_listing(self, resources_url, opener=None, base_url=None):
         """Load a resource listing.
 
-        @param resources_url:   File name for resources.json
-        @param base_url:    Optional URL to be the base URL for finding API
+        :param resources_url:   File name for resources.json
+        :param base_url:    Optional URL to be the base URL for finding API
                             declarations. If not specified, 'basePath' from the
                             resource listing is used.
         """
@@ -186,10 +186,10 @@ def validate_required_fields(json, required_fields, context):
 
     If any required field is missing, a SwaggerError is raised.
 
-    @type json: Jsonified
-    @param json: JSON object to check.
-    @param required_fields: List of required fields.
-    @param context: Current context in the API.
+    :type json: Jsonified
+    :param json: JSON object to check.
+    :param required_fields: List of required fields.
+    :param context: Current context in the API.
     """
     missing_fields = [f for f in required_fields
                       if not f in json.get_field_names()]
@@ -202,12 +202,12 @@ def validate_required_fields(json, required_fields, context):
 def load_file(resource_listing_file, processors=None, opener=None):
     """Loads a resource listing file, applying the given processors.
 
-    @param resource_listing_file: File name for a resource listing.
-    @param processors:  List of SwaggerProcessors to apply to the resulting
+    :param resource_listing_file: File name for a resource listing.
+    :param processors:  List of SwaggerProcessors to apply to the resulting
                         resource.
-    @param opener:  Optional urllib2 opener for fetching API docs.
-    @return: Processed object model from
-    @raise IOError: On error reading api-docs.
+    :param opener:  Optional urllib2 opener for fetching API docs.
+    :return: Processed object model from
+    :raise: IOError: On error reading api-docs.
     """
     file_path = os.path.abspath(resource_listing_file)
     url = urlparse.urljoin('file:', urllib.pathname2url(file_path))
@@ -221,15 +221,15 @@ def load_url(resource_listing_url, processors=None, opener=None,
              base_url=None):
     """Loads a resource listing, applying the given processors.
 
-    @param resource_listing_url: URL for a resource listing.
-    @param processors:  List of SwaggerProcessors to apply to the resulting
+    :param resource_listing_url: URL for a resource listing.
+    :param processors:  List of SwaggerProcessors to apply to the resulting
                         resource.
-    @param opener:  Optional urllib2 opener for fetching API docs.
-    @param base_url:    Optional URL to be the base URL for finding API
+    :param opener:  Optional urllib2 opener for fetching API docs.
+    :param base_url:    Optional URL to be the base URL for finding API
                         declarations. If not specified, 'basePath' from the
                         resource listing is used.
-    @return: Processed object model from
-    @raise IOError, URLError: On error reading api-docs.
+    :return: Processed object model from
+    :raise: IOError, URLError: On error reading api-docs.
     """
     loader = Loader(processors)
     return loader.load_resource_listing(

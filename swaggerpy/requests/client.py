@@ -36,6 +36,9 @@ class Resources(object):
 
 
 class SwaggerClient(object):
+    """Client library for accessing a Swagger-documented RESTful service.
+    """
+
     def __init__(self, discovery_url=None, resource_listing=None):
         if not discovery_url and not resource_listing:
             raise ValueError("Missing discovery_url or api_docs")

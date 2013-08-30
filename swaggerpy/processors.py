@@ -33,12 +33,12 @@ class ParsingContext(object):
     def push(self, obj_type, json, id_field):
         """Pushes a new self-identifying object into the context.
 
-        @type obj_type: str
-        @param obj_type: Specifies type of object json represents
-        @type json: Jsonified
-        @param json: Current Jsonified object.
-        @type id_field: str
-        @param id_field: Field name in json that identifies it.
+        :type obj_type: str
+        :param json: Specifies type of object json represents
+        :type json: Jsonified
+        :param json: Current Jsonified object.
+        :type id_field: str
+        :param id_field: Field name in json that identifies it.
         """
         if id_field not in json.get_field_names():
             raise SwaggerError("Missing id_field: %s" % id_field, self)
@@ -47,12 +47,12 @@ class ParsingContext(object):
     def push_str(self, obj_type, json, id_string):
         """Pushes a new object into the context.
 
-        @type obj_type: str
-        @param obj_type: Specifies type of object json represents
-        @type json: Jsonified
-        @param json: Current Jsonified object.
-        @type id_string: str
-        @param id_string: Identifier of the given json.
+        :type obj_type: str
+        :param obj_type: Specifies type of object json represents
+        :type json: Jsonified
+        :param json: Current Jsonified object.
+        :type id_string: str
+        :param id_string: Identifier of the given json.
         """
         self.type_stack.append(obj_type)
         self.id_stack.append(id_string)
@@ -73,9 +73,9 @@ class SwaggerError(Exception):
     def __init__(self, msg, context, cause=None):
         """Ctor.
 
-        @param msg: String message for the error.
-        @param context: ParsingContext object
-        @param cause: Optional exception that caused this one.
+        :param msg: String message for the error.
+        :param context: ParsingContext object
+        :param cause: Optional exception that caused this one.
         """
         super(Exception, self).__init__(msg, context, cause)
 
@@ -132,19 +132,19 @@ class SwaggerProcessor(object):
     def process_resource_listing(self, resources, context):
         """Post process a resources.json object.
 
-        @param resources: ResourceApi object.
-        @type context: ParsingContext
-        @param context: Current context in the API.
+        :param resources: ResourceApi object.
+        :type context: ParsingContext
+        :param context: Current context in the API.
         """
         pass
 
     def process_resource_listing_api(self, resources, listing_api, context):
         """Post process entries in a resource.json's api array.
 
-        @param resources: Resource listing object
-        @param listing_api: ResourceApi object.
-        @type context: ParsingContext
-        @param context: Current context in the API.
+        :param resources: Resource listing object
+        :param listing_api: ResourceApi object.
+        :type context: ParsingContext
+        :param context: Current context in the API.
         """
         pass
 
@@ -154,27 +154,27 @@ class SwaggerProcessor(object):
         This is parsed from a .json file reference by a resource listing's
         'api' array.
 
-        @param resource: resource object.
-        @type context: ParsingContext
-        @param context: Current context in the API.
+        :param resource: resource object.
+        :type context: ParsingContext
+        :param context: Current context in the API.
         """
         pass
 
     def process_resource_api(self, resources, resource, api, context):
         """Post process entries in a resource's api array
 
-        @param api: API object
-        @type context: ParsingContext
-        @param context: Current context in the API.
+        :param api: API object
+        :type context: ParsingContext
+        :param context: Current context in the API.
         """
         pass
 
     def process_operation(self, resources, resource, api, operation, context):
         """Post process an operation on an api.
 
-        @param operation: Operation object.
-        @type context: ParsingContext
-        @param context: Current context in the API.
+        :param operation: Operation object.
+        :type context: ParsingContext
+        :param context: Current context in the API.
         """
         pass
 
@@ -182,9 +182,9 @@ class SwaggerProcessor(object):
                           context):
         """Post process a parameter on an operation.
 
-        @param parameter: Parameter object.
-        @type context: ParsingContext
-        @param context: Current context in the API.
+        :param parameter: Parameter object.
+        :type context: ParsingContext
+        :param context: Current context in the API.
         """
         pass
 
@@ -192,36 +192,36 @@ class SwaggerProcessor(object):
                                error_response, context):
         """Post process an errorResponse on an operation.
 
-        @param error_response: Response object.
-        @type context: ParsingContext
-        @param context: Current context in the API.
+        :param error_response: Response object.
+        :type context: ParsingContext
+        :param context: Current context in the API.
         """
         pass
 
     def process_model(self, resources, resource, model, context):
         """Post process a model from a resources model dictionary.
 
-        @param model: Model object.
-        @type context: ParsingContext
-        @param context: Current context in the API.
+        :param model: Model object.
+        :type context: ParsingContext
+        :param context: Current context in the API.
         """
         pass
 
     def process_property(self, resources, resource, model, prop, context):
         """Post process a property from a model.
 
-        @param prop: Property object.
-        @type context: ParsingContext
-        @param context: Current context in the API.
+        :param prop: Property object.
+        :type context: ParsingContext
+        :param context: Current context in the API.
         """
         pass
 
     def process_type(self, swagger_type, context):
         """Post process a type.
 
-        @param swagger_type: ResourceListing object.
-        @type context: ParsingContext
-        @param context: Current context in the API.
+        :param swagger_type: ResourceListing object.
+        :type context: ParsingContext
+        :param context: Current context in the API.
         """
         pass
 
