@@ -4,6 +4,9 @@
 # Copyright (c) 2013, Digium, Inc.
 #
 
+"""Main entry point for codegen command line app.
+"""
+
 import sys
 
 from optparse import OptionParser
@@ -12,8 +15,8 @@ USAGE = "usage: %prog [options] template-dir output-dir"
 
 
 def main(argv=None):
-    '''Main method, as invoked by setuptools launcher script.
-    '''
+    """Main method, as invoked by setuptools launcher script.
+    """
     if argv is None:
         argv = sys.argv
 

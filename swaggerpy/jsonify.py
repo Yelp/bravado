@@ -2,6 +2,39 @@
 # Copyright (c) 2013, Digium, Inc.
 #
 
+"""A handy way for dealing with JSON in Python.
+
+The jsonify() method will wrap a JSON object model making it easier to deal
+with.
+
+>>> import json
+>>> j = jsonify(json.loads('{"foo": 1, "bar": { "array": [10, 9, 8]}}'))
+
+Fields of a JSON object can be accessed simply using dot-notation. Arrays with
+subscript syntax.
+
+>>> j.foo
+1
+>>> j.bar.array[1]
+9
+
+If a field does not exist, it's an AttributeError.
+
+>>> j.does_not_exist
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+AttributeError: 'Jsonified' object has no attribute 'does_not_exist'
+
+Objects can also be referenced using subscript syntax. Fields that do not exist
+return None.
+
+>>> j['foo']
+1
+>>> print j['does_not_exist']
+None
+
+"""
+
 
 def jsonify(obj):
     """Wraps parse JSON in in a Jsonify.
@@ -44,7 +77,7 @@ class Jsonified(object):
             return None
 
     def __contains__(self, item):
-        """Implement the 'in' keyword.
+        """Implement the "in" keyword.
 
         @param item: Field name to look up
         @return: True if item names a field; False otherwise

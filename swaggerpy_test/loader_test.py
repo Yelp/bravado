@@ -33,8 +33,7 @@ class LoaderTest(unittest.TestCase):
     def test_missing(self):
         try:
             swaggerpy.load_file(
-                'test-data/1.1/missing_resource/resources.json',
-                processors=[])
+                'test-data/1.1/missing_resource/resources.json')
             self.fail("Expected load failure b/c of missing file")
         except urllib2.URLError:
             pass

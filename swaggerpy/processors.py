@@ -2,7 +2,11 @@
 # Copyright (c) 2013, Digium, Inc.
 #
 
-"""Swagger processors enrich the Swagger data model to make templating easier.
+"""Swagger processors enrich and validate the Swagger data model.
+
+This can be to make templating easier, or ensure values required for a
+particular use case (such as ensuring that description and summary fields
+exist)
 """
 
 

@@ -6,6 +6,8 @@
 """
 
 import json
+import os
+import urllib
 import urllib2
 import urlparse
 
@@ -114,13 +116,13 @@ class ValidationProcessor(SwaggerProcessor):
         validate_required_fields(prop, required_fields, context)
 
 
-def load_url(opener, url):
+def json_load_url(opener, url):
     """Download and parse JSON from a URL, wrapping in a Jsonify.
 
     @type opener: urllib2.OpenerDirector
     @param opener: Opener for requesting JSON.
     @param url: URL for JSON to parse
-    @return: Jsonified
+    @return: Parse JSON dict
     """
     fp = opener.open(url)
     try:
@@ -150,7 +152,7 @@ class Loader(object):
             opener = urllib2.build_opener()
 
         # Load the resource listing
-        resource_listing_dict = load_url(opener, resources_url)
+        resource_listing_dict = json_load_url(opener, resources_url)
 
         # Some extra data only known about at load time
         resource_listing_dict['url'] = resources_url
@@ -170,7 +172,7 @@ class Loader(object):
     def load_api_declaration(self, opener, base_url, api_dict):
         path = api_dict.get('path').replace('{format}', 'json')
         api_dict['url'] = urlparse.urljoin(base_url + '/', path.strip('/'))
-        api_dict['api_declaration'] = load_url(opener, api_dict['url'])
+        api_dict['api_declaration'] = json_load_url(opener, api_dict['url'])
 
     def process_resource_listing(self, resources):
         jsonified = jsonify(resources)
@@ -195,3 +197,45 @@ def validate_required_fields(json, required_fields, context):
     if missing_fields:
         raise SwaggerError(
             "Missing fields: %s" % ', '.join(missing_fields), context)
+
+
+def load_file(resource_listing_file, processors=None, opener=None):
+    """Loads a resource listing file, applying the given processors.
+
+    @param resource_listing_file: File name for a resource listing.
+    @param processors:  List of SwaggerProcessors to apply to the resulting
+                        resource.
+    @param opener:  Optional urllib2 opener for fetching API docs.
+    @return: Processed object model from
+    @raise IOError: On error reading api-docs.
+    """
+    file_path = os.path.abspath(resource_listing_file)
+    url = urlparse.urljoin('file:', urllib.pathname2url(file_path))
+    # When loading from files, everything is relative to the resource listing
+    dir_path = os.path.dirname(file_path)
+    base_url = urlparse.urljoin('file:', urllib.pathname2url(dir_path))
+    return load_url(url, processors, opener=opener, base_url=base_url)
+
+
+def load_url(resource_listing_url, processors=None, opener=None,
+             base_url=None):
+    """Loads a resource listing, applying the given processors.
+
+    @param resource_listing_url: URL for a resource listing.
+    @param processors:  List of SwaggerProcessors to apply to the resulting
+                        resource.
+    @param opener:  Optional urllib2 opener for fetching API docs.
+    @param base_url:    Optional URL to be the base URL for finding API
+                        declarations. If not specified, 'basePath' from the
+                        resource listing is used.
+    @return: Processed object model from
+    @raise IOError, URLError: On error reading api-docs.
+    """
+    loader = Loader(processors)
+    return loader.load_resource_listing(
+        resource_listing_url, opener=opener, base_url=base_url)
+
+
+def load_json(resource_listing, processors=None):
+    loader = Loader(processors)
+    return loader.process_resource_listing(resource_listing)
