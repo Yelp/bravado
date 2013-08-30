@@ -27,7 +27,7 @@ setup(
         "Programming Language :: Python",
     ],
     setup_requires=['nose>=1.3'],
-    tests_require=['coverage', 'tissue'],
+    tests_require=['coverage', 'tissue', 'httpretty'],
     install_requires=['requests'],
     entry_points="""
     [console_scripts]

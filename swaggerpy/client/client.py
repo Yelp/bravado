@@ -20,6 +20,7 @@ class ClientProcessor(SwaggerProcessor):
 
 class Resource(object):
     def __init__(self, resource):
+        self.resource = resource
         decl = resource.api_declaration
         self.operations = dict(
             [(oper.nickname, self._build_operation(decl, api, oper))
@@ -33,7 +34,11 @@ class Resource(object):
         :rtype: Resource
         :return: Resource object.
         """
-        return self.operations[name]
+        op = self.operations.get(name)
+        if not op:
+            raise AttributeError("Resource '%s' has no operation '%s'" %
+                                 (self.resource.path, name))
+        return op
 
     def _build_operation(self, decl, api, operation):
         """Build an operation object

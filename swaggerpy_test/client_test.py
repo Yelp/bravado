@@ -4,30 +4,63 @@
 # Copyright (c) 2013, Digium, Inc.
 #
 
+import httpretty
+import logging
 import requests
-from swaggerpy.client import SwaggerClient
 import unittest
 
+from swaggerpy.client import SwaggerClient
+
+
+log = logging.getLogger(__name__)
 
 class ClientTest(unittest.TestCase):
-    def test_something(self):
-        try:
-            self.uut.apis.pet.listPets()
-            self.fail("Should have gotten a connection failure")
-        except requests.ConnectionError:
-            pass
+
+    @httpretty.activate
+    def test_get(self):
+        httpretty.register_uri(
+            httpretty.GET, "http://swagger.py/swagger-test/pet",
+            body='[]')
+
+        resp = self.uut.apis.pet.listPets()
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual([], resp.json())
+
+    @httpretty.activate
+    def test_post(self):
+        httpretty.register_uri(
+            httpretty.POST, "http://swagger.py/swagger-test/pet",
+            status=requests.codes.created,
+            body='{"id": 1234, "name": "Sparky"}')
+
+        resp = self.uut.apis.pet.createPet(name='sparky')
+        self.assertEqual(requests.codes.created, resp.status_code)
+        self.assertEqual('', resp.body)
+        self.assertEqual({'name': 'Sparky'},
+                         httpretty.last_request().querystring)
+
+    @httpretty.activate
+    def test_delete(self):
+        httpretty.register_uri(
+            httpretty.DELETE, "http://swagger.py/swagger-test/pet/1234",
+            status=requests.codes.no_content)
+
+        resp = self.uut.apis.pet.deletePet(petId=1234)
+        self.assertEqual(requests.codes.no_content, resp.status_code)
+        self.assertEqual('', resp.content)
 
     def setUp(self):
+        # Default handlers for all swagger.py access
         self.resource_listing = {
             "swaggerVersion": "1.1",
-            "basePath": "http://localhost:8000/swagger-test",
+            "basePath": "http://swagger.py/swagger-test",
             "apis": [
                 {
                     "path": "/api-docs/pet.json",
                     "description": "Test loader when missing a file",
                     "api_declaration": {
                         "swaggerVersion": "1.1",
-                        "basePath": "http://localhost:8000/swagger-test",
+                        "basePath": "http://swagger.py/swagger-test",
                         "resourcePath": "/pet.json",
                         "apis": [
                             {
@@ -36,6 +69,33 @@ class ClientTest(unittest.TestCase):
                                     {
                                         "httpMethod": "GET",
                                         "nickname": "listPets"
+                                    },
+                                    {
+                                        "httpMethod": "POST",
+                                        "nickname": "createPet",
+                                        "parameters": [
+                                            {
+                                                "name": "name",
+                                                "paramType": "query",
+                                                "dataType": "string",
+                                                "required": True
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "path": "/pet/{petId}",
+                                "operations": [
+                                    {
+                                        "httpMethod": "DELETE",
+                                        "nickname": "deletePet",
+                                        "parameters": [
+                                            {
+                                                "name": "petId",
+                                                "paramType": "path"
+                                            }
+                                        ]
                                     }
                                 ]
                             }

@@ -91,8 +91,15 @@ class ValidationProcessor(SwaggerProcessor):
 
     def process_parameter(self, resources, resource, api, operation, parameter,
                           context):
-        required_fields = ['name', 'dataType']
+        required_fields = ['name', 'paramType']
         validate_required_fields(parameter, required_fields, context)
+        if parameter.paramType == 'path':
+            # special handling for path parameters
+            parameter.required = True
+            parameter.dataType = 'string'
+        else:
+            # dataType is required for non-path parameters
+            validate_required_fields(parameter, ['dataType'], context)
         if 'allowedValues' in parameter:
             raise SwaggerError(
                 "Field 'allowedValues' invalid; use 'allowableValues'",
