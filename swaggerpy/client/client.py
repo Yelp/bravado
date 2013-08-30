@@ -51,7 +51,13 @@ class Resource(object):
             for param in (operation['parameters'] or []):
                 value = kwargs.get(param.name)
                 if value:
-                    params[param.name] = value
+                    if param.paramType == 'path':
+                        uri = uri.replace('{%s}' % param.name, str(value))
+                    elif param.paramType == 'query':
+                        params[param.name] = value
+                    else:
+                        raise ValueError("Unsupported paramType %s" %
+                                         param.paramType)
                     del kwargs[param.name]
                 else:
                     if param['required']:
@@ -61,6 +67,7 @@ class Resource(object):
                 raise TypeError("'%s' does not have parameters %r" %
                                 (operation.nickname, kwargs.keys()))
 
+            log.info("%s %s(%r)", method, uri, params)
             return requests.request(method, uri, params=params)
         return invoke_oper
 
