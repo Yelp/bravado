@@ -33,10 +33,10 @@ class ClientTest(unittest.TestCase):
             status=requests.codes.created,
             body='{"id": 1234, "name": "Sparky"}')
 
-        resp = self.uut.apis.pet.createPet(name='sparky')
+        resp = self.uut.apis.pet.createPet(name='Sparky')
         self.assertEqual(requests.codes.created, resp.status_code)
-        self.assertEqual('', resp.body)
-        self.assertEqual({'name': 'Sparky'},
+        self.assertEqual({"id": 1234, "name": "Sparky"}, resp.json())
+        self.assertEqual({'name': ['Sparky']},
                          httpretty.last_request().querystring)
 
     @httpretty.activate

@@ -47,7 +47,21 @@ class Resource(object):
             log.info("%s(%r, %r)" % (operation.nickname, args, kwargs))
             method = operation.httpMethod
             uri = decl.basePath + api.path
-            return requests.get(uri)
+            params = {}
+            for param in (operation['parameters'] or []):
+                value = kwargs.get(param.name)
+                if value:
+                    params[param.name] = value
+                    del kwargs[param.name]
+                else:
+                    if param['required']:
+                        raise TypeError("'%s' has required parameter %s" %
+                                        (operation.nickname, param.name))
+            if kwargs:
+                raise TypeError("'%s' does not have parameters %r" %
+                                (operation.nickname, kwargs.keys()))
+
+            return requests.request(method, uri, params=params)
         return invoke_oper
 
 
