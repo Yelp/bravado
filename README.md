@@ -60,7 +60,7 @@ There are a few meaningful differences.
 Development
 -----------
 
-The code is documented using [Epydoc][], which allows [IntelliJ IDEA][]
+The code is documented using [Sphinx][], which allows [IntelliJ IDEA][]
 to do a better job at inferring types for autocompletion.
 
 To keep things isolated, I also recommend installing (and using)
@@ -92,7 +92,7 @@ Swagger.py is licensed with a [BSD 3-Clause License][BSD].
 
  [bsd]: http://opensource.org/licenses/BSD-3-Clause
  [coverage]: http://nedbatchelder.com/code/coverage/
- [epydoc]: http://epydoc.sourceforge.net/
+ [sphinx]: http://sphinx-doc.org/
  [intellij idea]: http://confluence.jetbrains.net/display/PYH/
  [mustache]: http://mustache.github.io/
  [nose]: http://nose.readthedocs.org/en/latest/
