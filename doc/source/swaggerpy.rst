@@ -1,7 +1,50 @@
-.. Copyright (c) 2013, Digium, Inc.
-
-Swagger API model
+swaggerpy Package
 =================
 
-.. automodule:: swaggerpy
-   :members: load_file, load_json, load_url, Loader, SwaggerProcessor, SwaggerError
+:mod:`swaggerpy` Package
+------------------------
+
+.. automodule:: swaggerpy.__init__
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`codegen` Module
+---------------------
+
+.. automodule:: swaggerpy.codegen
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`jsonify` Module
+---------------------
+
+.. automodule:: swaggerpy.jsonify
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`processors` Module
+------------------------
+
+.. automodule:: swaggerpy.processors
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`swagger_model` Module
+---------------------------
+
+.. automodule:: swaggerpy.swagger_model
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+
+    swaggerpy.client
+

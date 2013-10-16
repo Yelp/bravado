@@ -17,10 +17,13 @@ Install swagger.py using the `setup.py` script.
 
     $ sudo ./setup.py install
 
-<!-- TODO
 swagger-codegen
 ===============
 
+There are the beginnings of a Mustache-based code generator, but it's
+not functional... yet.
+
+<!-- TODO
 Inspired by the original [swagger-codegen][] project, templates are
 written using [Mustache][] templates ([Pystache][], specifically).
 There are several important differences.
