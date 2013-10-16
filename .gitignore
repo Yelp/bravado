@@ -1,5 +1,5 @@
 *.egg-info/
-*.egg/
+*.egg
 *.pyc
 .coverage
 cover/

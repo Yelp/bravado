@@ -17,9 +17,7 @@ Install swagger.py using the `setup.py` script.
 
     $ sudo ./setup.py install
 
-This installs the swagger.py libraries, and a `swagger-codegen` tool
-for generating code from a set of Swagger API docs.
-
+<!-- TODO
 swagger-codegen
 ===============
 
@@ -33,6 +31,7 @@ There are several important differences.
  * The templates themselves are completely self contained, with the
    logic to enrich the model being specified in `translate.py` in the
    same directory as the `*.mustache` files.
+-->
 
 <a id="model"></a>
 Data model
@@ -57,10 +56,6 @@ There are a few meaningful differences.
  * API declaration
    * A `file` field has been added, referencing the original `.json`
      file.
-   * The `model` field was changed from an object to an array, so it
-     can be better referenced from a mustache template.
-   * Similarly, a `model`'s `properties` field was changed from an
-     object to an array.
 
 Development
 -----------
@@ -69,12 +64,12 @@ The code is documented using [Epydoc][], which allows [IntelliJ IDEA][]
 to do a better job at inferring types for autocompletion.
 
 To keep things isolated, I also recommend installing (and using)
-[virtualenv][]. Some scripts are provided to help keep the
-environments manageable
+[virtualenv][].
 
     $ sudo pip install virtualenv
-    $ ./make-env.sh
-    $ . activate-env.sh
+    $ mkdir -p ~/virtualenv
+    $ virtualenv ~/virtualenv/swagger
+    $ . ~/virtualenv/swagger/bin/activate
 
 [Setuptools][] is used for building.
 
@@ -86,7 +81,6 @@ environments manageable
 installed to generated code coverage reports. Pass `--with-coverage`
 to generate the code coverage report. HTML versions of the reports are
 put in `cover/index.html`.
-
 
 License
 -------

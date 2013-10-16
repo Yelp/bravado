@@ -14,6 +14,7 @@ from swaggerpy.client import SwaggerClient
 
 log = logging.getLogger(__name__)
 
+
 class ClientTest(unittest.TestCase):
 
     @httpretty.activate
