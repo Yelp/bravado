@@ -1,11 +1,14 @@
 #
 # Copyright (c) 2013, Digium, Inc.
 #
+import urllib
 
 import swaggerpy
 import os.path
 import logging
 import requests
+import websocket
+import re
 
 from swaggerpy.processors import WebsocketProcessor, SwaggerProcessor
 
@@ -19,9 +22,10 @@ class ClientProcessor(SwaggerProcessor):
 
 
 class Resource(object):
-    def __init__(self, resource):
+    def __init__(self, resource, session):
         self.resource = resource
         decl = resource.api_declaration
+        self.session = session or requests.Session()
         self.operations = dict(
             [(oper.nickname, self._build_operation(decl, api, oper))
              for api in decl.apis for oper in api.operations]
@@ -43,6 +47,7 @@ class Resource(object):
     def _build_operation(self, decl, api, operation):
         """Build an operation object
         """
+
         def invoke_oper(*args, **kwargs):
             log.info("%s(%r, %r)" % (operation.nickname, args, kwargs))
             method = operation.httpMethod
@@ -68,14 +73,31 @@ class Resource(object):
                                 (operation.nickname, kwargs.keys()))
 
             log.info("%s %s(%r)", method, uri, params)
-            return requests.request(method, uri, params=params)
+            if operation.is_websocket:
+                uri = re.sub('^http', "ws", uri)
+                uri = "%s?%s" % (uri, urllib.urlencode(params))
+
+                # Hack - pull out basic auth from session
+                class FakeRes(object):
+                    def __init__(self):
+                        self.headers = {}
+
+                fake_res = FakeRes()
+                if self.session.auth:
+                    self.session.auth(fake_res)
+                headers = ["%s: %s" % (k, v)
+                           for (k, v) in fake_res.headers.items()]
+                return websocket.create_connection(uri, header=headers)
+            else:
+                return self.session.request(method, uri, params=params)
+
         return invoke_oper
 
 
 class Resources(object):
-    def __init__(self, api_docs):
+    def __init__(self, api_docs, session):
         self.resources = dict(
-            [(resource.name, Resource(resource))
+            [(resource.name, Resource(resource, session))
              for resource in api_docs.apis])
 
     def __getattr__(self, name):
@@ -114,5 +136,5 @@ class SwaggerClient(object):
             self.api_docs = loader.process_resource_listing(resource_listing)
         else:
             self.api_docs = loader.load_resource_listing(discovery_url)
-        self.apis = Resources(self.api_docs)
+        self.apis = Resources(self.api_docs, session)
         """API access object"""

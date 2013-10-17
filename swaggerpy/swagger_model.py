@@ -138,7 +138,9 @@ def json_load_url(session, url):
         finally:
             fp.close()
     else:
-        return session.get(url).json()
+        resp = session.get(url)
+        resp.raise_for_status()
+        return resp.json()
 
 
 class Loader(object):
@@ -165,7 +167,7 @@ class Loader(object):
         # Some extra data only known about at load time
         resource_listing_dict['url'] = resources_url
         if not base_url:
-            base_url = resource_listing_dict.basePath
+            base_url = resource_listing_dict.get('basePath')
 
         # Load the API declarations
         for api in resource_listing_dict.get('apis'):
