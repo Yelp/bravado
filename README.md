@@ -11,6 +11,9 @@ Swagger itself is best described on the Swagger home page:
 The [Swagger specification][] defines how API's may be described using
 Swagger.
 
+Swagger.py also supports a WebSocket extension, allowing a WebSocket
+to be documented, and auto-generated WebSocket client code.
+
 Usage
 -----
 Install swagger.py using the `setup.py` script.
@@ -23,8 +26,35 @@ API
 Swagger.py will dynamically build an object model from a
 Swagger-enabled RESTful API.
 
-```Python
+Here is a simple example using the [Asterisk REST Interface][]
 
+```Python
+#!/usr/bin/env python
+
+import json
+import requests
+import requests.auth
+
+from swaggerpy.client import SwaggerClient
+
+session = requests.Session()
+
+session.auth = requests.auth.HTTPBasicAuth('hey', 'peekaboo')
+
+ari = SwaggerClient(
+    discovery_url="http://localhost:8088/ari/api-docs/resources.json",
+    session=session).apis
+
+ws = ari.events.eventWebsocket(app='hello')
+
+for msg_str in iter(lambda: ws.recv(), None):
+    msg_json = json.loads(msg_str)
+    if msg_json['type'] == 'StasisStart':
+        channelId = msg_json['channel']['id']
+        ari.channels.answerChannel(channelId=channelId)
+        ari.channels.playOnChannel(channelId=channelId,
+                                   media='sound:hello-world')
+        ari.channels.deleteChannel(channelId=channelId)
 ```
 
 swagger-codegen
@@ -103,15 +133,16 @@ All rights reserved.
 
 Swagger.py is licensed with a [BSD 3-Clause License][BSD].
 
+ [Asterisk REST Interface]: https://wiki.asterisk.org/wiki/display/AST/Asterisk+12+ARI
  [bsd]: http://opensource.org/licenses/BSD-3-Clause
  [coverage]: http://nedbatchelder.com/code/coverage/
- [sphinx]: http://sphinx-doc.org/
  [intellij idea]: http://confluence.jetbrains.net/display/PYH/
  [mustache]: http://mustache.github.io/
  [nose]: http://nose.readthedocs.org/en/latest/
  [pystache]: https://github.com/defunkt/pystache
  [setuptools]: http://pypi.python.org/pypi/setuptools
- [Swagger specification]: https://github.com/wordnik/swagger-core/wiki
+ [sphinx]: http://sphinx-doc.org/
  [swagger-codegen]: https://github.com/wordnik/swagger-codegen
  [swagger]: https://developers.helloreverb.com/swagger/
+ [Swagger specification]: https://github.com/wordnik/swagger-core/wiki
  [virtualenv]: http://www.virtualenv.org/
