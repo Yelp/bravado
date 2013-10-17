@@ -92,7 +92,8 @@ class SwaggerClient(object):
     """Client library for accessing a Swagger-documented RESTful service.
     """
 
-    def __init__(self, discovery_url=None, resource_listing=None):
+    def __init__(self, discovery_url=None, resource_listing=None,
+                 session=None):
         """Create a SwaggerClient, either from a discovery URL or an already
         parsed resource listing.
 
@@ -100,9 +101,15 @@ class SwaggerClient(object):
         :type resource_listing: dict
         :raise:
         """
+
         if not discovery_url and not resource_listing:
             raise ValueError("Missing discovery_url or api_docs")
-        loader = swaggerpy.Loader([WebsocketProcessor(), ClientProcessor()])
+
+        if not session:
+            session = requests.Session()
+
+        loader = swaggerpy.Loader(
+            session, [WebsocketProcessor(), ClientProcessor()])
         if resource_listing:
             self.api_docs = loader.process_resource_listing(resource_listing)
         else:

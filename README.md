@@ -17,6 +17,16 @@ Install swagger.py using the `setup.py` script.
 
     $ sudo ./setup.py install
 
+API
+===
+
+Swagger.py will dynamically build an object model from a
+Swagger-enabled RESTful API.
+
+```Python
+
+```
+
 swagger-codegen
 ===============
 
