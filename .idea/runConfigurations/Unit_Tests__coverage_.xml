@@ -19,7 +19,11 @@
     <option name="USE_PATTERN" value="false" />
     <option name="PARAMS" value="--config nose.cfg --with-coverage" />
     <option name="USE_PARAM" value="true" />
+    <RunnerSettings RunnerId="PyDebugRunner" />
+    <RunnerSettings RunnerId="PythonRunner" />
     <RunnerSettings RunnerId="Run" />
+    <ConfigurationWrapper RunnerId="PyDebugRunner" />
+    <ConfigurationWrapper RunnerId="PythonRunner" />
     <ConfigurationWrapper RunnerId="Run" />
     <method>
       <option name="Make" enabled="false" />

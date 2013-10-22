@@ -4,3 +4,4 @@
 .coverage
 cover/
 dist/
+nosetests.xml

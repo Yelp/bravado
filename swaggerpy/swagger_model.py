@@ -9,9 +9,8 @@ import json
 import os
 import urllib
 import urlparse
-import requests
 
-from swaggerpy.jsonify import jsonify
+from swaggerpy.http_client import SynchronousHttpClient
 from swaggerpy.processors import SwaggerProcessor, SwaggerError
 
 SWAGGER_VERSIONS = ["1.1", "1.2"]
@@ -29,36 +28,16 @@ SWAGGER_PRIMITIVES = [
 ]
 
 
-def compare_versions(lhs, rhs):
-    """Performs a lexicographical comparison between two version numbers.
-
-    This properly handles simple major.minor.whatever.sure.why.not version
-    numbers, but fails miserably if there's any letters in there.
-
-    For reference:
-      1.0 == 1.0
-      1.0 < 1.0.1
-      1.2 < 1.10
-
-    :param lhs: Left hand side of the comparison
-    :param rhs: Right hand side of the comparison
-    :return:  < 0 if lhs  < rhs
-    :return: == 0 if lhs == rhs
-    :return:  > 0 if lhs  > rhs
-    """
-    lhs = [int(v) for v in lhs.split('.')]
-    rhs = [int(v) for v in rhs.split('.')]
-    return cmp(lhs, rhs)
-
-
+# noinspection PyDocstring
 class ValidationProcessor(SwaggerProcessor):
     """A processor that validates the Swagger model.
     """
+
     def process_resource_listing(self, resources, context):
         required_fields = ['basePath', 'apis', 'swaggerVersion']
         validate_required_fields(resources, required_fields, context)
 
-        if not resources.swaggerVersion in SWAGGER_VERSIONS:
+        if not resources['swaggerVersion'] in SWAGGER_VERSIONS:
             raise SwaggerError(
                 "Unsupported Swagger version %s" % resources.swaggerVersion,
                 context)
@@ -66,7 +45,7 @@ class ValidationProcessor(SwaggerProcessor):
     def process_resource_listing_api(self, resources, listing_api, context):
         validate_required_fields(listing_api, ['path', 'description'], context)
 
-        if not listing_api.path.startswith("/"):
+        if not listing_api['path'].startswith("/"):
             raise SwaggerError("Path must start with /", context)
 
     def process_api_declaration(self, resources, resource, context):
@@ -76,8 +55,8 @@ class ValidationProcessor(SwaggerProcessor):
         ]
         validate_required_fields(resource, required_fields, context)
         # Check model name and id consistency
-        for (model_name, model) in resource.models:
-            if model_name != model.id:
+        for (model_name, model) in resource['models'].items():
+            if model_name != model['id']:
                 raise SwaggerError("Model id doesn't match name", context)
                 # Convert models dict to list
 
@@ -93,10 +72,10 @@ class ValidationProcessor(SwaggerProcessor):
                           context):
         required_fields = ['name', 'paramType']
         validate_required_fields(parameter, required_fields, context)
-        if parameter.paramType == 'path':
+        if parameter['paramType'] == 'path':
             # special handling for path parameters
-            parameter.required = True
-            parameter.dataType = 'string'
+            parameter['required'] = True
+            parameter['dataType'] = 'string'
         else:
             # dataType is required for non-path parameters
             validate_required_fields(parameter, ['dataType'], context)
@@ -114,8 +93,8 @@ class ValidationProcessor(SwaggerProcessor):
         required_fields = ['id', 'properties']
         validate_required_fields(model, required_fields, context)
         # Move property field name into the object
-        for (prop_name, prop) in model.properties:
-            prop.name = prop_name
+        for (prop_name, prop) in model['properties'].items():
+            prop['name'] = prop_name
 
     def process_property(self, resources, resource, model, prop,
                          context):
@@ -123,37 +102,54 @@ class ValidationProcessor(SwaggerProcessor):
         validate_required_fields(prop, required_fields, context)
 
 
-def json_load_url(session, url):
-    """Download and parse JSON from a URL, wrapping in a Jsonify.
+def json_load_url(http_client, url):
+    """Download and parse JSON from a URL.
 
+    :param http_client: HTTP client interface.
+    :type  http_client: http_client.HttpClient
     :param url: URL for JSON to parse
-    :return: Parse JSON dict
+    :return: Parsed JSON dict
     """
     scheme = urlparse.urlparse(url).scheme
     if scheme == 'file':
-        # requests can't handle file: URL's
+        # requests can't handle file: URLs
         fp = urllib.urlopen(url)
         try:
             return json.load(fp)
         finally:
             fp.close()
     else:
-        resp = session.get(url)
+        resp = http_client.request('GET', url)
         resp.raise_for_status()
         return resp.json()
 
 
 class Loader(object):
-    def __init__(self, session, processors=None):
-        self.session = session
+    """Abstraction for loading Swagger API's.
+
+    :param http_client: HTTP client interface.
+    :type  http_client: http_client.HttpClient
+    :param processors: List of processors to apply to the API.
+    :type  processors: list of SwaggerProcessor
+    """
+
+    def __init__(self, http_client, processors=None):
+        self.http_client = http_client
         if processors is None:
             processors = []
-        # always go through the validation processor first
-        self.processors = [ValidationProcessor()]
-        self.processors.extend(processors)
+            # always go through the validation processor first
+        # noinspection PyTypeChecker
+        self.processors = [ValidationProcessor()] + processors
 
     def load_resource_listing(self, resources_url, base_url=None):
-        """Load a resource listing.
+        """Load a resource listing, loading referenced API declarations.
+
+        The following fields are added to the resource listing object model.
+         * ['url'] = URL resource listing was loaded from
+         * The ['apis'] array is modified according to load_api_declaration()
+
+        The Loader's processors are applied to the fully loaded resource
+        listing.
 
         :param resources_url:   File name for resources.json
         :param base_url:    Optional URL to be the base URL for finding API
@@ -162,34 +158,43 @@ class Loader(object):
         """
 
         # Load the resource listing
-        resource_listing_dict = json_load_url(self.session, resources_url)
+        resource_listing = json_load_url(self.http_client, resources_url)
 
         # Some extra data only known about at load time
-        resource_listing_dict['url'] = resources_url
+        resource_listing['url'] = resources_url
         if not base_url:
-            base_url = resource_listing_dict.get('basePath')
+            base_url = resource_listing.get('basePath')
 
         # Load the API declarations
-        for api in resource_listing_dict.get('apis'):
+        for api in resource_listing.get('apis'):
             self.load_api_declaration(base_url, api)
 
         # Now that the raw object model has been loaded, apply the processors
-        resource_listing_json = self.process_resource_listing(
-            resource_listing_dict)
-
-        return resource_listing_json
+        self.process_resource_listing(resource_listing)
+        return resource_listing
 
     def load_api_declaration(self, base_url, api_dict):
+        """Load an API declaration file.
+
+        api_dict is modified with the results of the load:
+         * ['url'] = URL api declaration was loaded from
+         * ['api_declaration'] = Parsed results of the load
+
+        :param base_url: Base URL to load from
+        :param api_dict: api object from resource listing.
+        """
         path = api_dict.get('path').replace('{format}', 'json')
         api_dict['url'] = urlparse.urljoin(base_url + '/', path.strip('/'))
         api_dict['api_declaration'] = json_load_url(
-            self.session, api_dict['url'])
+            self.http_client, api_dict['url'])
 
     def process_resource_listing(self, resources):
-        jsonified = jsonify(resources)
+        """Apply processors to a resource listing.
+
+        :param resources: Resource listing to process.
+        """
         for processor in self.processors:
-            processor.apply(jsonified)
-        return jsonified
+            processor.apply(resources)
 
 
 def validate_required_fields(json, required_fields, context):
@@ -197,22 +202,21 @@ def validate_required_fields(json, required_fields, context):
 
     If any required field is missing, a SwaggerError is raised.
 
-    :type json: Jsonified
     :param json: JSON object to check.
     :param required_fields: List of required fields.
     :param context: Current context in the API.
     """
-    missing_fields = [f for f in required_fields
-                      if not f in json.get_field_names()]
+    missing_fields = [f for f in required_fields if not f in json]
 
     if missing_fields:
         raise SwaggerError(
             "Missing fields: %s" % ', '.join(missing_fields), context)
 
 
-def load_file(resource_listing_file, session=None, processors=None):
+def load_file(resource_listing_file, http_client=None, processors=None):
     """Loads a resource listing file, applying the given processors.
 
+    :param http_client: HTTP client interface.
     :param resource_listing_file: File name for a resource listing.
     :param processors:  List of SwaggerProcessors to apply to the resulting
                         resource.
@@ -224,15 +228,16 @@ def load_file(resource_listing_file, session=None, processors=None):
     # When loading from files, everything is relative to the resource listing
     dir_path = os.path.dirname(file_path)
     base_url = urlparse.urljoin('file:', urllib.pathname2url(dir_path))
-    return load_url(url, session=session, processors=processors,
+    return load_url(url, http_client=http_client, processors=processors,
                     base_url=base_url)
 
 
-def load_url(resource_listing_url, session=None, processors=None,
+def load_url(resource_listing_url, http_client=None, processors=None,
              base_url=None):
     """Loads a resource listing, applying the given processors.
 
     :param resource_listing_url: URL for a resource listing.
+    :param http_client: HTTP client interface.
     :param processors:  List of SwaggerProcessors to apply to the resulting
                         resource.
     :param base_url:    Optional URL to be the base URL for finding API
@@ -241,17 +246,26 @@ def load_url(resource_listing_url, session=None, processors=None,
     :return: Processed object model from
     :raise: IOError, URLError: On error reading api-docs.
     """
-    if session is None:
-        session = requests.Session()
+    if http_client is None:
+        http_client = SynchronousHttpClient()
 
-    loader = Loader(session=session, processors=processors)
+    loader = Loader(http_client=http_client, processors=processors)
     return loader.load_resource_listing(
         resource_listing_url, base_url=base_url)
 
 
-def load_json(resource_listing, session=None, processors=None):
-    if session is None:
-        session = requests.Session()
+def load_json(resource_listing, http_client=None, processors=None):
+    """Process a resource listing that has already been parsed.
 
-    loader = Loader(session=session, processors=processors)
-    return loader.process_resource_listing(resource_listing)
+    :param resource_listing: Parsed resource listing.
+    :type  resource_listing: dict
+    :param http_client:
+    :param processors:
+    :return: Processed resource listing.
+    """
+    if http_client is None:
+        http_client = SynchronousHttpClient()
+
+    loader = Loader(http_client=http_client, processors=processors)
+    loader.process_resource_listing(resource_listing)
+    return resource_listing

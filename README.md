@@ -32,18 +32,16 @@ Here is a simple example using the [Asterisk REST Interface][]
 #!/usr/bin/env python
 
 import json
-import requests
-import requests.auth
 
 from swaggerpy.client import SwaggerClient
+from swaggerpy.http_client import SynchronousHttpClient
 
-session = requests.Session()
-
-session.auth = requests.auth.HTTPBasicAuth('hey', 'peekaboo')
+http_client = SynchronousHttpClient()
+http_client.set_basic_auth('hey', 'peekaboo')
 
 ari = SwaggerClient(
-    discovery_url="http://localhost:8088/ari/api-docs/resources.json",
-    session=session).apis
+    "http://localhost:8088/ari/api-docs/resources.json",
+    http_client=http_client)
 
 ws = ari.events.eventWebsocket(app='hello')
 
@@ -51,10 +49,10 @@ for msg_str in iter(lambda: ws.recv(), None):
     msg_json = json.loads(msg_str)
     if msg_json['type'] == 'StasisStart':
         channelId = msg_json['channel']['id']
-        ari.channels.answerChannel(channelId=channelId)
-        ari.channels.playOnChannel(channelId=channelId,
-                                   media='sound:hello-world')
-        ari.channels.deleteChannel(channelId=channelId)
+        ari.channels.answer(channelId=channelId)
+        ari.channels.play(channelId=channelId,
+                          media='sound:hello-world')
+        ari.channels.continueInDialplan(channelId=channelId)
 ```
 
 swagger-codegen

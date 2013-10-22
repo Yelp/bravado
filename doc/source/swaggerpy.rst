@@ -17,14 +17,6 @@ swaggerpy Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`jsonify` Module
----------------------
-
-.. automodule:: swaggerpy.jsonify
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`processors` Module
 ------------------------
 

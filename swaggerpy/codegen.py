@@ -16,6 +16,8 @@ USAGE = "usage: %prog [options] template-dir output-dir"
 
 def main(argv=None):
     """Main method, as invoked by setuptools launcher script.
+
+    :param argv: Command line argument list.
     """
     if argv is None:
         argv = sys.argv
