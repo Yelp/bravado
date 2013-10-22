@@ -47,51 +47,61 @@ class Resource(object):
     def _build_operation(self, decl, api, operation):
         """Build an operation object
         """
+        resource_self = self
 
-        def invoke_oper(*args, **kwargs):
-            log.info("%s(%r, %r)" % (operation.nickname, args, kwargs))
-            method = operation.httpMethod
-            uri = decl.basePath + api.path
-            params = {}
-            for param in (operation['parameters'] or []):
-                value = kwargs.get(param.name)
-                if value:
-                    if param.paramType == 'path':
-                        uri = uri.replace('{%s}' % param.name, str(value))
-                    elif param.paramType == 'query':
-                        params[param.name] = value
+        class InvokeOper(object):
+            def __init__(self):
+                self.response_class = operation['responseClass']
+
+            def __call__(self, *args, **kwargs):
+                log.info("%s(%r, %r)" % (operation.nickname, args, kwargs))
+                method = operation.httpMethod
+                uri = decl.basePath + api.path
+                params = {}
+                for param in (operation['parameters'] or []):
+                    value = kwargs.get(param.name)
+                    # Turn list params into comma separated values
+                    if isinstance(value, list):
+                        value = ",".join(value)
+
+                    if value:
+                        if param.paramType == 'path':
+                            uri = uri.replace('{%s}' % param.name, str(value))
+                        elif param.paramType == 'query':
+                            params[param.name] = value
+                        else:
+                            raise ValueError("Unsupported paramType %s" %
+                                             param.paramType)
+                        del kwargs[param.name]
                     else:
-                        raise ValueError("Unsupported paramType %s" %
-                                         param.paramType)
-                    del kwargs[param.name]
+                        if param['required']:
+                            raise TypeError("'%s' has required parameter %s" %
+                                            (operation.nickname, param.name))
+                if kwargs:
+                    raise TypeError("'%s' does not have parameters %r" %
+                                    (operation.nickname, kwargs.keys()))
+
+                log.info("%s %s(%r)", method, uri, params)
+                if operation.is_websocket:
+                    uri = re.sub('^http', "ws", uri)
+                    uri = "%s?%s" % (uri, urllib.urlencode(params))
+
+                    # Hack - pull out basic auth from session
+                    class FakeRes(object):
+                        def __init__(self):
+                            self.headers = {}
+
+                    fake_res = FakeRes()
+                    if resource_self.session.auth:
+                        resource_self.session.auth(fake_res)
+                    headers = ["%s: %s" % (k, v)
+                               for (k, v) in fake_res.headers.items()]
+                    return websocket.create_connection(uri, header=headers)
                 else:
-                    if param['required']:
-                        raise TypeError("'%s' has required parameter %s" %
-                                        (operation.nickname, param.name))
-            if kwargs:
-                raise TypeError("'%s' does not have parameters %r" %
-                                (operation.nickname, kwargs.keys()))
+                    return resource_self.session.request(
+                        method, uri, params=params)
 
-            log.info("%s %s(%r)", method, uri, params)
-            if operation.is_websocket:
-                uri = re.sub('^http', "ws", uri)
-                uri = "%s?%s" % (uri, urllib.urlencode(params))
-
-                # Hack - pull out basic auth from session
-                class FakeRes(object):
-                    def __init__(self):
-                        self.headers = {}
-
-                fake_res = FakeRes()
-                if self.session.auth:
-                    self.session.auth(fake_res)
-                headers = ["%s: %s" % (k, v)
-                           for (k, v) in fake_res.headers.items()]
-                return websocket.create_connection(uri, header=headers)
-            else:
-                return self.session.request(method, uri, params=params)
-
-        return invoke_oper
+        return InvokeOper()
 
 
 class Resources(object):
