@@ -17,7 +17,7 @@ setup(
     license="BSD 3-Clause License",
     description="Library for accessing Swagger-enabled API's",
     long_description=open(os.path.join(os.path.dirname(__file__),
-                                       "README.md")).read(),
+                                       "README.rst")).read(),
     author="Digium, Inc.",
     author_email="dlee@digium.com",
     url="https://github.com/digium/swagger-py",
@@ -30,8 +30,7 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
     ],
-    setup_requires=["nose>=1.3", "tissue"],
-    tests_require=["coverage", "httpretty"],
+    tests_require=["nose", "tissue", "coverage", "httpretty"],
     install_requires=["requests", "websocket-client"],
     entry_points="""
     [console_scripts]

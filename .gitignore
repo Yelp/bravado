@@ -5,3 +5,4 @@
 cover/
 dist/
 nosetests.xml
+build
