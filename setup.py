@@ -13,13 +13,14 @@ from setuptools import setup
 
 setup(
     name="swaggerpy",
-    version="0.0.1",
+    version="0.1.0",
     license="BSD 3-Clause License",
     description="Library for accessing Swagger-enabled API's",
     long_description=open(os.path.join(os.path.dirname(__file__),
                                        "README.md")).read(),
     author="Digium, Inc.",
-    url="https://github.com/leedm777/swaggerpy",
+    author_email="dlee@digium.com",
+    url="https://github.com/digium/swagger-py",
     packages=["swaggerpy"],
     classifiers=[
         "Development Status :: 1 - Planning",
