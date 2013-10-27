@@ -20,6 +20,12 @@ class HttpClient(object):
     """Interface for a minimal HTTP client.
     """
 
+    def close(self):
+        """Close this client resource.
+        """
+        raise NotImplementedError(
+            "%s: Method not implemented", self.__class__.__name__)
+
     def request(self, method, url, params=None, data=None):
         """Issue an HTTP request.
 
@@ -146,6 +152,11 @@ class SynchronousHttpClient(HttpClient):
     def __init__(self):
         self.session = requests.Session()
         self.authenticator = None
+        self.websockets = set()
+
+    def close(self):
+        self.session.close()
+        # There's no WebSocket factory to close; close connections individually
 
     def set_basic_auth(self, host, username, password):
         self.authenticator = BasicAuthenticator(

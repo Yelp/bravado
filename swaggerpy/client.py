@@ -168,6 +168,7 @@ class SwaggerClient(object):
     def __init__(self, url_or_resource, http_client=None):
         if not http_client:
             http_client = SynchronousHttpClient()
+        self.http_client = http_client
 
         loader = swaggerpy.Loader(
             http_client, [WebsocketProcessor(), ClientProcessor()])
@@ -197,6 +198,11 @@ class SwaggerClient(object):
         if not resource:
             raise AttributeError("API has no resource '%s'" % item)
         return resource
+
+    def close(self):
+        """Close the SwaggerClient, and underlying resources.
+        """
+        self.http_client.close()
 
     def get_resource(self, name):
         """Gets a Swagger resource by name.
