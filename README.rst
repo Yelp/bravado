@@ -51,7 +51,7 @@ Interface <https://wiki.asterisk.org/wiki/display/AST/Asterisk+12+ARI>`__
     from swaggerpy.http_client import SynchronousHttpClient
 
     http_client = SynchronousHttpClient()
-    http_client.set_basic_auth('hey', 'peekaboo')
+    http_client.set_basic_auth('localhost', 'hey', 'peekaboo')
 
     ari = SwaggerClient(
         "http://localhost:8088/ari/api-docs/resources.json",
