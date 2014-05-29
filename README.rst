@@ -20,19 +20,7 @@ be documented, and auto-generated WebSocket client code.
 Usage
 -----
 
-Install the latest release from PyPI.
-
-::
-
-    $ sudo pip install swaggerpy
-
-Or install from source using the ``setup.py`` script.
-
-::
-
-    $ sudo ./setup.py install
-
-Or directly from github as:
+Install directly from github as:
 
 ::
 
@@ -40,9 +28,6 @@ Or directly from github as:
 
 API
 ===
-
-Swagger.py will dynamically build an object model from a Swagger-enabled
-RESTful API.
 
 Here is a simple one to try on REPL:
 
@@ -58,36 +43,6 @@ Here is a simple one to try on REPL:
 
     import logging; logging.basicConfig(level=logging.DEBUG)
 
-
-Here is a simple example using the `Asterisk REST
-Interface <https://wiki.asterisk.org/wiki/display/AST/Asterisk+12+ARI>`__
-
-.. code:: Python
-
-    #!/usr/bin/env python
-
-    import json
-
-    from swaggerpy.client import SwaggerClient
-    from swaggerpy.http_client import SynchronousHttpClient
-
-    http_client = SynchronousHttpClient()
-    http_client.set_basic_auth('localhost', 'hey', 'peekaboo')
-
-    ari = SwaggerClient(
-        "http://localhost:8088/ari/api-docs/resources.json",
-        http_client=http_client)
-
-    ws = ari.events.eventWebsocket(app='hello')
-
-    for msg_str in iter(lambda: ws.recv(), None):
-        msg_json = json.loads(msg_str)
-        if msg_json['type'] == 'StasisStart':
-            channelId = msg_json['channel']['id']
-            ari.channels.answer(channelId=channelId)
-            ari.channels.play(channelId=channelId,
-                              media='sound:hello-world')
-            ari.channels.continueInDialplan(channelId=channelId)
 
 swagger-codegen
 ===============
