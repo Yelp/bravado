@@ -8,7 +8,7 @@
             "description": "Test resource",
             "operations": [
                 {
-                    "httpMethod": "GET",
+                    "method": "GET",
                     "summary": "Gets Asterisk system information.",
                     "nickname": "getAsteriskInfo",
                     "responseClass": "Simple",
@@ -16,7 +16,7 @@
                         {
                             "name": "test_param",
                             "paramType": "query",
-                            "dataType": "string",
+                            "type": "string",
                             "allowableValues": {
                                 "valueType": "LIST",
                                 "values": [

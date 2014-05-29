@@ -104,12 +104,6 @@ class Resource(object):
         log.debug(u"Building resource '%s'" % resource[u'name'])
         log.debug( "*** %s %s " , resource, basePath )
         self.__json = resource
-        #decl = resource
-        #self.http_client = http_client
-        #self.basePath = basePath #u'http://localhost:20028' #basePath
-        #self.operations = dict(
-        #        (oper[u'nickname'], self._build_operation({ u'basePath': self.basePath }, decl, oper))
-        #    for oper in resource.get(u'operations', []))
         decl = resource['api_declaration']
         self.__http_client = http_client
         self.__basePath = basePath
@@ -190,21 +184,18 @@ class SwaggerClient(object):
         if isinstance(url_or_resource, unicode):
             log.debug(u"Loading from %s" % url_or_resource)
             self.__api_docs = loader.load_resource_listing(url_or_resource)
+            parsed_uri = urlparse(url_or_resource)
+            basePath = '{uri.scheme}://{uri.netloc}'.format(uri=parsed_uri)
         else:
             log.debug(u"Loading from %s" % url_or_resource.get(u'basePath'))
             self.__api_docs = url_or_resource
             loader.process_resource_listing(self.__api_docs)
+            basePath = url_or_resource.get(u'basePath')
         
-        parsed_uri = urlparse(url_or_resource)
-        basePath = '{uri.scheme}://{uri.netloc}'.format(uri=parsed_uri)
         self.__resources = {}
         for resource in self.__api_docs[u'apis']:
-            #self.resources.setdefault(resource[u'name'], []).append(Resource(resource, http_client, basePath))
             self.__resources[resource[u'name']] = Resource(resource, http_client, basePath)
             setattr(self, resource["name"], self.__get_resource(resource[u'name']))
-        #dict((
-        #    resource[u'name'], Resource(resource, http_client, basePath))
-        #    for resource in self.api_docs[u'apis'])
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.__api_docs.get(u'basePath'))
