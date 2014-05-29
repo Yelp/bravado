@@ -38,6 +38,15 @@ API
 Swagger.py will dynamically build an object model from a Swagger-enabled
 RESTful API.
 
+Here is a simple one to try on REPL:
+
+.. code:: Python
+
+    from swaggerpy.client import SwaggerClient
+    ari = SwaggerClient(u"http://petstore.swagger.wordnik.com/api/api-docs")
+    ari.pet.getPetById(petId=2).text
+
+
 Here is a simple example using the `Asterisk REST
 Interface <https://wiki.asterisk.org/wiki/display/AST/Asterisk+12+ARI>`__
 
