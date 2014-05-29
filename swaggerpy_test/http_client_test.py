@@ -86,8 +86,8 @@ class SynchronousClientTestCase(unittest.TestCase):
         self.assertEqual('expected', resp.text)
         self.assertEqual({'foo': ['bar']},
                          httpretty.last_request().querystring)
-        self.assertIsNone(
-            httpretty.last_request().headers.get('Authorization'))
+        self.assertTrue(
+            httpretty.last_request().headers.get('Authorization') is None)
 
 
 if __name__ == '__main__':

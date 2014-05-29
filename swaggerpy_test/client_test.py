@@ -104,17 +104,17 @@ class ClientTest(unittest.TestCase):
                                 "path": "/pet",
                                 "operations": [
                                     {
-                                        "httpMethod": "GET",
+                                        "method": "GET",
                                         "nickname": "listPets"
                                     },
                                     {
-                                        "httpMethod": "POST",
+                                        "method": "POST",
                                         "nickname": "createPet",
                                         "parameters": [
                                             {
                                                 "name": "name",
                                                 "paramType": "query",
-                                                "dataType": "string",
+                                                "type": "string",
                                                 "required": True
                                             }
                                         ]
@@ -125,13 +125,13 @@ class ClientTest(unittest.TestCase):
                                 "path": "/pet/find",
                                 "operations": [
                                     {
-                                        "httpMethod": "GET",
+                                        "method": "GET",
                                         "nickname": "findPets",
                                         "parameters": [
                                             {
                                                 "name": "species",
                                                 "paramType": "query",
-                                                "dataType": "string",
+                                                "type": "string",
                                                 "allowMultiple": True
                                             }
                                         ]
@@ -142,7 +142,7 @@ class ClientTest(unittest.TestCase):
                                 "path": "/pet/{petId}",
                                 "operations": [
                                     {
-                                        "httpMethod": "DELETE",
+                                        "method": "DELETE",
                                         "nickname": "deletePet",
                                         "parameters": [
                                             {
