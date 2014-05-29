@@ -89,14 +89,14 @@ class ClientTest(unittest.TestCase):
     def setUp(self):
         # Default handlers for all swagger.py access
         self.resource_listing = {
-            "swaggerVersion": "1.1",
+            "swaggerVersion": "1.2",
             "basePath": "http://swagger.py/swagger-test",
             "apis": [
                 {
                     "path": "/api-docs/pet.json",
                     "description": "Test loader when missing a file",
                     "api_declaration": {
-                        "swaggerVersion": "1.1",
+                        "swaggerVersion": "1.2",
                         "basePath": "http://swagger.py/swagger-test",
                         "resourcePath": "/pet.json",
                         "apis": [
