@@ -166,8 +166,6 @@ class Loader(object):
 
         # Some extra data only known about at load time
         resource_listing[u'url'] = resources_url
-        #parsed_uri = urlparse.urlparse(resources_url)
-        #basePath = '{uri.scheme}://{uri.netloc}'.format(uri=parsed_uri)
         if not base_url:
             base_url = resources_url #basePath #resource_listing.get(u'basePath')
 
@@ -175,7 +173,6 @@ class Loader(object):
         for api in resource_listing.get(u'apis'):
             log.debug(" --- %s %s", base_url, api)
             self.load_api_declaration(base_url, api)
-        #    pass
 
         # Now that the raw object model has been loaded, apply the processors
         self.process_resource_listing(resource_listing)
