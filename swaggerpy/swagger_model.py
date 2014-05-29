@@ -5,6 +5,7 @@
 """Code for handling the base Swagger API model.
 """
 
+import logging
 import json
 import os
 import urllib
@@ -27,6 +28,7 @@ SWAGGER_PRIMITIVES = [
     u'Date',
 ]
 
+log = logging.getLogger(__name__)
 
 # noinspection PyDocstring
 class ValidationProcessor(SwaggerProcessor):
@@ -34,7 +36,8 @@ class ValidationProcessor(SwaggerProcessor):
     """
 
     def process_resource_listing(self, resources, context):
-        required_fields = [u'basePath', u'apis', u'swaggerVersion']
+        #required_fields = [u'basePath', u'apis', u'swaggerVersion']
+        required_fields = [u'apis', u'swaggerVersion']
         validate_required_fields(resources, required_fields, context)
 
         if not resources[u'swaggerVersion'] in SWAGGER_VERSIONS:
@@ -43,7 +46,8 @@ class ValidationProcessor(SwaggerProcessor):
                 context)
 
     def process_resource_listing_api(self, resources, listing_api, context):
-        validate_required_fields(listing_api, [u'path', u'description'], context)
+        #validate_required_fields(listing_api, [u'path', u'description'], context)
+        validate_required_fields(listing_api, [u'path'], context)
 
         if not listing_api[u'path'].startswith(u"/"):
             raise SwaggerError(u"Path must start with /", context)
@@ -65,7 +69,7 @@ class ValidationProcessor(SwaggerProcessor):
         validate_required_fields(api, required_fields, context)
 
     def process_operation(self, resources, resource, api, operation, context):
-        required_fields = [u'httpMethod', u'nickname']
+        required_fields = [u'method', u'nickname']
         validate_required_fields(operation, required_fields, context)
 
     def process_parameter(self, resources, resource, api, operation, parameter,
@@ -75,10 +79,10 @@ class ValidationProcessor(SwaggerProcessor):
         if parameter[u'paramType'] == u'path':
             # special handling for path parameters
             parameter[u'required'] = True
-            parameter[u'dataType'] = u'string'
+            parameter[u'type'] = u'string'
         else:
-            # dataType is required for non-path parameters
-            validate_required_fields(parameter, [u'dataType'], context)
+            # type is required for non-path parameters
+            validate_required_fields(parameter, [u'type'], context)
         if u'allowedValues' in parameter:
             raise SwaggerError(
                 u"Field 'allowedValues' invalid; use 'allowableValues'",
@@ -162,12 +166,16 @@ class Loader(object):
 
         # Some extra data only known about at load time
         resource_listing[u'url'] = resources_url
+        #parsed_uri = urlparse.urlparse(resources_url)
+        #basePath = '{uri.scheme}://{uri.netloc}'.format(uri=parsed_uri)
         if not base_url:
-            base_url = resource_listing.get(u'basePath')
+            base_url = resources_url #basePath #resource_listing.get(u'basePath')
 
         # Load the API declarations
         for api in resource_listing.get(u'apis'):
+            log.debug(" --- %s %s", base_url, api)
             self.load_api_declaration(base_url, api)
+        #    pass
 
         # Now that the raw object model has been loaded, apply the processors
         self.process_resource_listing(resource_listing)
@@ -185,6 +193,7 @@ class Loader(object):
         """
         path = api_dict.get(u'path').replace(u'{format}', u'json')
         api_dict[u'url'] = urlparse.urljoin(base_url + u'/', path.strip(u'/'))
+        log.debug(" ---*** %s", api_dict)
         api_dict[u'api_declaration'] = json_load_url(
             self.http_client, api_dict[u'url'])
 
