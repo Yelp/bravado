@@ -32,6 +32,12 @@ Or install from source using the ``setup.py`` script.
 
     $ sudo ./setup.py install
 
+Or directly from github as:
+
+::
+
+    $ inenv -- pip install --upgrade git+git://github.com/prat0318/swagger-py.git
+
 API
 ===
 
@@ -45,6 +51,12 @@ Here is a simple one to try on REPL:
     from swaggerpy.client import SwaggerClient
     ari = SwaggerClient(u"http://petstore.swagger.wordnik.com/api/api-docs")
     ari.pet.getPetById(petId=2).text
+    
+(To enable logging...)
+
+::
+
+    import logging; logging.basicConfig(level=logging.DEBUG)
 
 
 Here is a simple example using the `Asterisk REST
