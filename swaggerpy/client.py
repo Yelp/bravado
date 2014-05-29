@@ -19,6 +19,7 @@ log = logging.getLogger(__name__)
 
 class ClientProcessor(SwaggerProcessor):
     """Enriches swagger models for client processing.
+        Modified for Python 2.6 and Swagger 1.1
     """
 
     def process_resource_listing_api(self, resources, listing_api, context):
