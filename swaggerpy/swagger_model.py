@@ -36,7 +36,6 @@ class ValidationProcessor(SwaggerProcessor):
     """
 
     def process_resource_listing(self, resources, context):
-        #required_fields = [u'basePath', u'apis', u'swaggerVersion']
         required_fields = [u'apis', u'swaggerVersion']
         validate_required_fields(resources, required_fields, context)
 
@@ -46,7 +45,7 @@ class ValidationProcessor(SwaggerProcessor):
                 context)
 
     def process_resource_listing_api(self, resources, listing_api, context):
-        #validate_required_fields(listing_api, [u'path', u'description'], context)
+        #'description' is recommended
         validate_required_fields(listing_api, [u'path'], context)
 
         if not listing_api[u'path'].startswith(u"/"):
@@ -94,6 +93,7 @@ class ValidationProcessor(SwaggerProcessor):
         validate_required_fields(error_response, required_fields, context)
 
     def process_model(self, resources, resource, model, context):
+        log.debug("### %s %s", model, context)
         required_fields = [u'id', u'properties']
         validate_required_fields(model, required_fields, context)
         # Move property field name into the object
