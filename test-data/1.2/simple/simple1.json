@@ -1,0 +1,43 @@
+{
+    "swaggerVersion": "1.2",
+    "basePath": "/",
+    "resourcePath": "simple.{format}",
+    "apis": [
+        {
+            "path": "/test_http",
+            "description": "Test resource",
+            "operations": [
+                {
+                    "method": "GET",
+                    "summary": "Gets Asterisk system information.",
+                    "nickname": "getAsteriskInfoHttp",
+                    "responseClass": "Simple",
+                    "parameters": [
+                        {
+                            "name": "test_param",
+			    "required": true,
+                            "paramType": "query",
+                            "type": "string"
+                        }
+                    ],
+                    "errorResponses": [
+                        {
+                            "code": 404,
+                            "reason": "Not Found"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "models": {
+        "Simple": {
+            "id": "Simple",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

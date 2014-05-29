@@ -75,7 +75,7 @@ class Operation(object):
                         param.paramType)
                 del kwargs[pname]
             else:
-                if param[u'required']:
+                if param.get(u'required'):
                     raise TypeError(
                         u"Missing required parameter '%s' for '%s'" %
                         (pname, self.json[u'nickname']))

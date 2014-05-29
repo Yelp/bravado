@@ -1,9 +1,12 @@
 {
     "swaggerVersion": "1.2",
-    "basePath": "http://localhost/swagger/test",
     "apis": [
         {
             "path": "/simple.json",
+            "description": "Simple test case for the loader"
+        },
+        {
+            "path": "/simple1.json",
             "description": "Simple test case for the loader"
         }
     ]
