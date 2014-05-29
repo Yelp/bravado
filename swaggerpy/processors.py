@@ -8,6 +8,7 @@ This can be to make templating easier, or ensure values required for a
 particular use case (such as ensuring that description and summary fields
 exist)
 """
+from itertools import izip
 
 
 class ParsingContext(object):
@@ -20,12 +21,12 @@ class ParsingContext(object):
     def __init__(self):
         self.type_stack = []
         self.id_stack = []
-        self.args = {'context': self}
+        self.args = {u'context': self}
 
     def __repr__(self):
-        zipped = zip(self.type_stack, self.id_stack)
-        strs = ["%s=%s" % (t, i) for (t, i) in zipped]
-        return "ParsingContext(stack=%r)" % strs
+        zipped = izip(self.type_stack, self.id_stack)
+        strs = [u"%s=%s" % (t, i) for (t, i) in zipped]
+        return u"ParsingContext(stack=%r)" % strs
 
     def is_empty(self):
         """Tests whether context is empty.
@@ -45,8 +46,8 @@ class ParsingContext(object):
         :param id_field: Field name in json that identifies it.
         """
         if id_field not in json:
-            raise SwaggerError("Missing id_field: %s" % id_field, self)
-        self.push_str(obj_type, json, str(json[id_field]))
+            raise SwaggerError(u"Missing id_field: %s" % id_field, self)
+        self.push_str(obj_type, json, unicode(json[id_field]))
 
     def push_str(self, obj_type, json, id_string):
         """Pushes a new object into the context.
@@ -98,46 +99,46 @@ class SwaggerProcessor(object):
         :type  resources: dict
         """
         context = ParsingContext()
-        resources_url = resources.get('url') or 'json:resource_listing'
-        context.push_str('resources', resources, resources_url)
+        resources_url = resources.get(u'url') or u'json:resource_listing'
+        context.push_str(u'resources', resources, resources_url)
         self.process_resource_listing(**context.args)
-        for listing_api in resources['apis']:
-            context.push('listing_api', listing_api, 'path')
+        for listing_api in resources[u'apis']:
+            context.push(u'listing_api', listing_api, u'path')
             self.process_resource_listing_api(**context.args)
             context.pop()
 
-            api_url = listing_api.get('url') or 'json:api_declaration'
-            context.push_str('resource', listing_api['api_declaration'],
+            api_url = listing_api.get(u'url') or u'json:api_declaration'
+            context.push_str(u'resource', listing_api[u'api_declaration'],
                              api_url)
             self.process_api_declaration(**context.args)
-            for api in listing_api['api_declaration']['apis']:
-                context.push('api', api, 'path')
+            for api in listing_api[u'api_declaration'][u'apis']:
+                context.push(u'api', api, u'path')
                 self.process_resource_api(**context.args)
-                for operation in api['operations']:
-                    context.push('operation', operation, 'nickname')
+                for operation in api[u'operations']:
+                    context.push(u'operation', operation, u'nickname')
                     self.process_operation(**context.args)
-                    for parameter in operation.get('parameters', []):
-                        context.push('parameter', parameter, 'name')
+                    for parameter in operation.get(u'parameters', []):
+                        context.push(u'parameter', parameter, u'name')
                         self.process_parameter(**context.args)
                         context.pop()
-                    for response in operation.get('errorResponses', []):
-                        context.push('error_response', response, 'code')
+                    for response in operation.get(u'errorResponses', []):
+                        context.push(u'error_response', response, u'code')
                         self.process_error_response(**context.args)
                         context.pop()
                     context.pop()
                 context.pop()
-            models = listing_api['api_declaration'].get('models', {})
+            models = listing_api[u'api_declaration'].get(u'models', {})
             for (name, model) in models.items():
-                context.push('model', model, 'id')
+                context.push(u'model', model, u'id')
                 self.process_model(**context.args)
-                for (name, prop) in model['properties'].items():
-                    context.push('prop', prop, 'name')
+                for (name, prop) in model[u'properties'].items():
+                    context.push(u'prop', prop, u'name')
                     self.process_property(**context.args)
                     context.pop()
                 context.pop()
             context.pop()
         context.pop()
-        assert context.is_empty(), "Expected %r to be empty" % context
+        assert context.is_empty(), u"Expected %r to be empty" % context
 
     def process_resource_listing(self, resources, context):
         """Post process a resources.json object.
@@ -252,16 +253,16 @@ class WebsocketProcessor(SwaggerProcessor):
     """
 
     def process_resource_api(self, resources, resource, api, context):
-        api.setdefault('has_websocket', False)
+        api.setdefault(u'has_websocket', False)
 
     def process_operation(self, resources, resource, api, operation, context):
-        operation['is_websocket'] = operation.get('upgrade') == 'websocket'
+        operation[u'is_websocket'] = operation.get(u'upgrade') == u'websocket'
 
-        if operation['is_websocket']:
-            api['has_websocket'] = True
-            if operation['httpMethod'] != 'GET':
+        if operation[u'is_websocket']:
+            api[u'has_websocket'] = True
+            if operation[u'httpMethod'] != u'GET':
                 raise SwaggerError(
-                    "upgrade: websocket is only valid on GET operations",
+                    u"upgrade: websocket is only valid on GET operations",
                     context)
 
 

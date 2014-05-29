@@ -11,7 +11,7 @@ import sys
 
 from optparse import OptionParser
 
-USAGE = "usage: %prog [options] template-dir output-dir"
+USAGE = u"usage: %prog [options] template-dir output-dir"
 
 
 def main(argv=None):
@@ -23,19 +23,17 @@ def main(argv=None):
         argv = sys.argv
 
     parser = OptionParser(usage=USAGE)
-    parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
-                      default=False, help="Verbose output")
+    parser.add_option(u"-v", u"--verbose", action=u"store_true", dest=u"verbose",
+                      default=False, help=u"Verbose output")
 
     (options, args) = parser.parse_args(argv)
 
     if len(args) < 3:
-        parser.error("Missing arguments")
+        parser.error(u"Missing arguments")
     elif len(args) > 3:
-        parser.error("Too many arguments")
+        parser.error(u"Too many arguments")
 
-    template_dir = args[1]
-    output_dir = args[2]
 
 # And sometimes you just want to run the script...
-if __name__ == "__main__":
+if __name__ == u"__main__":
     sys.exit(main() or 0)

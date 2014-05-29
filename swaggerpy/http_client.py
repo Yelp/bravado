@@ -24,7 +24,7 @@ class HttpClient(object):
         """Close this client resource.
         """
         raise NotImplementedError(
-            "%s: Method not implemented", self.__class__.__name__)
+            u"%s: Method not implemented", self.__class__.__name__)
 
     def request(self, method, url, params=None, data=None):
         """Issue an HTTP request.
@@ -40,7 +40,7 @@ class HttpClient(object):
         :return: Implementation specific response object
         """
         raise NotImplementedError(
-            "%s: Method not implemented", self.__class__.__name__)
+            u"%s: Method not implemented", self.__class__.__name__)
 
     def ws_connect(self, url, params=None):
         """Create a WebSocket connection.
@@ -52,7 +52,7 @@ class HttpClient(object):
         :return: Implmentation specific WebSocket connection object
         """
         raise NotImplementedError(
-            "%s: Method not implemented", self.__class__.__name__)
+            u"%s: Method not implemented", self.__class__.__name__)
 
     def set_basic_auth(self, host, username, password):
         """Configures client to use HTTP Basic authentication.
@@ -62,9 +62,9 @@ class HttpClient(object):
         :param password: Password
         """
         raise NotImplementedError(
-            "%s: Method not implemented", self.__class__.__name__)
+            u"%s: Method not implemented", self.__class__.__name__)
 
-    def set_api_key(self, host, api_key, param_name='api_key'):
+    def set_api_key(self, host, api_key, param_name=u'api_key'):
         """Configures client to use api_key authentication.
 
         The api_key is added to every query parameter sent.
@@ -74,7 +74,7 @@ class HttpClient(object):
         :param param_name: Parameter name to use in query string.
         """
         raise NotImplementedError(
-            "%s: Method not implemented", self.__class__.__name__)
+            u"%s: Method not implemented", self.__class__.__name__)
 
 
 class Authenticator(object):
@@ -87,7 +87,7 @@ class Authenticator(object):
         self.host = host
 
     def __repr__(self):
-        return "%s(%s)" % (self.__class__.__name__, self.host)
+        return u"%s(%s)" % (self.__class__.__name__, self.host)
 
     def matches(self, url):
         """Returns true if this authenticator applies to the given url.
@@ -103,7 +103,7 @@ class Authenticator(object):
 
         :param request: Request to add authentication information to.
         """
-        raise NotImplementedError("%s: Method not implemented",
+        raise NotImplementedError(u"%s: Method not implemented",
                                   self.__class__.__name__)
 
 
@@ -135,7 +135,7 @@ class ApiKeyAuthenticator(Authenticator):
     :param param_name: Query parameter specifying the API key.
     """
 
-    def __init__(self, host, api_key, param_name='api_key'):
+    def __init__(self, host, api_key, param_name=u'api_key'):
         super(ApiKeyAuthenticator, self).__init__(host)
         self.param_name = param_name
         self.api_key = api_key
@@ -162,7 +162,7 @@ class SynchronousHttpClient(HttpClient):
         self.authenticator = BasicAuthenticator(
             host=host, username=username, password=password)
 
-    def set_api_key(self, host, api_key, param_name='api_key'):
+    def set_api_key(self, host, api_key, param_name=u'api_key'):
         self.authenticator = ApiKeyAuthenticator(
             host=host, api_key=api_key, param_name=param_name)
 
@@ -184,15 +184,15 @@ class SynchronousHttpClient(HttpClient):
         :rtype:  websocket.WebSocket
         """
         # Build a prototype request and apply authentication to it
-        proto_req = requests.Request('GET', url, params=params)
+        proto_req = requests.Request(u'GET', url, params=params)
         self.apply_authentication(proto_req)
         # Prepare the request, so params will be put on the url,
         # and authenticators can manipulate headers
         preped_req = proto_req.prepare()
         # Pull the Authorization header, if needed
-        header = ["%s: %s" % (k, v)
+        header = [u"%s: %s" % (k, v)
                   for (k, v) in preped_req.headers.items()
-                  if k == 'Authorization']
+                  if k == u'Authorization']
         # Pull the URL, which includes query params
         url = preped_req.url
         return websocket.create_connection(url, header=header)
