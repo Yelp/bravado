@@ -36,7 +36,6 @@ class ValidationProcessor(SwaggerProcessor):
     """
 
     def process_resource_listing(self, resources, context):
-        #required_fields = [u'basePath', u'apis', u'swaggerVersion']
         required_fields = [u'apis', u'swaggerVersion']
         validate_required_fields(resources, required_fields, context)
 
@@ -46,7 +45,7 @@ class ValidationProcessor(SwaggerProcessor):
                 context)
 
     def process_resource_listing_api(self, resources, listing_api, context):
-        #validate_required_fields(listing_api, [u'path', u'description'], context)
+        #'description' is recommended
         validate_required_fields(listing_api, [u'path'], context)
 
         if not listing_api[u'path'].startswith(u"/"):
