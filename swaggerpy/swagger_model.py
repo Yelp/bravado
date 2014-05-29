@@ -93,6 +93,7 @@ class ValidationProcessor(SwaggerProcessor):
         validate_required_fields(error_response, required_fields, context)
 
     def process_model(self, resources, resource, model, context):
+        log.debug("### %s %s", model, context)
         required_fields = [u'id', u'properties']
         validate_required_fields(model, required_fields, context)
         # Move property field name into the object
