@@ -191,7 +191,7 @@ class SwaggerClient(object):
             self.__api_docs = url_or_resource
             loader.process_resource_listing(self.__api_docs)
             basePath = url_or_resource.get(u'basePath')
-        
+
         self.__resources = {}
         for resource in self.__api_docs[u'apis']:
             self.__resources[resource[u'name']] = Resource(resource, http_client, basePath)
