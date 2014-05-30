@@ -90,7 +90,7 @@ class ValidationProcessor(SwaggerProcessor):
         validate_required_fields(error_response, required_fields, context)
 
     def process_model(self, resources, resource, model, context):
-        log.debug("### %s %s", model, context)
+        log.debug("model: %s context: %s", model, context)
         required_fields = [u'id', u'properties']
         validate_required_fields(model, required_fields, context)
         # Move property field name into the object
@@ -168,7 +168,7 @@ class Loader(object):
 
         # Load the API declarations
         for api in resource_listing.get(u'apis'):
-            log.debug(" --- %s %s", base_url, api)
+            log.debug("Base_url: %s api: %s", base_url, api)
             self.load_api_declaration(base_url, api)
 
         # Now that the raw object model has been loaded, apply the processors
@@ -187,7 +187,6 @@ class Loader(object):
         """
         path = api_dict.get(u'path').replace(u'{format}', u'json')
         api_dict[u'url'] = urlparse.urljoin(base_url + u'/', path.strip(u'/'))
-        log.debug(" ---*** %s", api_dict)
         api_dict[u'api_declaration'] = json_load_url(
             self.http_client, api_dict[u'url'])
 

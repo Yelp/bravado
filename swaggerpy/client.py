@@ -102,7 +102,7 @@ class Resource(object):
 
     def __init__(self, resource, http_client, basePath):
         log.debug(u"Building resource '%s'" % resource[u'name'])
-        log.debug( "*** %s %s " , resource, basePath )
+        log.debug( "Resource: %s basePath: %s " , resource, basePath )
         self.__json = resource
         decl = resource['api_declaration']
         self.__http_client = http_client
@@ -157,7 +157,7 @@ class Resource(object):
         """
         log.debug(u"Building operation %s.%s" % (
             self.__get_name(), operation[u'nickname']))
-        log.debug(" ++++ %s %s %s", decl, api, operation)
+        log.debug("Decl: %s API: %s operation: %s", decl, api, operation)
         basePath = self.__basePath if decl[u'basePath'] == '/' else decl[u'basePath']
         uri = basePath + api[u'path']
         return Operation(uri, operation, self.__http_client)
