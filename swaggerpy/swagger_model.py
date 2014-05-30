@@ -52,10 +52,7 @@ class ValidationProcessor(SwaggerProcessor):
             raise SwaggerError(u"Path must start with /", context)
 
     def process_api_declaration(self, resources, resource, context):
-        required_fields = [
-            u'swaggerVersion', u'basePath', u'resourcePath', u'apis',
-            u'models'
-        ]
+        required_fields = [ u'swaggerVersion', u'basePath', u'apis' ]
         validate_required_fields(resource, required_fields, context)
         # Check model name and id consistency
         for (model_name, model) in resource[u'models'].items():
