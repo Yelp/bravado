@@ -130,7 +130,6 @@ class SwaggerProcessor(object):
                     context.pop()
                 context.pop()
             models = listing_api[u'api_declaration'].get(u'models', {})
-            #models = listing_api.get(u'models', {})
             for (name, model) in models.items():
                 context.push(u'model', model, u'id')
                 self.process_model(**context.args)

@@ -99,7 +99,7 @@ class ValidationProcessor(SwaggerProcessor):
 
     def process_property(self, resources, resource, model, prop,
                          context):
-        required_fields = [u'type']
+        required_fields = []
         validate_required_fields(prop, required_fields, context)
 
 
