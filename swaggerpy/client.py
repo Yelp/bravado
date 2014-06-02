@@ -90,7 +90,7 @@ class Operation(object):
         if self.json[u'is_websocket']:
             # Fix up http: URLs
             uri = re.sub(u'^http', u"ws", uri)
-            response = self.http_client.ws_connect(uri, params=params)
+            self.http_client.ws_connect(uri, params=params)
         else:
             return self.http_client.request(method, uri, params, data, headers)
 
@@ -171,13 +171,8 @@ class Resource(object):
         :param operation: Operation.
         """
         log.debug(u"Building operation %s.%s" % (
-<<<<<<< HEAD
             self._get_name(), operation[u'nickname']))
         basePath = self._basePath if decl[u'basePath'] == '/' else decl[u'basePath']
-=======
-            self.__get_name(), operation[u'nickname']))
-        basePath = self.__basePath if decl[u'basePath'] == '/' else decl[u'basePath']
->>>>>>> Try wrapping response
         uri = basePath + api[u'path']
         return Operation(uri, operation, self._http_client)
 
