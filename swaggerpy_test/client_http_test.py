@@ -62,6 +62,21 @@ class ClientTest(unittest.TestCase):
         self.assertEqual(200, resp.status_code)
         self.assertEqual([], resp.json())
 
+    #Pass body if available and send header as json
+    @httpretty.activate
+    def test_post_check_headers(self):
+        body = {"id":"test_id"}
+        httpretty.register_uri(
+            httpretty.POST, "http://localhost/test_http?",
+            body='[]', content_type='text/json')
+        resp = self.uut.simple1.createAsterikInfoHttp(body=body)
+        self.assertEqual('application/json',
+                         httpretty.last_request().headers['content-type'])
+        self.assertEqual('{"id": "test_id"}',
+                         httpretty.last_request().body)
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual([], resp.json())
+
     @httpretty.activate
     def setUp(self):
         httpretty.register_uri(
