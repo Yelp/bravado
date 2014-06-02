@@ -13,6 +13,7 @@ import swaggerpy
 from urlparse import urlparse
 from swaggerpy.http_client import SynchronousHttpClient
 from swaggerpy.processors import WebsocketProcessor, SwaggerProcessor
+from requests.models import Response
 
 log = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class Operation(object):
         self.uri = uri
         self.json = operation
         self.http_client = http_client
+        self._wrapType()
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.json[u'nickname'])
@@ -88,9 +90,17 @@ class Operation(object):
         if self.json[u'is_websocket']:
             # Fix up http: URLs
             uri = re.sub(u'^http', u"ws", uri)
-            return self.http_client.ws_connect(uri, params=params)
+            response = self.http_client.ws_connect(uri, params=params)
         else:
             return self.http_client.request(method, uri, params, data, headers)
+
+    def _wrapType(self):
+        primitive_types = [u'int32', u'int64', u'float',
+                u'double', u'byte', u'date', u'date-time']
+        non_complex_types = primitive_types + ['array']
+        type = self.json.get(u'$ref') or self.json.get(u'type')
+        if type not in non_complex_types:
+            setattr(self, type, Response())
 
 
 class Resource(object):
@@ -112,6 +122,12 @@ class Resource(object):
             for oper in api['operations'])
         for key in self._operations:
             setattr(self, key, self._get_operation(key))
+        self.models = self._set_models()
+
+    def _set_models(self):
+        return {'Pet':
+                type('Pet', (object,), dict(__init__ = lambda self:setattr(self,'swagger_types',{"asdf":4})))
+                }
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self._json[u'name'])
@@ -155,8 +171,13 @@ class Resource(object):
         :param operation: Operation.
         """
         log.debug(u"Building operation %s.%s" % (
+<<<<<<< HEAD
             self._get_name(), operation[u'nickname']))
         basePath = self._basePath if decl[u'basePath'] == '/' else decl[u'basePath']
+=======
+            self.__get_name(), operation[u'nickname']))
+        basePath = self.__basePath if decl[u'basePath'] == '/' else decl[u'basePath']
+>>>>>>> Try wrapping response
         uri = basePath + api[u'path']
         return Operation(uri, operation, self._http_client)
 
