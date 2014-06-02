@@ -19,7 +19,6 @@ log = logging.getLogger(__name__)
 
 class ClientProcessor(SwaggerProcessor):
     """Enriches swagger models for client processing.
-        Modified for Python 2.6 and Swagger 1.2
     """
 
     def process_resource_listing_api(self, resources, listing_api, context):
@@ -31,7 +30,6 @@ class ClientProcessor(SwaggerProcessor):
         :param context: Current context in the API.
         """
         name, ext = os.path.splitext(os.path.basename(listing_api[u'path']))
-        log.debug("API name is %s", name)
         listing_api[u'name'] = name
 
 
@@ -104,20 +102,19 @@ class Resource(object):
 
     def __init__(self, resource, http_client, basePath):
         log.debug(u"Building resource '%s'" % resource[u'name'])
-        log.debug( "Resource: %s basePath: %s " , resource, basePath )
-        self.__json = resource
+        self._json = resource
         decl = resource['api_declaration']
-        self.__http_client = http_client
-        self.__basePath = basePath
-        self.__operations = dict(
+        self._http_client = http_client
+        self._basePath = basePath
+        self._operations = dict(
                 (oper['nickname'], self._build_operation(decl, api, oper))
             for api in decl['apis']
             for oper in api['operations'])
-        for key in self.__operations:
-            setattr(self, key, self.__get_operation(key))
+        for key in self._operations:
+            setattr(self, key, self._get_operation(key))
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self.__json[u'name'])
+        return u"%s(%s)" % (self.__class__.__name__, self._json[u'name'])
 
     def __getattr__(self, item):
         """Promote operations to be object fields.
@@ -126,29 +123,29 @@ class Resource(object):
         :rtype: Resource
         :return: Resource object.
         """
-        op = self.__get_operation(item)
+        op = self._get_operation(item)
         if not op:
             raise AttributeError(u"Resource '%s' has no operation '%s'" %
-                                 (self.__get_name(), item))
+                                 (self._get_name(), item))
         return op
 
-    def __get_operation(self, name):
+    def _get_operation(self, name):
         """Gets the operation with the given nickname.
 
         :param name: Nickname of the operation.
         :rtype:  Operation
         :return: Operation, or None if not found.
         """
-        return self.__operations.get(name)
+        return self._operations.get(name)
 
-    def __get_name(self):
+    def _get_name(self):
         """Returns the name of this resource.
 
         Name is derived from the filename of the API declaration.
 
         :return: Resource name.
         """
-        return self.__json.get(u'name')
+        return self._json.get(u'name')
 
     def _build_operation(self, decl, api, operation):
         """Build an operation object
@@ -158,11 +155,11 @@ class Resource(object):
         :param operation: Operation.
         """
         log.debug(u"Building operation %s.%s" % (
-            self.__get_name(), operation[u'nickname']))
-        log.debug("Decl: %s API: %s operation: %s", decl, api, operation)
-        basePath = self.__basePath if decl[u'basePath'] == '/' else decl[u'basePath']
+            self._get_name(), operation[u'nickname']))
+        #If basePath is root, use the basePath stored during init
+        basePath = self._basePath if decl[u'basePath'] == '/' else decl[u'basePath']
         uri = basePath + api[u'path']
-        return Operation(uri, operation, self.__http_client)
+        return Operation(uri, operation, self._http_client)
 
 
 class SwaggerClient(object):
@@ -178,29 +175,31 @@ class SwaggerClient(object):
     def __init__(self, url_or_resource, http_client=None):
         if not http_client:
             http_client = SynchronousHttpClient()
-        self.__http_client = http_client
+        self._http_client = http_client
 
         loader = swaggerpy.Loader(
             http_client, [WebsocketProcessor(), ClientProcessor()])
 
-        if isinstance(url_or_resource, unicode):
+        # url_or_resource can be url of type str,
+        # OR a dict of resource itself.
+        if isinstance(url_or_resource, (str, unicode)):
             log.debug(u"Loading from %s" % url_or_resource)
-            self.__api_docs = loader.load_resource_listing(url_or_resource)
+            self._api_docs = loader.load_resource_listing(url_or_resource)
             parsed_uri = urlparse(url_or_resource)
             basePath = '{uri.scheme}://{uri.netloc}'.format(uri=parsed_uri)
         else:
             log.debug(u"Loading from %s" % url_or_resource.get(u'basePath'))
-            self.__api_docs = url_or_resource
-            loader.process_resource_listing(self.__api_docs)
+            self._api_docs = url_or_resource
+            loader.process_resource_listing(self._api_docs)
             basePath = url_or_resource.get(u'basePath')
 
-        self.__resources = {}
-        for resource in self.__api_docs[u'apis']:
-            self.__resources[resource[u'name']] = Resource(resource, http_client, basePath)
-            setattr(self, resource["name"], self.__get_resource(resource[u'name']))
+        self._resources = {}
+        for resource in self._api_docs[u'apis']:
+            self._resources[resource[u'name']] = Resource(resource, http_client, basePath)
+            setattr(self, resource["name"], self._get_resource(resource[u'name']))
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self.__api_docs.get(u'basePath'))
+        return u"%s(%s)" % (self.__class__.__name__, self._api_docs.get(u'basePath'))
 
     def __getattr__(self, item):
         """Promote resource objects to be client fields.
@@ -208,7 +207,7 @@ class SwaggerClient(object):
         :param item: Name of the attribute to get.
         :return: Resource object.
         """
-        resource = self.__get_resource(item)
+        resource = self._get_resource(item)
         if not resource:
             raise AttributeError(u"API has no resource '%s'" % item)
         return resource
@@ -216,13 +215,13 @@ class SwaggerClient(object):
     def close(self):
         """Close the SwaggerClient, and underlying resources.
         """
-        self.__http_client.close()
+        self._http_client.close()
 
-    def __get_resource(self, name):
+    def _get_resource(self, name):
         """Gets a Swagger resource by name.
 
         :param name: Name of the resource to get
         :rtype: Resource
         :return: Resource, or None if not found.
         """
-        return self.__resources.get(name)
+        return self._resources.get(name)

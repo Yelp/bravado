@@ -7,7 +7,7 @@
         },
         {
             "path": "/simple1.json",
-            "description": "Another Simple test case for the loader"
+            "description": "Test case for the loader with basePath as /"
         }
     ]
 }

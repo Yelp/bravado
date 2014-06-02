@@ -24,42 +24,19 @@ Install directly from github as:
 
 ::
 
-    $ inenv -- pip install --upgrade git+git://github.com/prat0318/swagger-py.git
+    $ pip install --upgrade git+git://github.com/Yelp/swagger-py
 
 API
 ===
 
-Here is a simple one to try on REPL:
+Here is a simple one to try from REPL:
 
 .. code:: Python
 
     from swaggerpy.client import SwaggerClient
-    ari = SwaggerClient(u"http://petstore.swagger.wordnik.com/api/api-docs")
-    ari.pet.getPetById(petId=2).text
-    
-(To enable logging...)
+    client = SwaggerClient(u"http://petstore.swagger.wordnik.com/api/api-docs")
+    client.pet.getPetById(petId=2).text
 
-::
-
-    import logging; logging.basicConfig(level=logging.DEBUG)
-
-
-swagger-codegen
-===============
-
-There are the beginnings of a Mustache-based code generator, but it's
-not functional... yet.
-
-.. Inspired by the original [swagger-codegen][] project, templates are
-   written using [Mustache][] templates ([Pystache][], specifically).
-   There are several important differences.
-
-    * The model that is fed into the mustache templates is almost
-      identical to Swagger's API resource listing and API declaration
-      model. The differences are listed [below](#model).
-    * The templates themselves are completely self contained, with the
-      logic to enrich the model being specified in `translate.py` in the
-      same directory as the `*.mustache` files.
 
 Data model
 ==========

@@ -5,8 +5,8 @@
 """Code for handling the base Swagger API model.
 """
 
-import logging
 import json
+import logging
 import os
 import urllib
 import urlparse
@@ -45,7 +45,7 @@ class ValidationProcessor(SwaggerProcessor):
                 context)
 
     def process_resource_listing_api(self, resources, listing_api, context):
-        #'description' is recommended
+        # removing 'description' as it is recommended but not required
         validate_required_fields(listing_api, [u'path'], context)
 
         if not listing_api[u'path'].startswith(u"/"):
@@ -163,12 +163,10 @@ class Loader(object):
 
         # Some extra data only known about at load time
         resource_listing[u'url'] = resources_url
-        if not base_url:
-            base_url = resources_url #basePath #resource_listing.get(u'basePath')
+        base_url = base_url if base_url else resources_url
 
         # Load the API declarations
         for api in resource_listing.get(u'apis'):
-            log.debug("Base_url: %s api: %s", base_url, api)
             self.load_api_declaration(base_url, api)
 
         # Now that the raw object model has been loaded, apply the processors
