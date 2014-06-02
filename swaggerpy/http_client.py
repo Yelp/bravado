@@ -12,6 +12,7 @@ import requests
 import requests.auth
 import urlparse
 import websocket
+import json
 
 log = logging.getLogger(__name__)
 
@@ -166,14 +167,18 @@ class SynchronousHttpClient(HttpClient):
         self.authenticator = ApiKeyAuthenticator(
             host=host, api_key=api_key, param_name=param_name)
 
-    def request(self, method, url, params=None, data=None):
+    def request(self, method, url, params=None, data=None, headers = None):
         """Requests based implementation.
 
         :return: Requests response
         :rtype:  requests.Response
         """
-        req = requests.Request(
-            method=method, url=url, params=params, data=data)
+        if headers and headers.get('content-type') == 'application/json':
+            data = json.dumps(data)
+        kwargs = {}
+        for i in ('method', 'url', 'params', 'data', 'headers'):
+            kwargs[i] = locals()[i]
+        req = requests.Request(**kwargs)
         self.apply_authentication(req)
         return self.session.send(self.session.prepare_request(req))
 

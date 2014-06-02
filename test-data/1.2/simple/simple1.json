@@ -26,7 +26,19 @@
                             "reason": "Not Found"
                         }
                     ]
-                }
+                },
+	    {
+		"method": "POST",
+		"nickname": "createAsterikInfoHttp",
+		"parameters": [
+		    {
+			"name": "body",
+			"paramType": "body",
+			"type": "Simple",
+			"required": true
+		    }
+		]
+	    }
             ]
         }
     ],
