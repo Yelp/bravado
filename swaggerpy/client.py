@@ -104,9 +104,8 @@ class Operation(object):
 def is_complex_type(type):
     primitive_types = [u'void', u'int32', u'int64', u'float',
             u'double', u'byte', u'date', u'date-time']
-    non_complex_types = primitive_types + ['array']
-    if type not in non_complex_types:
-        return type
+    non_complex_types = primitive_types + ['array', None]
+    return type not in non_complex_types
 
 def get_types(props):
     swagger_types = {}
