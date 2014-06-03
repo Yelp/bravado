@@ -14,6 +14,7 @@ from urlparse import urlparse
 from swaggerpy.http_client import SynchronousHttpClient
 from swaggerpy.processors import WebsocketProcessor, SwaggerProcessor
 from requests.models import Response
+from collections import namedtuple
 
 log = logging.getLogger(__name__)
 
@@ -102,6 +103,27 @@ class Operation(object):
         if type not in non_complex_types:
             setattr(self, type, Response())
 
+def get_types(props):
+    swagger_types = {}
+    for prop in props.keys():
+        _type = props[prop].get('type')
+        _format = props[prop].get('format') 
+        _ref = props[prop].get('$ref')
+        _item = props[prop].get('items')
+        if _item:
+            _item_type = _item.get('$ref') or \
+            _item.get('format') or \
+            _item.get('type')
+        if _format:
+            swagger_types[prop] = _format
+        elif _type == "array":
+            swagger_types[prop] = _type+"["+_item_type+"]"
+        elif _ref:
+            swagger_types[prop] = _ref
+        elif _type:
+            swagger_types[prop] = _type
+    return swagger_types
+
 
 class Resource(object):
     """Swagger resource, described in an API declaration.
@@ -122,13 +144,23 @@ class Resource(object):
             for oper in api['operations'])
         for key in self._operations:
             setattr(self, key, self._get_operation(key))
-        self.models = self._set_models()
+        self._set_models()
 
     def _set_models(self):
-        return {'Pet':
-                type('Pet', (object,), dict(__init__ = lambda self:setattr(self,'swagger_types',{"asdf":4})))
-                }
+        models_dict = self._json['api_declaration']['models']
+        models = namedtuple('models', models_dict.keys())
+        keys = {}
+        for key in models_dict.keys():
+            props = models_dict[key]['properties']
+            def set_props(this, props):
+                for prop in props.keys():
+                    setattr(this, prop, None)
 
+            keys[key] = type(str(key), (object,), dict(__init__ = lambda self: set_props(self, props)))
+            setattr(keys[key], 'swagger_types', get_types(props))
+            setattr(keys[key], 'required', models_dict[key].get('required'))
+        self.models = models(**keys)
+        
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self._json[u'name'])
 
