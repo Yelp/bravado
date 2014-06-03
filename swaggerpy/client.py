@@ -91,9 +91,10 @@ class Operation(object):
         if self.json[u'is_websocket']:
             # Fix up http: URLs
             uri = re.sub(u'^http', u"ws", uri)
-            self.http_client.ws_connect(uri, params=params)
+            response = self.http_client.ws_connect(uri, params=params)
         else:
-            return self.http_client.request(method, uri, params, data, headers)
+            response = self.http_client.request(method, uri, params, data, headers)
+        return response
 
     def _wrapType(self):
         primitive_types = [u'int32', u'int64', u'float',
