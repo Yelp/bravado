@@ -13,7 +13,6 @@ import swaggerpy
 from urlparse import urlparse
 from swaggerpy.http_client import SynchronousHttpClient
 from swaggerpy.processors import WebsocketProcessor, SwaggerProcessor
-from requests.models import Response
 from collections import namedtuple
 
 log = logging.getLogger(__name__)
@@ -39,11 +38,11 @@ class Operation(object):
     """Operation object.
     """
 
-    def __init__(self, uri, operation, http_client):
+    def __init__(self, uri, operation, http_client, models):
         self.uri = uri
         self.json = operation
         self.http_client = http_client
-        self._wrapType()
+        self.models = models
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.json[u'nickname'])
@@ -94,15 +93,20 @@ class Operation(object):
             response = self.http_client.ws_connect(uri, params=params)
         else:
             response = self.http_client.request(method, uri, params, data, headers)
+        type = self.json.get(u'type')
+        if is_complex_type(type):
+            setattr(response, 'model', getattr(self.models, type)())
+            #ToDo: populate response.model
+        else:
+            setattr(response, 'model', None)
         return response
 
-    def _wrapType(self):
-        primitive_types = [u'int32', u'int64', u'float',
-                u'double', u'byte', u'date', u'date-time']
-        non_complex_types = primitive_types + ['array']
-        type = self.json.get(u'$ref') or self.json.get(u'type')
-        if type not in non_complex_types:
-            setattr(self, type, Response())
+def is_complex_type(type):
+    primitive_types = [u'void', u'int32', u'int64', u'float',
+            u'double', u'byte', u'date', u'date-time']
+    non_complex_types = primitive_types + ['array']
+    if type not in non_complex_types:
+        return type
 
 def get_types(props):
     swagger_types = {}
@@ -139,13 +143,13 @@ class Resource(object):
         decl = resource['api_declaration']
         self._http_client = http_client
         self._basePath = basePath
+        self._set_models()
         self._operations = dict(
                 (oper['nickname'], self._build_operation(decl, api, oper))
             for api in decl['apis']
             for oper in api['operations'])
         for key in self._operations:
             setattr(self, key, self._get_operation(key))
-        self._set_models()
 
     def _set_models(self):
         models_dict = self._json['api_declaration']['models']
@@ -207,7 +211,7 @@ class Resource(object):
             self._get_name(), operation[u'nickname']))
         basePath = self._basePath if decl[u'basePath'] == '/' else decl[u'basePath']
         uri = basePath + api[u'path']
-        return Operation(uri, operation, self._http_client)
+        return Operation(uri, operation, self._http_client, self.models)
 
 
 class SwaggerClient(object):
