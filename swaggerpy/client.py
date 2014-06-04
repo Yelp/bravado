@@ -7,6 +7,8 @@
 
 from datetime import datetime
 import dateutil.parser
+from itertools import groupby
+import json
 import logging
 import os.path
 import re
@@ -51,6 +53,30 @@ class ClientProcessor(SwaggerProcessor):
         listing_api[u'name'] = name
 
 
+def build_param_string(param):
+    string = ""
+    if param.get('required'):
+        string += "required "
+    type = param.get('$ref') or param.get('format') or param.get('type')
+    if type:
+        string += ("["+type+"] ")
+    if param.get('description'):
+        string += param["description"]
+    return string
+
+def create_docstring(_json):
+    docstring = dict()
+    docstring['description'] = ("[%s] %s" % (_json.get("method"), _json.get("summary")))
+    docstring['notes'] = _json.get("notes")
+    if _json.get("parameters"):
+        docstring['parameters'] = dict()
+        for key, group in groupby(_json.get("parameters"), lambda x:x.get('paramType')):
+            docstring['parameters'][key] = [{ item['name'] : build_param_string(item) } for item in group]
+    docstring['return_type'] = _json.get("type")
+    docstring['response_msgs'] = [("(%s) %s" % (item.get("code"), item.get("message"))) for item in _json.get("responseMessages") or []]
+    return json.dumps(docstring, sort_keys=True, indent=4, separators=(',', ': '))
+
+
 class Operation(object):
     """Operation object.
     """
@@ -60,16 +86,12 @@ class Operation(object):
         self._json = operation
         self._http_client = http_client
         self._models = models
+        self.__doc__ = create_docstring(operation)
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self.json[u'nickname'])
+        return u"%s(%s)" % (self.__class__.__name__, self._json[u'nickname'])
 
     def __call__(self, **kwargs):
-        """Invoke ARI operation.
-
-        :param kwargs: ARI operation arguments.
-        :return: Implementation specific response or WebSocket connection
-        """
         log.info(u"%s?%r" % (self._json[u'nickname'], urllib.urlencode(kwargs)))
         method = self._json[u'method']
         uri = self._uri
@@ -115,7 +137,7 @@ class Operation(object):
         if self._http_client.is_response_ok(response):
             response_map = check_response_format(response.json(), self._models, _type)
             instance = create_instance(response_map, self._models, _type)
-            setattr(response, 'model', instance)
+            setattr(response, 'value', instance)
         return response
 
 def get_subtype(json):
@@ -138,7 +160,7 @@ def create_instance(response, models, _type):
     klass = getattr(models, _type)
     instance = klass()
     for key in response.keys():
-        _type = klass.swagger_types[key]
+        _type = klass._swagger_types[key]
         val = create_instance(response[key], models, _type) if is_complex_type(_type) else response[key]
         setattr(instance, key, val)
     return instance
@@ -154,14 +176,14 @@ def check_response_format(response, models, _type):
             return response
         return [check_response_format(item, models, subitem_type) for item in response]
     klass = getattr(models, _type)
-    required = list(klass.required) if klass.required else []
+    required = list(klass._required) if klass._required else []
     for key in response.keys():
         if key in required:
             required.remove(key)
-        if key not in klass.swagger_types.keys():
+        if key not in klass._swagger_types.keys():
             raise TypeError(u"Type for '%s' was not defined in spec." %
                     key)
-        response[key] = check_response_format(response[key], models, klass.swagger_types[key])
+        response[key] = check_response_format(response[key], models, klass._swagger_types[key])
     if required:
         raise AssertionError(u"These required fields not present: %s" %
                 required)
@@ -229,13 +251,31 @@ class Resource(object):
         keys = {}
         for key in models_dict.keys():
             props = models_dict[key]['properties']
-            def set_props(this, props):
-                for prop in props.keys():
+            def generate_repr(this):
+                #props = dict((prop, getattr(this, prop)) for prop in getattr(this, '_swagger_types').keys())
+                string, separator = ["",""]
+                for prop in getattr(this, '_swagger_types').keys():
+                    string += ("%s%s=%r" % (separator, prop, getattr(this,prop)))
+                    separator = ", "
+                return string #json.dumps(props)
+            def set_props(this, **kwargs):
+                props = getattr(this, '_swagger_types').keys()
+                for prop in props:
                     setattr(this, prop, None)
-
-            keys[key] = type(str(key), (object,), dict(__init__ = lambda self: set_props(self, props)))
-            setattr(keys[key], 'swagger_types', get_types(props))
-            setattr(keys[key], 'required', models_dict[key].get('required'))
+                for prop in kwargs:
+                    if prop in props:
+                        setattr(this, prop, kwargs[prop])
+                    else:
+                        raise AttributeError(" %s is not defined for %s. Allowed : %s" %
+                                (prop, this, props))
+            def generate_doc(props):
+                docstring = { "attributes": props }
+                return json.dumps(docstring, sort_keys=True, indent=4, separators=(',', ': '))
+            keys[key] = type(str(key), (object,), dict(__init__ = lambda self, **kwargs: set_props(self, **kwargs), 
+                __doc__ = generate_doc(get_types(props)),
+                __repr__ = lambda self: ("%s(%s)" % (self.__class__.__name__, generate_repr(self)))))
+            setattr(keys[key], '_swagger_types', get_types(props))
+            setattr(keys[key], '_required', models_dict[key].get('required'))
         return models(**keys)
         
     def __repr__(self):
