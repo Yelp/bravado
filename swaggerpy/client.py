@@ -56,10 +56,10 @@ class Operation(object):
     """
 
     def __init__(self, uri, operation, http_client, models):
-        self.uri = uri
-        self.json = operation
-        self.http_client = http_client
-        self.models = models
+        self._uri = uri
+        self._json = operation
+        self._http_client = http_client
+        self._models = models
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.json[u'nickname'])
@@ -70,12 +70,12 @@ class Operation(object):
         :param kwargs: ARI operation arguments.
         :return: Implementation specific response or WebSocket connection
         """
-        log.info(u"%s?%r" % (self.json[u'nickname'], urllib.urlencode(kwargs)))
-        method = self.json[u'method']
-        uri = self.uri
+        log.info(u"%s?%r" % (self._json[u'nickname'], urllib.urlencode(kwargs)))
+        method = self._json[u'method']
+        uri = self._uri
         params = {}
         data = None; headers = None
-        for param in self.json.get(u'parameters', []):
+        for param in self._json.get(u'parameters', []):
             pname = param[u'name']
             value = kwargs.get(pname)
             # Turn list params into comma separated values
@@ -98,23 +98,23 @@ class Operation(object):
                 if param.get(u'required'):
                     raise TypeError(
                         u"Missing required parameter '%s' for '%s'" %
-                        (pname, self.json[u'nickname']))
+                        (pname, self._json[u'nickname']))
         if kwargs:
             raise TypeError(u"'%s' does not have parameters %r" %
-                            (self.json[u'nickname'], kwargs.keys()))
+                            (self._json[u'nickname'], kwargs.keys()))
 
         log.info(u"%s %s(%r)", method, uri, params)
-        if self.json[u'is_websocket']:
+        if self._json[u'is_websocket']:
             # Fix up http: URLs
             uri = re.sub(u'^http', u"ws", uri)
-            response = self.http_client.ws_connect(uri, params=params)
+            response = self._http_client.ws_connect(uri, params=params)
         else:
-            response = self.http_client.request(method, uri, params, data, headers)
-        _type = self.json.get(u'type')
-        _type = add_subtype_for_array(_type, self.json)
-        if self.http_client.is_response_ok(response):
-            response_map = check_response_format(response.json(), self.models, _type)
-            instance = create_instance(response_map, self.models, _type)
+            response = self._http_client.request(method, uri, params, data, headers)
+        _type = self._json.get(u'type')
+        _type = add_subtype_for_array(_type, self._json)
+        if self._http_client.is_response_ok(response):
+            response_map = check_response_format(response.json(), self._models, _type)
+            instance = create_instance(response_map, self._models, _type)
             setattr(response, 'model', instance)
         return response
 
@@ -215,7 +215,7 @@ class Resource(object):
         decl = resource['api_declaration']
         self._http_client = http_client
         self._basePath = basePath
-        self._set_models()
+        self._models = self._set_models()
         self._operations = dict(
                 (oper['nickname'], self._build_operation(decl, api, oper))
             for api in decl['apis']
@@ -236,7 +236,7 @@ class Resource(object):
             keys[key] = type(str(key), (object,), dict(__init__ = lambda self: set_props(self, props)))
             setattr(keys[key], 'swagger_types', get_types(props))
             setattr(keys[key], 'required', models_dict[key].get('required'))
-        self.models = models(**keys)
+        return models(**keys)
         
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self._json[u'name'])
@@ -283,7 +283,7 @@ class Resource(object):
             self._get_name(), operation[u'nickname']))
         basePath = self._basePath if decl[u'basePath'] == '/' else decl[u'basePath']
         uri = basePath + api[u'path']
-        return Operation(uri, operation, self._http_client, self.models)
+        return Operation(uri, operation, self._http_client, self._models)
 
 
 class SwaggerClient(object):
