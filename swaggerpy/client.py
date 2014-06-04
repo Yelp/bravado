@@ -5,6 +5,8 @@
 """Swagger client library.
 """
 
+from datetime import datetime
+import dateutil.parser
 import logging
 import os.path
 import re
@@ -16,7 +18,22 @@ from swaggerpy.processors import WebsocketProcessor, SwaggerProcessor
 from collections import namedtuple
 
 log = logging.getLogger(__name__)
+assert datetime # silence pyflakes
 
+VOID_TYPES = ['void', None]
+
+PRIMITIVE_TYPE_MAPPING = {
+            'int32':'int',
+            'int64':'(int, long)',
+            'float':'float',
+            'double':'float',
+            'string':'(str, unicode)',
+            'boolean':'bool',
+            'date':'datetime',
+            'date-time':'datetime',
+            'array':'list',
+            'byte':'byte'
+            }
 
 class ClientProcessor(SwaggerProcessor):
     """Enriches swagger models for client processing.
@@ -93,19 +110,80 @@ class Operation(object):
             response = self.http_client.ws_connect(uri, params=params)
         else:
             response = self.http_client.request(method, uri, params, data, headers)
-        type = self.json.get(u'type')
-        if is_complex_type(type):
-            setattr(response, 'model', getattr(self.models, type)())
-            #ToDo: populate response.model
-        else:
-            setattr(response, 'model', None)
+        _type = self.json.get(u'type')
+        _type = add_subtype_for_array(_type, self.json)
+        if self.http_client.is_response_ok(response):
+            response_map = check_response_format(response.json(), self.models, _type)
+            instance = create_instance(response_map, self.models, _type)
+            setattr(response, 'model', instance)
         return response
 
-def is_complex_type(type):
-    primitive_types = [u'void', u'int32', u'int64', u'float',
-            u'double', u'byte', u'date', u'date-time']
-    non_complex_types = primitive_types + ['array', None]
-    return type not in non_complex_types
+def get_subtype(json):
+    subtype = json.get(u'items') 
+    return (subtype.get('$ref') or subtype.get('format') or subtype.get('type'))
+
+def add_subtype_for_array(_type, json):
+    if _type == "array":
+        return "array:" + get_subtype(json)
+    return _type
+
+def create_instance(response, models, _type):
+    if not is_complex_type(_type):
+        return response
+    if is_array_type(_type):
+        _type, subitem_type = _type.split(':')
+        if response is None:
+            return response
+        return [create_instance(item, models, subitem_type) if is_complex_type(subitem_type) else item for item in response]
+    klass = getattr(models, _type)
+    instance = klass()
+    for key in response.keys():
+        _type = klass.swagger_types[key]
+        val = create_instance(response[key], models, _type) if is_complex_type(_type) else response[key]
+        setattr(instance, key, val)
+    return instance
+
+#return is necessary to change response in check_type()
+#as per data types and store them after the change
+def check_response_format(response, models, _type):
+    if not is_complex_type(_type):
+        return check_type(response, models, _type)
+    if is_array_type(_type):
+        _type, subitem_type = _type.split(':')
+        if response is None:
+            return response
+        return [check_response_format(item, models, subitem_type) for item in response]
+    klass = getattr(models, _type)
+    required = list(klass.required) if klass.required else []
+    for key in response.keys():
+        if key in required:
+            required.remove(key)
+        if key not in klass.swagger_types.keys():
+            raise TypeError(u"Type for '%s' was not defined in spec." %
+                    key)
+        response[key] = check_response_format(response[key], models, klass.swagger_types[key])
+    if required:
+        raise AssertionError(u"These required fields not present: %s" %
+                required)
+    return response
+
+def check_type(value, models, _type):
+    if _type in VOID_TYPES:
+        return
+    ptype = PRIMITIVE_TYPE_MAPPING[_type]
+    if ptype == "datetime":
+        value = dateutil.parser.parse(value)
+    assert isinstance(value, eval(ptype)), u"Type of %s should be %s" % \
+            (value, ptype)
+    return value
+
+#array:XYZ and all $ref are complex types
+def is_complex_type(_type):
+    non_complex_types = PRIMITIVE_TYPE_MAPPING.keys() + VOID_TYPES
+    return _type not in non_complex_types
+
+def is_array_type(_type):
+    return _type.startswith('array:')
 
 def get_types(props):
     swagger_types = {}
@@ -113,15 +191,10 @@ def get_types(props):
         _type = props[prop].get('type')
         _format = props[prop].get('format') 
         _ref = props[prop].get('$ref')
-        _item = props[prop].get('items')
-        if _item:
-            _item_type = _item.get('$ref') or \
-            _item.get('format') or \
-            _item.get('type')
         if _format:
             swagger_types[prop] = _format
         elif _type == "array":
-            swagger_types[prop] = _type+"["+_item_type+"]"
+            swagger_types[prop] = add_subtype_for_array(_type, props[prop])
         elif _ref:
             swagger_types[prop] = _ref
         elif _type:

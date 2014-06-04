@@ -77,6 +77,10 @@ class HttpClient(object):
         raise NotImplementedError(
             u"%s: Method not implemented", self.__class__.__name__)
 
+    @classmethod
+    def is_response_ok(cls, response):
+        return response.status_code == requests.codes.ok
+
 
 class Authenticator(object):
     """Authenticates requests.
