@@ -54,27 +54,29 @@ class ClientProcessor(SwaggerProcessor):
 
 
 def build_param_string(param):
-    string = ""
-    if param.get('required'):
-        string += "required "
+    string = "\t"+param.get("name")
     type = param.get('$ref') or param.get('format') or param.get('type')
     if type:
-        string += ("["+type+"] ")
+        string += (" ("+type+") ")
     if param.get('description'):
-        string += param["description"]
-    return string
+        string += ": " + param["description"]
+    return string + "\n"
 
 def create_docstring(_json):
-    docstring = dict()
-    docstring['description'] = ("[%s] %s" % (_json.get("method"), _json.get("summary")))
-    docstring['notes'] = _json.get("notes")
+    docstring = ''
+    docstring += ("[%s] %s\n\n" % (_json.get("method"), _json.get("summary"))) if _json.get('description') else ''
+    docstring += (_json["notes"]+"\n") if _json.get("notes") else ''
     if _json.get("parameters"):
-        docstring['parameters'] = dict()
-        for key, group in groupby(_json.get("parameters"), lambda x:x.get('paramType')):
-            docstring['parameters'][key] = [{ item['name'] : build_param_string(item) } for item in group]
-    docstring['return_type'] = _json.get("type")
-    docstring['response_msgs'] = [("(%s) %s" % (item.get("code"), item.get("message"))) for item in _json.get("responseMessages") or []]
-    return json.dumps(docstring, sort_keys=True, indent=4, separators=(',', ': '))
+        docstring += "Args:\n"
+        for param in _json["parameters"]:
+            docstring += build_param_string(param)
+    if _json.get('type'):
+        docstring += "Returns:\n\t%s\n" % _json["type"]
+    if _json.get('responseMessages'):
+        docstring += "Raises:\n"
+        for msg in _json.get('responseMessages'):
+            docstring += "\t%s: %s\n" % (msg.get("code"), msg.get("message"))
+    return docstring
 
 
 class Operation(object):
@@ -269,10 +271,15 @@ class Resource(object):
                         raise AttributeError(" %s is not defined for %s. Allowed : %s" %
                                 (prop, this, props))
             def generate_doc(props):
-                docstring = { "attributes": props }
-                return json.dumps(docstring, sort_keys=True, indent=4, separators=(',', ': '))
+                types = get_types(props)
+                docstring = "Attributes:\n\n\t"
+                for prop in props.keys():
+                    docstring += prop + " (" + types[prop] + ") "
+                    docstring += ": " + props[prop]['description'] if props[prop].get('description') else ''
+                    docstring += '\n\t'
+                return docstring
             keys[key] = type(str(key), (object,), dict(__init__ = lambda self, **kwargs: set_props(self, **kwargs), 
-                __doc__ = generate_doc(get_types(props)),
+                __doc__ = generate_doc(props),
                 __repr__ = lambda self: ("%s(%s)" % (self.__class__.__name__, generate_repr(self)))))
             setattr(keys[key], '_swagger_types', get_types(props))
             setattr(keys[key], '_required', models_dict[key].get('required'))
