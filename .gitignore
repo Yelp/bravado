@@ -6,3 +6,4 @@ cover/
 dist/
 nosetests.xml
 build
+*.swp

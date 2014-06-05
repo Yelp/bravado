@@ -10,7 +10,7 @@ import os.path
 import re
 import urllib
 import swaggerpy
-
+from urlparse import urlparse
 from swaggerpy.http_client import SynchronousHttpClient
 from swaggerpy.processors import WebsocketProcessor, SwaggerProcessor
 
@@ -52,9 +52,10 @@ class Operation(object):
         :return: Implementation specific response or WebSocket connection
         """
         log.info(u"%s?%r" % (self.json[u'nickname'], urllib.urlencode(kwargs)))
-        method = self.json[u'httpMethod']
+        method = self.json[u'method']
         uri = self.uri
         params = {}
+        data = None; headers = None
         for param in self.json.get(u'parameters', []):
             pname = param[u'name']
             value = kwargs.get(pname)
@@ -67,13 +68,15 @@ class Operation(object):
                     uri = uri.replace(u'{%s}' % pname, unicode(value))
                 elif param[u'paramType'] == u'query':
                     params[pname] = value
+                elif param[u'paramType'] == u'body':
+                    data = value; headers = {'content-type':'application/json'}
                 else:
                     raise AssertionError(
                         u"Unsupported paramType %s" %
                         param.paramType)
                 del kwargs[pname]
             else:
-                if param[u'required']:
+                if param.get(u'required'):
                     raise TypeError(
                         u"Missing required parameter '%s' for '%s'" %
                         (pname, self.json[u'nickname']))
@@ -87,8 +90,7 @@ class Operation(object):
             uri = re.sub(u'^http', u"ws", uri)
             return self.http_client.ws_connect(uri, params=params)
         else:
-            return self.http_client.request(
-                method, uri, params=params)
+            return self.http_client.request(method, uri, params, data, headers)
 
 
 class Resource(object):
@@ -98,18 +100,21 @@ class Resource(object):
     :param http_client: HTTP client API
     """
 
-    def __init__(self, resource, http_client):
+    def __init__(self, resource, http_client, basePath):
         log.debug(u"Building resource '%s'" % resource[u'name'])
-        self.json = resource
-        decl = resource[u'api_declaration']
-        self.http_client = http_client
-        self.__operations = dict(
+        self._json = resource
+        decl = resource['api_declaration']
+        self._http_client = http_client
+        self._basePath = basePath
+        self._operations = dict(
                 (oper['nickname'], self._build_operation(decl, api, oper))
             for api in decl['apis']
             for oper in api['operations'])
+        for key in self._operations:
+            setattr(self, key, self._get_operation(key))
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self.json[u'name'])
+        return u"%s(%s)" % (self.__class__.__name__, self._json[u'name'])
 
     def __getattr__(self, item):
         """Promote operations to be object fields.
@@ -118,29 +123,29 @@ class Resource(object):
         :rtype: Resource
         :return: Resource object.
         """
-        op = self.get_operation(item)
+        op = self._get_operation(item)
         if not op:
             raise AttributeError(u"Resource '%s' has no operation '%s'" %
-                                 (self.get_name(), item))
+                                 (self._get_name(), item))
         return op
 
-    def get_operation(self, name):
+    def _get_operation(self, name):
         """Gets the operation with the given nickname.
 
         :param name: Nickname of the operation.
         :rtype:  Operation
         :return: Operation, or None if not found.
         """
-        return self.operations.get(name)
+        return self._operations.get(name)
 
-    def get_name(self):
+    def _get_name(self):
         """Returns the name of this resource.
 
         Name is derived from the filename of the API declaration.
 
         :return: Resource name.
         """
-        return self.json.get(u'name')
+        return self._json.get(u'name')
 
     def _build_operation(self, decl, api, operation):
         """Build an operation object
@@ -150,9 +155,11 @@ class Resource(object):
         :param operation: Operation.
         """
         log.debug(u"Building operation %s.%s" % (
-            self.get_name(), operation[u'nickname']))
-        uri = decl[u'basePath'] + api[u'path']
-        return Operation(uri, operation, self.http_client)
+            self._get_name(), operation[u'nickname']))
+        #If basePath is root, use the basePath stored during init
+        basePath = self._basePath if decl[u'basePath'] == '/' else decl[u'basePath']
+        uri = basePath + api[u'path']
+        return Operation(uri, operation, self._http_client)
 
 
 class SwaggerClient(object):
@@ -168,25 +175,31 @@ class SwaggerClient(object):
     def __init__(self, url_or_resource, http_client=None):
         if not http_client:
             http_client = SynchronousHttpClient()
-        self.http_client = http_client
+        self._http_client = http_client
 
         loader = swaggerpy.Loader(
             http_client, [WebsocketProcessor(), ClientProcessor()])
 
-        if isinstance(url_or_resource, unicode):
+        # url_or_resource can be url of type str,
+        # OR a dict of resource itself.
+        if isinstance(url_or_resource, (str, unicode)):
             log.debug(u"Loading from %s" % url_or_resource)
-            self.api_docs = loader.load_resource_listing(url_or_resource)
+            self._api_docs = loader.load_resource_listing(url_or_resource)
+            parsed_uri = urlparse(url_or_resource)
+            basePath = '{uri.scheme}://{uri.netloc}'.format(uri=parsed_uri)
         else:
             log.debug(u"Loading from %s" % url_or_resource.get(u'basePath'))
-            self.api_docs = url_or_resource
-            loader.process_resource_listing(self.api_docs)
+            self._api_docs = url_or_resource
+            loader.process_resource_listing(self._api_docs)
+            basePath = url_or_resource.get(u'basePath')
 
-        self.resources = dict((
-            resource[u'name'], Resource(resource, http_client))
-            for resource in self.api_docs[u'apis'])
+        self._resources = {}
+        for resource in self._api_docs[u'apis']:
+            self._resources[resource[u'name']] = Resource(resource, http_client, basePath)
+            setattr(self, resource["name"], self._get_resource(resource[u'name']))
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self.api_docs[u'basePath'])
+        return u"%s(%s)" % (self.__class__.__name__, self._api_docs.get(u'basePath'))
 
     def __getattr__(self, item):
         """Promote resource objects to be client fields.
@@ -194,7 +207,7 @@ class SwaggerClient(object):
         :param item: Name of the attribute to get.
         :return: Resource object.
         """
-        resource = self.get_resource(item)
+        resource = self._get_resource(item)
         if not resource:
             raise AttributeError(u"API has no resource '%s'" % item)
         return resource
@@ -202,13 +215,13 @@ class SwaggerClient(object):
     def close(self):
         """Close the SwaggerClient, and underlying resources.
         """
-        self.http_client.close()
+        self._http_client.close()
 
-    def get_resource(self, name):
+    def _get_resource(self, name):
         """Gets a Swagger resource by name.
 
         :param name: Name of the resource to get
         :rtype: Resource
         :return: Resource, or None if not found.
         """
-        return self.resources.get(name)
+        return self._resources.get(name)

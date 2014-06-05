@@ -1,29 +1,23 @@
 {
-    "swaggerVersion": "1.1",
-    "basePath": "http://localhost/swagger/test",
+    "swaggerVersion": "1.2",
+    "basePath": "/",
     "resourcePath": "simple.{format}",
     "apis": [
         {
-            "path": "/test",
+            "path": "/test_http",
             "description": "Test resource",
             "operations": [
                 {
-                    "httpMethod": "GET",
+                    "method": "GET",
                     "summary": "Gets Asterisk system information.",
-                    "nickname": "getAsteriskInfo",
+                    "nickname": "getAsteriskInfoHttp",
                     "responseClass": "Simple",
                     "parameters": [
                         {
                             "name": "test_param",
+			    "required": true,
                             "paramType": "query",
-                            "dataType": "string",
-                            "allowableValues": {
-                                "valueType": "LIST",
-                                "values": [
-                                    "foo",
-                                    "bar"
-                                ]
-                            }
+                            "type": "string"
                         }
                     ],
                     "errorResponses": [
@@ -32,7 +26,19 @@
                             "reason": "Not Found"
                         }
                     ]
-                }
+                },
+	    {
+		"method": "POST",
+		"nickname": "createAsterikInfoHttp",
+		"parameters": [
+		    {
+			"name": "body",
+			"paramType": "body",
+			"type": "Simple",
+			"required": true
+		    }
+		]
+	    }
             ]
         }
     ],

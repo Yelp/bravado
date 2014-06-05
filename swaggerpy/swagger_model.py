@@ -6,6 +6,7 @@
 """
 
 import json
+import logging
 import os
 import urllib
 import urlparse
@@ -27,6 +28,7 @@ SWAGGER_PRIMITIVES = [
     u'Date',
 ]
 
+log = logging.getLogger(__name__)
 
 # noinspection PyDocstring
 class ValidationProcessor(SwaggerProcessor):
@@ -34,7 +36,7 @@ class ValidationProcessor(SwaggerProcessor):
     """
 
     def process_resource_listing(self, resources, context):
-        required_fields = [u'basePath', u'apis', u'swaggerVersion']
+        required_fields = [u'apis', u'swaggerVersion']
         validate_required_fields(resources, required_fields, context)
 
         if not resources[u'swaggerVersion'] in SWAGGER_VERSIONS:
@@ -43,16 +45,14 @@ class ValidationProcessor(SwaggerProcessor):
                 context)
 
     def process_resource_listing_api(self, resources, listing_api, context):
-        validate_required_fields(listing_api, [u'path', u'description'], context)
+        # removing 'description' as it is recommended but not required
+        validate_required_fields(listing_api, [u'path'], context)
 
         if not listing_api[u'path'].startswith(u"/"):
             raise SwaggerError(u"Path must start with /", context)
 
     def process_api_declaration(self, resources, resource, context):
-        required_fields = [
-            u'swaggerVersion', u'basePath', u'resourcePath', u'apis',
-            u'models'
-        ]
+        required_fields = [ u'swaggerVersion', u'basePath', u'apis' ]
         validate_required_fields(resource, required_fields, context)
         # Check model name and id consistency
         for (model_name, model) in resource[u'models'].items():
@@ -65,7 +65,7 @@ class ValidationProcessor(SwaggerProcessor):
         validate_required_fields(api, required_fields, context)
 
     def process_operation(self, resources, resource, api, operation, context):
-        required_fields = [u'httpMethod', u'nickname']
+        required_fields = [u'method', u'nickname']
         validate_required_fields(operation, required_fields, context)
 
     def process_parameter(self, resources, resource, api, operation, parameter,
@@ -75,10 +75,10 @@ class ValidationProcessor(SwaggerProcessor):
         if parameter[u'paramType'] == u'path':
             # special handling for path parameters
             parameter[u'required'] = True
-            parameter[u'dataType'] = u'string'
+            parameter[u'type'] = u'string'
         else:
-            # dataType is required for non-path parameters
-            validate_required_fields(parameter, [u'dataType'], context)
+            # type is required for non-path parameters
+            validate_required_fields(parameter, [u'type'], context)
         if u'allowedValues' in parameter:
             raise SwaggerError(
                 u"Field 'allowedValues' invalid; use 'allowableValues'",
@@ -90,6 +90,7 @@ class ValidationProcessor(SwaggerProcessor):
         validate_required_fields(error_response, required_fields, context)
 
     def process_model(self, resources, resource, model, context):
+        log.debug("model: %s context: %s", model, context)
         required_fields = [u'id', u'properties']
         validate_required_fields(model, required_fields, context)
         # Move property field name into the object
@@ -98,7 +99,7 @@ class ValidationProcessor(SwaggerProcessor):
 
     def process_property(self, resources, resource, model, prop,
                          context):
-        required_fields = [u'type']
+        required_fields = []
         validate_required_fields(prop, required_fields, context)
 
 
@@ -162,8 +163,7 @@ class Loader(object):
 
         # Some extra data only known about at load time
         resource_listing[u'url'] = resources_url
-        if not base_url:
-            base_url = resource_listing.get(u'basePath')
+        base_url = base_url if base_url else resources_url
 
         # Load the API declarations
         for api in resource_listing.get(u'apis'):

@@ -9,6 +9,8 @@ particular use case (such as ensuring that description and summary fields
 exist)
 """
 from itertools import izip
+import logging
+log = logging.getLogger(__name__)
 
 
 class ParsingContext(object):
@@ -108,9 +110,9 @@ class SwaggerProcessor(object):
             context.pop()
 
             api_url = listing_api.get(u'url') or u'json:api_declaration'
-            context.push_str(u'resource', listing_api[u'api_declaration'],
-                             api_url)
+            context.push_str(u'resource', listing_api[u'api_declaration'], api_url)
             self.process_api_declaration(**context.args)
+            log.debug("listing_api: %s ", listing_api)
             for api in listing_api[u'api_declaration'][u'apis']:
                 context.push(u'api', api, u'path')
                 self.process_resource_api(**context.args)
@@ -260,7 +262,7 @@ class WebsocketProcessor(SwaggerProcessor):
 
         if operation[u'is_websocket']:
             api[u'has_websocket'] = True
-            if operation[u'httpMethod'] != u'GET':
+            if operation[u'method'] != u'GET':
                 raise SwaggerError(
                     u"upgrade: websocket is only valid on GET operations",
                     context)
