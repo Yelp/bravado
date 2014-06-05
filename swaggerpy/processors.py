@@ -112,6 +112,7 @@ class SwaggerProcessor(object):
             api_url = listing_api.get(u'url') or u'json:api_declaration'
             context.push_str(u'resource', listing_api[u'api_declaration'], api_url)
             self.process_api_declaration(**context.args)
+            log.debug("listing_api: %s ", listing_api)
             for api in listing_api[u'api_declaration'][u'apis']:
                 context.push(u'api', api, u'path')
                 self.process_resource_api(**context.args)

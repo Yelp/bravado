@@ -24,12 +24,12 @@ Install directly from github as:
 
 ::
 
-    $ inenv -- pip install --upgrade git+git://github.com/Yelp/swagger-py.git
+    $ pip install --upgrade git+git://github.com/Yelp/swagger-py
 
 API
 ===
 
-Here is a simple one to try on REPL:
+Here is a simple one to try from REPL:
 
 .. code:: Python
 

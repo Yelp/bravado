@@ -328,6 +328,7 @@ class Resource(object):
         """
         log.debug(u"Building operation %s.%s" % (
             self._get_name(), operation[u'nickname']))
+        #If basePath is root, use the basePath stored during init
         basePath = self._basePath if decl[u'basePath'] == '/' else decl[u'basePath']
         uri = basePath + api[u'path']
         return Operation(uri, operation, self._http_client, self._models)
@@ -351,7 +352,9 @@ class SwaggerClient(object):
         loader = swaggerpy.Loader(
             http_client, [WebsocketProcessor(), ClientProcessor()])
 
-        if isinstance(url_or_resource, unicode):
+        # url_or_resource can be url of type str,
+        # OR a dict of resource itself.
+        if isinstance(url_or_resource, (str, unicode)):
             log.debug(u"Loading from %s" % url_or_resource)
             self._api_docs = loader.load_resource_listing(url_or_resource)
             parsed_uri = urlparse(url_or_resource)
