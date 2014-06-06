@@ -171,7 +171,7 @@ class SynchronousHttpClient(HttpClient):
         self.authenticator = ApiKeyAuthenticator(
             host=host, api_key=api_key, param_name=param_name)
 
-    def request(self, method, url, params=None, data=None, headers = None):
+    def request(self, method, url, params=None, data=None, headers=None):
         """Requests based implementation.
 
         :return: Requests response

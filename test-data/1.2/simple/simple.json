@@ -12,6 +12,10 @@
                     "summary": "Gets Asterisk system information.",
                     "nickname": "getAsteriskInfo",
                     "responseClass": "Simple",
+		    "type": "array",
+		    "items": {
+			    "$ref":"Simple"
+		    },
                     "parameters": [
                         {
                             "name": "test_param",

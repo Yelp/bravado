@@ -43,7 +43,7 @@ class ClientTest(unittest.TestCase):
     #Pass body if available and send header as json
     @httpretty.activate
     def test_post_check_headers(self):
-        body = {"id":"test_id"}
+        body = {"id": "test_id"}
         httpretty.register_uri(
             httpretty.POST, "http://localhost/test_http?",
             body='[]', content_type='text/json')
@@ -83,15 +83,15 @@ class ClientTest(unittest.TestCase):
     def setUp(self):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/api-docs",
-            body=open('test-data/1.2/simple/resources.json','r').read())
+            body=open('test-data/1.2/simple/resources.json', 'r').read())
 
         httpretty.register_uri(
             httpretty.GET, "http://localhost/api-docs/simple.json",
-            body=open('test-data/1.2/simple/simple.json','r').read())
+            body=open('test-data/1.2/simple/simple.json', 'r').read())
 
         httpretty.register_uri(
             httpretty.GET, "http://localhost/api-docs/simple1.json",
-            body=open('test-data/1.2/simple/simple1.json','r').read())
+            body=open('test-data/1.2/simple/simple1.json', 'r').read())
 
         # Default handlers for all swagger.py access
         self.client = SwaggerClient(u'http://localhost/api-docs')

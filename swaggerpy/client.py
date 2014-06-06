@@ -5,37 +5,21 @@
 """Swagger client library.
 """
 
-from datetime import datetime
-import dateutil.parser
-from itertools import groupby
-import json
 import logging
 import os.path
 import re
 import urllib
+import swagger_type
 import swaggerpy
-from urlparse import urlparse
+from collections import namedtuple
+from response import SwaggerResponse
+from swagger_model import create_model_type
 from swaggerpy.http_client import SynchronousHttpClient
 from swaggerpy.processors import WebsocketProcessor, SwaggerProcessor
-from collections import namedtuple
+from urlparse import urlparse
 
 log = logging.getLogger(__name__)
-assert datetime # silence pyflakes
 
-VOID_TYPES = ['void', None]
-
-PRIMITIVE_TYPE_MAPPING = {
-            'int32':'int',
-            'int64':'(int, long)',
-            'float':'float',
-            'double':'float',
-            'string':'(str, unicode)',
-            'boolean':'bool',
-            'date':'datetime',
-            'date-time':'datetime',
-            'array':'list',
-            'byte':'byte'
-            }
 
 class ClientProcessor(SwaggerProcessor):
     """Enriches swagger models for client processing.
@@ -53,32 +37,6 @@ class ClientProcessor(SwaggerProcessor):
         listing_api[u'name'] = name
 
 
-def build_param_string(param):
-    string = "\t"+param.get("name")
-    type = param.get('$ref') or param.get('format') or param.get('type')
-    if type:
-        string += (" ("+type+") ")
-    if param.get('description'):
-        string += ": " + param["description"]
-    return string + "\n"
-
-def create_docstring(_json):
-    docstring = ''
-    docstring += ("[%s] %s\n\n" % (_json.get("method"), _json.get("summary"))) if _json.get('description') else ''
-    docstring += (_json["notes"]+"\n") if _json.get("notes") else ''
-    if _json.get("parameters"):
-        docstring += "Args:\n"
-        for param in _json["parameters"]:
-            docstring += build_param_string(param)
-    if _json.get('type'):
-        docstring += "Returns:\n\t%s\n" % _json["type"]
-    if _json.get('responseMessages'):
-        docstring += "Raises:\n"
-        for msg in _json.get('responseMessages'):
-            docstring += "\t%s: %s\n" % (msg.get("code"), msg.get("message"))
-    return docstring
-
-
 class Operation(object):
     """Operation object.
     """
@@ -88,7 +46,7 @@ class Operation(object):
         self._json = operation
         self._http_client = http_client
         self._models = models
-        self.__doc__ = create_docstring(operation)
+        self.__doc__ = create_operation_docstring(operation)
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self._json[u'nickname'])
@@ -98,7 +56,8 @@ class Operation(object):
         method = self._json[u'method']
         uri = self._uri
         params = {}
-        data = None; headers = None
+        data = None
+        headers = None
         for param in self._json.get(u'parameters', []):
             pname = param[u'name']
             value = kwargs.get(pname)
@@ -112,7 +71,8 @@ class Operation(object):
                 elif param[u'paramType'] == u'query':
                     params[pname] = value
                 elif param[u'paramType'] == u'body':
-                    data = value; headers = {'content-type':'application/json'}
+                    data = value
+                    headers = {'content-type': 'application/json'}
                 else:
                     raise AssertionError(
                         u"Unsupported paramType %s" %
@@ -135,95 +95,12 @@ class Operation(object):
         else:
             response = self._http_client.request(method, uri, params, data, headers)
         _type = self._json.get(u'type')
-        _type = add_subtype_for_array(_type, self._json)
-        if self._http_client.is_response_ok(response):
-            response_map = check_response_format(response.json(), self._models, _type)
-            instance = create_instance(response_map, self._models, _type)
-            setattr(response, 'value', instance)
+        _type = swagger_type.add_subtype_for_array(_type, self._json)
+        value = None
+        if self._http_client.is_response_ok(response) and response.text:
+            value = SwaggerResponse(response.json(), _type, self._models).parse_object()
+        setattr(response, 'value', value)
         return response
-
-def get_subtype(json):
-    subtype = json.get(u'items') 
-    return (subtype.get('$ref') or subtype.get('format') or subtype.get('type'))
-
-def add_subtype_for_array(_type, json):
-    if _type == "array":
-        return "array:" + get_subtype(json)
-    return _type
-
-def create_instance(response, models, _type):
-    if not is_complex_type(_type):
-        return response
-    if is_array_type(_type):
-        _type, subitem_type = _type.split(':')
-        if response is None:
-            return response
-        return [create_instance(item, models, subitem_type) if is_complex_type(subitem_type) else item for item in response]
-    klass = getattr(models, _type)
-    instance = klass()
-    for key in response.keys():
-        _type = klass._swagger_types[key]
-        val = create_instance(response[key], models, _type) if is_complex_type(_type) else response[key]
-        setattr(instance, key, val)
-    return instance
-
-#return is necessary to change response in check_type()
-#as per data types and store them after the change
-def check_response_format(response, models, _type):
-    if not is_complex_type(_type):
-        return check_type(response, models, _type)
-    if is_array_type(_type):
-        _type, subitem_type = _type.split(':')
-        if response is None:
-            return response
-        return [check_response_format(item, models, subitem_type) for item in response]
-    klass = getattr(models, _type)
-    required = list(klass._required) if klass._required else []
-    for key in response.keys():
-        if key in required:
-            required.remove(key)
-        if key not in klass._swagger_types.keys():
-            raise TypeError(u"Type for '%s' was not defined in spec." %
-                    key)
-        response[key] = check_response_format(response[key], models, klass._swagger_types[key])
-    if required:
-        raise AssertionError(u"These required fields not present: %s" %
-                required)
-    return response
-
-def check_type(value, models, _type):
-    if _type in VOID_TYPES:
-        return
-    ptype = PRIMITIVE_TYPE_MAPPING[_type]
-    if ptype == "datetime":
-        value = dateutil.parser.parse(value)
-    assert isinstance(value, eval(ptype)), u"Type of %s should be %s" % \
-            (value, ptype)
-    return value
-
-#array:XYZ and all $ref are complex types
-def is_complex_type(_type):
-    non_complex_types = PRIMITIVE_TYPE_MAPPING.keys() + VOID_TYPES
-    return _type not in non_complex_types
-
-def is_array_type(_type):
-    return _type.startswith('array:')
-
-def get_types(props):
-    swagger_types = {}
-    for prop in props.keys():
-        _type = props[prop].get('type')
-        _format = props[prop].get('format') 
-        _ref = props[prop].get('$ref')
-        if _format:
-            swagger_types[prop] = _format
-        elif _type == "array":
-            swagger_types[prop] = add_subtype_for_array(_type, props[prop])
-        elif _ref:
-            swagger_types[prop] = _ref
-        elif _type:
-            swagger_types[prop] = _type
-    return swagger_types
 
 
 class Resource(object):
@@ -239,7 +116,7 @@ class Resource(object):
         decl = resource['api_declaration']
         self._http_client = http_client
         self._basePath = basePath
-        self._models = self._set_models()
+        self._set_models()
         self._operations = dict(
                 (oper['nickname'], self._build_operation(decl, api, oper))
             for api in decl['apis']
@@ -248,43 +125,15 @@ class Resource(object):
             setattr(self, key, self._get_operation(key))
 
     def _set_models(self):
+        """Create namedtuple of model types created from 'api_declaration'
+        """
         models_dict = self._json['api_declaration']['models']
         models = namedtuple('models', models_dict.keys())
         keys = {}
         for key in models_dict.keys():
-            props = models_dict[key]['properties']
-            def generate_repr(this):
-                #props = dict((prop, getattr(this, prop)) for prop in getattr(this, '_swagger_types').keys())
-                string, separator = ["",""]
-                for prop in getattr(this, '_swagger_types').keys():
-                    string += ("%s%s=%r" % (separator, prop, getattr(this,prop)))
-                    separator = ", "
-                return string #json.dumps(props)
-            def set_props(this, **kwargs):
-                props = getattr(this, '_swagger_types').keys()
-                for prop in props:
-                    setattr(this, prop, None)
-                for prop in kwargs:
-                    if prop in props:
-                        setattr(this, prop, kwargs[prop])
-                    else:
-                        raise AttributeError(" %s is not defined for %s. Allowed : %s" %
-                                (prop, this, props))
-            def generate_doc(props):
-                types = get_types(props)
-                docstring = "Attributes:\n\n\t"
-                for prop in props.keys():
-                    docstring += prop + " (" + types[prop] + ") "
-                    docstring += ": " + props[prop]['description'] if props[prop].get('description') else ''
-                    docstring += '\n\t'
-                return docstring
-            keys[key] = type(str(key), (object,), dict(__init__ = lambda self, **kwargs: set_props(self, **kwargs), 
-                __doc__ = generate_doc(props),
-                __repr__ = lambda self: ("%s(%s)" % (self.__class__.__name__, generate_repr(self)))))
-            setattr(keys[key], '_swagger_types', get_types(props))
-            setattr(keys[key], '_required', models_dict[key].get('required'))
-        return models(**keys)
-        
+            keys[key] = create_model_type(models_dict[key])
+        self.models = models(**keys)
+
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self._json[u'name'])
 
@@ -331,7 +180,7 @@ class Resource(object):
         #If basePath is root, use the basePath stored during init
         basePath = self._basePath if decl[u'basePath'] == '/' else decl[u'basePath']
         uri = basePath + api[u'path']
-        return Operation(uri, operation, self._http_client, self._models)
+        return Operation(uri, operation, self._http_client, self.models)
 
 
 class SwaggerClient(object):
@@ -397,3 +246,32 @@ class SwaggerClient(object):
         :return: Resource, or None if not found.
         """
         return self._resources.get(name)
+
+
+def __build_param_string(param):
+    string = "\t" + param.get("name")
+    _type = param.get('$ref') or param.get('format') or param.get('type')
+    if _type:
+        string += (" (%s) " % _type)
+    if param.get('description'):
+        string += ": " + param["description"]
+    return string + "\n"
+
+
+def create_operation_docstring(_json):
+    docstring = ""
+    if _json.get('summary'):
+        docstring += ("[%s] %s\n\n" % (_json['method'], _json.get('summary')))
+    docstring += (_json["notes"] + "\n") if _json.get("notes") else ''
+
+    if _json["parameters"]:
+        docstring += "Args:\n"
+        for param in _json["parameters"]:
+            docstring += __build_param_string(param)
+    if _json.get('type'):
+        docstring += "Returns:\n\t%s\n" % _json["type"]
+    if _json.get('responseMessages'):
+        docstring += "Raises:\n"
+        for msg in _json.get('responseMessages'):
+            docstring += "\t%s: %s\n" % (msg.get("code"), msg.get("message"))
+    return docstring

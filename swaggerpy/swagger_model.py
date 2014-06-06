@@ -7,29 +7,18 @@
 
 import logging
 import json
-import logging
 import os
 import urllib
 import urlparse
+import swagger_type
 
 from swaggerpy.http_client import SynchronousHttpClient
 from swaggerpy.processors import SwaggerProcessor, SwaggerError
 
 SWAGGER_VERSIONS = [u"1.1", u"1.2"]
 
-SWAGGER_PRIMITIVES = [
-    u'void',
-    u'string',
-    u'boolean',
-    u'number',
-    u'int',
-    u'long',
-    u'double',
-    u'float',
-    u'Date',
-]
-
 log = logging.getLogger(__name__)
+
 
 # noinspection PyDocstring
 class ValidationProcessor(SwaggerProcessor):
@@ -53,7 +42,7 @@ class ValidationProcessor(SwaggerProcessor):
             raise SwaggerError(u"Path must start with /", context)
 
     def process_api_declaration(self, resources, resource, context):
-        required_fields = [ u'swaggerVersion', u'basePath', u'apis' ]
+        required_fields = [u'swaggerVersion', u'basePath', u'apis']
         validate_required_fields(resource, required_fields, context)
         # Check model name and id consistency
         for (model_name, model) in resource[u'models'].items():
@@ -91,7 +80,6 @@ class ValidationProcessor(SwaggerProcessor):
         validate_required_fields(error_response, required_fields, context)
 
     def process_model(self, resources, resource, model, context):
-        log.debug("model: %s context: %s", model, context)
         required_fields = [u'id', u'properties']
         validate_required_fields(model, required_fields, context)
         # Move property field name into the object
@@ -168,7 +156,6 @@ class Loader(object):
 
         # Load the API declarations
         for api in resource_listing.get(u'apis'):
-            log.debug("Base_url: %s api: %s", base_url, api)
             self.load_api_declaration(base_url, api)
 
         # Now that the raw object model has been loaded, apply the processors
@@ -271,3 +258,51 @@ def load_json(resource_listing, http_client=None, processors=None):
     loader = Loader(http_client=http_client, processors=processors)
     loader.process_resource_listing(resource_listing)
     return resource_listing
+
+
+def create_model_type(model):
+    props = model['properties']
+    name = str(model['id'])
+    magic_methods = dict(
+            __doc__=create_model_docstring(props),
+            __init__=lambda self, **kwargs: set_props(self, **kwargs),
+            __repr__=lambda self: ("%s(%s)" % (self.__class__.__name__,
+                                             create_model_repr(self))))
+    model_type = type(name, (object,), magic_methods)
+    setattr(model_type, '_swagger_types', swagger_type.get_swagger_types(props))
+    setattr(model_type, '_required', model.get('required'))
+    return model_type
+
+
+def set_props(model, **kwargs):
+    props = getattr(model, '_swagger_types').keys()
+    arg_keys = kwargs.keys()
+    for prop in props:
+        value = None
+        if prop in arg_keys:
+            value = kwargs[prop]
+            arg_keys.remove(prop)
+        setattr(model, prop, value)
+    if arg_keys:
+        raise AttributeError(" %s are not defined for %s." % (arg_keys, model))
+
+
+def create_model_docstring(props):
+    types = swagger_type.get_swagger_types(props)
+    docstring = "Attributes:\n\n\t"
+    for prop in props.keys():
+        py_type = swagger_type.swagger_to_py_type(types[prop])
+        docstring += ("%s (%s) " % (prop, py_type))
+        if props[prop].get('description'):
+            docstring += ": " + props[prop]['description']
+        docstring += '\n\t'
+    return docstring
+
+
+def create_model_repr(resource):
+    string = ""
+    separator = ""
+    for prop in getattr(resource, '_swagger_types').keys():
+        string += ("%s%s=%r" % (separator, prop, getattr(resource, prop)))
+        separator = ", "
+    return string

@@ -12,6 +12,10 @@
                     "summary": "Gets Asterisk system information.",
                     "nickname": "getAsteriskInfoHttp",
                     "responseClass": "Simple",
+		    "type": "array",
+		    "items": {
+			    "$ref":"Simple"
+		    },
                     "parameters": [
                         {
                             "name": "test_param",
@@ -30,6 +34,10 @@
 	    {
 		"method": "POST",
 		"nickname": "createAsterikInfoHttp",
+		"type": "array",
+		"items": {
+			"$ref":"Simple"
+		},
 		"parameters": [
 		    {
 			"name": "body",

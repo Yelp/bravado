@@ -105,7 +105,12 @@ class ClientTest(unittest.TestCase):
                                 "operations": [
                                     {
                                         "method": "GET",
-                                        "nickname": "listPets"
+                                        "nickname": "listPets",
+                                        "type": "array",
+                                        "items": {
+                                                "type":"string"
+                                        },
+                                        "parameters": []
                                     },
                                     {
                                         "method": "POST",
@@ -127,6 +132,10 @@ class ClientTest(unittest.TestCase):
                                     {
                                         "method": "GET",
                                         "nickname": "findPets",
+                                        "type": "array",
+                                        "items": {
+                                                "type":"string"
+                                        },
                                         "parameters": [
                                             {
                                                 "name": "species",
