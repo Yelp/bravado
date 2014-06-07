@@ -358,7 +358,7 @@ class SwaggerClient(object):
             log.debug(u"Loading from %s" % url_or_resource)
             self._api_docs = loader.load_resource_listing(url_or_resource)
             parsed_uri = urlparse(url_or_resource)
-            basePath = '{uri.scheme}://{uri.netloc}'.format(uri=parsed_uri)
+            basePath = "{uri.scheme}://{uri.netloc}".format(uri=parsed_uri)
         else:
             log.debug(u"Loading from %s" % url_or_resource.get(u'basePath'))
             self._api_docs = url_or_resource
@@ -368,7 +368,7 @@ class SwaggerClient(object):
         self._resources = {}
         for resource in self._api_docs[u'apis']:
             self._resources[resource[u'name']] = Resource(resource, http_client, basePath)
-            setattr(self, resource["name"], self._get_resource(resource[u'name']))
+            setattr(self, resource['name'], self._get_resource(resource[u'name']))
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self._api_docs.get(u'basePath'))
