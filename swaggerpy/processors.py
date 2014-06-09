@@ -94,6 +94,23 @@ class SwaggerProcessor(object):
     information to use in the templates.
     """
 
+    def pre_apply(self, resources):
+        """Apply this processor to a Swagger definition not loaded.
+
+        :param resources: Top level Swagger definition.
+        :type  resources: dict
+        """
+        context = ParsingContext()
+        resources_url = resources.get(u'url') or u'json:resource_listing'
+        context.push_str(u'resources', resources, resources_url)
+        self.process_resource_listing(**context.args)
+        for listing_api in resources[u'apis']:
+            context.push(u'listing_api', listing_api, u'path')
+            self.process_resource_listing_api(**context.args)
+            context.pop()
+        context.pop()
+        assert context.is_empty(), u"Expected %r to be empty" % context
+
     def apply(self, resources):
         """Apply this processor to a loaded Swagger definition.
 
@@ -111,30 +128,34 @@ class SwaggerProcessor(object):
 
             api_url = listing_api.get(u'url') or u'json:api_declaration'
             context.push_str(u'resource', listing_api[u'api_declaration'], api_url)
+            models = listing_api[u'api_declaration'].get(u'models', {})
             self.process_api_declaration(**context.args)
             for api in listing_api[u'api_declaration'][u'apis']:
                 context.push(u'api', api, u'path')
                 self.process_resource_api(**context.args)
                 for operation in api[u'operations']:
                     context.push(u'operation', operation, u'nickname')
+                    context.push(u'model_ids', {'model_ids': models.keys()}, u'model_ids')
                     self.process_operation(**context.args)
                     for parameter in operation.get(u'parameters', []):
                         context.push(u'parameter', parameter, u'name')
                         self.process_parameter(**context.args)
                         context.pop()
-                    for response in operation.get(u'errorResponses', []):
-                        context.push(u'error_response', response, u'code')
-                        self.process_error_response(**context.args)
+                    for response in operation.get(u'responseMessages', []):
+                        context.push(u'response_message', response, u'code')
+                        self.process_response_message(**context.args)
                         context.pop()
                     context.pop()
+                    context.pop()
                 context.pop()
-            models = listing_api[u'api_declaration'].get(u'models', {})
             for (name, model) in models.items():
                 context.push(u'model', model, u'id')
                 self.process_model(**context.args)
                 for (name, prop) in model[u'properties'].items():
                     context.push(u'prop', prop, u'name')
+                    context.push(u'model_ids', {'model_ids': models.keys()}, u'model_ids')
                     self.process_property(**context.args)
+                    context.pop()
                     context.pop()
                 context.pop()
             context.pop()
@@ -184,7 +205,7 @@ class SwaggerProcessor(object):
         """
         pass
 
-    def process_operation(self, resources, resource, api, operation, context):
+    def process_operation(self, resources, resource, api, operation, context, model_ids):
         """Post process an operation on an api.
 
         :param resources: Resource listing object
@@ -197,7 +218,7 @@ class SwaggerProcessor(object):
         pass
 
     def process_parameter(self, resources, resource, api, operation, parameter,
-                          context):
+                          context, model_ids):
         """Post process a parameter on an operation.
 
         :param resources: Resource listing object
@@ -210,15 +231,15 @@ class SwaggerProcessor(object):
         """
         pass
 
-    def process_error_response(self, resources, resource, api, operation,
-                               error_response, context):
-        """Post process an errorResponse on an operation.
+    def process_response_message(self, resources, resource, api, operation,
+                               response_message, context, model_ids):
+        """Post process an Response on an operation.
 
         :param resources: Resource listing object
         :param resource: resource object.
         :param api: API object
         :param operation: Operation object.
-        :param error_response: Response object.
+        :param response: Response object.
         :type context: ParsingContext
         :param context: Current context in the API.
         """
@@ -235,7 +256,7 @@ class SwaggerProcessor(object):
         """
         pass
 
-    def process_property(self, resources, resource, model, prop, context):
+    def process_property(self, resources, resource, model, prop, context, model_ids):
         """Post process a property from a model.
 
         :param resources: Resource listing object
@@ -256,7 +277,7 @@ class WebsocketProcessor(SwaggerProcessor):
     def process_resource_api(self, resources, resource, api, context):
         api.setdefault(u'has_websocket', False)
 
-    def process_operation(self, resources, resource, api, operation, context):
+    def process_operation(self, resources, resource, api, operation, context, model_ids):
         operation[u'is_websocket'] = operation.get(u'upgrade') == u'websocket'
 
         if operation[u'is_websocket']:

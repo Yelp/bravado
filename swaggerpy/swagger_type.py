@@ -5,21 +5,47 @@ NoneType = None.__class__
 PRIMITIVE_TYPE_MAPPING = {
             'int32': int,
             'int64': (long, int),
+            'integer': (long, int),
             'float': float,
             'double': float,
+            'number': float,
             'string': (str, unicode),
             'boolean': bool,
             'date': datetime,
             'date-time': datetime,
-            'array': list,
             'byte': bytes,
-            'void': NoneType,
-            None: NoneType
             }
 
 
+PRIMITIVE_TYPE_TO_FORMAT = {
+        u'integer': ['int32', 'int64'],
+        u'number': ['float', 'double'],
+        u'string': ['byte', 'date', 'date-time'],
+        u'boolean': []
+        }
+
+
+CONTAINER_MAPPING = {
+        u'array': list
+        }
+
+
+OTHER_PRIMITIVE_MAPPING = {
+        u'File': bytes
+        }
+
+
+def primitive_types():
+    return PRIMITIVE_TYPE_TO_FORMAT.keys() + \
+           OTHER_PRIMITIVE_MAPPING.keys()
+
+
+def container_types():
+    return CONTAINER_MAPPING.keys()
+
+
 def is_primitive(_type):
-    return _type in PRIMITIVE_TYPE_MAPPING.keys()
+    return _type in PRIMITIVE_TYPE_TO_FORMAT.keys()
 
 
 #array:XYZ and all $ref are complex types
@@ -38,7 +64,8 @@ def get_subtype_array(_type):
 
 def swagger_to_py_type(_type):
     if is_array(_type):
-        return "list(%s)" % swagger_to_py_type(_type[6:])
+        return "%s(%s)" % (CONTAINER_MAPPING['array'].__name__,
+                           swagger_to_py_type(_type[6:]))
     if is_complex(_type):
         return _type
     py_type = PRIMITIVE_TYPE_MAPPING[_type]

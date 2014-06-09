@@ -115,6 +115,7 @@ class ClientTest(unittest.TestCase):
                                     {
                                         "method": "POST",
                                         "nickname": "createPet",
+                                        "type": "void",
                                         "parameters": [
                                             {
                                                 "name": "name",
@@ -153,9 +154,11 @@ class ClientTest(unittest.TestCase):
                                     {
                                         "method": "DELETE",
                                         "nickname": "deletePet",
+                                        "type": "void",
                                         "parameters": [
                                             {
                                                 "name": "petId",
+                                                "type": "string",
                                                 "paramType": "path"
                                             }
                                         ]

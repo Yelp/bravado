@@ -2,11 +2,11 @@
     "swaggerVersion": "1.2",
     "apis": [
         {
-            "path": "/simple.json",
+            "path": "/simple",
             "description": "Simple test case for the loader"
         },
         {
-            "path": "/simple1.json",
+            "path": "/simple1",
             "description": "Test case for the loader with basePath as /"
         }
     ]

@@ -86,11 +86,11 @@ class ClientTest(unittest.TestCase):
             body=open('test-data/1.2/simple/resources.json', 'r').read())
 
         httpretty.register_uri(
-            httpretty.GET, "http://localhost/api-docs/simple.json",
+            httpretty.GET, "http://localhost/api-docs/simple",
             body=open('test-data/1.2/simple/simple.json', 'r').read())
 
         httpretty.register_uri(
-            httpretty.GET, "http://localhost/api-docs/simple1.json",
+            httpretty.GET, "http://localhost/api-docs/simple1",
             body=open('test-data/1.2/simple/simple1.json', 'r').read())
 
         # Default handlers for all swagger.py access

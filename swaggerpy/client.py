@@ -127,7 +127,7 @@ class Resource(object):
     def _set_models(self):
         """Create namedtuple of model types created from 'api_declaration'
         """
-        models_dict = self._json['api_declaration']['models']
+        models_dict = self._json['api_declaration'].get('models', {})
         models = namedtuple('models', models_dict.keys())
         keys = {}
         for key in models_dict.keys():

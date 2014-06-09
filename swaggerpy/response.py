@@ -32,6 +32,9 @@ class SwaggerResponse(object):
     def check_array_type(self):
         if self.response is None:
             raise TypeError("Response array found as null instead of empty")
+        if self.response.__class__ is not list:
+            raise TypeError("Response is supposed to be an array instead of" %
+                    self.response.__class__.__name__)
         subitem_type = swagger_type.get_subtype_array(self._type)
         self.response = [SwaggerResponse(item, subitem_type, self.models).
                                                     check_response_format().response
@@ -72,6 +75,8 @@ class SwaggerResponse(object):
     def check_response_format(self):
         if self.response is None:
             pass
+        #Response if of type array is pre-converted to array:subtype
+        #So, it does not match is_primitive
         elif swagger_type.is_primitive(self._type):
             self.check_primitive_type()
         elif swagger_type.is_array(self._type):
