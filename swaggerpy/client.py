@@ -60,23 +60,29 @@ class Operation(object):
         headers = None
         for param in self._json.get(u'parameters', []):
             pname = param[u'name']
+            # ToDo: No check on param value right now.
+            # To be done similar to checkResponse in SwaggerResponse
             value = kwargs.get(pname)
+            paramType = param[u'paramType']
             # Turn list params into comma separated values
-            if isinstance(value, list):
-                value = u",".join(value)
+            # Assumption: values will only be primitive else str() fails
+            if isinstance(value, list) and paramType in ('path', 'query'):
+                value = u",".join(str(x) for x in value)
 
             if value:
-                if param[u'paramType'] == u'path':
+                if paramType == u'path':
                     uri = uri.replace(u'{%s}' % pname, unicode(value))
-                elif param[u'paramType'] == u'query':
+                elif paramType == u'query':
                     params[pname] = value
-                elif param[u'paramType'] == u'body':
+                elif paramType == u'body':
+                    # value if not string is converted to json.dumps() later
+                    # ToDo: model instance as body object not valid right now
+                    #       Must be given as a json string in the body
                     data = value
                     headers = {'content-type': 'application/json'}
                 else:
                     raise AssertionError(
-                        u"Unsupported paramType %s" %
-                        param.paramType)
+                        u"Unsupported paramType %s" % param.paramType)
                 del kwargs[pname]
             else:
                 if param.get(u'required'):
@@ -94,10 +100,10 @@ class Operation(object):
             response = self._http_client.ws_connect(uri, params=params)
         else:
             response = self._http_client.request(method, uri, params, data, headers)
-        _type = self._json.get(u'type')
-        _type = swagger_type.add_subtype_for_array(_type, self._json)
+        _type = swagger_type.get_swagger_type(self._json)
         value = None
         if self._http_client.is_response_ok(response) and response.text:
+            # Validate and then convert API response to Python model instance
             value = SwaggerResponse(response.json(), _type, self._models).parse_object()
         setattr(response, 'value', value)
         return response
@@ -249,6 +255,12 @@ class SwaggerClient(object):
 
 
 def __build_param_string(param):
+    """Builds param docstring from the param dict
+
+       :param param: data to create docstring from
+       :type param: dict
+       :returns: string giving meta info
+    """
     string = "\t" + param.get("name")
     _type = param.get('$ref') or param.get('format') or param.get('type')
     if _type:
@@ -259,6 +271,12 @@ def __build_param_string(param):
 
 
 def create_operation_docstring(_json):
+    """Builds Operation docstring from the json dict
+
+       :param _json: data to create docstring from
+       :type _json: dict
+       :returns: string giving meta info
+    """
     docstring = ""
     if _json.get('summary'):
         docstring += ("[%s] %s\n\n" % (_json['method'], _json.get('summary')))

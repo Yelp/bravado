@@ -178,7 +178,7 @@ class SynchronousHttpClient(HttpClient):
         :rtype:  requests.Response
         """
         if headers and headers.get('content-type') == 'application/json':
-            data = json.dumps(data)
+            data = data if isinstance(data, (str, unicode)) else json.dumps(data)
         kwargs = {}
         for i in ('method', 'url', 'params', 'data', 'headers'):
             kwargs[i] = locals()[i]
