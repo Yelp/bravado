@@ -100,6 +100,7 @@ class ValidationProcessor(SwaggerProcessor):
     def process_model(self, resources, resource, model, context):
         required_fields = [u'id', u'properties']
         validate_required_fields(model, required_fields, context)
+        #ToDo: Check "required" if present should be a list
         # Move property field name into the object
         for (prop_name, prop) in model[u'properties'].items():
             prop[u'name'] = prop_name
