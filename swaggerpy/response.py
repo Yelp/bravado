@@ -76,7 +76,7 @@ class SwaggerResponseCheck(object):
         :type models: namedtuple
         """
         self.response = response
-        self._type_ = type_
+        self._type = type_
         self._models = models
         self._check_response_format()
 
@@ -84,12 +84,12 @@ class SwaggerResponseCheck(object):
         """Check the response as per the type of the response
         Returns self to allow chaining of methods
         """
-        if self._type_ == 'void':
+        if self._type == 'void':
             if self.response:
                 raise TypeError("Response %s is supposed to be empty" % self.response)
-        elif swagger_type.is_primitive(self._type_):
+        elif swagger_type.is_primitive(self._type):
             self._check_primitive_type()
-        elif swagger_type.is_array(self._type_):
+        elif swagger_type.is_array(self._type):
             self._check_array_type()
         else:
             self._check_complex_type()
@@ -98,7 +98,7 @@ class SwaggerResponseCheck(object):
         """Validate primitive type response is of correct type
         Also converts swagger type to py type if needed eg. datetime
         """
-        ptype = swagger_type.get_primitive_mapping(self._type_)
+        ptype = swagger_type.get_primitive_mapping(self._type)
         if ptype == datetime:
             self.response = dateutil.parser.parse(self.response)
         if not isinstance(self.response, ptype):
@@ -114,7 +114,7 @@ class SwaggerResponseCheck(object):
         if self.response.__class__ is not list:
             raise TypeError("Response is supposed to be an array instead of" %
                             self.response.__class__.__name__)
-        array_item_type = swagger_type.get_array_item_type(self._type_)
+        array_item_type = swagger_type.get_array_item_type(self._type)
         self.response = [SwaggerResponseCheck(item, array_item_type, self._models).response
                          for item in self.response]
 
@@ -124,7 +124,7 @@ class SwaggerResponseCheck(object):
         """
         if not isinstance(self.response, dict):
             raise TypeError("Type for %s is expected to be object" % self.response)
-        klass = getattr(self._models, self._type_)
+        klass = getattr(self._models, self._type)
         required = list(klass._required) if klass._required else []
         for key in self.response.keys():
             if key in required:
@@ -151,7 +151,7 @@ class SwaggerResponseConstruct(object):
         :type models: namedtuple
         """
         self._response = response
-        self._type_ = type_
+        self._type = type_
         self._models = models
 
     def create_object(self):
@@ -163,9 +163,9 @@ class SwaggerResponseConstruct(object):
         """
         if self._response is None:
             return
-        if swagger_type.is_primitive(self._type_) or self._type_ == 'void':
+        if swagger_type.is_primitive(self._type) or self._type == 'void':
             return self._response
-        if swagger_type.is_array(self._type_):
+        if swagger_type.is_array(self._type):
             return self._create_array_object()
         return self._create_complex_object()
 
@@ -173,7 +173,7 @@ class SwaggerResponseConstruct(object):
         """Creates array item objects by recursive call to create_object()
         Assume the response is validated and correct
         """
-        array_item_type = swagger_type.get_array_item_type(self._type_)
+        array_item_type = swagger_type.get_array_item_type(self._type)
         return [SwaggerResponseConstruct(item,
                                          array_item_type,
                                          self._models
@@ -184,7 +184,7 @@ class SwaggerResponseConstruct(object):
         """Creates empty instance of complex object and then fills it with attrs
         Assume the response is validated and correct
         """
-        klass = getattr(self._models, self._type_)
+        klass = getattr(self._models, self._type)
         instance = klass()
         for key in self._response.keys():
             type_ = klass._swagger_types[key]
