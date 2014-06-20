@@ -7,12 +7,13 @@
 """HTTP client abstractions.
 """
 
+import json
 import logging
+import urlparse
+
 import requests
 import requests.auth
-import urlparse
 import websocket
-import json
 
 log = logging.getLogger(__name__)
 
@@ -73,6 +74,25 @@ class HttpClient(object):
         :param host: Hostname to limit authentication to.
         :param api_key: Value for api_key.
         :param param_name: Parameter name to use in query string.
+        """
+        raise NotImplementedError(
+            u"%s: Method not implemented", self.__class__.__name__)
+
+    def setup(self, request_params):
+        """Store the request params for calling later.
+
+        :param request_params: Complete request data.
+        :type request_params: dict
+        """
+        raise NotImplementedError(
+            u"%s: Method not implemented", self.__class__.__name__)
+
+    def wait(self, timeout):
+        """Similar to 'request', Calls the API with request_params until timeout.
+
+        :param timeout: time in seconds to wait for response.
+        :type timeout: float
+        :return: Implementation specific response
         """
         raise NotImplementedError(
             u"%s: Method not implemented", self.__class__.__name__)
@@ -163,6 +183,9 @@ class SynchronousHttpClient(HttpClient):
         self.session.close()
         # There's no WebSocket factory to close; close connections individually
 
+    def setup(self, request_params):
+        self.request_params = request_params
+
     def set_basic_auth(self, host, username, password):
         self.authenticator = BasicAuthenticator(
             host=host, username=username, password=password)
@@ -170,6 +193,27 @@ class SynchronousHttpClient(HttpClient):
     def set_api_key(self, host, api_key, param_name=u'api_key'):
         self.authenticator = ApiKeyAuthenticator(
             host=host, api_key=api_key, param_name=param_name)
+
+    def wait(self, timeout):
+        """Requests based implemention with timeout
+        No support of Websockets.
+
+        :param timeout: time in seconds to wait for response
+        :return: Requests response
+        :rtype:  requests.Response
+        """
+        log.info(u"%s %s(%r)", self.request_params['method'],
+                 self.request_params['url'],
+                 self.request_params['params'])
+        # If body is dict/list, dump it as a string
+        if self.request_params.get('headers'):
+            if self.request_params['headers'].get('content-type') == 'application/json':
+                data = self.request_params['data']
+                if not isinstance(data, (str, unicode)):
+                    self.request_params['data'] = json.dumps(data)
+        req = requests.Request(**self.request_params)
+        self.apply_authentication(req)
+        return self.session.send(self.session.prepare_request(req), timeout=timeout)
 
     def request(self, method, url, params=None, data=None, headers=None):
         """Requests based implementation.

@@ -8,9 +8,10 @@
 *Deprecated test*
 """
 
+import unittest
+
 import httpretty
 import requests
-import unittest
 
 from swaggerpy.client import SwaggerClient
 
@@ -48,9 +49,8 @@ class ClientTest(unittest.TestCase):
             httpretty.GET, "http://swagger.py/swagger-test/pet",
             body='[]')
 
-        resp = self.uut.pet.listPets()
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual([], resp.json())
+        resp = self.uut.pet.listPets()()
+        self.assertEqual([], resp)
 
     @httpretty.activate
     def test_multiple(self):
@@ -58,9 +58,8 @@ class ClientTest(unittest.TestCase):
             httpretty.GET, "http://swagger.py/swagger-test/pet/find",
             body='[]')
 
-        resp = self.uut.pet.findPets(species=['cat', 'dog'])
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual([], resp.json())
+        resp = self.uut.pet.findPets(species=['cat', 'dog'])()
+        self.assertEqual([], resp)
         self.assertEqual({'species': ['cat,dog']},
                          httpretty.last_request().querystring)
 
@@ -68,12 +67,11 @@ class ClientTest(unittest.TestCase):
     def test_post(self):
         httpretty.register_uri(
             httpretty.POST, "http://swagger.py/swagger-test/pet",
-            status=requests.codes.created,
-            body='{"id": 1234, "name": "Sparky"}')
+            status=requests.codes.ok,
+            body='"Spark is born"')
 
-        resp = self.uut.pet.createPet(name='Sparky')
-        self.assertEqual(requests.codes.created, resp.status_code)
-        self.assertEqual({"id": 1234, "name": "Sparky"}, resp.json())
+        resp = self.uut.pet.createPet(name='Sparky')()
+        self.assertEqual('Spark is born', resp)
         self.assertEqual({'name': ['Sparky']},
                          httpretty.last_request().querystring)
 
@@ -83,9 +81,8 @@ class ClientTest(unittest.TestCase):
             httpretty.DELETE, "http://swagger.py/swagger-test/pet/1234",
             status=requests.codes.no_content)
 
-        resp = self.uut.pet.deletePet(petId=1234)
-        self.assertEqual(requests.codes.no_content, resp.status_code)
-        self.assertEqual('', resp.content)
+        resp = self.uut.pet.deletePet(petId=1234)()
+        self.assertEqual(None, resp)
 
     def setUp(self):
         # Default handlers for all swagger.py access
@@ -116,7 +113,7 @@ class ClientTest(unittest.TestCase):
                                     {
                                         "method": "POST",
                                         "nickname": "createPet",
-                                        "type": "void",
+                                        "type": "string",
                                         "parameters": [
                                             {
                                                 "name": "name",

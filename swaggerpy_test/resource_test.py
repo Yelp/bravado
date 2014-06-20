@@ -5,9 +5,10 @@
     ResourceListing > Resource > ResourceApi > ResourceOperation
 """
 
-import httpretty
-import unittest
 import json
+import unittest
+
+import httpretty
 
 from swaggerpy.client import SwaggerClient, Resource, Operation
 from swaggerpy.processors import SwaggerError
@@ -44,7 +45,7 @@ class ResourceTest(unittest.TestCase):
             self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
         [iterate_test(field) for field in ('swaggerVersion', 'basePath', 'apis')]
 
-    #Use baesPath as api domain if it is '/' in the API declaration
+    # Use basePath as api domain if it is '/' in the API declaration
     @httpretty.activate
     def test_correct_route_with_basePath_as_slash(self):
         httpretty.register_uri(
@@ -52,9 +53,8 @@ class ResourceTest(unittest.TestCase):
             body='[]')
         self.register_urls()
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resp = resource.testHTTP(test_param="foo")
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual([], resp.json())
+        resp = resource.testHTTP(test_param="foo")()
+        self.assertEqual([], resp)
 
     @httpretty.activate
     def test_setattrs_on_client_and_resource(self):
@@ -63,7 +63,7 @@ class ResourceTest(unittest.TestCase):
         self.assertTrue(isinstance(client.api_test, Resource))
         self.assertTrue(isinstance(client.api_test.testHTTP, Operation))
 
-    #Use baesPath mentioned in the API declaration if it is not '/'
+    # Use basePath mentioned in the API declaration if it is not '/'
     @httpretty.activate
     def test_correct_route_with_basePath_no_slash(self):
         httpretty.register_uri(
@@ -73,9 +73,8 @@ class ResourceTest(unittest.TestCase):
         response["basePath"] = "http://localhost/lame/test"
         self.register_urls(response)
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resp = resource.testHTTP(test_param="foo")
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual('', resp.json())
+        resp = resource.testHTTP(test_param="foo")()
+        self.assertEqual('', resp)
 
     def setUp(self):
         pass

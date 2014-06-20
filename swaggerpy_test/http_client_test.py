@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import base64
-
 import unittest
+
 import httpretty
 
 from swaggerpy.http_client import SynchronousHttpClient
