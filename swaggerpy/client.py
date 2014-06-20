@@ -50,62 +50,38 @@ class Operation(object):
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self._json[u'nickname'])
 
-    def __call__(self, **kwargs):
-        log.info(u"%s?%r" % (self._json[u'nickname'], urllib.urlencode(kwargs)))
-        request_params = {}
-        request_params['method'] = self._json[u'method']
-        request_params['url'] = self._uri
-        request_params['params'] = {}
-        request_params['data'] = None
-        request_params['headers'] = None
+    def construct_request(self, **kwargs):
+        request = {}
+        request['method'] = self._json[u'method']
+        request['url'] = self._uri
+        request['params'] = {}
         for param in self._json.get(u'parameters', []):
-            pname = param[u'name']
             # TODO: No check on param value right now.
             # To be done similar to checkResponse in SwaggerResponse
-            value = kwargs.get(pname)
-            param_type = param[u'paramType']
-            # Turn list params into comma separated values
-            # Assumption: values will only be primitive else str() fails
-            if isinstance(value, list) and param_type in ('path', 'query'):
-                value = u",".join(str(x) for x in value)
-
-            if value:
-                if param_type == u'path':
-                    request_params['url'] = request_params['url'].replace(
-                        u'{%s}' % pname, unicode(value))
-                elif param_type == u'query':
-                    request_params['params'][pname] = value
-                elif param_type == u'body':
-                    # value if not string is converted to json.dumps() later
-                    # TODO: model instance as body object not valid right now
-                    #       Must be given as a json string in the body
-                    request_params['data'] = value
-                    request_params['headers'] = {'content-type': 'application/json'}
-                else:
-                    raise AssertionError(
-                        u"Unsupported param_type %s" % param.param_type)
-                del kwargs[pname]
-            else:
-                if param.get(u'required'):
-                    raise TypeError(
-                        u"Missing required parameter '%s' for '%s'" %
-                        (pname, self._json[u'nickname']))
+            value = kwargs.pop(param[u'name'], None)
+            op_name = self._json[u'nickname']
+            validate_and_add_params_to_request(param, value, request, op_name)
         if kwargs:
-            raise TypeError(u"'%s' does not have parameters %r" %
-                            (self._json[u'nickname'], kwargs.keys()))
+            raise TypeError(u"'%s' does not have parameters %r" % (
+                self._json[u'nickname'], kwargs.keys()))
+        return request
+
+    def __call__(self, **kwargs):
+        log.info(u"%s?%r" % (self._json[u'nickname'], urllib.urlencode(kwargs)))
         if self._json[u'is_websocket']:
             raise AssertionError("Websockets are not supported in this version")
-        type_ = swagger_type.get_swagger_type(self._json)
-        models = self._models
+        request = self.construct_request(**kwargs)
 
-        def postHTTP(response):
+        def py_model_convert_callback(response):
             value = None
-            # Assume exception is raised if status code is not OK
+            type_ = swagger_type.get_swagger_type(self._json)
+            # Assume status is OK, as exception would have been raised if not OK
+            # Validate the response if it is not empty.
             if response.text:
                 # Validate and then convert API response to Python model instance
-                value = SwaggerResponse(response.json(), type_, models).swagger_object
+                value = SwaggerResponse(response.json(), type_, self._models).swagger_object
             return value
-        return HTTPFuture(self._http_client, request_params, postHTTP)
+        return HTTPFuture(self._http_client, request, py_model_convert_callback)
 
 
 class Resource(object):
@@ -310,3 +286,53 @@ def create_operation_docstring(json_):
         for msg in json_.get('responseMessages'):
             docstring += "\t%s: %s\n" % (msg.get("code"), msg.get("message"))
     return docstring
+
+
+def add_param_to_req(param, value, request):
+    """Populates request object with the request parameters
+
+    :param param: swagger spec details of a param
+    :type param: dict
+    :param value: value for the param given in the API call
+    :param request: request object to be populated
+    """
+    pname = param['name']
+    param_type = param['paramType']
+    if param_type == u'path':
+        request['url'] = request['url'].replace(
+            u'{%s}' % pname, unicode(value))
+    elif param_type == u'query':
+        request['params'][pname] = value
+    elif param_type == u'body':
+        # value if not string is converted to json.dumps() later
+        # TODO: model instance as body object not valid right now
+        #       Must be given as a json string in the body
+        request['data'] = value
+        request['headers'] = {'content-type': 'application/json'}
+    else:
+        raise AssertionError(
+            u"Unsupported param_type %s" % param_type)
+
+
+def validate_and_add_params_to_request(param, value, request, operation_name):
+    """Validates if a required param is given
+    And wraps 'add_param_to_req' to populate a valid request
+
+    :param param: swagger spec details of a param
+    :type param: dict
+    :param value: value for the param given in the API call
+    :param request: request object to be populated
+    :param operation_name: Name of operation, just used for logging
+    """
+    pname = param['name']
+    param_type = param['paramType']
+    # Turn list params into comma separated values
+    # Assumption: values will only be primitive else str() fails
+    if isinstance(value, list) and param_type in ('path', 'query'):
+        value = u",".join(str(x) for x in value)
+    if value:
+        add_param_to_req(param, value, request)
+    else:
+        if param.get(u'required'):
+            raise TypeError(u"Missing required parameter '%s' for '%s'" % (
+                pname, operation_name))
