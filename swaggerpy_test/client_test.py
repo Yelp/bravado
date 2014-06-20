@@ -5,6 +5,7 @@
 #
 
 """Swagger client tests.
+*Deprecated test*
 """
 
 import httpretty
@@ -108,7 +109,7 @@ class ClientTest(unittest.TestCase):
                                         "nickname": "listPets",
                                         "type": "array",
                                         "items": {
-                                                "type":"string"
+                                                "type": "string"
                                         },
                                         "parameters": []
                                     },
@@ -135,7 +136,7 @@ class ClientTest(unittest.TestCase):
                                         "nickname": "findPets",
                                         "type": "array",
                                         "items": {
-                                                "type":"string"
+                                                "type": "string"
                                         },
                                         "parameters": [
                                             {

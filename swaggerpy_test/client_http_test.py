@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 #
-# Copyright (c) 2013, Digium, Inc.
+# Copyright (c) 2014, Yelp, Inc.
 #
 
 """Swagger client tests.
+*Deprecated test*
 """
 
 import httpretty
@@ -16,7 +17,7 @@ from swaggerpy.client import SwaggerClient
 # noinspection PyDocstring
 class ClientTest(unittest.TestCase):
 
-    #Pass body if available and send header as json
+    # Pass body if available and send header as json
     @httpretty.activate
     def test_post_check_headers(self):
         body = {"id": "test_id"}

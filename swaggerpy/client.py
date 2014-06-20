@@ -9,14 +9,14 @@ import logging
 import os.path
 import re
 import urllib
-import swagger_type
-import swaggerpy
 from collections import namedtuple
-from response import SwaggerResponse
-from swagger_model import create_model_type
+from urlparse import urlparse
+
+import swagger_type
+from swaggerpy.response import SwaggerResponse
+from swaggerpy.swagger_model import create_model_type, Loader
 from swaggerpy.http_client import SynchronousHttpClient
 from swaggerpy.processors import WebsocketProcessor, SwaggerProcessor
-from urlparse import urlparse
 
 log = logging.getLogger(__name__)
 
@@ -60,29 +60,29 @@ class Operation(object):
         headers = None
         for param in self._json.get(u'parameters', []):
             pname = param[u'name']
-            # ToDo: No check on param value right now.
+            # TODO: No check on param value right now.
             # To be done similar to checkResponse in SwaggerResponse
             value = kwargs.get(pname)
-            paramType = param[u'paramType']
+            param_type = param[u'paramType']
             # Turn list params into comma separated values
             # Assumption: values will only be primitive else str() fails
-            if isinstance(value, list) and paramType in ('path', 'query'):
+            if isinstance(value, list) and param_type in ('path', 'query'):
                 value = u",".join(str(x) for x in value)
 
             if value:
-                if paramType == u'path':
+                if param_type == u'path':
                     uri = uri.replace(u'{%s}' % pname, unicode(value))
-                elif paramType == u'query':
+                elif param_type == u'query':
                     params[pname] = value
-                elif paramType == u'body':
+                elif param_type == u'body':
                     # value if not string is converted to json.dumps() later
-                    # ToDo: model instance as body object not valid right now
+                    # TODO: model instance as body object not valid right now
                     #       Must be given as a json string in the body
                     data = value
                     headers = {'content-type': 'application/json'}
                 else:
                     raise AssertionError(
-                        u"Unsupported paramType %s" % param.paramType)
+                        u"Unsupported param_type %s" % param.param_type)
                 del kwargs[pname]
             else:
                 if param.get(u'required'):
@@ -100,11 +100,11 @@ class Operation(object):
             response = self._http_client.ws_connect(uri, params=params)
         else:
             response = self._http_client.request(method, uri, params, data, headers)
-        _type = swagger_type.get_swagger_type(self._json)
+        type_ = swagger_type.get_swagger_type(self._json)
         value = None
         if self._http_client.is_response_ok(response) and response.text:
             # Validate and then convert API response to Python model instance
-            value = SwaggerResponse(response.json(), _type, self._models).parse_object()
+            value = SwaggerResponse(response.json(), type_, self._models).swagger_object
         setattr(response, 'value', value)
         return response
 
@@ -118,13 +118,13 @@ class Resource(object):
 
     def __init__(self, resource, http_client, basePath):
         log.debug(u"Building resource '%s'" % resource[u'name'])
-        self._json = resource
+        self.json_ = resource
         decl = resource['api_declaration']
         self._http_client = http_client
         self._basePath = basePath
         self._set_models()
         self._operations = dict(
-                (oper['nickname'], self._build_operation(decl, api, oper))
+            (oper['nickname'], self._build_operation(decl, api, oper))
             for api in decl['apis']
             for oper in api['operations'])
         for key in self._operations:
@@ -133,15 +133,15 @@ class Resource(object):
     def _set_models(self):
         """Create namedtuple of model types created from 'api_declaration'
         """
-        models_dict = self._json['api_declaration'].get('models', {})
+        models_dict = self.json_['api_declaration'].get('models', {})
         models = namedtuple('models', models_dict.keys())
-        keys = {}
+        keys_to_models = {}
         for key in models_dict.keys():
-            keys[key] = create_model_type(models_dict[key])
-        self.models = models(**keys)
+            keys_to_models[key] = create_model_type(models_dict[key])
+        self.models = models(**keys_to_models)
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self._json[u'name'])
+        return u"%s(%s)" % (self.__class__.__name__, self.json_[u'name'])
 
     def __getattr__(self, item):
         """Promote operations to be object fields.
@@ -172,7 +172,7 @@ class Resource(object):
 
         :return: Resource name.
         """
-        return self._json.get(u'name')
+        return self.json_.get(u'name')
 
     def _build_operation(self, decl, api, operation):
         """Build an operation object
@@ -183,7 +183,7 @@ class Resource(object):
         """
         log.debug(u"Building operation %s.%s" % (
             self._get_name(), operation[u'nickname']))
-        #If basePath is root, use the basePath stored during init
+        # If basePath is root, use the basePath stored during init
         basePath = self._basePath if decl[u'basePath'] == '/' else decl[u'basePath']
         uri = basePath + api[u'path']
         return Operation(uri, operation, self._http_client, self.models)
@@ -204,7 +204,7 @@ class SwaggerClient(object):
             http_client = SynchronousHttpClient()
         self._http_client = http_client
 
-        loader = swaggerpy.Loader(
+        loader = Loader(
             http_client, [WebsocketProcessor(), ClientProcessor()])
 
         # url_or_resource can be url of type str,
@@ -254,42 +254,59 @@ class SwaggerClient(object):
         return self._resources.get(name)
 
 
-def __build_param_string(param):
+def _build_param_string(param):
     """Builds param docstring from the param dict
 
-       :param param: data to create docstring from
-       :type param: dict
-       :returns: string giving meta info
+    :param param: data to create docstring from
+    :type param: dict
+    :returns: string giving meta info
+
+    Example: "  status (string) : Status values that need to be considered for filter
+                from_date (string) : Start date filter"
     """
     string = "\t" + param.get("name")
-    _type = param.get('$ref') or param.get('format') or param.get('type')
-    if _type:
-        string += (" (%s) " % _type)
+    type_ = param.get('$ref') or param.get('format') or param.get('type')
+    if type_:
+        string += (" (%s) " % type_)
     if param.get('description'):
         string += ": " + param["description"]
     return string + "\n"
 
 
-def create_operation_docstring(_json):
+def create_operation_docstring(json_):
     """Builds Operation docstring from the json dict
 
-       :param _json: data to create docstring from
-       :type _json: dict
-       :returns: string giving meta info
+    :param json_: data to create docstring from
+    :type json_: dict
+    :returns: string giving meta info
+
+    Example:
+    client.pet.findPetsByStatus?
+
+    "[GET] Finds Pets by status
+
+    Multiple status values can be provided with comma seperated strings
+    Args:
+            status (string) : Status values that need to be considered for filter
+            from_date (string) : Start date filter
+    Returns:
+            array
+    Raises:
+            400: Invalid status value"
     """
     docstring = ""
-    if _json.get('summary'):
-        docstring += ("[%s] %s\n\n" % (_json['method'], _json.get('summary')))
-    docstring += (_json["notes"] + "\n") if _json.get("notes") else ''
+    if json_.get('summary'):
+        docstring += ("[%s] %s\n\n" % (json_['method'], json_.get('summary')))
+    docstring += (json_["notes"] + "\n") if json_.get("notes") else ''
 
-    if _json["parameters"]:
+    if json_["parameters"]:
         docstring += "Args:\n"
-        for param in _json["parameters"]:
-            docstring += __build_param_string(param)
-    if _json.get('type'):
-        docstring += "Returns:\n\t%s\n" % _json["type"]
-    if _json.get('responseMessages'):
+        for param in json_["parameters"]:
+            docstring += _build_param_string(param)
+    if json_.get('type'):
+        docstring += "Returns:\n\t%s\n" % json_["type"]
+    if json_.get('responseMessages'):
         docstring += "Raises:\n"
-        for msg in _json.get('responseMessages'):
+        for msg in json_.get('responseMessages'):
             docstring += "\t%s: %s\n" % (msg.get("code"), msg.get("message"))
     return docstring

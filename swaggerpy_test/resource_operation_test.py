@@ -2,13 +2,13 @@
 
 """Swagger client tests to validate resource api operation
 
-    ResourceListing > Resource > ResourceApi > "ResourceOperation"
+ResourceListing > Resource > ResourceApi > "ResourceOperation"
 """
 
-import httpretty
-import unittest
-import json
 import copy
+import httpretty
+import json
+import unittest
 
 from swaggerpy.client import SwaggerClient
 from swaggerpy.processors import SwaggerError
@@ -138,7 +138,8 @@ class ResourceOperationTest(unittest.TestCase):
         response["apis"][0]["path"] = "/params/{param_id}/test_http"
         response["apis"][0]["operations"][0]["method"] = "POST"
         response["apis"][0]["operations"][0]["parameters"] = [query_parameter,
-                                                        path_parameter, body_parameter]
+                                                              path_parameter,
+                                                              body_parameter]
         self.register_urls(response)
         httpretty.register_uri(
             httpretty.POST, "http://localhost/params/42/test_http?test_param=foo",

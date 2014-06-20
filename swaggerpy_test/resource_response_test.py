@@ -5,13 +5,14 @@
     ResourceListing > "Resource" > ResourceApi > ResourceOperation
 """
 
-import httpretty
-import unittest
-import json
 import copy
-
+import httpretty
+import json
+import unittest
 from datetime import datetime
+
 from dateutil.tz import tzutc
+
 from swaggerpy.client import SwaggerClient
 from swaggerpy.processors import SwaggerError
 
@@ -52,29 +53,29 @@ class ResourceResponseTest(unittest.TestCase):
     @httpretty.activate
     def test_success_on_correct_primitive_types_returned_by_operation(self):
         types = {'void': '[]', 'string': '"test"', 'integer': '42', 'number': '3.4',
-                'boolean': 'true'}
-        for _type in types:
+                 'boolean': 'true'}
+        for type_ in types:
             response = copy.deepcopy(self.response)
-            response["apis"][0]["operations"][0]["type"] = _type
+            response["apis"][0]["operations"][0]["type"] = type_
             self.register_urls(response)
             httpretty.register_uri(
                 httpretty.GET, "http://localhost/test_http?test_param=foo",
-                body=types[_type])
+                body=types[type_])
             resource = SwaggerClient(u'http://localhost/api-docs').api_test
             resp = resource.testHTTP(test_param="foo")
-            self.assertEqual(resp.value, json.loads(types[_type]))
+            self.assertEqual(resp.value, json.loads(types[type_]))
 
     @httpretty.activate
     def test_error_on_incorrect_primitive_types_returned(self):
         types = {'void': '"NOT_EMPTY"', 'string': '42', 'integer': '3.4', 'number': '42',
-                'boolean': '"NOT_BOOL"'}
-        for _type in types:
+                 'boolean': '"NOT_BOOL"'}
+        for type_ in types:
             response = copy.deepcopy(self.response)
-            response["apis"][0]["operations"][0]["type"] = _type
+            response["apis"][0]["operations"][0]["type"] = type_
             self.register_urls(response)
             httpretty.register_uri(
                 httpretty.GET, "http://localhost/test_http?test_param=foo",
-                body=types[_type])
+                body=types[type_])
             resource = SwaggerClient(u'http://localhost/api-docs').api_test
             self.assertRaises(TypeError, resource.testHTTP, test_param="foo")
 

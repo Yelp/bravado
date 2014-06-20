@@ -2,7 +2,7 @@
 
 """Swagger client tests to validate resource_listing.
 
-    "ResourceListing" > Resource > ResourceApi > ResourceOperation
+"ResourceListing" > Resource > ResourceApi > ResourceOperation
 """
 
 import httpretty
@@ -19,7 +19,6 @@ def register_urls(response):
         body=json.dumps(response))
 
 
-# noinspection PyDocstring
 class ResourceListingTest(unittest.TestCase):
     response = {"swaggerVersion": "1.2", "apis": [{"path": "/api"}]}
 

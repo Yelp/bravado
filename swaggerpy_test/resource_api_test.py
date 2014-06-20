@@ -2,7 +2,7 @@
 
 """Swagger client tests to validate resource apis
 
-    ResourceListing > Resource > "ResourceApi" > ResourceOperation
+ResourceListing > Resource > "ResourceApi" > ResourceOperation
 """
 
 import httpretty

@@ -8,8 +8,9 @@ This can be to make templating easier, or ensure values required for a
 particular use case (such as ensuring that description and summary fields
 exist)
 """
-from itertools import izip
 import logging
+from itertools import izip
+
 log = logging.getLogger(__name__)
 
 
@@ -95,7 +96,9 @@ class SwaggerProcessor(object):
     """
 
     def pre_apply(self, resources):
-        """Apply this processor to a Swagger definition not loaded.
+        """Apply this processor to a Swagger definition before loading resources.
+
+        It fails if resource listing is not valid.
 
         :param resources: Top level Swagger definition.
         :type  resources: dict
@@ -113,6 +116,8 @@ class SwaggerProcessor(object):
 
     def apply(self, resources):
         """Apply this processor to a loaded Swagger definition.
+
+        It assumes Swagger resource listing is valid and verified.
 
         :param resources: Top level Swagger definition.
         :type  resources: dict
@@ -232,7 +237,7 @@ class SwaggerProcessor(object):
         pass
 
     def process_response_message(self, resources, resource, api, operation,
-                               response_message, context, model_ids):
+                                 response_message, context, model_ids):
         """Post process an Response on an operation.
 
         :param resources: Resource listing object

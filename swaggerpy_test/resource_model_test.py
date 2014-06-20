@@ -2,7 +2,7 @@
 
 """Swagger client tests to validate resource models
 
-    ResourceListing > Resource > "ResourceModel"
+ResourceListing > Resource > "ResourceModel"
 """
 
 import httpretty
@@ -16,32 +16,32 @@ from swaggerpy.processors import SwaggerError
 
 class ResourceTest(unittest.TestCase):
     models = {
-            "School": {
-                "id": "School",
-                "properties": {
-                    "name": {
-                        "type": "string"
-                        }
-                    },
-                "required": ["name"]
-                },
-            "User": {
-                "id": "User",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "format": "int64"
-                        },
-                    "schools": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "School"
-                            }
-                        }
-                    },
-                "required": ["id"]
+        "School": {
+            "id": "School",
+            "properties": {
+                "name": {
+                    "type": "string"
                 }
-            }
+            },
+            "required": ["name"]
+        },
+        "User": {
+            "id": "User",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                },
+                "schools": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "School"
+                    }
+                }
+            },
+            "required": ["id"]
+        }
+    }
     sample_model = {"id": 42, "schools": [{"name": "School1"}, {"name": "School2"}]}
     operation = {"method": "GET", "nickname": "testHTTP", "type": "User", "parameters": []}
     api = {"path": "/test_http", "operations": [operation]}
@@ -72,7 +72,8 @@ class ResourceTest(unittest.TestCase):
         User = resource.models.User
         School = resource.models.School
         user = User(id=42, schools=[School(name="a"), School(name="b")])
-        self.assertEqual({"schools": [{"name": "a"}, {"name": "b"}], "id": 42}, user)
+        user1 = User(schools=[School(name="a"), School(name="b")], id=42)
+        self.assertEqual(user1, user)
 
     # ToDo: DocString generated is not validated as of now
 
@@ -115,7 +116,7 @@ class ResourceTest(unittest.TestCase):
         self.assertNotEqual(None, models.User)
         self.assertEqual(['id'], models.User._required)
         self.assertEqual({'schools': 'array:School', 'id': 'integer:int64'},
-                models.User._swagger_types)
+                         models.User._swagger_types)
         self.assertNotEqual(None, models.School)
         self.assertEqual(['name'], models.School._required)
         self.assertEqual({'name': 'string'}, models.School._swagger_types)
