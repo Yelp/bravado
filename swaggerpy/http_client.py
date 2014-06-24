@@ -2,6 +2,7 @@
 
 #
 # Copyright (c) 2013, Digium, Inc.
+# Copyright (c) 2014, Yelp, Inc.
 #
 
 """HTTP client abstractions.
@@ -10,22 +11,10 @@
 import json
 import logging
 import urlparse
-from cStringIO import StringIO
-import urllib
 
-import crochet
 import requests
 import requests.auth
-import twisted.internet.error
-import twisted.web.client
 import websocket
-from twisted.internet import reactor
-from twisted.internet.defer import Deferred
-from twisted.internet.protocol import Protocol
-from twisted.web.client import Agent
-from twisted.web.client import FileBodyProducer
-from twisted.web.client import WebClientContextFactory
-from twisted.web.http_headers import Headers
 
 
 log = logging.getLogger(__name__)
@@ -178,102 +167,6 @@ class ApiKeyAuthenticator(Authenticator):
         request.params[self.param_name] = self.api_key
 
 
-class AsynchronousHttpClient(HttpClient):
-    """Asynchronous HTTP client implementation.
-    """
-
-    def setup(self, request_params):
-        self.request_params = request_params
-        data = self.request_params.pop('data', None)
-        params = self.request_params.pop('params')
-        url = self.request_params.pop('url', '')
-        if self.request_params.get('headers'):
-            self.request_params['headers'] = Headers(self.request_params['headers'])
-        """
-            if self.request_params['headers'].get('content-type') == 'application/json':
-                if data and not isinstance(data, (str, unicode)):
-                    data = json.dumps(data)
-        """
-        if data:
-            self.request_params['bodyProducer'] = FileBodyProducer(StringIO(data))
-        self.request_params['method'] = str(self.request_params['method'])
-        self.request_params['uri'] = str(url + "?" + urllib.urlencode(params))
-        crochet.setup()
-        self.eventual = self.fetch_http_inner()
-
-    def wait(self, timeout):
-        """Requests based implemention with timeout
-
-        :param timeout: time in seconds to wait for response
-        :return: Requests response
-        :rtype:  requests.Response
-        """
-        log.info(u"%s %s(%r)", self.request_params.get('method'),
-                 self.request_params.get('url'),
-                 self.request_params.get('params'))
-        return self.eventual.wait(timeout)
-
-    @crochet.run_in_reactor
-    def fetch_http_inner(self):
-
-        finished = Deferred()
-
-        agent = Agent(
-            reactor,
-            connectTimeout=None,
-            contextFactory=WebClientContextFactory())
-
-        deferred = agent.request(**self.request_params)
-
-        def response_callback(response):
-            response.deliverBody(_HTTPBodyFetcher(self.request_params, response, finished))
-        deferred.addCallback(response_callback)
-
-        def response_errback(reason):
-            finished.errback(reason)
-        deferred.addErrback(response_errback)
-
-        return finished
-
-
-class HTTPResponse(object):
-
-    def __init__(self, request, code, headers, body):
-        self.request = request
-        self.headers = dict(headers.getAllRawHeaders())
-        self.code = code
-        self.text = body
-
-    def json(self):
-        return json.loads(self.text)
-
-    def raise_for_status(self):
-        pass
-
-
-class _HTTPBodyFetcher(Protocol):
-
-    def __init__(self, request, response, finished):
-        self.buffer = StringIO()
-        self.request = request
-        self.response = response
-        self.finished = finished
-
-    def dataReceived(self, data):
-        self.buffer.write(data)
-
-    def connectionLost(self, reason):
-        if reason.check(twisted.web.client.ResponseDone) or reason.check(twisted.web.http.PotentialDataLoss):
-            self.finished.callback(
-                HTTPResponse(
-                    request=self.request,
-                    code=self.response.code,
-                    headers=self.response.headers,
-                    body=self.buffer.getvalue()))
-        else:
-            self.finished.errback(reason)
-
-
 # noinspection PyDocstring
 class SynchronousHttpClient(HttpClient):
     """Synchronous HTTP client implementation.
@@ -289,12 +182,8 @@ class SynchronousHttpClient(HttpClient):
         # There's no WebSocket factory to close; close connections individually
 
     def setup(self, request_params):
+        stringify_body(request_params)
         self.request_params = request_params
-        if self.request_params.get('headers'):
-            if self.request_params['headers'].get('content-type') == 'application/json':
-                data = self.request_params['data']
-                if not isinstance(data, (str, unicode)):
-                    self.request_params['data'] = json.dumps(data)
 
     def set_basic_auth(self, host, username, password):
         self.authenticator = BasicAuthenticator(
@@ -317,7 +206,8 @@ class SynchronousHttpClient(HttpClient):
                  self.request_params.get('params'))
         req = requests.Request(**self.request_params)
         self.apply_authentication(req)
-        return self.session.send(self.session.prepare_request(req), timeout=timeout)
+        return self.session.send(self.session.prepare_request(req),
+                                 timeout=timeout)
 
     def request(self, method, url, params=None, data=None, headers=None):
         """Requests based implementation.
@@ -326,7 +216,8 @@ class SynchronousHttpClient(HttpClient):
         :rtype:  requests.Response
         """
         if headers and headers.get('content-type') == 'application/json':
-            data = data if isinstance(data, (str, unicode)) else json.dumps(data)
+            data = (data if isinstance(data, (str, unicode))
+                    else json.dumps(data))
         kwargs = {}
         for i in ('method', 'url', 'params', 'data', 'headers'):
             kwargs[i] = locals()[i]
@@ -359,7 +250,12 @@ class SynchronousHttpClient(HttpClient):
             self.authenticator.apply(req)
 
 
-def preprocess_request_params(headers, data):
-    # If body is dict/list, dump it as a string
-    if headers and headers.get('content-type') == 'application/json':
-        return data if isinstance(data, (str, unicode)) else json.dumps(data)
+def stringify_body(request_params):
+    """Json dump the data to string if not already in string
+    """
+    # If header is None or header's value is None assign {}
+    headers = request_params.get('headers', {}) or {}
+    if headers.get('content-type') == 'application/json':
+        data = request_params['data']
+        if not isinstance(data, (str, unicode)):
+            request_params['data'] = json.dumps(data)
