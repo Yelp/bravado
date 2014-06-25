@@ -105,11 +105,17 @@ class ClientTest(unittest.TestCase):
                                 "operations": [
                                     {
                                         "method": "GET",
-                                        "nickname": "listPets"
+                                        "nickname": "listPets",
+                                        "type": "array",
+                                        "items": {
+                                                "type": "string"
+                                        },
+                                        "parameters": []
                                     },
                                     {
                                         "method": "POST",
                                         "nickname": "createPet",
+                                        "type": "void",
                                         "parameters": [
                                             {
                                                 "name": "name",
@@ -127,6 +133,10 @@ class ClientTest(unittest.TestCase):
                                     {
                                         "method": "GET",
                                         "nickname": "findPets",
+                                        "type": "array",
+                                        "items": {
+                                                "type": "string"
+                                        },
                                         "parameters": [
                                             {
                                                 "name": "species",
@@ -144,9 +154,11 @@ class ClientTest(unittest.TestCase):
                                     {
                                         "method": "DELETE",
                                         "nickname": "deletePet",
+                                        "type": "void",
                                         "parameters": [
                                             {
                                                 "name": "petId",
+                                                "type": "string",
                                                 "paramType": "path"
                                             }
                                         ]

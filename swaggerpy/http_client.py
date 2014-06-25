@@ -77,6 +77,10 @@ class HttpClient(object):
         raise NotImplementedError(
             u"%s: Method not implemented", self.__class__.__name__)
 
+    @classmethod
+    def is_response_ok(cls, response):
+        return response.status_code == requests.codes.ok
+
 
 class Authenticator(object):
     """Authenticates requests.
@@ -167,14 +171,14 @@ class SynchronousHttpClient(HttpClient):
         self.authenticator = ApiKeyAuthenticator(
             host=host, api_key=api_key, param_name=param_name)
 
-    def request(self, method, url, params=None, data=None, headers = None):
+    def request(self, method, url, params=None, data=None, headers=None):
         """Requests based implementation.
 
         :return: Requests response
         :rtype:  requests.Response
         """
         if headers and headers.get('content-type') == 'application/json':
-            data = json.dumps(data)
+            data = data if isinstance(data, (str, unicode)) else json.dumps(data)
         kwargs = {}
         for i in ('method', 'url', 'params', 'data', 'headers'):
             kwargs[i] = locals()[i]
