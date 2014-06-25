@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
 #
+# Copyright (c) 2013, Digium, Inc.
 # Copyright (c) 2014, Yelp, Inc.
 #
 
 """Swagger client tests.
-*Deprecated test*
 """
 
 import unittest

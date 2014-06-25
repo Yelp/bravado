@@ -5,7 +5,6 @@
 #
 
 """Swagger client tests.
-*Deprecated test*
 """
 
 import unittest

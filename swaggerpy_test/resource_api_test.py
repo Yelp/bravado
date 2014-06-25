@@ -1,44 +1,76 @@
 #!/usr/bin/env python
 
-"""Swagger client tests to validate resource apis
+"""Swagger client tests to validate 'resource api's
 
-ResourceListing > Resource > "ResourceApi" > ResourceOperation
+A sample 'resource api' is listed in the "apis" list below.
+{
+
+    "apiVersion": "1.0.0",
+    "swaggerVersion": "1.2",
+    "basePath": "http://petstore.swagger.wordnik.com/api",
+    ...
+    "apis": [
+        {
+            "path": "/user/{username}",
+            "operations": [...]
+        }
+    ]
+    ...
+}
 """
 
-import httpretty
-import unittest
 import json
-import copy
+import unittest
+
+import httpretty
 
 from swaggerpy.client import SwaggerClient
 from swaggerpy.processors import SwaggerError
 
 
 class ResourceApiTest(unittest.TestCase):
-    parameter = {"paramType": "query", "name": "test_param", "type": "string"}
-    operation = {"method": "GET", "nickname": "testHTTP", "type": "void", "parameters": [parameter]}
-    api = {"path": "/test_http", "operations": [operation]}
-    response = {"swaggerVersion": "1.2", "basePath": "/", "apis": [api]}
+    def setUp(self):
+        parameter = {
+            "paramType": "query",
+            "name": "test_param",
+            "type": "string"
+        }
+        operation = {
+            "method": "GET",
+            "nickname": "testHTTP",
+            "type": "void",
+            "parameters": [parameter]
+        }
+        api = {
+            "path": "/test_http",
+            "operations": [operation]
+        }
+        self.response = {
+            "swaggerVersion": "1.2",
+            "basePath": "/",
+            "apis": [api]
+        }
 
-    def register_urls(self, response):
+    def register_urls(self):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/api-docs",
-            body=json.dumps({"swaggerVersion": "1.2", "apis": [{"path": "/api_test"}]}))
+            body=json.dumps({
+                "swaggerVersion": "1.2",
+                "apis": [{
+                    "path": "/api_test"
+                }]
+            }))
         httpretty.register_uri(
             httpretty.GET, "http://localhost/api-docs/api_test",
-            body=json.dumps(response))
+            body=json.dumps(self.response))
 
     @httpretty.activate
     def test_error_on_missing_attr(self):
         def iterate_test(field):
-            response = copy.deepcopy(self.response)
-            response["apis"][0].pop(field)
-            self.register_urls(response)
+            self.response["apis"][0].pop(field)
+            self.register_urls()
             self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
         [iterate_test(field) for field in ('path', 'operations')]
-
-    def setUp(self):
-        pass
 
 
 if __name__ == '__main__':

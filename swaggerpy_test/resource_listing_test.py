@@ -1,61 +1,76 @@
 #!/usr/bin/env python
 
-"""Swagger client tests to validate resource_listing.
+"""Swagger client tests to validate 'resource_listing'.
 
-"ResourceListing" > Resource > ResourceApi > ResourceOperation
+Sample 'resource_listing' this test intends to check is like:
+
+{
+    "apiVersion": "1.0.0",
+    "swaggerVersion": "1.2",
+    "apis": [
+        {
+            "path": "/pet",
+            "description": "Operations about pets"
+        },
+        {
+            "path": "/user",
+            "description": "Operations about user"
+        }
+    ]
+}
 """
 
-import httpretty
-import unittest
 import json
+import unittest
+
+import httpretty
 
 from swaggerpy.client import SwaggerClient
 from swaggerpy.processors import SwaggerError
 
 
-def register_urls(response):
-    httpretty.register_uri(
-        httpretty.GET, "http://localhost/api-docs",
-        body=json.dumps(response))
-
-
 class ResourceListingTest(unittest.TestCase):
-    response = {"swaggerVersion": "1.2", "apis": [{"path": "/api"}]}
+    def setUp(self):
+        self.response = {
+            "swaggerVersion": "1.2",
+            "apis": [{
+                "path": "/api"
+            }]
+        }
+
+    def register_urls(self):
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/api-docs",
+            body=json.dumps(self.response))
 
     @httpretty.activate
     def test_error_on_wrong_swagger_version(self):
-        response = self.response.copy()
-        response["swaggerVersion"] = "XYZ"
-        register_urls(response)
+        self.response["swaggerVersion"] = "XYZ"
+        self.register_urls()
         self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
 
     @httpretty.activate
     def test_error_on_missing_path_in_apis(self):
-        response = self.response.copy()
-        response['apis'] = [{}]
-        register_urls(response)
+        self.response['apis'] = [{}]
+        self.register_urls()
         self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
 
     @httpretty.activate
     def test_error_on_missing_attr(self):
         def iterate_test(field):
-            response = self.response.copy()
-            response.pop(field)
-            register_urls(response)
+            self.response.pop(field)
+            self.register_urls()
             self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
         [iterate_test(field) for field in ('swaggerVersion', 'apis')]
 
     @httpretty.activate
     def test_success_with_api_call(self):
-        register_urls(self.response)
+        self.register_urls()
         httpretty.register_uri(
             httpretty.GET, "http://localhost/api-docs/api",
             body='{"swaggerVersion": "1.2", "basePath": "/", "apis":[]}')
         self.client = SwaggerClient(u'http://localhost/api-docs')
         self.assertNotEqual(None, self.client)
-
-    def setUp(self):
-        pass
 
 if __name__ == '__main__':
     unittest.main()
