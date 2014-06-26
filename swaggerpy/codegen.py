@@ -23,8 +23,8 @@ def main(argv=None):
         argv = sys.argv
 
     parser = OptionParser(usage=USAGE)
-    parser.add_option(u"-v", u"--verbose", action=u"store_true", dest=u"verbose",
-                      default=False, help=u"Verbose output")
+    parser.add_option(u"-v", u"--verbose", action=u"store_true",
+                      dest=u"verbose", default=False, help=u"Verbose output")
 
     (options, args) = parser.parse_args(argv)
 

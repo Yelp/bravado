@@ -90,9 +90,12 @@ class ResourceOperationTest(unittest.TestCase):
         def iterate_test(field):
             self.response["apis"][0]["operations"][0].pop(field)
             self.register_urls()
-            self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
-        [iterate_test(field) for field in ('method', 'nickname', 'type', 'parameters')]
+            self.assertRaises(SwaggerError, SwaggerClient,
+                              u'http://localhost/api-docs')
+        [iterate_test(field) for field in ('method', 'nickname', 'type',
+                                           'parameters')]
 
+    #############################
     # Validate param in operation
     #############################
     # ToDo: Check correctness if $ref is passed (and no type)
@@ -100,41 +103,51 @@ class ResourceOperationTest(unittest.TestCase):
     @httpretty.activate
     def test_error_on_missing_attr_in_parameter(self):
         def iterate_test(field):
-            self.response["apis"][0]["operations"][0]["parameters"][0].pop(field)
+            self.response["apis"][0]["operations"][0]["parameters"][0].pop(
+                field)
             self.register_urls()
-            self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
+            self.assertRaises(SwaggerError, SwaggerClient,
+                              u'http://localhost/api-docs')
         [iterate_test(field) for field in ('type', 'paramType', 'name')]
 
     @httpretty.activate
     def test_error_on_missing_items_param_in_array_parameter(self):
         self.response["apis"][0]["operations"][0]["type"] = "array"
         self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
+        self.assertRaises(SwaggerError, SwaggerClient,
+                          u'http://localhost/api-docs')
 
     @httpretty.activate
     def test_error_on_wrong_attr_type_in_parameter(self):
-        self.response["apis"][0]["operations"][0]["parameters"][0]["type"] = "WRONG_TYPE"
+        parameters = self.response["apis"][0]["operations"][0]["parameters"]
+        parameters[0]["type"] = "WRONG_TYPE"
         self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
+        self.assertRaises(SwaggerError, SwaggerClient,
+                          u'http://localhost/api-docs')
 
     @httpretty.activate
     def test_error_on_wrong_attr_type_in_array_parameter(self):
-        self.response["apis"][0]["operations"][0]["parameters"][0]["type"] = "array"
-        self.response["apis"][0]["operations"][0]["parameters"][0]["items"] = {"type": "WRONG_TYPE"}
+        parameters = self.response["apis"][0]["operations"][0]["parameters"]
+        parameters[0]["type"] = "array"
+        parameters[0]["items"] = {"type": "WRONG_TYPE"}
         self.register_urls()
-        self.assertRaises(TypeError, SwaggerClient, u'http://localhost/api-docs')
+        self.assertRaises(TypeError, SwaggerClient,
+                          u'http://localhost/api-docs')
 
     @httpretty.activate
     def test_error_on_missing_param_in_error_response(self):
         msg = {"code": 400, "message": "some message"}
 
         def iterate_test(field):
-            self.response["apis"][0]["operations"][0]["responseMessages"] = [msg]
-            self.response["apis"][0]["operations"][0]["responseMessages"][0].pop(field)
+            operations = self.response["apis"][0]["operations"]
+            operations[0]["responseMessages"] = [msg]
+            operations[0]["responseMessages"][0].pop(field)
             self.register_urls()
-            self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
+            self.assertRaises(SwaggerError, SwaggerClient,
+                              u'http://localhost/api-docs')
         [iterate_test(field) for field in ('code', 'message')]
 
+    ######################################################
     # Validate paramType of parameters - path, query, body
     ######################################################
 
@@ -147,10 +160,12 @@ class ResourceOperationTest(unittest.TestCase):
             "type": "string"
         }
         self.response["apis"][0]["path"] = "/params/{param_id}/test_http"
-        self.response["apis"][0]["operations"][0]["parameters"] = [query_parameter, path_parameter]
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            query_parameter, path_parameter]
         self.register_urls()
         httpretty.register_uri(
-            httpretty.GET, "http://localhost/params/42/test_http?test_param=foo",
+            httpretty.GET,
+            "http://localhost/params/42/test_http?test_param=foo",
             body='')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_param="foo", param_id="42")()
@@ -171,13 +186,16 @@ class ResourceOperationTest(unittest.TestCase):
             "items": {
                 "type": "integer"}}
         self.response["apis"][0]["path"] = "/params/{param_ids}/test_http"
-        self.response["apis"][0]["operations"][0]["parameters"] = [query_parameter, path_parameter]
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            query_parameter, path_parameter]
         self.register_urls()
         httpretty.register_uri(
-            httpretty.GET, "http://localhost/params/40,41,42/test_http?test_param=foo,bar",
+            httpretty.GET,
+            "http://localhost/params/40,41,42/test_http?test_param=foo,bar",
             body='')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resp = resource.testHTTP(test_params=["foo", "bar"], param_ids=[40, 41, 42])()
+        resp = resource.testHTTP(test_params=["foo", "bar"],
+                                 param_ids=[40, 41, 42])()
         self.assertEqual(None, resp)
 
     """
@@ -190,10 +208,12 @@ class ResourceOperationTest(unittest.TestCase):
             "name": "test_param",
             "type": "integer"
         }
-        self.response["apis"][0]["operations"][0]["parameters"] = [query_parameter]
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            query_parameter]
         self.register_urls()
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        self.assertRaises(TypeError, resource.testHTTP, test_param="NOT_INTEGER")
+        self.assertRaises(TypeError, resource.testHTTP,
+                          test_param="NOT_INTEGER")
     """
 
     @httpretty.activate
@@ -210,17 +230,20 @@ class ResourceOperationTest(unittest.TestCase):
             "type": "string"
         }
         self.response["apis"][0]["path"] = "/params/{param_id}/test_http"
-        self.response["apis"][0]["operations"][0]["method"] = "POST"
-        self.response["apis"][0]["operations"][0]["parameters"] = [query_parameter,
-                                                                   path_parameter,
-                                                                   body_parameter]
+        operations = self.response["apis"][0]["operations"]
+        operations[0]["method"] = "POST"
+        operations[0]["parameters"] = [query_parameter,
+                                       path_parameter,
+                                       body_parameter]
         self.register_urls()
         httpretty.register_uri(
-            httpretty.POST, "http://localhost/params/42/test_http?test_param=foo",
-            body='')
+            httpretty.POST,
+            "http://localhost/params/42/test_http?test_param=foo", body='')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resp = resource.testHTTP(test_param="foo", param_id="42", body="some_test")()
-        self.assertEqual('application/json', httpretty.last_request().headers['content-type'])
+        resp = resource.testHTTP(test_param="foo", param_id="42",
+                                 body="some_test")()
+        self.assertEqual('application/json',
+                         httpretty.last_request().headers['content-type'])
         self.assertEqual('some_test', httpretty.last_request().body)
         self.assertEqual(None, resp)
 
@@ -234,13 +257,16 @@ class ResourceOperationTest(unittest.TestCase):
                 "type": "string"
             }
         }
-        self.response["apis"][0]["operations"][0]["parameters"] = [body_parameter]
-        self.response["apis"][0]["operations"][0]["method"] = "POST"
+        operations = self.response["apis"][0]["operations"]
+        operations[0]["parameters"] = [body_parameter]
+        operations[0]["method"] = "POST"
         self.register_urls()
-        httpretty.register_uri(httpretty.POST, "http://localhost/test_http", body='')
+        httpretty.register_uri(httpretty.POST, "http://localhost/test_http",
+                               body='')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(body=["a", "b", "c"])()
-        self.assertEqual(["a", "b", "c"], json.loads(httpretty.last_request().body))
+        self.assertEqual(["a", "b", "c"],
+                         json.loads(httpretty.last_request().body))
         self.assertEqual(None, resp)
 
     # ToDo: Wrong body type not being checked as of now...

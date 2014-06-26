@@ -31,8 +31,8 @@ class ValidationProcessor(SwaggerProcessor):
 
         if not resources[u'swaggerVersion'] in SWAGGER_VERSIONS:
             raise SwaggerError(
-                u"Unsupported Swagger version %s" % resources[u'swaggerVersion'],
-                context)
+                u"Unsupported Swagger version %s" %
+                resources[u'swaggerVersion'], context)
 
     def process_resource_listing_api(self, resources, listing_api, context):
         # removing 'description' as it is recommended but not required
@@ -47,8 +47,8 @@ class ValidationProcessor(SwaggerProcessor):
 
         if not resource[u'swaggerVersion'] in SWAGGER_VERSIONS:
             raise SwaggerError(
-                u"Unsupported Swagger version %s" % resource[u'swaggerVersion'],
-                context)
+                u"Unsupported Swagger version %s" %
+                resource[u'swaggerVersion'], context)
         # Check model name and id consistency
         if u'models' in resource:
             for (model_name, model) in resource[u'models'].items():
@@ -67,8 +67,8 @@ class ValidationProcessor(SwaggerProcessor):
         if operation.get(u'type') in swagger_type.CONTAINER_TYPES:
             validate_required_fields(operation, [u'items'], context)
             return validate_type_or_ref(operation[u'items'], model_ids)
-        allowed_types = swagger_type.primitive_types() + \
-            model_ids.get('model_ids') + ['void']
+        allowed_types = (swagger_type.primitive_types() +
+                         model_ids.get('model_ids') + ['void'])
         if operation.get(u'type') not in allowed_types:
             raise SwaggerError("%s not in allowed ones: %s" % (
                 operation.get(u'type'), allowed_types), context)
@@ -85,7 +85,8 @@ class ValidationProcessor(SwaggerProcessor):
         if parameter.get(u'type') in swagger_type.CONTAINER_TYPES:
             validate_required_fields(parameter, [u'items'], context)
             return validate_type_or_ref(parameter[u'items'], model_ids)
-        allowed_types = swagger_type.primitive_types() + model_ids.get('model_ids')
+        allowed_types = (swagger_type.primitive_types() +
+                         model_ids.get('model_ids'))
         if parameter.get(u'type') not in allowed_types:
             raise SwaggerError("%s not in allowed types: %s" % (
                 parameter.get(u'type'), allowed_types), context)
@@ -311,7 +312,8 @@ def create_model_type(model):
         __repr__=lambda self: create_model_repr(self))
     model_type = type(name, (object,), magic_methods)
     # Define a class variable to store types of its attributes
-    setattr(model_type, '_swagger_types', swagger_type.get_swagger_types(props))
+    setattr(model_type, '_swagger_types',
+            swagger_type.get_swagger_types(props))
     # Define a class variable to store all required fields
     setattr(model_type, '_required', model.get('required'))
     return model_type
@@ -329,7 +331,8 @@ def set_props(model, **kwargs):
     types = getattr(model, '_swagger_types')
     arg_keys = kwargs.keys()
     for property_name, property_swagger_type in types.iteritems():
-        swagger_py_type = swagger_type.swagger_to_py_type(property_swagger_type)
+        swagger_py_type = swagger_type.swagger_to_py_type(
+            property_swagger_type)
         property_value = swagger_py_type() if swagger_py_type else None
         # Override any property values specified in kwargs
         if property_name in arg_keys:
@@ -424,4 +427,5 @@ def validate_type_or_ref(json, model_ids):
     if json.get(u'type') not in allowed_types and \
        json.get(u'$ref') not in allowed_refs:
         raise TypeError("%s not in allowed types: %s" % (
-            json.get(u'type') or json.get(u'$ref'), allowed_types + allowed_refs))
+            json.get(u'type') or
+            json.get(u'$ref'), allowed_types + allowed_refs))
