@@ -1,5 +1,6 @@
 #
 # Copyright (c) 2013, Digium, Inc.
+# Copyright (c) 2014, Yelp, Inc.
 #
 
 """Swagger client library.
@@ -67,21 +68,25 @@ class Operation(object):
         return request
 
     def __call__(self, **kwargs):
-        log.info(u"%s?%r" % (self._json[u'nickname'], urllib.urlencode(kwargs)))
+        log.info(u"%s?%r" % (self._json[u'nickname'],
+                             urllib.urlencode(kwargs)))
         if self._json[u'is_websocket']:
-            raise AssertionError("Websockets are not supported in this version")
+            raise AssertionError("Websockets aren't supported in this version")
         request = self.construct_request(**kwargs)
 
         def py_model_convert_callback(response):
             value = None
             type_ = swagger_type.get_swagger_type(self._json)
-            # Assume status is OK, as exception would have been raised if not OK
+            # Assume status is OK,
+            # as exception would have been raised otherwise
             # Validate the response if it is not empty.
             if response.text:
-                # Validate and then convert API response to Python model instance
-                value = SwaggerResponse(response.json(), type_, self._models).swagger_object
+                # Validate and convert API response to Python model instance
+                value = SwaggerResponse(
+                    response.json(), type_, self._models).swagger_object
             return value
-        return HTTPFuture(self._http_client, request, py_model_convert_callback)
+        return HTTPFuture(self._http_client,
+                          request, py_model_convert_callback)
 
 
 class Resource(object):
@@ -159,7 +164,8 @@ class Resource(object):
         log.debug(u"Building operation %s.%s" % (
             self._get_name(), operation[u'nickname']))
         # If basePath is root, use the basePath stored during init
-        basePath = self._basePath if decl[u'basePath'] == '/' else decl[u'basePath']
+        basePath = (self._basePath if decl[u'basePath'] == '/'
+                    else decl[u'basePath'])
         uri = basePath + api[u'path']
         return Operation(uri, operation, self._http_client, self.models)
 
@@ -198,11 +204,14 @@ class SwaggerClient(object):
 
         self._resources = {}
         for resource in self._api_docs[u'apis']:
-            self._resources[resource[u'name']] = Resource(resource, http_client, basePath)
-            setattr(self, resource['name'], self._get_resource(resource[u'name']))
+            self._resources[resource[u'name']] = Resource(
+                resource, http_client, basePath)
+            setattr(self, resource['name'],
+                    self._get_resource(resource[u'name']))
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self._api_docs.get(u'basePath'))
+        return u"%s(%s)" % (self.__class__.__name__,
+                            self._api_docs.get(u'basePath'))
 
     def __getattr__(self, item):
         """Promote resource objects to be client fields.
@@ -237,7 +246,7 @@ def _build_param_string(param):
     :type param: dict
     :returns: string giving meta info
 
-    Example: "  status (string) : Status values that need to be considered for filter
+    Example: "  status (string) : Statuses to be considered for filter
                 from_date (string) : Start date filter"
     """
     string = "\t" + param.get("name")
@@ -263,7 +272,7 @@ def create_operation_docstring(json_):
 
     Multiple status values can be provided with comma seperated strings
     Args:
-            status (string) : Status values that need to be considered for filter
+            status (string) : Statuses to be considered for filter
             from_date (string) : Start date filter
     Returns:
             array

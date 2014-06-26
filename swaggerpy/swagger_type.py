@@ -2,7 +2,7 @@
 # Copyright (c) Yelp, Inc.
 #
 
-"""Code for checking the validity of swagger types and conversion to python types
+"""Code to check the validity of swagger types and conversion to python types
 """
 
 from datetime import datetime
@@ -112,8 +112,9 @@ def is_complex(type_):
 
 
 def get_array_item_type(type_):
-    """returns the Array Type extracted from Array:ArrayType
-    Array:ArrayType is the convention followed for array type conversion to string
+    """returns the Array Type extracted from 'Array:ArrayType'
+    'Array:ArrayType' is the convention followed for
+    converting swagger array type into a string
 
     :param type_: converted internal type format eg. "array:integer:int64"
     :type type_: str or unicode

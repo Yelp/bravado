@@ -88,7 +88,8 @@ class ResourceResponseTest(unittest.TestCase):
     def register_urls(self):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/api-docs",
-            body=json.dumps({"swaggerVersion": "1.2", "apis": [{"path": "/api_test"}]}))
+            body=json.dumps(
+                {"swaggerVersion": "1.2", "apis": [{"path": "/api_test"}]}))
         httpretty.register_uri(
             httpretty.GET, "http://localhost/api-docs/api_test",
             body=json.dumps(self.response))
@@ -102,6 +103,7 @@ class ResourceResponseTest(unittest.TestCase):
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         self.assertRaises(HTTPError, resource.testHTTP(test_param="foo"))
 
+    ###############################################
     # Validate operation types against API response
     ###############################################
 
@@ -109,7 +111,8 @@ class ResourceResponseTest(unittest.TestCase):
     def test_error_on_wrong_attr_type_in_operation_type(self):
         self.response["apis"][0]["operations"][0]["type"] = "WRONG_TYPE"
         self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
+        self.assertRaises(SwaggerError, SwaggerClient,
+                          u'http://localhost/api-docs')
 
     @httpretty.activate
     def test_success_on_correct_primitive_types_returned_by_operation(self):
@@ -163,7 +166,8 @@ class ResourceResponseTest(unittest.TestCase):
             body='["2014-06-10T23:49:54.728+0000"]')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_param="foo")()
-        self.assertEqual(resp, [datetime(2014, 6, 10, 23, 49, 54, 728000, tzinfo=tzutc())])
+        self.assertEqual(resp, [datetime(
+            2014, 6, 10, 23, 49, 54, 728000, tzinfo=tzutc())])
 
     @httpretty.activate
     def test_error_on_incorrect_array_type_returned(self):
@@ -181,7 +185,8 @@ class ResourceResponseTest(unittest.TestCase):
     @httpretty.activate
     def test_future_is_returned_from_swagger_client(self):
         self.register_urls()
-        future = SwaggerClient(u'http://localhost/api-docs').api_test.testHTTP(test_param="a")
+        future = SwaggerClient(
+            u'http://localhost/api-docs').api_test.testHTTP(test_param="a")
         self.assertTrue(isinstance(future, HTTPFuture))
 
     # TODO test timeout : delay/sleep in httpretty body doesn't work.

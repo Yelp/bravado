@@ -47,20 +47,23 @@ class ResourceListingTest(unittest.TestCase):
     def test_error_on_wrong_swagger_version(self):
         self.response["swaggerVersion"] = "XYZ"
         self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
+        self.assertRaises(SwaggerError, SwaggerClient,
+                          u'http://localhost/api-docs')
 
     @httpretty.activate
     def test_error_on_missing_path_in_apis(self):
         self.response['apis'] = [{}]
         self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
+        self.assertRaises(SwaggerError, SwaggerClient,
+                          u'http://localhost/api-docs')
 
     @httpretty.activate
     def test_error_on_missing_attr(self):
         def iterate_test(field):
             self.response.pop(field)
             self.register_urls()
-            self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
+            self.assertRaises(SwaggerError, SwaggerClient,
+                              u'http://localhost/api-docs')
         [iterate_test(field) for field in ('swaggerVersion', 'apis')]
 
     @httpretty.activate
