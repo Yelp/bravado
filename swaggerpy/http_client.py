@@ -207,13 +207,15 @@ class SynchronousHttpClient(HttpClient):
                  self.request_params['params'])
         # If body is dict/list, dump it as a string
         if self.request_params.get('headers'):
-            if self.request_params['headers'].get('content-type') == 'application/json':
+            content_type = self.request_params['headers'].get('content-type')
+            if (content_type == 'application/json'):
                 data = self.request_params['data']
                 if not isinstance(data, (str, unicode)):
                     self.request_params['data'] = json.dumps(data)
         req = requests.Request(**self.request_params)
         self.apply_authentication(req)
-        return self.session.send(self.session.prepare_request(req), timeout=timeout)
+        return self.session.send(self.session.prepare_request(req),
+                                 timeout=timeout)
 
     def request(self, method, url, params=None, data=None, headers=None):
         """Requests based implementation.
@@ -222,7 +224,8 @@ class SynchronousHttpClient(HttpClient):
         :rtype:  requests.Response
         """
         if headers and headers.get('content-type') == 'application/json':
-            data = data if isinstance(data, (str, unicode)) else json.dumps(data)
+            data = (data if isinstance(data, (str, unicode))
+                    else json.dumps(data))
         kwargs = {}
         for i in ('method', 'url', 'params', 'data', 'headers'):
             kwargs[i] = locals()[i]

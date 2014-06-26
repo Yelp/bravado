@@ -52,7 +52,8 @@ class SwaggerResponse(object):
         }
 
     SwaggerResponse
-    Pet(category=Category(id=0L, name=u'chihuahua'), status=u'available', name=u'tommy',
+    Pet(category=Category(id=0L, name=u'chihuahua'),
+        status=u'available', name=u'tommy',
         tags=[Tag(id=0L, name=u'cute')], photoUrls=[u''], id=1)
     """
 
@@ -76,7 +77,8 @@ class SwaggerResponseCheck(object):
     """Initialization of the class checks for the validity of the API response.
 
     Also handles conversion of response to Python types if necessary
-    Ex. "2014-06-10T23:49:54.728+0000" -> datetime(2014, 6, 10, 23, 49, 54, 728000, tzinfo=tzutc())
+    Ex. "2014-06-10T23:49:54.728+0000" -> datetime(
+        2014, 6, 10, 23, 49, 54, 728000, tzinfo=tzutc())
 
     Raises TypeError/AssertionError if validation fails
     """
@@ -102,7 +104,8 @@ class SwaggerResponseCheck(object):
         """
         if self._type == 'void':
             if self.response:
-                raise TypeError("Response %s is supposed to be empty" % self.response)
+                raise TypeError("Response %s is supposed to be empty" %
+                                self.response)
         elif swagger_type.is_primitive(self._type):
             self._check_primitive_type()
         elif swagger_type.is_array(self._type):
@@ -131,15 +134,17 @@ class SwaggerResponseCheck(object):
             raise TypeError("Response is supposed to be an array instead of" %
                             self.response.__class__.__name__)
         array_item_type = swagger_type.get_array_item_type(self._type)
-        self.response = [SwaggerResponseCheck(item, array_item_type, self._models).response
-                         for item in self.response]
+        self.response = [SwaggerResponseCheck(
+            item, array_item_type, self._models).response
+            for item in self.response]
 
     def _check_complex_type(self):
         """Checks all the fields in the complex type are of proper type
         All the required fields are present and no extra field is present
         """
         if not isinstance(self.response, dict):
-            raise TypeError("Type for %s is expected to be object" % self.response)
+            raise TypeError("Type for %s is expected to be object" %
+                            self.response)
         klass = getattr(self._models, self._type)
         required = list(klass._required) if klass._required else []
         for key in self.response.keys():
@@ -148,10 +153,12 @@ class SwaggerResponseCheck(object):
             if key not in klass._swagger_types.keys():
                 raise TypeError("Type for '%s' was not defined in spec." % key)
             self.response[key] = SwaggerResponseCheck(self.response[key],
-                                                      klass._swagger_types[key],
+                                                      klass._swagger_types[
+                                                          key],
                                                       self._models).response
         if required:
-            raise AssertionError("These required fields not present: %s" % required)
+            raise AssertionError("These required fields not present: %s" %
+                                 required)
 
 
 class SwaggerResponseConstruct(object):
