@@ -7,6 +7,8 @@
 
 from datetime import datetime
 
+import dateutil.parser
+
 from swaggerpy.processors import SwaggerError
 
 # Tuple is added to allow a response '4' which is of
@@ -205,3 +207,93 @@ def get_swagger_types(props):
     for prop in props.keys():
         swagger_types[prop] = get_swagger_type(props[prop])
     return swagger_types
+
+
+class SwaggerTypeCheck(object):
+    """Initialization of the class checks for the validity
+    of the value to the type.
+
+    Raises TypeError/AssertionError if validation fails
+    """
+
+    def __init__(self, value, type_, models):
+        """Ctor to set params and then check the value
+
+        :param value: JSON value
+        :type value: dict
+        :param type_: type against which the value is to be validated
+        :type type_: str or unicode
+        :param models: namedtuple which maps complex type string to py type
+        :type models: namedtuple
+        """
+        self.value = value
+        self._type = type_
+        self.models = models
+        self._check_value_format()
+
+    def _check_value_format(self):
+        """Check the value as per the type of the value
+        """
+        if self._type == 'void':
+            if self.value:
+                raise TypeError("Response %s is supposed to be empty" %
+                                self.value)
+        elif is_primitive(self._type):
+            self._check_primitive_type()
+        elif is_array(self._type):
+            self._check_array_type()
+        else:
+            self._check_complex_type()
+
+    def _check_primitive_type(self):
+        """Validate value is of primitive type
+        Also converts swagger type to py type if needed eg. datetime
+        """
+        ptype = get_primitive_mapping(self._type)
+        if not isinstance(self.value, ptype):
+            # convert string datetime to python datetime format
+            if ptype == datetime:
+                self.value = dateutil.parser.parse(self.value)
+            else:
+                # For all the other cases, raise Type mismatch
+                raise TypeError("Type of %s should be in %r" % (
+                    self.value, ptype))
+
+    def _check_array_type(self):
+        """Validate array type value is actually array type
+        Also recursively converts value array to list of item array types
+        """
+        if self.value is None:
+            raise TypeError("Response array found as null instead of empty")
+        if self.value.__class__ is not list:
+            raise TypeError("Response is supposed to be an array instead of %s" %
+                            self.value.__class__.__name__)
+        array_item_type = get_array_item_type(self._type)
+        self.value = [SwaggerTypeCheck(
+            item, array_item_type, self.models).value
+            for item in self.value]
+
+    def _check_complex_type(self):
+        """Checks all the fields in the complex type are of proper type
+        All the required fields are present and no extra field is present
+        """
+        klass = getattr(self.models, self._type)
+        if isinstance(self.value, klass):
+            raise AssertionError("Py instance %r not supported in Request" %
+                                 self.value)
+        # The only valid type is JSON dict
+        if not isinstance(self.value, dict):
+            raise TypeError("Type for %s is expected to be object" %
+                            self.value)
+        required = list(klass._required) if klass._required else []
+        for key in self.value.keys():
+            if key in required:
+                required.remove(key)
+            if key not in klass._swagger_types.keys():
+                raise TypeError("Type for '%s' was not defined in spec." % key)
+            self.value[key] = SwaggerTypeCheck(self.value[key],
+                                               klass._swagger_types[key],
+                                               self.models).value
+        if required:
+            raise AssertionError("These required fields not present: %s" %
+                                 required)

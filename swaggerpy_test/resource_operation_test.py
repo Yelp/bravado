@@ -42,8 +42,10 @@ A sample 'peration' is listed below in 'operations' list.
 
 import json
 import unittest
+from datetime import datetime
 
 import httpretty
+from dateutil.tz import tzutc
 
 from swaggerpy.client import SwaggerClient
 from swaggerpy.processors import SwaggerError
@@ -131,7 +133,7 @@ class ResourceOperationTest(unittest.TestCase):
         parameters[0]["type"] = "array"
         parameters[0]["items"] = {"type": "WRONG_TYPE"}
         self.register_urls()
-        self.assertRaises(TypeError, SwaggerClient,
+        self.assertRaises(SwaggerError, SwaggerClient,
                           u'http://localhost/api-docs')
 
     @httpretty.activate
@@ -198,11 +200,8 @@ class ResourceOperationTest(unittest.TestCase):
                                  param_ids=[40, 41, 42])()
         self.assertEqual(None, resp)
 
-    """
-    # ToDo: Wrong param type not being checked as of now...
-    # Commented test is expected to fail
     @httpretty.activate
-    def test_error_on_get_with_wrong_type_param(self):
+    def test_error_on_get_with_wrong_type_in_query(self):
         query_parameter = {
             "paramType": "query",
             "name": "test_param",
@@ -214,7 +213,41 @@ class ResourceOperationTest(unittest.TestCase):
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         self.assertRaises(TypeError, resource.testHTTP,
                           test_param="NOT_INTEGER")
-    """
+
+    @httpretty.activate
+    def test_error_on_get_with_wrong_array_item_type_in_query(self):
+        query_parameter = {
+            "paramType": "query",
+            "name": "test_param",
+            "type": "array",
+            "items": {"type": "integer"}
+        }
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            query_parameter]
+        self.register_urls()
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        self.assertRaises(TypeError, resource.testHTTP,
+                          test_param=["NOT_INTEGER"])
+
+    @httpretty.activate
+    def test_success_on_passing_datetime_in_param(self):
+        query_parameter = {
+            "paramType": "query",
+            "name": "test_param",
+            "type": "string",
+            "format": "date-time"
+        }
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            query_parameter]
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/test_http",
+            body='', match_querystring=True)
+        self.register_urls()
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        some_date = datetime(2014, 6, 10, 23, 49, 54, 728000, tzinfo=tzutc())
+        resource.testHTTP(test_param=some_date)()
+        self.assertEqual(['2014-06-10 23:49:54.728000 00:00'],
+                         httpretty.last_request().querystring['test_param'])
 
     @httpretty.activate
     def test_success_on_post_with_path_query_and_body_params(self):
@@ -242,8 +275,6 @@ class ResourceOperationTest(unittest.TestCase):
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_param="foo", param_id="42",
                                  body="some_test")()
-        self.assertEqual('application/json',
-                         httpretty.last_request().headers['content-type'])
         self.assertEqual('some_test', httpretty.last_request().body)
         self.assertEqual(None, resp)
 

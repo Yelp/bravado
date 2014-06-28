@@ -180,7 +180,7 @@ class ResourceTest(unittest.TestCase):
         self.register_urls()
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         models = resource.models
-        self.assertTrue(isinstance(models, tuple))  # specifically namedtuple
+        self.assertTrue(isinstance(models, tuple))
         self.assertNotEqual(None, models.User)
         self.assertEqual(['id'], models.User._required)
         self.assertEqual({
@@ -325,6 +325,84 @@ class ResourceTest(unittest.TestCase):
             body=json.dumps(self.sample_model))
         self.assertRaises(AssertionError, SwaggerClient(
             u'http://localhost/api-docs').api_test.testHTTP())
+
+    ###############################################
+    # Raise that passing Model in request parameters
+    # is not supported for now
+    ################################################
+
+    @httpretty.activate
+    def test_error_on_passing_model_in_param_body(self):
+        query_parameter = {
+            "paramType": "body",
+            "name": "body",
+            "type": "School",
+        }
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            query_parameter]
+        self.register_urls()
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        school = resource.models.School()
+        self.assertRaises(AssertionError, resource.testHTTP, body=school)
+
+    @httpretty.activate
+    def test_error_on_passing_model_in_param_query(self):
+        """Only primitive types are allowed in path or query
+        """
+        query_parameter = {
+            "paramType": "query",
+            "name": "test_param",
+            "type": "School",
+        }
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            query_parameter]
+        self.register_urls()
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        school = resource.models.School()
+        # TODO: After Py model is accepted in request body,
+        # this test should then raise TypeError
+        self.assertRaises(AssertionError, resource.testHTTP, test_param=school)
+
+    #################################################
+    # Model JSON sent in request body
+    ################################################
+
+    @httpretty.activate
+    def test_content_type_as_json_if_complex_type_in_body(self):
+        query_parameter = {
+            "paramType": "body",
+            "name": "body",
+            "type": "School",
+        }
+        school = {"name": "temp"}
+        self.response["apis"][0]["operations"][0]["type"] = "School"
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            query_parameter]
+        self.register_urls()
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/test_http",
+            body=json.dumps(school))
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resource.testHTTP(body=school)()
+        self.assertEqual("application/json", httpretty.last_request().headers[
+            'content-type'])
+
+    @httpretty.activate
+    def test_content_type_not_present_if_only_primitive_type_in_body(self):
+        query_parameter = {
+            "paramType": "body",
+            "name": "body",
+            "type": "integer",
+        }
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            query_parameter]
+        self.register_urls()
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/test_http",
+            body=json.dumps({'id': 1}))
+        SwaggerClient(u'http://localhost/api-docs').api_test.testHTTP(
+            body=42)()
+        self.assertFalse('content-type' in httpretty.last_request().headers)
 
 
 if __name__ == '__main__':
