@@ -8,8 +8,9 @@
 """Swagger client tests.
 """
 
-import httpretty
 import unittest
+
+import httpretty
 
 from swaggerpy.client import SwaggerClient
 
@@ -24,13 +25,12 @@ class ClientTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.POST, "http://localhost/test_http?",
             body='[]', content_type='text/json')
-        resp = self.client.simple1.createAsterikInfoHttp(body=body)
+        resp = self.client.simple1.createAsterikInfoHttp(body=body)()
         self.assertEqual('application/json',
                          httpretty.last_request().headers['content-type'])
         self.assertEqual('{"id": "test_id"}',
                          httpretty.last_request().body)
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual([], resp.json())
+        self.assertEqual([], resp)
 
     @httpretty.activate
     def test_bad_operation(self):

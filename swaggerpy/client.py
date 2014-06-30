@@ -7,16 +7,15 @@
 
 import logging
 import os.path
-import re
 import urllib
 from collections import namedtuple
 from urlparse import urlparse
 
 import swagger_type
-from swaggerpy.response import SwaggerResponse
-from swaggerpy.swagger_model import create_model_type, Loader
 from swaggerpy.http_client import SynchronousHttpClient
 from swaggerpy.processors import WebsocketProcessor, SwaggerProcessor
+from swaggerpy.response import HTTPFuture, SwaggerResponse
+from swaggerpy.swagger_model import create_model_type, Loader
 
 log = logging.getLogger(__name__)
 
@@ -53,11 +52,12 @@ class Operation(object):
 
     def __call__(self, **kwargs):
         log.info(u"%s?%r" % (self._json[u'nickname'], urllib.urlencode(kwargs)))
-        method = self._json[u'method']
-        uri = self._uri
-        params = {}
-        data = None
-        headers = None
+        request_params = {}
+        request_params['method'] = self._json[u'method']
+        request_params['url'] = self._uri
+        request_params['params'] = {}
+        request_params['data'] = None
+        request_params['headers'] = None
         for param in self._json.get(u'parameters', []):
             pname = param[u'name']
             # TODO: No check on param value right now.
@@ -71,15 +71,16 @@ class Operation(object):
 
             if value:
                 if param_type == u'path':
-                    uri = uri.replace(u'{%s}' % pname, unicode(value))
+                    request_params['url'] = request_params['url'].replace(
+                        u'{%s}' % pname, unicode(value))
                 elif param_type == u'query':
-                    params[pname] = value
+                    request_params['params'][pname] = value
                 elif param_type == u'body':
                     # value if not string is converted to json.dumps() later
                     # TODO: model instance as body object not valid right now
                     #       Must be given as a json string in the body
-                    data = value
-                    headers = {'content-type': 'application/json'}
+                    request_params['data'] = value
+                    request_params['headers'] = {'content-type': 'application/json'}
                 else:
                     raise AssertionError(
                         u"Unsupported param_type %s" % param.param_type)
@@ -92,21 +93,19 @@ class Operation(object):
         if kwargs:
             raise TypeError(u"'%s' does not have parameters %r" %
                             (self._json[u'nickname'], kwargs.keys()))
-
-        log.info(u"%s %s(%r)", method, uri, params)
         if self._json[u'is_websocket']:
-            # Fix up http: URLs
-            uri = re.sub(u'^http', u"ws", uri)
-            response = self._http_client.ws_connect(uri, params=params)
-        else:
-            response = self._http_client.request(method, uri, params, data, headers)
+            raise AssertionError("Websockets are not supported in this version")
         type_ = swagger_type.get_swagger_type(self._json)
-        value = None
-        if self._http_client.is_response_ok(response) and response.text:
-            # Validate and then convert API response to Python model instance
-            value = SwaggerResponse(response.json(), type_, self._models).swagger_object
-        setattr(response, 'value', value)
-        return response
+        models = self._models
+
+        def postHTTP(response):
+            value = None
+            # Assume exception is raised if status code is not OK
+            if response.text:
+                # Validate and then convert API response to Python model instance
+                value = SwaggerResponse(response.json(), type_, models).swagger_object
+            return value
+        return HTTPFuture(self._http_client, request_params, postHTTP)
 
 
 class Resource(object):
@@ -204,8 +203,9 @@ class SwaggerClient(object):
             http_client = SynchronousHttpClient()
         self._http_client = http_client
 
+        # Load Swagger APIs always synchronously
         loader = Loader(
-            http_client, [WebsocketProcessor(), ClientProcessor()])
+            SynchronousHttpClient(), [WebsocketProcessor(), ClientProcessor()])
 
         # url_or_resource can be url of type str,
         # OR a dict of resource itself.

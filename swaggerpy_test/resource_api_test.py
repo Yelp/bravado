@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+#
+# Copyright (c) 2014, Yelp, Inc.
+#
+
 """Swagger client tests to validate 'resource api's
 
 A sample 'resource api' is listed in the "apis" list below.

@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+#
+# Copyright (c) 2014, Yelp, Inc.
+#
+
 """Swagger client tests to validate 'resource' declarations
 
 A sample 'resource' is listed below.
@@ -77,9 +81,8 @@ class ResourceTest(unittest.TestCase):
             body='[]')
         self.register_urls()
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resp = resource.testHTTP(test_param="foo")
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual([], resp.json())
+        resp = resource.testHTTP(test_param="foo")()
+        self.assertEqual([], resp)
 
     @httpretty.activate
     def test_setattrs_on_client_and_resource(self):
@@ -97,9 +100,8 @@ class ResourceTest(unittest.TestCase):
         self.response["basePath"] = "http://localhost/lame/test"
         self.register_urls()
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resp = resource.testHTTP(test_param="foo")
-        self.assertEqual(200, resp.status_code)
-        self.assertEqual('', resp.json())
+        resp = resource.testHTTP(test_param="foo")()
+        self.assertEqual('', resp)
 
 
 if __name__ == '__main__':

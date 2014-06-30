@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+#
+# Copyright (c) 2014, Yelp, Inc.
+#
+
 """Swagger client tests to validate resource api 'operation'
 
 A sample 'peration' is listed below in 'operations' list.
@@ -153,8 +157,8 @@ class ResourceOperationTest(unittest.TestCase):
             httpretty.GET, "http://localhost/params/42/test_http?test_param=foo",
             body='')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resp = resource.testHTTP(test_param="foo", param_id="42")
-        self.assertEqual(200, resp.status_code)
+        resp = resource.testHTTP(test_param="foo", param_id="42")()
+        self.assertEqual(None, resp)
 
     @httpretty.activate
     def test_success_on_get_with_array_in_path_and_query_params(self):
@@ -177,8 +181,8 @@ class ResourceOperationTest(unittest.TestCase):
             httpretty.GET, "http://localhost/params/40,41,42/test_http?test_param=foo,bar",
             body='')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resp = resource.testHTTP(test_params=["foo", "bar"], param_ids=[40, 41, 42])
-        self.assertEqual(200, resp.status_code)
+        resp = resource.testHTTP(test_params=["foo", "bar"], param_ids=[40, 41, 42])()
+        self.assertEqual(None, resp)
 
     """
     # ToDo: Wrong param type not being checked as of now...
@@ -219,10 +223,10 @@ class ResourceOperationTest(unittest.TestCase):
             httpretty.POST, "http://localhost/params/42/test_http?test_param=foo",
             body='')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resp = resource.testHTTP(test_param="foo", param_id="42", body="some_test")
+        resp = resource.testHTTP(test_param="foo", param_id="42", body="some_test")()
         self.assertEqual('application/json', httpretty.last_request().headers['content-type'])
         self.assertEqual('some_test', httpretty.last_request().body)
-        self.assertEqual(200, resp.status_code)
+        self.assertEqual(None, resp)
 
     @httpretty.activate
     def test_success_on_post_with_array_in_body_params(self):
@@ -239,9 +243,9 @@ class ResourceOperationTest(unittest.TestCase):
         self.register_urls()
         httpretty.register_uri(httpretty.POST, "http://localhost/test_http", body='')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resp = resource.testHTTP(body=["a", "b", "c"])
+        resp = resource.testHTTP(body=["a", "b", "c"])()
         self.assertEqual(["a", "b", "c"], json.loads(httpretty.last_request().body))
-        self.assertEqual(200, resp.status_code)
+        self.assertEqual(None, resp)
 
     # ToDo: Wrong body type not being checked as of now...
     @httpretty.activate

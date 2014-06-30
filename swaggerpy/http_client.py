@@ -2,17 +2,20 @@
 
 #
 # Copyright (c) 2013, Digium, Inc.
+# Copyright (c) 2014, Yelp, Inc.
 #
 
 """HTTP client abstractions.
 """
 
+import json
 import logging
+import urlparse
+
 import requests
 import requests.auth
-import urlparse
 import websocket
-import json
+
 
 log = logging.getLogger(__name__)
 
@@ -77,9 +80,24 @@ class HttpClient(object):
         raise NotImplementedError(
             u"%s: Method not implemented", self.__class__.__name__)
 
-    @classmethod
-    def is_response_ok(cls, response):
-        return response.status_code == requests.codes.ok
+    def setup(self, request_params):
+        """Store the request params for calling later.
+
+        :param request_params: Complete request data.
+        :type request_params: dict
+        """
+        raise NotImplementedError(
+            u"%s: Method not implemented", self.__class__.__name__)
+
+    def wait(self, timeout):
+        """Similar to 'request', Calls the API with request_params until timeout.
+
+        :param timeout: time in seconds to wait for response.
+        :type timeout: float
+        :return: Implementation specific response
+        """
+        raise NotImplementedError(
+            u"%s: Method not implemented", self.__class__.__name__)
 
 
 class Authenticator(object):
@@ -163,6 +181,10 @@ class SynchronousHttpClient(HttpClient):
         self.session.close()
         # There's no WebSocket factory to close; close connections individually
 
+    def setup(self, request_params):
+        stringify_body(request_params)
+        self.request_params = request_params
+
     def set_basic_auth(self, host, username, password):
         self.authenticator = BasicAuthenticator(
             host=host, username=username, password=password)
@@ -171,6 +193,22 @@ class SynchronousHttpClient(HttpClient):
         self.authenticator = ApiKeyAuthenticator(
             host=host, api_key=api_key, param_name=param_name)
 
+    def wait(self, timeout):
+        """Requests based implemention with timeout
+        No support of Websockets.
+
+        :param timeout: time in seconds to wait for response
+        :return: Requests response
+        :rtype:  requests.Response
+        """
+        log.info(u"%s %s(%r)", self.request_params.get('method'),
+                 self.request_params.get('url'),
+                 self.request_params.get('params'))
+        req = requests.Request(**self.request_params)
+        self.apply_authentication(req)
+        return self.session.send(self.session.prepare_request(req),
+                                 timeout=timeout)
+
     def request(self, method, url, params=None, data=None, headers=None):
         """Requests based implementation.
 
@@ -178,7 +216,8 @@ class SynchronousHttpClient(HttpClient):
         :rtype:  requests.Response
         """
         if headers and headers.get('content-type') == 'application/json':
-            data = data if isinstance(data, (str, unicode)) else json.dumps(data)
+            data = (data if isinstance(data, (str, unicode))
+                    else json.dumps(data))
         kwargs = {}
         for i in ('method', 'url', 'params', 'data', 'headers'):
             kwargs[i] = locals()[i]
@@ -209,3 +248,14 @@ class SynchronousHttpClient(HttpClient):
     def apply_authentication(self, req):
         if self.authenticator and self.authenticator.matches(req.url):
             self.authenticator.apply(req)
+
+
+def stringify_body(request_params):
+    """Json dump the data to string if not already in string
+    """
+    # If header is None or header's value is None assign {}
+    headers = request_params.get('headers', {}) or {}
+    if headers.get('content-type') == 'application/json':
+        data = request_params['data']
+        if not isinstance(data, (str, unicode)):
+            request_params['data'] = json.dumps(data)

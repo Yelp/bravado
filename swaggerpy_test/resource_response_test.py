@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+#
+# Copyright (c) 2014, Yelp, Inc.
+#
+
 """Swagger client tests to validate resource api response
 
 The response is validated against Swagger spec specifications
@@ -55,9 +59,11 @@ from datetime import datetime
 
 import httpretty
 from dateutil.tz import tzutc
+from requests import HTTPError
 
 from swaggerpy.client import SwaggerClient
 from swaggerpy.processors import SwaggerError
+from swaggerpy.response import HTTPFuture
 
 
 class ResourceResponseTest(unittest.TestCase):
@@ -98,7 +104,7 @@ class ResourceResponseTest(unittest.TestCase):
             httpretty.GET, "http://localhost/test_http?test_param=foo",
             status=500)
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        self.assertEqual(None, resource.testHTTP(test_param="foo").value)
+        self.assertRaises(HTTPError, resource.testHTTP(test_param="foo"))
 
     # Validate operation types against API response
     ###############################################
@@ -125,8 +131,8 @@ class ResourceResponseTest(unittest.TestCase):
                 httpretty.GET, "http://localhost/test_http?test_param=foo",
                 body=types[type_])
             resource = SwaggerClient(u'http://localhost/api-docs').api_test
-            resp = resource.testHTTP(test_param="foo")
-            self.assertEqual(resp.value, json.loads(types[type_]))
+            resp = resource.testHTTP(test_param="foo")()
+            self.assertEqual(json.loads(types[type_]), resp)
 
     @httpretty.activate
     def test_error_on_incorrect_primitive_types_returned(self):
@@ -144,7 +150,8 @@ class ResourceResponseTest(unittest.TestCase):
                 httpretty.GET, "http://localhost/test_http?test_param=foo",
                 body=types[type_])
             resource = SwaggerClient(u'http://localhost/api-docs').api_test
-            self.assertRaises(TypeError, resource.testHTTP, test_param="foo")
+            future = resource.testHTTP(test_param="foo")
+            self.assertRaises(TypeError, future)
 
     # check array and datetime types
     @httpretty.activate
@@ -159,8 +166,8 @@ class ResourceResponseTest(unittest.TestCase):
             httpretty.GET, "http://localhost/test_http?test_param=foo",
             body='["2014-06-10T23:49:54.728+0000"]')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resp = resource.testHTTP(test_param="foo")
-        self.assertEqual(resp.value, [datetime(2014, 6, 10, 23, 49, 54, 728000, tzinfo=tzutc())])
+        resp = resource.testHTTP(test_param="foo")()
+        self.assertEqual(resp, [datetime(2014, 6, 10, 23, 49, 54, 728000, tzinfo=tzutc())])
 
     @httpretty.activate
     def test_error_on_incorrect_array_type_returned(self):
@@ -171,7 +178,20 @@ class ResourceResponseTest(unittest.TestCase):
             httpretty.GET, "http://localhost/test_http?test_param=foo",
             body="123.32")
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        self.assertRaises(TypeError, resource.testHTTP, test_param="foo")
+        future = resource.testHTTP(test_param="foo")
+        self.assertRaises(TypeError, future)
+
+    # Also test that /test_http? is not called when Future is returned for Sync
+    @httpretty.activate
+    def test_future_is_returned_from_swagger_client(self):
+        self.register_urls()
+        future = SwaggerClient(u'http://localhost/api-docs').api_test.testHTTP(test_param="a")
+        self.assertTrue(isinstance(future, HTTPFuture))
+
+    # TODO test timeout : delay/sleep in httpretty body doesn't work.
+    @httpretty.activate
+    def test_timeout_works_for_sync_http_client(self):
+        pass
 
 
 if __name__ == '__main__':

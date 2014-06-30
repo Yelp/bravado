@@ -13,6 +13,22 @@ import dateutil.parser
 import swagger_type
 
 
+DEFAULT_TIMEOUT_S = 5.0
+
+
+class HTTPFuture(object):
+    """A future which inputs HTTP params"""
+    def __init__(self, http_client, request_params, postHTTP_callback):
+        self._http_client = http_client
+        self._postHTTP_callback = postHTTP_callback
+        self._http_client.setup(request_params)
+
+    def __call__(self, timeout=DEFAULT_TIMEOUT_S):
+        response = self._http_client.wait(timeout)
+        response.raise_for_status()
+        return self._postHTTP_callback(response)
+
+
 class SwaggerResponse(object):
     """Converts the API json response to Python class models
 
