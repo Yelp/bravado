@@ -201,9 +201,16 @@ class SynchronousHttpClient(HttpClient):
         :return: Requests response
         :rtype:  requests.Response
         """
-        log.info(u"%s %s(%r)", self.request_params.get('method'),
-                 self.request_params.get('url'),
-                 self.request_params.get('params'))
+        log.info(u"%s %s(%r)", self.request_params['method'],
+                 self.request_params['url'],
+                 self.request_params['params'])
+        # If body is dict/list, dump it as a string
+        if self.request_params.get('headers'):
+            content_type = self.request_params['headers'].get('content-type')
+            if (content_type == 'application/json'):
+                data = self.request_params['data']
+                if not isinstance(data, (str, unicode)):
+                    self.request_params['data'] = json.dumps(data)
         req = requests.Request(**self.request_params)
         self.apply_authentication(req)
         return self.session.send(self.session.prepare_request(req),

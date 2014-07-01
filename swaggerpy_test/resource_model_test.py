@@ -122,9 +122,12 @@ class ResourceTest(unittest.TestCase):
             httpretty.GET, "http://localhost/api-docs/api_test",
             body=json.dumps(self.response))
 
-    # Test that swaggerpy correctly creates model classes from swagger model definitions
-    # API calls are not triggered here. Scope is limited to model definition in swagger api spec
-    ############################################################################################
+    ################################################################
+    # Test that swaggerpy correctly creates model
+    # classes from swagger model definitions
+    # API calls are not triggered here.
+    # Scope is limited to model definition in swagger api spec
+    ################################################################
 
     @httpretty.activate
     def test_success_on_model_types_creation(self):
@@ -147,9 +150,11 @@ class ResourceTest(unittest.TestCase):
 
     @httpretty.activate
     def test_error_on_wrong_attr_type_in_model_declaration(self):
-        self.response["models"]["School"]["properties"]["name"]["type"] = "WRONG_TYPE"
+        self.response["models"]["School"]["properties"]["name"][
+            "type"] = "WRONG_TYPE"
         self.register_urls()
-        self.assertRaises(TypeError, SwaggerClient, u'http://localhost/api-docs')
+        self.assertRaises(TypeError, SwaggerClient,
+                          u'http://localhost/api-docs')
 
     @httpretty.activate
     def test_error_on_extra_attr_during_model_types_instantiation(self):
@@ -163,14 +168,16 @@ class ResourceTest(unittest.TestCase):
         def iterate_test(field):
             self.response["models"]["User"].pop(field)
             self.register_urls()
-            self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
+            self.assertRaises(SwaggerError, SwaggerClient,
+                              u'http://localhost/api-docs')
         [iterate_test(field) for field in ('id', 'properties')]
 
     @httpretty.activate
     def test_error_on_model_name_and_id_mismatch(self):
         self.response["models"]["User"]["id"] = "NotUser"
         self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
+        self.assertRaises(SwaggerError, SwaggerClient,
+                          u'http://localhost/api-docs')
 
     @httpretty.activate
     def test_setattrs_on_client_and_model(self):
@@ -199,6 +206,7 @@ class ResourceTest(unittest.TestCase):
         self.assertTrue(isinstance(user.schools, list))
         self.assertTrue(isinstance(school.name, str))
 
+    ########################################################################
     # Validate that Models specified in the spec have correct Property types
     # API calls are not triggered here. Scope is limited to properties
     # of models defined in swagger api spec
@@ -206,7 +214,8 @@ class ResourceTest(unittest.TestCase):
 
     @httpretty.activate
     def test_success_if_ref_but_no_type_in_property(self):
-        self.response["models"]["User"]["properties"]["school"] = {"$ref": "School"}
+        self.response["models"]["User"]["properties"]["school"] = {
+            "$ref": "School"}
         self.register_urls()
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         self.assertTrue('school' in resource.models.User().__dict__)
@@ -221,24 +230,31 @@ class ResourceTest(unittest.TestCase):
         # Empty dict assigned which means no ref or no type
         self.response["models"]["User"]["properties"]["school"] = {}
         self.register_urls()
-        self.assertRaises(TypeError, SwaggerClient, u'http://localhost/api-docs')
+        self.assertRaises(TypeError, SwaggerClient,
+                          u'http://localhost/api-docs')
 
     @httpretty.activate
     def test_error_if_no_complex_in_ref_in_property(self):
-        self.response["models"]["User"]["properties"]["school"] = {"$ref": "string"}
+        self.response["models"]["User"]["properties"]["school"] = {
+            "$ref": "string"}
         self.register_urls()
-        self.assertRaises(TypeError, SwaggerClient, u'http://localhost/api-docs')
+        self.assertRaises(TypeError, SwaggerClient,
+                          u'http://localhost/api-docs')
 
     @httpretty.activate
     def test_error_if_complex_in_type_in_property(self):
-        self.response["models"]["User"]["properties"]["school"] = {"type": "School"}
+        self.response["models"]["User"]["properties"]["school"] = {
+            "type": "School"}
         self.register_urls()
-        self.assertRaises(TypeError, SwaggerClient, u'http://localhost/api-docs')
+        self.assertRaises(TypeError, SwaggerClient,
+                          u'http://localhost/api-docs')
 
+    ###########################################################################
     # Validate the correctness of Complex (non-primitive) Type response
-    # ie. if a 'School' is expected to be returned, then it in fact should be a 'School'
+    # ie. if a 'School' is expected to be returned,
+    # then it in fact should be a 'School'
     # API call is triggered in below tests and the response type is validated
-    ####################################################################################
+    ###########################################################################
 
     @httpretty.activate
     def test_success_on_complex_operation_response_type(self):
@@ -252,7 +268,8 @@ class ResourceTest(unittest.TestCase):
         School = resource.models.School
         self.assertTrue(isinstance(resp, User))
         [self.assertTrue(isinstance(x, School)) for x in resp.schools]
-        self.assertEqual(User(id=42, schools=[School(name="School1"), School(name="School2")]), resp)
+        self.assertEqual(User(id=42, schools=[School(
+            name="School1"), School(name="School2")]), resp)
 
     @httpretty.activate
     def test_error_on_missing_required_type_instead_of_complex_type(self):
@@ -261,7 +278,8 @@ class ResourceTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http",
             body=json.dumps(self.sample_model))
-        self.assertRaises(AssertionError, SwaggerClient(u'http://localhost/api-docs').api_test.testHTTP())
+        self.assertRaises(AssertionError, SwaggerClient(
+            u'http://localhost/api-docs').api_test.testHTTP())
 
     @httpretty.activate
     def test_error_on_extra_type_instead_of_complex_type(self):
@@ -270,7 +288,8 @@ class ResourceTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http",
             body=json.dumps(self.sample_model))
-        self.assertRaises(TypeError, SwaggerClient(u'http://localhost/api-docs').api_test.testHTTP())
+        self.assertRaises(TypeError, SwaggerClient(
+            u'http://localhost/api-docs').api_test.testHTTP())
 
     @httpretty.activate
     def test_error_on_wrong_type_instead_of_complex_type(self):
@@ -278,7 +297,8 @@ class ResourceTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http",
             body='"NOT_COMPLEX_TYPE"')
-        self.assertRaises(TypeError, SwaggerClient(u'http://localhost/api-docs').api_test.testHTTP())
+        self.assertRaises(TypeError, SwaggerClient(
+            u'http://localhost/api-docs').api_test.testHTTP())
 
     @httpretty.activate
     def test_error_on_wrong_type_inside_complex_type(self):
@@ -287,7 +307,8 @@ class ResourceTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http",
             body=json.dumps(self.sample_model))
-        self.assertRaises(TypeError, SwaggerClient(u'http://localhost/api-docs').api_test.testHTTP())
+        self.assertRaises(TypeError, SwaggerClient(
+            u'http://localhost/api-docs').api_test.testHTTP())
 
     @httpretty.activate
     def test_error_on_wrong_type_inside_nested_complex_type_2(self):
@@ -296,7 +317,8 @@ class ResourceTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http",
             body=json.dumps(self.sample_model))
-        self.assertRaises(TypeError, SwaggerClient(u'http://localhost/api-docs').api_test.testHTTP())
+        self.assertRaises(TypeError, SwaggerClient(
+            u'http://localhost/api-docs').api_test.testHTTP())
 
     @httpretty.activate
     def test_error_on_missing_type_inside_nested_complex_type_1(self):
@@ -305,7 +327,8 @@ class ResourceTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http",
             body=json.dumps(self.sample_model))
-        self.assertRaises(AssertionError, SwaggerClient(u'http://localhost/api-docs').api_test.testHTTP())
+        self.assertRaises(AssertionError, SwaggerClient(
+            u'http://localhost/api-docs').api_test.testHTTP())
 
 
 if __name__ == '__main__':
