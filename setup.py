@@ -12,6 +12,9 @@ import os
 
 from setuptools import setup
 
+websocket_packages = ["websocket-client"]
+async_packages = ["crochet", "twisted"]
+
 setup(
     name="swaggerpy",
     version="0.3.0",
@@ -32,5 +35,10 @@ setup(
         "Programming Language :: Python",
     ],
     tests_require=["nose", "tissue", "coverage", "httpretty"],
-    install_requires=["requests", "websocket-client", "python-dateutil"],
+    install_requires=(["requests", "python-dateutil"] + websocket_packages +
+        async_packages),
+    entry_points="""
+    [console_scripts]
+    swagger-codegen = swaggerpy.codegen:main
+    """
 )
