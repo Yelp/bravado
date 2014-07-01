@@ -182,6 +182,7 @@ class SynchronousHttpClient(HttpClient):
         # There's no WebSocket factory to close; close connections individually
 
     def setup(self, request_params):
+        # request_params has mandatory: method, url, params
         stringify_body(request_params)
         self.request_params = request_params
 
