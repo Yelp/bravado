@@ -56,14 +56,44 @@ is validated against its type 'Pet' which is defined like so:
 import json
 import unittest
 from datetime import datetime
+from mock import patch, Mock
 
 import httpretty
 from dateutil.tz import tzutc
 from requests import HTTPError
 
+from swaggerpy.async_http_client import AsynchronousHttpClient
 from swaggerpy.client import SwaggerClient
+from swaggerpy.exception import CancelledError
 from swaggerpy.processors import SwaggerError
 from swaggerpy.response import HTTPFuture
+
+
+class HTTPFutureTest(unittest.TestCase):
+    def setUp(self):
+        http_client = Mock()
+        http_client.setup.return_value = None
+        self.future = HTTPFuture(http_client, None, None)
+
+    def test_raise_cancelled_error_if_result_is_called_after_cancel(self):
+        self.future.cancel()
+        self.assertRaises(CancelledError, self.future.result)
+
+    def test_cancelled_returns_true_if_called_after_cancel(self):
+        self.future.cancel()
+        self.assertTrue(self.future.cancelled())
+
+    def test_cancelled_returns_false_if_called_before_cancel(self):
+        self.assertFalse(self.future.cancelled())
+
+    def test_cancel_for_async_cancels_the_api_call(self):
+        http_client = AsynchronousHttpClient()
+        with patch.object(AsynchronousHttpClient, 'cancel') as mock_cancel:
+            with patch.object(AsynchronousHttpClient, 'setup') as mock_setup:
+                self.future = HTTPFuture(http_client, None, None)
+                self.future.cancel()
+                mock_setup.assert_called_once_with(None)
+                mock_cancel.assert_called_once_with()
 
 
 class ResourceResponseTest(unittest.TestCase):
@@ -104,7 +134,7 @@ class ResourceResponseTest(unittest.TestCase):
             httpretty.GET, "http://localhost/test_http?test_param=foo",
             status=500)
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        self.assertRaises(HTTPError, resource.testHTTP(test_param="foo"))
+        self.assertRaises(HTTPError, resource.testHTTP(test_param="foo").result)
 
     # Validate operation types against API response
     ###############################################
@@ -131,7 +161,7 @@ class ResourceResponseTest(unittest.TestCase):
                 httpretty.GET, "http://localhost/test_http?test_param=foo",
                 body=types[type_])
             resource = SwaggerClient(u'http://localhost/api-docs').api_test
-            resp = resource.testHTTP(test_param="foo")()
+            resp = resource.testHTTP(test_param="foo").result()
             self.assertEqual(json.loads(types[type_]), resp)
 
     @httpretty.activate
@@ -166,7 +196,7 @@ class ResourceResponseTest(unittest.TestCase):
             httpretty.GET, "http://localhost/test_http?test_param=foo",
             body='["2014-06-10T23:49:54.728+0000"]')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resp = resource.testHTTP(test_param="foo")()
+        resp = resource.testHTTP(test_param="foo").result()
         self.assertEqual(resp, [datetime(2014, 6, 10, 23, 49, 54, 728000, tzinfo=tzutc())])
 
     @httpretty.activate

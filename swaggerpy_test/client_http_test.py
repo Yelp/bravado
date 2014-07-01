@@ -25,7 +25,7 @@ class ClientTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.POST, "http://localhost/test_http?",
             body='[]', content_type='text/json')
-        resp = self.client.simple1.createAsterikInfoHttp(body=body)()
+        resp = self.client.simple1.createAsterikInfoHttp(body=body).result()
         self.assertEqual('application/json',
                          httpretty.last_request().headers['content-type'])
         self.assertEqual('{"id": "test_id"}',

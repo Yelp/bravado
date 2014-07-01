@@ -50,6 +50,11 @@ class AsynchronousHttpClient(http_client.HttpClient):
         crochet.setup()
         self.eventual = self.fetch_deferred()
 
+    def cancel(self):
+        """Try to cancel the API call using crochet's cancel() API
+        """
+        self.eventual.cancel()
+
     def wait(self, timeout):
         """Requests based implemention with timeout
 
