@@ -17,6 +17,7 @@ from swaggerpy.http_client import SynchronousHttpClient
 from swaggerpy.processors import WebsocketProcessor, SwaggerProcessor
 from swaggerpy.response import HTTPFuture, SwaggerResponse
 from swaggerpy.swagger_model import create_model_type, Loader
+from swaggerpy.swagger_type import SwaggerTypeCheck
 
 log = logging.getLogger(__name__)
 
@@ -60,8 +61,8 @@ class Operation(object):
             # TODO: No check on param value right now.
             # To be done similar to checkResponse in SwaggerResponse
             value = kwargs.pop(param[u'name'], None)
-            op_name = self._json[u'nickname']
-            validate_and_add_params_to_request(param, value, request, op_name)
+            validate_and_add_params_to_request(param, value, request,
+                                               self._models)
         if kwargs:
             raise TypeError(u"'%s' does not have parameters %r" % (
                 self._json[u'nickname'], kwargs.keys()))
@@ -306,24 +307,27 @@ def add_param_to_req(param, value, request):
     :param request: request object to be populated
     """
     pname = param['name']
-    param_type = param['paramType']
-    if param_type == u'path':
+    type_ = swagger_type.get_swagger_type(param)
+    param_req_type = param['paramType']
+
+    if param_req_type == u'path':
         request['url'] = request['url'].replace(
             u'{%s}' % pname, unicode(value))
-    elif param_type == u'query':
+    elif param_req_type == u'query':
         request['params'][pname] = value
-    elif param_type == u'body':
-        # value if not string is converted to json.dumps() later
-        # TODO: model instance as body object not valid right now
-        #       Must be given as a json string in the body
+    elif param_req_type == u'body':
         request['data'] = value
-        request['headers'] = {'content-type': 'application/json'}
+        if not swagger_type.is_primitive(type_):
+            # TODO: model instance is not valid right now
+            #       Must be given as a json string in the body
+            request['headers'] = {'content-type': 'application/json'}
+    # TODO: accept 'header', 'form' in paramType
     else:
         raise AssertionError(
-            u"Unsupported param_type %s" % param_type)
+            u"Unsupported Parameter type: %s" % param_req_type)
 
 
-def validate_and_add_params_to_request(param, value, request, operation_name):
+def validate_and_add_params_to_request(param, value, request, models):
     """Validates if a required param is given
     And wraps 'add_param_to_req' to populate a valid request
 
@@ -331,17 +335,29 @@ def validate_and_add_params_to_request(param, value, request, operation_name):
     :type param: dict
     :param value: value for the param given in the API call
     :param request: request object to be populated
-    :param operation_name: Name of operation, just used for logging
+    :param models: models tuple containing all complex model types
+    :type models: namedtuple
     """
     pname = param['name']
-    param_type = param['paramType']
-    # Turn list params into comma separated values
-    # Assumption: values will only be primitive else str() fails
-    if isinstance(value, list) and param_type in ('path', 'query'):
-        value = u",".join(str(x) for x in value)
+    type_ = swagger_type.get_swagger_type(param)
+    param_req_type = param['paramType']
+
+    # Check the parameter value against its type
+    SwaggerTypeCheck(value, type_, models)
+
+    if param_req_type in ('path', 'query'):
+        # Parameters in path, query need to be primitive/array types
+        if swagger_type.is_complex(type_):
+            raise TypeError("Param %s is in %s and not primitive" %
+                            (pname, param_req_type))
+
+        # If list, Turn list items into comma separated values
+        if swagger_type.is_array(type_):
+            value = u",".join(str(x) for x in value)
+
+    # Add the parameter value to the request object
     if value:
         add_param_to_req(param, value, request)
     else:
         if param.get(u'required'):
-            raise TypeError(u"Missing required parameter '%s' for '%s'" % (
-                pname, operation_name))
+            raise TypeError(u"Missing required parameter '%s'" % pname)
