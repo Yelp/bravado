@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+#
+# Copyright (c) 2014, Yelp, Inc.
+#
+
 """Swagger client tests to validate 'resource_listing'.
 
 Sample 'resource_listing' this test intends to check is like:

@@ -2,6 +2,7 @@
 
 #
 # Copyright (c) 2013, Digium, Inc.
+# Copyright (c) 2014, Yelp, Inc.
 #
 
 """HTTP client abstractions.
@@ -15,6 +16,7 @@ from datetime import datetime
 import requests
 import requests.auth
 import websocket
+
 
 log = logging.getLogger(__name__)
 
@@ -97,10 +99,6 @@ class HttpClient(object):
         """
         raise NotImplementedError(
             u"%s: Method not implemented", self.__class__.__name__)
-
-    @classmethod
-    def is_response_ok(cls, response):
-        return response.status_code == requests.codes.ok
 
 
 class Authenticator(object):
@@ -185,6 +183,8 @@ class SynchronousHttpClient(HttpClient):
         # There's no WebSocket factory to close; close connections individually
 
     def setup(self, request_params):
+        # request_params has mandatory: method, url, params
+        stringify_body(request_params)
         self.request_params = request_params
 
     def set_basic_auth(self, host, username, password):
@@ -254,3 +254,14 @@ class SynchronousHttpClient(HttpClient):
     def apply_authentication(self, req):
         if self.authenticator and self.authenticator.matches(req.url):
             self.authenticator.apply(req)
+
+
+def stringify_body(request_params):
+    """Json dump the data to string if not already in string
+    """
+    # If header is None or header's value is None assign {}
+    headers = request_params.get('headers', {}) or {}
+    if headers.get('content-type') == 'application/json':
+        data = request_params['data']
+        if not isinstance(data, (str, unicode)):
+            request_params['data'] = json.dumps(data)
