@@ -8,6 +8,7 @@ it into Python class types
 
 import swagger_type
 from swagger_type import SwaggerTypeCheck
+from swaggerpy.exception import CancelledError
 
 
 DEFAULT_TIMEOUT_S = 5.0
@@ -16,11 +17,36 @@ DEFAULT_TIMEOUT_S = 5.0
 class HTTPFuture(object):
     """A future which inputs HTTP params"""
     def __init__(self, http_client, request_params, postHTTP_callback):
+        """Kicks API call for Asynchronous client
+
+        :param http_client: instance with public methods: setup(), wait()
+        :param request_params: dict containing API request parameters
+        :param postHTTP_callback: function to callback on finish
+        """
         self._http_client = http_client
         self._postHTTP_callback = postHTTP_callback
         self._http_client.setup(request_params)
+        self._cancelled = False
 
-    def __call__(self, timeout=DEFAULT_TIMEOUT_S):
+    def cancelled(self):
+        """Checks if API is cancelled
+        Once cancelled, it can't be resumed
+        """
+        return self._cancelled
+
+    def cancel(self):
+        """Try to cancel the API (meaningful for Asynchronous client)
+        """
+        self._cancelled = True
+        self._http_client.cancel()
+
+    def result(self, timeout=DEFAULT_TIMEOUT_S):
+        """Blocking call to wait for API response
+        If API was cancelled earlier, CancelledError is raised
+        If everything goes fine, callback registered is triggered with response
+        """
+        if self.cancelled():
+            raise CancelledError()
         response = self._http_client.wait(timeout)
         response.raise_for_status()
         return self._postHTTP_callback(response)

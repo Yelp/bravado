@@ -174,7 +174,7 @@ class ResourceOperationTest(unittest.TestCase):
             "http://localhost/params/42/test_http?test_param=foo",
             body='')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resp = resource.testHTTP(test_param="foo", param_id="42")()
+        resp = resource.testHTTP(test_param="foo", param_id="42").result()
         self.assertEqual(None, resp)
 
     @httpretty.activate
@@ -201,7 +201,7 @@ class ResourceOperationTest(unittest.TestCase):
             body='')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_params=["foo", "bar"],
-                                 param_ids=[40, 41, 42])()
+                                 param_ids=[40, 41, 42]).result()
         self.assertEqual(None, resp)
 
     @httpretty.activate
@@ -249,7 +249,7 @@ class ResourceOperationTest(unittest.TestCase):
         self.register_urls()
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         some_date = datetime(2014, 6, 10, 23, 49, 54, 728000, tzinfo=tzutc())
-        resource.testHTTP(test_param=some_date)()
+        resource.testHTTP(test_param=some_date).result()
         self.assertEqual(['2014-06-10 23:49:54.728000 00:00'],
                          httpretty.last_request().querystring['test_param'])
 
@@ -278,7 +278,7 @@ class ResourceOperationTest(unittest.TestCase):
             "http://localhost/params/42/test_http?test_param=foo", body='')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_param="foo", param_id="42",
-                                 body="some_test")()
+                                 body="some_test").result()
         self.assertEqual('some_test', httpretty.last_request().body)
         self.assertEqual(None, resp)
 
@@ -299,7 +299,7 @@ class ResourceOperationTest(unittest.TestCase):
         httpretty.register_uri(httpretty.POST, "http://localhost/test_http",
                                body='')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resp = resource.testHTTP(body=["a", "b", "c"])()
+        resp = resource.testHTTP(body=["a", "b", "c"]).result()
         self.assertEqual(["a", "b", "c"],
                          json.loads(httpretty.last_request().body))
         self.assertEqual(None, resp)

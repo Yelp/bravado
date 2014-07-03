@@ -48,7 +48,7 @@ class ClientTest(unittest.TestCase):
             httpretty.GET, "http://swagger.py/swagger-test/pet",
             body='[]')
 
-        resp = self.uut.pet.listPets()()
+        resp = self.uut.pet.listPets().result()
         self.assertEqual([], resp)
 
     @httpretty.activate
@@ -57,7 +57,7 @@ class ClientTest(unittest.TestCase):
             httpretty.GET, "http://swagger.py/swagger-test/pet/find",
             body='[]')
 
-        resp = self.uut.pet.findPets(species=['cat', 'dog'])()
+        resp = self.uut.pet.findPets(species=['cat', 'dog']).result()
         self.assertEqual([], resp)
         self.assertEqual({'species': ['cat,dog']},
                          httpretty.last_request().querystring)
@@ -69,7 +69,7 @@ class ClientTest(unittest.TestCase):
             status=requests.codes.ok,
             body='"Spark is born"')
 
-        resp = self.uut.pet.createPet(name='Sparky')()
+        resp = self.uut.pet.createPet(name='Sparky').result()
         self.assertEqual('Spark is born', resp)
         self.assertEqual({'name': ['Sparky']},
                          httpretty.last_request().querystring)
@@ -80,7 +80,7 @@ class ClientTest(unittest.TestCase):
             httpretty.DELETE, "http://swagger.py/swagger-test/pet/1234",
             status=requests.codes.no_content)
 
-        resp = self.uut.pet.deletePet(petId=1234)()
+        resp = self.uut.pet.deletePet(petId=1234).result()
         self.assertEqual(None, resp)
 
     def setUp(self):
