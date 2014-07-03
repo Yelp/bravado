@@ -7,3 +7,4 @@ dist/
 nosetests.xml
 build
 *.swp
+*.tox

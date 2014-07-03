@@ -132,7 +132,8 @@ class SwaggerProcessor(object):
             context.pop()
 
             api_url = listing_api.get(u'url') or u'json:api_declaration'
-            context.push_str(u'resource', listing_api[u'api_declaration'], api_url)
+            context.push_str(u'resource', listing_api[u'api_declaration'],
+                             api_url)
             models = listing_api[u'api_declaration'].get(u'models', {})
             self.process_api_declaration(**context.args)
             for api in listing_api[u'api_declaration'][u'apis']:
@@ -140,7 +141,8 @@ class SwaggerProcessor(object):
                 self.process_resource_api(**context.args)
                 for operation in api[u'operations']:
                     context.push(u'operation', operation, u'nickname')
-                    context.push(u'model_ids', {'model_ids': models.keys()}, u'model_ids')
+                    context.push(u'model_ids', {'model_ids': models.keys()},
+                                 u'model_ids')
                     self.process_operation(**context.args)
                     for parameter in operation.get(u'parameters', []):
                         context.push(u'parameter', parameter, u'name')
@@ -158,7 +160,8 @@ class SwaggerProcessor(object):
                 self.process_model(**context.args)
                 for (name, prop) in model[u'properties'].items():
                     context.push(u'prop', prop, u'name')
-                    context.push(u'model_ids', {'model_ids': models.keys()}, u'model_ids')
+                    context.push(u'model_ids', {'model_ids': models.keys()},
+                                 u'model_ids')
                     self.process_property(**context.args)
                     context.pop()
                     context.pop()
@@ -210,7 +213,8 @@ class SwaggerProcessor(object):
         """
         pass
 
-    def process_operation(self, resources, resource, api, operation, context, model_ids):
+    def process_operation(self, resources, resource, api, operation,
+                          context, model_ids):
         """Post process an operation on an api.
 
         :param resources: Resource listing object
@@ -261,7 +265,8 @@ class SwaggerProcessor(object):
         """
         pass
 
-    def process_property(self, resources, resource, model, prop, context, model_ids):
+    def process_property(self, resources, resource, model, prop,
+                         context, model_ids):
         """Post process a property from a model.
 
         :param resources: Resource listing object
@@ -282,7 +287,8 @@ class WebsocketProcessor(SwaggerProcessor):
     def process_resource_api(self, resources, resource, api, context):
         api.setdefault(u'has_websocket', False)
 
-    def process_operation(self, resources, resource, api, operation, context, model_ids):
+    def process_operation(self, resources, resource, api, operation,
+                          context, model_ids):
         operation[u'is_websocket'] = operation.get(u'upgrade') == u'websocket'
 
         if operation[u'is_websocket']:

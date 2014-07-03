@@ -39,10 +39,11 @@ class AsynchronousHttpClient(http_client.HttpClient):
         :param request_params: request parameters for API call
         :type request_params: dict
         """
+        # request_params has mandatory: method, url, params
         self.request_params = {
             'method': str(request_params['method']),
             'bodyProducer': stringify_body(request_params),
-            'headers': listify_headers(request_params['headers']),
+            'headers': listify_headers(request_params.get('headers')),
             'uri': str(request_params['url'] + '?' + urllib.urlencode(
                 request_params['params']))
         }
@@ -160,7 +161,7 @@ def stringify_body(request_params):
     """Wraps the data using twisted FileBodyProducer
     """
     http_client.stringify_body(request_params)
-    data = request_params['data']
+    data = request_params.get('data')
     return FileBodyProducer(StringIO(data)) if data else None
 
 

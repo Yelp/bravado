@@ -73,7 +73,8 @@ class ResourceApiTest(unittest.TestCase):
         def iterate_test(field):
             self.response["apis"][0].pop(field)
             self.register_urls()
-            self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
+            self.assertRaises(SwaggerError, SwaggerClient,
+                              u'http://localhost/api-docs')
         [iterate_test(field) for field in ('path', 'operations')]
 
 

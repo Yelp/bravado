@@ -54,7 +54,8 @@ class ResourceTest(unittest.TestCase):
     def register_urls(self):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/api-docs",
-            body=json.dumps({"swaggerVersion": "1.2", "apis": [{"path": "/api_test"}]}))
+            body=json.dumps(
+                {"swaggerVersion": "1.2", "apis": [{"path": "/api_test"}]}))
         httpretty.register_uri(
             httpretty.GET, "http://localhost/api-docs/api_test",
             body=json.dumps(self.response))
@@ -63,15 +64,18 @@ class ResourceTest(unittest.TestCase):
     def test_error_on_wrong_swagger_version(self):
         self.response["swaggerVersion"] = "XYZ"
         self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
+        self.assertRaises(SwaggerError, SwaggerClient,
+                          u'http://localhost/api-docs')
 
     @httpretty.activate
     def test_error_on_missing_attr(self):
         def iterate_test(field):
             self.response.pop(field)
             self.register_urls()
-            self.assertRaises(SwaggerError, SwaggerClient, u'http://localhost/api-docs')
-        [iterate_test(field) for field in ('swaggerVersion', 'basePath', 'apis')]
+            self.assertRaises(SwaggerError, SwaggerClient,
+                              u'http://localhost/api-docs')
+        [iterate_test(field) for field in (
+            'swaggerVersion', 'basePath', 'apis')]
 
     # Use baesPath as api domain if it is '/' in the API declaration
     @httpretty.activate

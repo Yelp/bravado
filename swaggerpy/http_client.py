@@ -11,6 +11,7 @@
 import json
 import logging
 import urlparse
+from datetime import datetime
 
 import requests
 import requests.auth
@@ -188,6 +189,7 @@ class SynchronousHttpClient(HttpClient):
         # There's no WebSocket factory to close; close connections individually
 
     def setup(self, request_params):
+        # request_params has mandatory: method, url, params
         stringify_body(request_params)
         self.request_params = request_params
 
@@ -207,9 +209,16 @@ class SynchronousHttpClient(HttpClient):
         :return: Requests response
         :rtype:  requests.Response
         """
-        log.info(u"%s %s(%r)", self.request_params.get('method'),
-                 self.request_params.get('url'),
-                 self.request_params.get('params'))
+        log.info(u"%s %s(%r)", self.request_params['method'],
+                 self.request_params['url'],
+                 self.request_params['params'])
+        data = self.request_params.get('data')
+        if data and not isinstance(data, (str, unicode)):
+            # datetime is not json serializable, use str()
+            if isinstance(data, (datetime,)):
+                self.request_params['data'] = str(data)
+            else:
+                self.request_params['data'] = json.dumps(data)
         req = requests.Request(**self.request_params)
         self.apply_authentication(req)
         return self.session.send(self.session.prepare_request(req),
@@ -225,9 +234,6 @@ class SynchronousHttpClient(HttpClient):
         :return: Requests response
         :rtype:  requests.Response
         """
-        if headers and headers.get('content-type') == 'application/json':
-            data = (data if isinstance(data, (str, unicode))
-                    else json.dumps(data))
         kwargs = {}
         for i in ('method', 'url', 'params', 'data', 'headers'):
             kwargs[i] = locals()[i]

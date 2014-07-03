@@ -138,7 +138,10 @@ class ClientTest(unittest.TestCase):
                                             {
                                                 "name": "species",
                                                 "paramType": "query",
-                                                "type": "string",
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                },
                                                 "allowMultiple": True
                                             }
                                         ]
@@ -155,7 +158,7 @@ class ClientTest(unittest.TestCase):
                                         "parameters": [
                                             {
                                                 "name": "petId",
-                                                "type": "string",
+                                                "type": "integer",
                                                 "paramType": "path"
                                             }
                                         ]

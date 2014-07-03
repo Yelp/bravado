@@ -31,8 +31,8 @@ class ValidationProcessor(SwaggerProcessor):
 
         if not resources[u'swaggerVersion'] in SWAGGER_VERSIONS:
             raise SwaggerError(
-                u"Unsupported Swagger version %s" % resources[u'swaggerVersion'],
-                context)
+                u"Unsupported Swagger version %s" %
+                resources[u'swaggerVersion'], context)
 
     def process_resource_listing_api(self, resources, listing_api, context):
         # removing 'description' as it is recommended but not required
@@ -47,8 +47,8 @@ class ValidationProcessor(SwaggerProcessor):
 
         if not resource[u'swaggerVersion'] in SWAGGER_VERSIONS:
             raise SwaggerError(
-                u"Unsupported Swagger version %s" % resource[u'swaggerVersion'],
-                context)
+                u"Unsupported Swagger version %s" %
+                resource[u'swaggerVersion'], context)
         # Check model name and id consistency
         if u'models' in resource:
             for (model_name, model) in resource[u'models'].items():
@@ -64,31 +64,17 @@ class ValidationProcessor(SwaggerProcessor):
                           model_ids):
         required_fields = [u'method', u'nickname', u'parameters', u'type']
         validate_required_fields(operation, required_fields, context)
-        if operation.get(u'type') in swagger_type.CONTAINER_TYPES:
-            validate_required_fields(operation, [u'items'], context)
-            return validate_type_or_ref(operation[u'items'], model_ids)
-        allowed_types = swagger_type.primitive_types() + \
-            model_ids.get('model_ids') + ['void']
-        if operation.get(u'type') not in allowed_types:
-            raise SwaggerError("%s not in allowed ones: %s" % (
-                operation.get(u'type'), allowed_types), context)
+        allowed_types = (swagger_type.primitive_types() +
+                         model_ids.get('model_ids') + ['void'])
+        validate_type_or_ref(operation, model_ids, allowed_types, [], context)
 
     def process_parameter(self, resources, resource, api, operation, parameter,
                           context, model_ids):
-        # Assume 'type' is always necessary for any 'paramType'
         required_fields = [u'name', u'paramType', u'type']
         validate_required_fields(parameter, required_fields, context)
-        if u'allowedValues' in parameter:
-            raise SwaggerError(
-                u"Field 'allowedValues' invalid; use 'allowableValues'",
-                context)
-        if parameter.get(u'type') in swagger_type.CONTAINER_TYPES:
-            validate_required_fields(parameter, [u'items'], context)
-            return validate_type_or_ref(parameter[u'items'], model_ids)
-        allowed_types = swagger_type.primitive_types() + model_ids.get('model_ids')
-        if parameter.get(u'type') not in allowed_types:
-            raise SwaggerError("%s not in allowed types: %s" % (
-                parameter.get(u'type'), allowed_types), context)
+        allowed_types = (swagger_type.primitive_types() +
+                         model_ids.get('model_ids'))
+        validate_type_or_ref(parameter, model_ids, allowed_types, [], context)
 
     def process_response_message(self, resources, resource, api, operation,
                                  response_message, context, model_ids):
@@ -108,7 +94,10 @@ class ValidationProcessor(SwaggerProcessor):
         required_fields = []
         validate_required_fields(prop, required_fields, context)
         # explicit validate special case: type OR ref must exist
-        validate_type_or_ref(prop, model_ids)
+        allowed_types = swagger_type.primitive_types()
+        allowed_refs = model_ids.get('model_ids')
+        validate_type_or_ref(prop, model_ids, allowed_types,
+                             allowed_refs, None)
 
 
 def json_load_url(http_client, url):
@@ -311,7 +300,8 @@ def create_model_type(model):
         __repr__=lambda self: create_model_repr(self))
     model_type = type(name, (object,), magic_methods)
     # Define a class variable to store types of its attributes
-    setattr(model_type, '_swagger_types', swagger_type.get_swagger_types(props))
+    setattr(model_type, '_swagger_types',
+            swagger_type.get_swagger_types(props))
     # Define a class variable to store all required fields
     setattr(model_type, '_required', model.get('required'))
     return model_type
@@ -329,7 +319,8 @@ def set_props(model, **kwargs):
     types = getattr(model, '_swagger_types')
     arg_keys = kwargs.keys()
     for property_name, property_swagger_type in types.iteritems():
-        swagger_py_type = swagger_type.swagger_to_py_type(property_swagger_type)
+        swagger_py_type = swagger_type.swagger_to_py_type(
+            property_swagger_type)
         property_value = swagger_py_type() if swagger_py_type else None
         # Override any property values specified in kwargs
         if property_name in arg_keys:
@@ -411,17 +402,29 @@ def create_model_repr(model):
     return ("%s(%s)" % (model.__class__.__name__, string))
 
 
-def validate_type_or_ref(json, model_ids):
+def validate_type_or_ref(json, model_ids, allowed_types,
+                         allowed_refs, context):
     """Validates that either type OR ref is present in the json
 
        :param json: dict to check whether type or ref is present
        :param model_ids: list of allowed $ref ids (all models)
+       :param allowed_types: list of all kind of types allowed
+       :param allowed_refs: list of all kind of refs allowed
+       :param context: only used for Request Operation and Paramter
     """
     if json.get(u'type') in swagger_type.CONTAINER_TYPES:
-        return validate_type_or_ref(json[u'items'], model_ids)
-    allowed_types = swagger_type.primitive_types()
-    allowed_refs = model_ids.get('model_ids')
+        validate_required_fields(json, [u'items'], context)
+        # OVerride allowed_refs to add model_ids if empty
+        allowed_refs = model_ids.get('model_ids')
+        return validate_type_or_ref(json[u'items'], model_ids,
+                                    allowed_types, allowed_refs, context)
     if json.get(u'type') not in allowed_types and \
        json.get(u'$ref') not in allowed_refs:
-        raise TypeError("%s not in allowed types: %s" % (
-            json.get(u'type') or json.get(u'$ref'), allowed_types + allowed_refs))
+        # Show more detailed error with context, if present
+        if context:
+            raise SwaggerError("%s not in allowed types: %s" % (
+                json.get(u'type'), allowed_types), context)
+        else:
+            raise TypeError("%s not in allowed types: %s" % (
+                json.get(u'type') or
+                json.get(u'$ref'), allowed_types + allowed_refs))
