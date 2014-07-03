@@ -10,6 +10,7 @@ import json
 import os
 import urllib
 import urlparse
+from copy import copy
 
 import swagger_type
 from swaggerpy.http_client import SynchronousHttpClient
@@ -289,7 +290,8 @@ def create_model_type(model):
     """
     props = model['properties']
     name = str(model['id'])
-    magic_methods = dict(
+    methods = dict(
+        # Magic Methods :
         # Define the docstring
         __doc__=create_model_docstring(props),
         # Make equality work for dict & type OR type & type
@@ -297,8 +299,11 @@ def create_model_type(model):
         # Define the constructor for the type
         __init__=lambda self, **kwargs: set_props(self, **kwargs),
         # Define the str repr of the type
-        __repr__=lambda self: create_model_repr(self))
-    model_type = type(name, (object,), magic_methods)
+        __repr__=lambda self: create_model_repr(self),
+        # Instance methods :
+        # Generates flat dict from the model instance
+        _flat_dict=lambda self: create_flat_dict(self))
+    model_type = type(name, (object,), methods)
     # Define a class variable to store types of its attributes
     setattr(model_type, '_swagger_types',
             swagger_type.get_swagger_types(props))
@@ -307,7 +312,6 @@ def create_model_type(model):
     return model_type
 
 
-# ToDo: Check that no required fields are None if assigned by kwargs
 def set_props(model, **kwargs):
     """Constructor for the generated type - assigns given or default values
 
@@ -385,6 +389,39 @@ def compare(first, second):
     and compares again on those dict values
     """
     return hasattr(second, '__dict__') and first.__dict__ == second.__dict__
+
+
+def create_flat_dict(model):
+    """Generates __dict__ of the model traversing recursively
+    each of the list item of an array and calling it again.
+    While __dict__ only converts it on one level.
+
+       :param model: generated model type reference
+       :type model: type
+       :returns: flat dict repr of the model
+
+       Ex: Pet(id=3, name="Name", photoUrls=["7"], tags=[Tag(id=2, name='T')])
+
+       converts to:
+        {'id': 3,
+         'name': 'Name',
+         'photoUrls': ['7'],
+         'tags': [{'id': 2, 'name': 'T'}]}
+    """
+    if not hasattr(model, '__dict__'):
+        return model
+    model_dict = copy(model.__dict__)
+    for k, v in model.__dict__.iteritems():
+        if isinstance(v, list):
+            model_dict[k] = [create_flat_dict(x) for x in v if x is not None]
+        elif v is None:
+            # Remove None values from dict to avoid their type checking
+            if k in model._required:
+                raise AttributeError("Required field %s can not be None" % k)
+            model_dict.pop(k)
+        else:
+            model_dict[k] = create_flat_dict(v)
+    return model_dict
 
 
 def create_model_repr(model):

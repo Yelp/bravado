@@ -140,7 +140,6 @@ class ResourceResponseTest(unittest.TestCase):
     @httpretty.activate
     def test_error_on_incorrect_primitive_types_returned(self):
         types = {
-            'void': '"NOT_EMPTY"',
             'string': '42',
             'integer': '3.4',
             'number': '42',
@@ -155,6 +154,17 @@ class ResourceResponseTest(unittest.TestCase):
             resource = SwaggerClient(u'http://localhost/api-docs').api_test
             future = resource.testHTTP(test_param="foo")
             self.assertRaises(TypeError, future)
+
+    @httpretty.activate
+    def test_success_on_returning_anything_for_type_void(self):
+        # default operation type is void
+        self.register_urls()
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/test_http?test_param=foo",
+            body='{"some_foo": "bar"}')
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resp = resource.testHTTP(test_param="foo")()
+        self.assertEqual({"some_foo": "bar"}, resp)
 
     # check array and datetime types
     @httpretty.activate
