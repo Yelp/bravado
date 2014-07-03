@@ -90,11 +90,17 @@ class HttpClient(object):
             u"%s: Method not implemented", self.__class__.__name__)
 
     def wait(self, timeout):
-        """Similar to 'request', Calls the API with request_params until timeout.
+        """Calls the API with request_params and waits till timeout.
 
         :param timeout: time in seconds to wait for response.
         :type timeout: float
         :return: Implementation specific response
+        """
+        raise NotImplementedError(
+            u"%s: Method not implemented", self.__class__.__name__)
+
+    def cancel(self):
+        """Cancels the API call
         """
         raise NotImplementedError(
             u"%s: Method not implemented", self.__class__.__name__)
@@ -208,6 +214,10 @@ class SynchronousHttpClient(HttpClient):
         self.apply_authentication(req)
         return self.session.send(self.session.prepare_request(req),
                                  timeout=timeout)
+
+    def cancel(self):
+        """Nothing to be done for Synchronous client
+        """
 
     def request(self, method, url, params=None, data=None, headers=None):
         """Requests based implementation.

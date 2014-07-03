@@ -17,3 +17,9 @@ class HTTPError(IOError):
                 hasattr(response, 'request')):
             self.request = self.response.request
         super(HTTPError, self).__init__(*args, **kwargs)
+
+
+class CancelledError():
+    """Error raised when result() is called from HTTPFuture
+    and call was actually cancelled
+    """
