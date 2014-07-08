@@ -63,7 +63,7 @@ from dateutil.tz import tzutc
 from requests import HTTPError
 
 from swaggerpy.async_http_client import AsynchronousHttpClient
-from swaggerpy.client import SwaggerClient
+from swaggerpy.client import _SwaggerClient as SwaggerClient
 from swaggerpy.exception import CancelledError
 from swaggerpy.processors import SwaggerError
 from swaggerpy.response import HTTPFuture

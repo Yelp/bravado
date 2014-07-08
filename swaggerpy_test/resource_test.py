@@ -24,7 +24,8 @@ import unittest
 
 import httpretty
 
-from swaggerpy.client import SwaggerClient, Resource, Operation
+from swaggerpy.client import _SwaggerClient as SwaggerClient
+from swaggerpy.client import Resource, Operation
 from swaggerpy.processors import SwaggerError
 
 
