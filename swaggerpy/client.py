@@ -52,7 +52,7 @@ class Operation(object):
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self._json[u'nickname'])
 
-    def construct_request(self, **kwargs):
+    def _construct_request(self, **kwargs):
         request = {}
         request['method'] = self._json[u'method']
         request['url'] = self._uri
@@ -73,7 +73,7 @@ class Operation(object):
                              urllib.urlencode(kwargs)))
         if self._json[u'is_websocket']:
             raise AssertionError("Websockets aren't supported in this version")
-        request = self.construct_request(**kwargs)
+        request = self._construct_request(**kwargs)
 
         def py_model_convert_callback(response):
             value = None
@@ -99,7 +99,7 @@ class Resource(object):
 
     def __init__(self, resource, http_client, basePath):
         log.debug(u"Building resource '%s'" % resource[u'name'])
-        self.json_ = resource
+        self._json = resource
         decl = resource['api_declaration']
         self._http_client = http_client
         self._basePath = basePath
@@ -114,7 +114,7 @@ class Resource(object):
     def _set_models(self):
         """Create namedtuple of model types created from 'api_declaration'
         """
-        models_dict = self.json_['api_declaration'].get('models', {})
+        models_dict = self._json['api_declaration'].get('models', {})
         models = namedtuple('models', models_dict.keys())
         keys_to_models = {}
         for key in models_dict.keys():
@@ -122,7 +122,7 @@ class Resource(object):
         self.models = models(**keys_to_models)
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self.json_[u'name'])
+        return u"%s(%s)" % (self.__class__.__name__, self._json[u'name'])
 
     def __getattr__(self, item):
         """Promote operations to be object fields.
@@ -153,7 +153,7 @@ class Resource(object):
 
         :return: Resource name.
         """
-        return self.json_.get(u'name')
+        return self._json.get(u'name')
 
     def _build_operation(self, decl, api, operation):
         """Build an operation object
