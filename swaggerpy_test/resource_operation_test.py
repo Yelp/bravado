@@ -51,7 +51,7 @@ from datetime import datetime
 import httpretty
 from dateutil.tz import tzutc
 
-from swaggerpy.client import SwaggerClient
+from swaggerpy.client import _SwaggerClient as SwaggerClient
 from swaggerpy.processors import SwaggerError
 
 

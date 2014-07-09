@@ -7,12 +7,69 @@
 """Swagger client tests.
 """
 
+import time
 import unittest
+from mock import patch
 
 import httpretty
 import requests
 
-from swaggerpy.client import SwaggerClient
+from swaggerpy import client
+
+
+class SwaggerClientTest(unittest.TestCase):
+    """Test the proxy wrapper of SwaggerClient
+    """
+
+    def setUp(self):
+        client.SWAGGER_SPEC_LIFETIME_S = 10
+
+    def test_is_stale_returns_true_after_timeout(self):
+        with patch('swaggerpy.client._SwaggerClient'):
+            mocked_client = client.SwaggerClient()
+            with patch('swaggerpy.client.time.time',
+                       return_value=(time.time() + 11)):
+                self.assertTrue(mocked_client._is_stale())
+
+    def test_is_stale_returns_true_if_init_failed(self):
+        with patch('swaggerpy.client._SwaggerClient',
+                   side_effect=Exception()):
+            mocked_client = client.SwaggerClient()
+            self.assertEqual(None, mocked_client)
+            self.assertTrue(mocked_client._is_stale())
+
+    def test_is_stale_returns_false_before_timeout(self):
+        with patch('swaggerpy.client._SwaggerClient'):
+            mocked_client = client.SwaggerClient()
+            with patch('swaggerpy.client.time.time',
+                       return_value=(time.time() + 9)):
+                self.assertFalse(mocked_client._is_stale())
+
+    def test_refetch_of_swagger_client_if_stale(self):
+        with patch('swaggerpy.client._SwaggerClient') as mock:
+            with patch('swaggerpy.client.SwaggerClient._is_stale',
+                       return_value=True):
+                mocked_client = client.SwaggerClient()
+                # On a random attr call, SwaggerClient should
+                # again be fetched if stale.
+                mocked_client.foo
+                self.assertEqual(2, mock.call_count)
+
+    def test_update_timestamp_updates_the_time(self):
+        with patch('swaggerpy.client._SwaggerClient'):
+            mocked_client = client.SwaggerClient()
+            new_time = time.time()
+            with patch('swaggerpy.client.time.time',
+                       return_value=(new_time)):
+                mocked_client._update_timestamp()
+                self.assertEqual(new_time, mocked_client.timestamp)
+
+    def test_assign_client_calls_ctor_of_core_swagger_client(self):
+        with patch('swaggerpy.client._SwaggerClient') as mock:
+            # __init__ will be called twice,
+            # once in SwaggerClient(), then in _assign_client()
+            client.SwaggerClient()._assign_client()
+            self.assertEqual(2, mock.call_count)
 
 
 # noinspection PyDocstring
@@ -171,7 +228,7 @@ class ClientTest(unittest.TestCase):
                 }
             ]
         }
-        self.uut = SwaggerClient(self.resource_listing)
+        self.uut = client.SwaggerClient(self.resource_listing)
 
 
 if __name__ == '__main__':

@@ -9,8 +9,11 @@
 import logging
 import os.path
 import urllib
+import time
 from collections import namedtuple
 from urlparse import urlparse
+
+from peak.util.proxies import ObjectWrapper
 
 import swagger_type
 from swaggerpy.http_client import SynchronousHttpClient
@@ -20,6 +23,8 @@ from swaggerpy.swagger_model import create_model_type, Loader
 from swaggerpy.swagger_type import SwaggerTypeCheck
 
 log = logging.getLogger(__name__)
+
+SWAGGER_SPEC_LIFETIME_S = 300
 
 
 class ClientProcessor(SwaggerProcessor):
@@ -171,7 +176,81 @@ class Resource(object):
         return Operation(uri, operation, self._http_client, self.models)
 
 
-class SwaggerClient(object):
+class SwaggerClient(ObjectWrapper):
+    """Proxy class to core _SwaggerClient class. It acts as a wrapper
+    on all attributes of _SwaggerClient & adds a check for api-docs freshness.
+    The proxy contains a timestamp to indicate the last fetch time of api-docs.
+    If the timestamp is older by SWAGGER_SPEC_LIFETIME_S seconds, api-docs are
+    fetched again.
+
+    CAVEAT: Refetching only works if proxy object itself is used as a
+    long-lived instance. If any attribute out of the client is saved
+    externally (as a variable) and used for api calls, refetching won't
+    take place.
+
+    tl;dr.
+    RECOMMENDED:
+    future = client.pet.getPetById(petId=42)
+
+    NOT RECOMMENDED:
+    resource = client.pet  # referencing attribute out of client - BAD.
+    ...
+    future = resource.getPetById(...)
+    """
+
+    # Required as per: https://pypi.python.org/pypi/ProxyTypes#wrappers
+    __slots__ = ('args', 'kwargs', 'timeout_s', 'timestamp')
+
+    def __init__(self, *args, **kwargs):
+        """Constructor to internally create the core _SwaggerClient class
+        It saves the arguments to refetch the client again after timeout.
+        :param args: packed list of arguments to the ctor
+        :param kwargs: packed dict of arguments to the ctor
+
+        'timeout' can be passed to override default SWAGGER_SPEC_LIFETIME_S
+        """
+        self.args = args
+        self.timeout_s = kwargs.pop('timeout', SWAGGER_SPEC_LIFETIME_S)
+        self.kwargs = kwargs
+        # Try to assign api-docs on initialization else assign to None
+        try:
+            self._assign_client()
+        except Exception, e:
+            ObjectWrapper.__init__(self, None)
+            log.error(str(e))
+
+    def _is_stale(self):
+        """Check if init of SwaggerClient failed on the last attempt OR
+        the last timestamp is older than the timeout
+        """
+        return (not self.__subject__ or
+                self.timestamp + self.timeout_s < time.time())
+
+    def _update_timestamp(self):
+        """Update the instance timestamp to the current timestamp
+        """
+        self.timestamp = time.time()
+
+    def _assign_client(self):
+        """Fetches/Refetches the swagger client. Makes api-docs HTTP request
+        to build the client. Passes the arguments stored from proxy ctor.
+        """
+        ObjectWrapper.__init__(self, _SwaggerClient(
+            *self.args,
+            **self.kwargs))
+        # Update at the end when all of the above goes through successfully
+        self._update_timestamp()
+
+    def __getattr__(self, name):
+        """Intercept the attribute call to SwaggerClient and preprend it with
+        staleness check and client reload if necessary
+        """
+        if self._is_stale():
+            self._assign_client()
+        return getattr(self.__subject__, name)
+
+
+class _SwaggerClient(object):
     """Client object for accessing a Swagger-documented RESTful service.
 
     :param url_or_resource: Either the parsed resource listing+API decls, or
