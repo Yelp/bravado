@@ -11,8 +11,64 @@ import unittest
 
 import httpretty
 import requests
+from mock import patch
 
+from swaggerpy import client
 from swaggerpy.client import SwaggerClient
+
+
+class SwaggerFactoryTest(unittest.TestCase):
+    """Test the proxy wrapper of SwaggerClient
+    """
+
+    def setUp(self):
+        client.cache = dict()
+
+    def test_is_stale_returns_true_after_timeout(self):
+        with patch('swaggerpy.client.SwaggerClient'):
+            with patch('swaggerpy.client.time.time',
+                       side_effect=[1, 12]):
+                client.get_client('test', timeout=10)
+                self.assertTrue(client._is_stale(client.cache['test']))
+
+    def test_is_stale_returns_false_before_timeout(self):
+        with patch('swaggerpy.client.SwaggerClient'):
+            with patch('swaggerpy.client.time.time',
+                       side_effect=[1, 10]):
+                client.get_client('test', timeout=10)
+                self.assertFalse(client._is_stale(client.cache['test']))
+
+    def test_build_cached_client_with_proper_values(self):
+        with patch('swaggerpy.client.SwaggerClient') as mock:
+            mock.return_value = 'foo'
+            with patch('swaggerpy.client.time.time',
+                       side_effect=[1]):
+                client_object = client._build_cached_client('test', timeout=3)
+                self.assertEqual(client.CachedClient('foo', 3, 1),
+                                 client_object)
+
+    def test_builds_client_if_not_present_in_cache(self):
+        with patch('swaggerpy.client.SwaggerClient') as mock:
+            with patch('swaggerpy.client.time.time', side_effect=[1]):
+                client.get_client('foo')
+                mock.assert_called_once_with('foo')
+
+    def test_builds_client_if_present_in_cache_but_stale(self):
+        client.cache['foo'] = client.CachedClient('bar', 0, 1)
+        with patch('swaggerpy.client.SwaggerClient') as mock:
+            with patch('swaggerpy.client.time.time', side_effect=[2, 3]):
+                client.get_client('foo')
+                mock.assert_called_once_with('foo')
+
+    def test_uses_the_cache_if_present_and_fresh(self):
+        client.cache['foo'] = client.CachedClient('bar', 2, 1)
+        with patch('swaggerpy.client.SwaggerClient') as mock:
+            with patch('swaggerpy.client.time.time', side_effect=[2]):
+                client.get_client('foo')
+                assert not mock.called
+
+    def test_get_client_gets_atleast_one_param(self):
+        self.assertRaises(ValueError, client.get_client)
 
 
 # noinspection PyDocstring
