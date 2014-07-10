@@ -8,6 +8,7 @@
 
 import logging
 import os.path
+import time
 import urllib
 from collections import namedtuple
 from urlparse import urlparse
@@ -20,6 +21,48 @@ from swaggerpy.swagger_model import create_model_type, Loader
 from swaggerpy.swagger_type import SwaggerTypeCheck
 
 log = logging.getLogger(__name__)
+cache = dict()
+
+SWAGGER_SPEC_TIMEOUT_S = 300
+CachedClient = namedtuple('CachedClient', ['client', 'timeout', 'timestamp'])
+
+
+def get_client(*args, **kwargs):
+    """Factory method to generate SwaggerClient instance.
+    The factory caches instances of swagger client and takes care of refetching
+    them if it goes stale.
+
+    To change the freshness timeout, simply pass an argument: timeout=<sec.>
+
+    To remove the caching functionality, pass: timeout=0
+
+    CAVEAT: It is OKAY to call get_swagger_client(...) again and again.
+    Do not assign a reference to the generated client and make it long
+    lived as it strips out the refetching functionality.
+    """
+    if len(args) > 0:
+        api_docs_url = args[0]
+        if (api_docs_url not in cache or _is_stale(cache[api_docs_url])):
+            cache[api_docs_url] = _build_cached_client(*args, **kwargs)
+        return cache[api_docs_url].client
+    else:
+        raise ValueError("Expected at least one argument")
+
+
+def _is_stale(client_object):
+    """Checks if the stored object has now become stale
+    :param client_object: client info stored as a cache
+    :type client_object: CachedClient
+    """
+    return client_object.timestamp + client_object.timeout < time.time()
+
+
+def _build_cached_client(*args, **kwargs):
+    """Builds a fresh SwaggerClient and stores it in a namedtuple which
+    contains its created timestamp and timeout in seconds
+    """
+    timeout = kwargs.pop('timeout', SWAGGER_SPEC_TIMEOUT_S)
+    return CachedClient(SwaggerClient(*args, **kwargs), timeout, time.time())
 
 
 class ClientProcessor(SwaggerProcessor):
