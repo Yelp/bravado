@@ -68,7 +68,7 @@ class SwaggerFactoryTest(unittest.TestCase):
                 assert not mock.called
 
     def test_get_client_gets_atleast_one_param(self):
-        self.assertRaises(ValueError, client.get_client)
+        self.assertRaises(TypeError, client.get_client)
 
 
 # noinspection PyDocstring
