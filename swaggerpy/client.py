@@ -27,7 +27,7 @@ SWAGGER_SPEC_TIMEOUT_S = 300
 CachedClient = namedtuple('CachedClient', ['client', 'timeout', 'timestamp'])
 
 
-def get_client(*args, **kwargs):
+def get_client(api_docs_url, *args, **kwargs):
     """Factory method to generate SwaggerClient instance.
     The factory caches instances of swagger client and takes care of refetching
     them if it goes stale.
@@ -36,23 +36,27 @@ def get_client(*args, **kwargs):
 
     To remove the caching functionality, pass: timeout=0
 
-    CAVEAT: It is OKAY to call get_swagger_client(...) again and again.
-    Do not assign a reference to the generated client and make it long
-    lived as it strips out the refetching functionality.
+    .. note::
+
+       It is OKAY to call get_swagger_client(...) again and again.
+       Do not assign a reference to the generated client and make it long
+       lived as it strips out the refetching functionality.
+
+    :param api_docs_url: url for swagger api docs used to build the client
+    :type api_docs_url: str
+    :param timeout: (optional) Timeout in secs. after which api-docs is stale
+    :return: :class:`SwaggerClient`
     """
-    if len(args) > 0:
-        api_docs_url = args[0]
-        if (api_docs_url not in cache or _is_stale(cache[api_docs_url])):
-            cache[api_docs_url] = _build_cached_client(*args, **kwargs)
-        return cache[api_docs_url].client
-    else:
-        raise ValueError("Expected at least one argument")
+    if (api_docs_url not in cache or _is_stale(cache[api_docs_url])):
+        cache[api_docs_url] = _build_cached_client(api_docs_url, *args,
+                                                   **kwargs)
+    return cache[api_docs_url].client
 
 
 def _is_stale(client_object):
     """Checks if the stored object has now become stale
     :param client_object: client info stored as a cache
-    :type client_object: CachedClient
+    :type client_object: :class:`CachedClient`
     """
     return client_object.timestamp + client_object.timeout < time.time()
 
@@ -138,6 +142,7 @@ class Resource(object):
 
     :param resource: Resource model
     :param http_client: HTTP client API
+    :param basePath: url path used for api-docs fetch
     """
 
     def __init__(self, resource, http_client, basePath):
@@ -290,8 +295,9 @@ def _build_param_string(param):
     :type param: dict
     :returns: string giving meta info
 
-    Example: "  status (string) : Statuses to be considered for filter
-                from_date (string) : Start date filter"
+    Example: ::
+        status (string) : Statuses to be considered for filter
+        from_date (string) : Start date filter"
     """
     string = "\t" + param.get("name")
     type_ = param.get('$ref') or param.get('format') or param.get('type')
@@ -309,19 +315,22 @@ def create_operation_docstring(json_):
     :type json_: dict
     :returns: string giving meta info
 
-    Example:
-    client.pet.findPetsByStatus?
+    Example: ::
 
-    "[GET] Finds Pets by status
+        client.pet.findPetsByStatus?
 
-    Multiple status values can be provided with comma seperated strings
-    Args:
-            status (string) : Statuses to be considered for filter
-            from_date (string) : Start date filter
-    Returns:
-            array
-    Raises:
-            400: Invalid status value"
+    Outputs: ::
+
+        [GET] Finds Pets by status
+
+        Multiple status values can be provided with comma seperated strings
+        Args:
+                status (string) : Statuses to be considered for filter
+                from_date (string) : Start date filter
+        Returns:
+                array
+        Raises:
+                400: Invalid status value
     """
     docstring = ""
     if json_.get('summary'):
