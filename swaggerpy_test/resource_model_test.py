@@ -137,6 +137,17 @@ class ResourceTest(unittest.TestCase):
         self.assertEqual({"schools": [], "id": 0L}, User().__dict__)
 
     @httpretty.activate
+    def test_none_for_datetime_on_model_types_creation(self):
+        self.models['User']['properties']['date'] = {
+            'type': 'string',
+            'format': 'date'}
+        self.register_urls()
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        User = resource.models.User
+        self.assertEqual({"schools": [], "id": 0L, "date": None},
+                         User().__dict__)
+
+    @httpretty.activate
     def test_success_on_model_types_instantiation(self):
         self.register_urls()
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
