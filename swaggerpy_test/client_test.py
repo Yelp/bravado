@@ -14,38 +14,38 @@ import requests
 from mock import patch
 
 from swaggerpy import client
-from swaggerpy.client import SwaggerClient
+from swaggerpy.client import SwaggerClient, SwaggerClientFactory
 
 
-class SwaggerFactoryTest(unittest.TestCase):
+class SwaggerClientFactoryTest(unittest.TestCase):
     """Test the proxy wrapper of SwaggerClient
     """
 
     def setUp(self):
-        client.cache = dict()
+        client.factory = None
 
     def test_is_stale_returns_true_after_timeout(self):
         with patch('swaggerpy.client.SwaggerClient'):
-            with patch('swaggerpy.client.time.time',
-                       side_effect=[1, 12]):
+            with patch('swaggerpy.client.time.time', side_effect=[1]):
                 client.get_client('test', timeout=10)
-                self.assertTrue(client._is_stale(client.cache['test']))
+                self.assertTrue(client.factory.cache['test'].is_stale(12))
 
     def test_is_stale_returns_false_before_timeout(self):
         with patch('swaggerpy.client.SwaggerClient'):
-            with patch('swaggerpy.client.time.time',
-                       side_effect=[1, 10]):
+            with patch('swaggerpy.client.time.time', side_effect=[1]):
                 client.get_client('test', timeout=10)
-                self.assertFalse(client._is_stale(client.cache['test']))
+                self.assertFalse(client.factory.cache['test'].is_stale(11))
 
     def test_build_cached_client_with_proper_values(self):
         with patch('swaggerpy.client.SwaggerClient') as mock:
             mock.return_value = 'foo'
             with patch('swaggerpy.client.time.time',
-                       side_effect=[1]):
-                client_object = client._build_cached_client('test', timeout=3)
-                self.assertEqual(client.CachedClient('foo', 3, 1),
-                                 client_object)
+                       side_effect=[1, 1]):
+                client_object = SwaggerClientFactory().build_cached_client(
+                    'test', timeout=3)
+                self.assertEqual('foo', client_object.swagger_client)
+                self.assertEqual(3, client_object.timeout)
+                self.assertEqual(1, client_object.timestamp)
 
     def test_builds_client_if_not_present_in_cache(self):
         with patch('swaggerpy.client.SwaggerClient') as mock:
@@ -54,21 +54,42 @@ class SwaggerFactoryTest(unittest.TestCase):
                 mock.assert_called_once_with('foo')
 
     def test_builds_client_if_present_in_cache_but_stale(self):
-        client.cache['foo'] = client.CachedClient('bar', 0, 1)
-        with patch('swaggerpy.client.SwaggerClient') as mock:
-            with patch('swaggerpy.client.time.time', side_effect=[2, 3]):
+        with patch('swaggerpy.client.time.time', side_effect=[2, 3]):
+            client.cache['foo'] = client.CachedClient('bar', 0, 1)
+            with patch('swaggerpy.client.SwaggerClient') as mock:
                 client.get_client('foo')
                 mock.assert_called_once_with('foo')
 
     def test_uses_the_cache_if_present_and_fresh(self):
-        client.cache['foo'] = client.CachedClient('bar', 2, 1)
+        client.factory = client.SwaggerClientFactory()
+        client.factory.cache['foo'] = client.CachedClient('bar', 2, 1)
         with patch('swaggerpy.client.SwaggerClient') as mock:
             with patch('swaggerpy.client.time.time', side_effect=[2]):
                 client.get_client('foo')
                 assert not mock.called
 
+
+class GetClientMethodTest(unittest.TestCase):
+
+    def setUp(self):
+        client.factory = None
+
     def test_get_client_gets_atleast_one_param(self):
         self.assertRaises(TypeError, client.get_client)
+
+    def test_get_client_instantiates_new_factory_if_not_set(self):
+        with patch.object(SwaggerClientFactory, '__call__') as mock_method:
+            mock_method.client.return_value = None
+            client.get_client()
+            self.assertTrue(client.factory is not None)
+
+    def test_get_client_uses_instantiated_factory_second_time(self):
+        with patch.object(SwaggerClientFactory, '__call__') as mock_method:
+            mock_method.client.return_value = None
+            client.factory = SwaggerClientFactory()
+            prev_factory = client.factory
+            client.get_client()
+            self.assertTrue(prev_factory is client.factory)
 
 
 # noinspection PyDocstring

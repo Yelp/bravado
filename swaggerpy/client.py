@@ -24,13 +24,68 @@ log = logging.getLogger(__name__)
 cache = dict()
 
 SWAGGER_SPEC_TIMEOUT_S = 300
-CachedClient = namedtuple('CachedClient', ['client', 'timeout', 'timestamp'])
 
 
-def get_client(api_docs_url, *args, **kwargs):
+class CachedClient(object):
+    """A wrapper to client which stores the last updated timestamp and the
+    timeout in secs. when the client expires
+
+    :param swagger_client: Core SwaggerClient instance
+    :type swagger_client: :class:`SwaggerClient`
+    :param timeout: timeout in seconds after which the client expires
+    :type timeout: int
+    """
+
+    def __init__(self, swagger_client, timeout, timestamp=None):
+        self.swagger_client = swagger_client
+        self.timeout = timeout
+        self.timestamp = timestamp or time.time()
+
+    def is_stale(self, timestamp=None):
+        """Checks if the instance has become stale
+        :return: true/false whether client is now stale
+        """
+        current_time = timestamp or time.time()
+        return self.timestamp + self.timeout < current_time
+
+
+class SwaggerClientFactory(object):
+    """Factory to store swagger clients and refetch the api-docs if the client
+    becomes stale
+    """
+
+    def __init__(self):
+        self.cache = dict()
+
+    def __call__(self, api_docs_url, *args, **kwargs):
+        """
+        :param api_docs_url: url for swagger api docs used to build the client
+        :type api_docs_url: str
+        :param timeout: (optional) Timeout after which api-docs is stale
+        :return: :class:`CachedClient`
+        """
+        if (api_docs_url not in self.cache or
+                self.cache[api_docs_url].is_stale()):
+            self.cache[api_docs_url] = self.build_cached_client(api_docs_url,
+                                                                *args,
+                                                                **kwargs)
+        return self.cache[api_docs_url]
+
+    def build_cached_client(self, *args, **kwargs):
+        """Builds a fresh SwaggerClient and stores it in a namedtuple which
+        contains its created timestamp and timeout in seconds
+        """
+        timeout = kwargs.pop('timeout', SWAGGER_SPEC_TIMEOUT_S)
+        return CachedClient(SwaggerClient(*args, **kwargs), timeout)
+
+factory = None
+
+
+def get_client(*args, **kwargs):
     """Factory method to generate SwaggerClient instance.
-    The factory caches instances of swagger client and takes care of refetching
-    them if it goes stale.
+    ..note::
+        This factory method uses a global which maintains the state of swagger
+        client. Use :class:`SwaggerClientFactory` if you want more control.
 
     To change the freshness timeout, simply pass an argument: timeout=<sec.>
 
@@ -47,26 +102,12 @@ def get_client(api_docs_url, *args, **kwargs):
     :param timeout: (optional) Timeout in secs. after which api-docs is stale
     :return: :class:`SwaggerClient`
     """
-    if (api_docs_url not in cache or _is_stale(cache[api_docs_url])):
-        cache[api_docs_url] = _build_cached_client(api_docs_url, *args,
-                                                   **kwargs)
-    return cache[api_docs_url].client
+    global factory
 
+    if factory is None:
+        factory = SwaggerClientFactory()
 
-def _is_stale(client_object):
-    """Checks if the stored object has now become stale
-    :param client_object: client info stored as a cache
-    :type client_object: :class:`CachedClient`
-    """
-    return client_object.timestamp + client_object.timeout < time.time()
-
-
-def _build_cached_client(*args, **kwargs):
-    """Builds a fresh SwaggerClient and stores it in a namedtuple which
-    contains its created timestamp and timeout in seconds
-    """
-    timeout = kwargs.pop('timeout', SWAGGER_SPEC_TIMEOUT_S)
-    return CachedClient(SwaggerClient(*args, **kwargs), timeout, time.time())
+    return factory(*args, **kwargs).swagger_client
 
 
 class ClientProcessor(SwaggerProcessor):
