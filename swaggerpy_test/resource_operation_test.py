@@ -219,6 +219,13 @@ class ResourceOperationTest(unittest.TestCase):
                           test_param="NOT_INTEGER")
 
     @httpretty.activate
+    def test_no_error_on_not_passing_non_required_param_in_query(self):
+        self.register_urls()
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        # No error should be raised on not passing test_param (not required)
+        resource.testHTTP()
+
+    @httpretty.activate
     def test_error_on_get_with_wrong_array_item_type_in_query(self):
         query_parameter = {
             "paramType": "query",

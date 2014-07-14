@@ -431,6 +431,11 @@ def validate_and_add_params_to_request(param, value, request, models):
     :param models: models tuple containing all complex model types
     :type models: namedtuple
     """
+
+    # If param not given in args, and not required, just ignore.
+    if not param.get('required') and not value:
+        return
+
     pname = param['name']
     type_ = swagger_type.get_swagger_type(param)
     param_req_type = param['paramType']
