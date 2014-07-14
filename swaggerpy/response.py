@@ -90,7 +90,7 @@ class SwaggerResponse(object):
         :param models: namedtuple which maps complex type string to py type
         :type models: namedtuple
         """
-        response = SwaggerTypeCheck(response, type_, models).value
+        response = SwaggerTypeCheck("Response", response, type_, models).value
         self.swagger_object = SwaggerResponseConstruct(response,
                                                        type_,
                                                        models).create_object()

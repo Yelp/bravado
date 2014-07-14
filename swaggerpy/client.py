@@ -146,8 +146,6 @@ class Operation(object):
         request['url'] = self._uri
         request['params'] = {}
         for param in self._json.get(u'parameters', []):
-            # TODO: No check on param value right now.
-            # To be done similar to checkResponse in SwaggerResponse
             value = kwargs.pop(param[u'name'], None)
             validate_and_add_params_to_request(param, value, request,
                                                self._models)
@@ -436,7 +434,7 @@ def validate_and_add_params_to_request(param, value, request, models):
     param_req_type = param['paramType']
 
     # Check the parameter value against its type
-    SwaggerTypeCheck(value, type_, models)
+    SwaggerTypeCheck(pname, value, type_, models)
 
     if param_req_type in ('path', 'query'):
         # Parameters in path, query need to be primitive/array types
