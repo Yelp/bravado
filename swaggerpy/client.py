@@ -145,6 +145,7 @@ class Operation(object):
         request['method'] = self._json[u'method']
         request['url'] = self._uri
         request['params'] = {}
+        request['headers'] = {}
         for param in self._json.get(u'parameters', []):
             # TODO: No check on param value right now.
             # To be done similar to checkResponse in SwaggerResponse
@@ -413,7 +414,7 @@ def add_param_to_req(param, value, request):
         if not swagger_type.is_primitive(type_):
             # TODO: model instance is not valid right now
             #       Must be given as a json string in the body
-            request['headers'] = {'content-type': 'application/json'}
+            request['headers']['content-type'] = 'application/json'
     # TODO: accept 'header', 'form' in paramType
     else:
         raise AssertionError(
