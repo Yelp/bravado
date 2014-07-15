@@ -264,10 +264,10 @@ class SwaggerTypeCheck(object):
         Also recursively converts value array to list of item array types
         """
         if self.value is None:
-            raise TypeError("Response array found as null instead of empty")
+            raise TypeError("Array found as null")
         if self.value.__class__ is not list:
-            raise TypeError("Response should be an array instead of %s" %
-                            self.value.__class__.__name__)
+            raise TypeError("%r should be an array instead of %s" %
+                            (self.value, self.value.__class__.__name__))
         array_item_type = get_array_item_type(self._type)
         self.value = [SwaggerTypeCheck(
             item, array_item_type, self.models).value
