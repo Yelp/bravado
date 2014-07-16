@@ -145,7 +145,9 @@ class Operation(object):
         request['method'] = self._json[u'method']
         request['url'] = self._uri
         request['params'] = {}
-        request['headers'] = {}
+        # Copy the client's headers so that other headers could
+        # be added during this construction w/o changing the former
+        request['headers'] = self._http_client._headers.copy()
         for param in self._json.get(u'parameters', []):
             # TODO: No check on param value right now.
             # To be done similar to checkResponse in SwaggerResponse

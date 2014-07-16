@@ -30,7 +30,13 @@ log = logging.getLogger(__name__)
 
 class AsynchronousHttpClient(http_client.HttpClient):
     """Asynchronous HTTP client implementation.
+
+    :param headers: headers to be sent with the requests
+    :type headers: dict
     """
+
+    def __init__(self, headers={}):
+        self._headers = headers
 
     def setup(self, request_params):
         """Sets up the request params as per Twisted Agent needs.

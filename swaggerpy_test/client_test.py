@@ -14,6 +14,7 @@ import requests
 from mock import patch
 
 from swaggerpy import client
+from swaggerpy.http_client import SynchronousHttpClient
 from swaggerpy.client import SwaggerClient, SwaggerClientFactory
 
 
@@ -118,6 +119,17 @@ class ClientTest(unittest.TestCase):
             self.fail("Expected type error")
         except TypeError:
             pass
+
+    @httpretty.activate
+    def test_headers(self):
+        self.uut = SwaggerClient(self.resource_listing,
+                                 SynchronousHttpClient(headers={'foo': 'bar'}))
+        httpretty.register_uri(
+            httpretty.GET, "http://swagger.py/swagger-test/pet",
+            body='[]')
+
+        self.uut.pet.listPets().result()
+        self.assertEqual('bar', httpretty.last_request().headers['foo'])
 
     @httpretty.activate
     def test_get(self):

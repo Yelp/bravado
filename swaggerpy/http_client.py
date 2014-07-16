@@ -179,10 +179,11 @@ class SynchronousHttpClient(HttpClient):
     """Synchronous HTTP client implementation.
     """
 
-    def __init__(self):
+    def __init__(self, headers={}):
         self.session = requests.Session()
         self.authenticator = None
         self.websockets = set()
+        self._headers = headers
 
     def close(self):
         self.session.close()
