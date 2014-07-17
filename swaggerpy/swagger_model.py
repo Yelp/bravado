@@ -325,11 +325,13 @@ def set_props(model, **kwargs):
     for property_name, property_swagger_type in types.iteritems():
         swagger_py_type = swagger_type.swagger_to_py_type(
             property_swagger_type)
-        property_value = swagger_py_type() if swagger_py_type else None
-        # Override any property values specified in kwargs
+        # Assign all property values specified in kwargs
         if property_name in arg_keys:
             property_value = kwargs[property_name]
             arg_keys.remove(property_name)
+        else:
+            # If not in kwargs, provide a default value to the type
+            property_value = swagger_type.get_instance(swagger_py_type)
         setattr(model, property_name, property_value)
     if arg_keys:
         raise AttributeError(" %s are not defined for %s." % (arg_keys, model))
