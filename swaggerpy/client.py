@@ -149,8 +149,6 @@ class Operation(object):
         # be added during this construction w/o changing the former
         request['headers'] = self._http_client._headers.copy()
         for param in self._json.get(u'parameters', []):
-            # TODO: No check on param value right now.
-            # To be done similar to checkResponse in SwaggerResponse
             value = kwargs.pop(param[u'name'], None)
             validate_and_add_params_to_request(param, value, request,
                                                self._models)
@@ -459,7 +457,7 @@ def validate_and_add_params_to_request(param, value, request, models):
 
     # Check the parameter value against its type
     # And store the refined value back
-    value = SwaggerTypeCheck(value, type_, models).value
+    value = SwaggerTypeCheck(pname, value, type_, models).value
 
     # If list in path, Turn list items into comma separated values
     if isinstance(value, list) and param_req_type == 'path':

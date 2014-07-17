@@ -235,9 +235,11 @@ class SwaggerTypeCheck(object):
     Raises TypeError/AssertionError if validation fails
     """
 
-    def __init__(self, value, type_, models=None):
+    def __init__(self, name, value, type_, models=None):
         """Ctor to set params and then check the value
 
+        :param name: name of the field, used for error logging
+        :type name: str
         :param value: JSON value
         :type value: dict
         :param type_: type against which the value is to be validated
@@ -245,6 +247,7 @@ class SwaggerTypeCheck(object):
         :param models: namedtuple which maps complex type string to py type
         :type models: namedtuple
         """
+        self.name = name
         self.value = value
         self._type = type_
         self.models = models
@@ -276,8 +279,8 @@ class SwaggerTypeCheck(object):
                 self.value = dateutil.parser.parse(self.value)
             else:
                 # For all the other cases, raise Type mismatch
-                raise TypeError("Type of %s should be in %r" % (
-                    self.value, ptype))
+                raise TypeError("%s's value: %s should be in types %r" % (
+                    self.name, self.value, ptype))
 
     def _check_array_type(self):
         """Validate array type value is actually array type
@@ -290,6 +293,7 @@ class SwaggerTypeCheck(object):
                             (self.value, self.value.__class__.__name__))
         array_item_type = get_array_item_type(self._type)
         self.value = [SwaggerTypeCheck(
+            "%s's item" % self.name,
             item, array_item_type, self.models).value
             for item in self.value]
 
@@ -310,7 +314,8 @@ class SwaggerTypeCheck(object):
                 required.remove(key)
             if key not in klass._swagger_types.keys():
                 raise TypeError("Type for '%s' was not defined in spec." % key)
-            self.value[key] = SwaggerTypeCheck(self.value[key],
+            self.value[key] = SwaggerTypeCheck(key,
+                                               self.value[key],
                                                klass._swagger_types[key],
                                                self.models).value
         if required:
