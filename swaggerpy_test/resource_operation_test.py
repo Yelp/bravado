@@ -182,9 +182,7 @@ class ResourceOperationTest(unittest.TestCase):
         query_parameter = {
             "paramType": "query",
             "name": "test_params",
-            "type": "array",
-            "items": {
-                "type": "string"}}
+            "type": "string"}
         path_parameter = {
             "paramType": "path",
             "name": "param_ids",
@@ -197,11 +195,12 @@ class ResourceOperationTest(unittest.TestCase):
         self.register_urls()
         httpretty.register_uri(
             httpretty.GET,
-            "http://localhost/params/40,41,42/test_http?test_param=foo,bar",
-            body='')
+            "http://localhost/params/40,41,42/test_http?", body='')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_params=["foo", "bar"],
                                  param_ids=[40, 41, 42]).result()
+        self.assertEqual(["foo", "bar"],
+                         httpretty.last_request().querystring['test_params'])
         self.assertEqual(None, resp)
 
     @httpretty.activate
@@ -217,6 +216,20 @@ class ResourceOperationTest(unittest.TestCase):
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         self.assertRaises(TypeError, resource.testHTTP,
                           test_param="NOT_INTEGER")
+
+    @httpretty.activate
+    def test_error_on_get_with_array_type_in_query(self):
+        query_parameter = {
+            "paramType": "query",
+            "name": "test_param",
+            "type": "array",
+            "items": {"type": "string"}
+        }
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            query_parameter]
+        self.register_urls()
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        self.assertRaises(TypeError, resource.testHTTP, test_param=["A", "B"])
 
     @httpretty.activate
     def test_no_error_on_not_passing_non_required_param_in_query(self):
@@ -251,8 +264,7 @@ class ResourceOperationTest(unittest.TestCase):
         self.response["apis"][0]["operations"][0]["parameters"] = [
             query_parameter]
         httpretty.register_uri(
-            httpretty.GET, "http://localhost/test_http",
-            body='', match_querystring=True)
+            httpretty.GET, "http://localhost/test_http", body='')
         self.register_urls()
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         some_date = datetime(2014, 6, 10, 23, 49, 54, 728000, tzinfo=tzutc())

@@ -51,7 +51,7 @@ class AsynchronousHttpClient(http_client.HttpClient):
             'bodyProducer': stringify_body(request_params),
             'headers': listify_headers(request_params.get('headers')),
             'uri': str(request_params['url'] + '?' + urllib.urlencode(
-                request_params['params']))
+                request_params['params'], True))
         }
 
         crochet.setup()
