@@ -30,7 +30,13 @@ log = logging.getLogger(__name__)
 
 class AsynchronousHttpClient(http_client.HttpClient):
     """Asynchronous HTTP client implementation.
+
+    :param headers: headers to be sent with the requests
+    :type headers: dict
     """
+
+    def __init__(self, headers={}):
+        self._headers = headers
 
     def setup(self, request_params):
         """Sets up the request params as per Twisted Agent needs.
@@ -45,7 +51,7 @@ class AsynchronousHttpClient(http_client.HttpClient):
             'bodyProducer': stringify_body(request_params),
             'headers': listify_headers(request_params.get('headers')),
             'uri': str(request_params['url'] + '?' + urllib.urlencode(
-                request_params['params']))
+                request_params['params'], True))
         }
 
         crochet.setup()

@@ -145,6 +145,9 @@ class Operation(object):
         request['method'] = self._json[u'method']
         request['url'] = self._uri
         request['params'] = {}
+        # Copy the client's headers so that other headers could
+        # be added during this construction w/o changing the former
+        request['headers'] = self._http_client._headers.copy()
         for param in self._json.get(u'parameters', []):
             value = kwargs.pop(param[u'name'], None)
             validate_and_add_params_to_request(param, value, request,
@@ -411,7 +414,7 @@ def add_param_to_req(param, value, request):
         if not swagger_type.is_primitive(type_):
             # TODO: model instance is not valid right now
             #       Must be given as a json string in the body
-            request['headers'] = {'content-type': 'application/json'}
+            request['headers']['content-type'] = 'application/json'
     # TODO: accept 'header', 'form' in paramType
     else:
         raise AssertionError(
@@ -429,22 +432,36 @@ def validate_and_add_params_to_request(param, value, request, models):
     :param models: models tuple containing all complex model types
     :type models: namedtuple
     """
+
+    # If param not given in args, and not required, just ignore.
+    if not param.get('required') and not value:
+        return
+
     pname = param['name']
     type_ = swagger_type.get_swagger_type(param)
     param_req_type = param['paramType']
 
-    # Check the parameter value against its type
-    SwaggerTypeCheck(pname, value, type_, models)
-
-    if param_req_type in ('path', 'query'):
-        # Parameters in path, query need to be primitive/array types
+    if param_req_type == 'path':
+        # Parameters in path need to be primitive/array types
         if swagger_type.is_complex(type_):
-            raise TypeError("Param %s is in %s and not primitive" %
-                            (pname, param_req_type))
+            raise TypeError("Param %s in path can only be primitive/list" %
+                            pname)
+    elif param_req_type == 'query':
+        # Parameters in query need to be only primitive types
+        if not swagger_type.is_primitive(type_):
+            raise TypeError("Param %s in query can only be primitive" % pname)
 
-        # If list, Turn list items into comma separated values
-        if swagger_type.is_array(type_):
-            value = u",".join(str(x) for x in value)
+    # Allow lists for query params even if type is primitive
+    if isinstance(value, list) and param_req_type == 'query':
+        type_ = swagger_type.ARRAY + swagger_type.COLON + type_
+
+    # Check the parameter value against its type
+    # And store the refined value back
+    value = SwaggerTypeCheck(pname, value, type_, models).value
+
+    # If list in path, Turn list items into comma separated values
+    if isinstance(value, list) and param_req_type == 'path':
+        value = u",".join(str(x) for x in value)
 
     # Add the parameter value to the request object
     if value:

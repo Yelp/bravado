@@ -51,6 +51,25 @@ ARRAY = 'array'
 COLON = ':'
 
 
+def get_instance(py_type):
+    """Factory method to get default constructor invoked for the type
+
+    ..note ::
+        get_instance() is meant to be called to get an instance of
+        primitive Python type. datetime() is called as primitive in Swagger
+        but in Python, it is not. Hence, return None for datetime instance
+
+    Complex models are already set to None in swagger_to_py_type(), hence
+    this should be called only for values from SWAGGER_TO_PY_TYPE_MAPPING
+    """
+    if py_type is None:
+        return None
+    # datetime is not a Python primitive type, return None for it.
+    if py_type == datetime:
+        return None
+    return py_type()
+
+
 def primitive_formats():
     """returns Swagger primitive formats allowed after internal conversion.
 
@@ -216,7 +235,7 @@ class SwaggerTypeCheck(object):
     Raises TypeError/AssertionError if validation fails
     """
 
-    def __init__(self, name, value, type_, models):
+    def __init__(self, name, value, type_, models=None):
         """Ctor to set params and then check the value
 
         :param name: name of the field, used for error logging
@@ -238,15 +257,16 @@ class SwaggerTypeCheck(object):
         """Check the value as per the type of the value
         """
         if self._type == 'void':
-            if self.value:
-                raise TypeError("Response %s is supposed to be empty" %
-                                self.value)
+            # Ignore any check if type is 'void'
+            return
         elif is_primitive(self._type):
             self._check_primitive_type()
         elif is_array(self._type):
             self._check_array_type()
         else:
-            self._check_complex_type()
+            # Ignore check if models tuple is not provided
+            if self.models:
+                self._check_complex_type()
 
     def _check_primitive_type(self):
         """Validate value is of primitive type
@@ -267,10 +287,10 @@ class SwaggerTypeCheck(object):
         Also recursively converts value array to list of item array types
         """
         if self.value is None:
-            raise TypeError("Response array found as null instead of empty")
+            raise TypeError("Array found as null")
         if self.value.__class__ is not list:
-            raise TypeError("Response should be an array instead of %s" %
-                            self.value.__class__.__name__)
+            raise TypeError("%r should be an array instead of %s" %
+                            (self.value, self.value.__class__.__name__))
         array_item_type = get_array_item_type(self._type)
         self.value = [SwaggerTypeCheck(
             "%s's item" % self.name,
@@ -283,9 +303,8 @@ class SwaggerTypeCheck(object):
         """
         klass = getattr(self.models, self._type)
         if isinstance(self.value, klass):
-            raise AssertionError("Py instance %r not supported in Request" %
-                                 self.value)
-        # The only valid type is JSON dict
+            self.value = self.value._flat_dict()
+        # The only valid type from this point on is JSON dict
         if not isinstance(self.value, dict):
             raise TypeError("Type for %s is expected to be object" %
                             self.value)

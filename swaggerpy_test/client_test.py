@@ -14,6 +14,7 @@ import requests
 from mock import patch
 
 from swaggerpy import client
+from swaggerpy.http_client import SynchronousHttpClient
 from swaggerpy.client import SwaggerClient, SwaggerClientFactory
 
 
@@ -120,6 +121,17 @@ class ClientTest(unittest.TestCase):
             pass
 
     @httpretty.activate
+    def test_headers(self):
+        self.uut = SwaggerClient(self.resource_listing,
+                                 SynchronousHttpClient(headers={'foo': 'bar'}))
+        httpretty.register_uri(
+            httpretty.GET, "http://swagger.py/swagger-test/pet",
+            body='[]')
+
+        self.uut.pet.listPets().result()
+        self.assertEqual('bar', httpretty.last_request().headers['foo'])
+
+    @httpretty.activate
     def test_get(self):
         httpretty.register_uri(
             httpretty.GET, "http://swagger.py/swagger-test/pet",
@@ -136,7 +148,7 @@ class ClientTest(unittest.TestCase):
 
         resp = self.uut.pet.findPets(species=['cat', 'dog']).result()
         self.assertEqual([], resp)
-        self.assertEqual({'species': ['cat,dog']},
+        self.assertEqual({'species': ['cat', 'dog']},
                          httpretty.last_request().querystring)
 
     @httpretty.activate
@@ -215,10 +227,7 @@ class ClientTest(unittest.TestCase):
                                             {
                                                 "name": "species",
                                                 "paramType": "query",
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "string"
-                                                },
+                                                "type": "string",
                                                 "allowMultiple": True
                                             }
                                         ]
