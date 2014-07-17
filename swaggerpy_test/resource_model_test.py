@@ -330,25 +330,6 @@ class ResourceTest(unittest.TestCase):
         self.assertRaises(AssertionError, SwaggerClient(
             u'http://localhost/api-docs').api_test.testHTTP().result)
 
-    ###############################################
-    # Raise that passing Model in request parameters
-    # is not supported for now
-    ################################################
-
-    @httpretty.activate
-    def test_error_on_passing_model_in_param_body(self):
-        query_parameter = {
-            "paramType": "body",
-            "name": "body",
-            "type": "School",
-        }
-        self.response["apis"][0]["operations"][0]["parameters"] = [
-            query_parameter]
-        self.register_urls()
-        resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        school = resource.models.School()
-        self.assertRaises(AssertionError, resource.testHTTP, body=school)
-
     @httpretty.activate
     def test_error_on_passing_model_in_param_query(self):
         """Only primitive types are allowed in path or query
@@ -363,9 +344,66 @@ class ResourceTest(unittest.TestCase):
         self.register_urls()
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         school = resource.models.School()
-        # TODO: After Py model is accepted in request body,
-        # this test should then raise TypeError
-        self.assertRaises(AssertionError, resource.testHTTP, test_param=school)
+        self.assertRaises(TypeError, resource.testHTTP, test_param=school)
+
+    #################################################
+    # Model Py instance sent in request body
+    ################################################
+
+    @httpretty.activate
+    def test_success_model_in_param_body_converts_to_dict(self):
+        query_parameter = {
+            "paramType": "body",
+            "name": "body",
+            "type": "User",
+        }
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            query_parameter]
+        self.register_urls()
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        School = resource.models.School
+        # Also test all None items are removed from array list
+        user = resource.models.User(id=42, schools=[School(name='s1'), None])
+        future = resource.testHTTP(body=user)
+        self.assertEqual(json.dumps({'id': 42,
+                                     'schools': [{'name': 's1'}]}),
+                         future._http_client.request_params['data'])
+
+    @httpretty.activate
+    def test_removal_of_none_attributes_from_param_body_model(self):
+        query_parameter = {
+            "paramType": "body",
+            "name": "body",
+            "type": "User",
+        }
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            query_parameter]
+        self.response["models"]["User"]["properties"]["school"] = {
+            "$ref": "School"}
+        self.register_urls()
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        user = resource.models.User(id=42)
+        future = resource.testHTTP(body=user)
+        # Removed the 'school': None - key, value pair from dict
+        self.assertEqual(json.dumps({'id': 42, 'schools': []}),
+                         future._http_client.request_params['data'])
+
+    @httpretty.activate
+    def test_error_on_finding_required_attributes_none(self):
+        query_parameter = {
+            "paramType": "body",
+            "name": "body",
+            "type": "User",
+        }
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            query_parameter]
+        self.response["models"]["User"]["properties"]["school"] = {
+            "$ref": "School"}
+        self.response["models"]["User"]["required"] = ["school"]
+        self.register_urls()
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        user = resource.models.User(id=42)
+        self.assertRaises(AttributeError, resource.testHTTP, body=user)
 
     #################################################
     # Model JSON sent in request body

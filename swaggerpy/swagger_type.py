@@ -216,7 +216,7 @@ class SwaggerTypeCheck(object):
     Raises TypeError/AssertionError if validation fails
     """
 
-    def __init__(self, value, type_, models):
+    def __init__(self, value, type_, models=None):
         """Ctor to set params and then check the value
 
         :param value: JSON value
@@ -235,15 +235,16 @@ class SwaggerTypeCheck(object):
         """Check the value as per the type of the value
         """
         if self._type == 'void':
-            if self.value:
-                raise TypeError("Response %s is supposed to be empty" %
-                                self.value)
+            # Ignore any check if type is 'void'
+            return
         elif is_primitive(self._type):
             self._check_primitive_type()
         elif is_array(self._type):
             self._check_array_type()
         else:
-            self._check_complex_type()
+            # Ignore check if models tuple is not provided
+            if self.models:
+                self._check_complex_type()
 
     def _check_primitive_type(self):
         """Validate value is of primitive type
@@ -279,9 +280,8 @@ class SwaggerTypeCheck(object):
         """
         klass = getattr(self.models, self._type)
         if isinstance(self.value, klass):
-            raise AssertionError("Py instance %r not supported in Request" %
-                                 self.value)
-        # The only valid type is JSON dict
+            self.value = self.value._flat_dict()
+        # The only valid type from this point on is JSON dict
         if not isinstance(self.value, dict):
             raise TypeError("Type for %s is expected to be object" %
                             self.value)

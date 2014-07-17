@@ -444,7 +444,8 @@ def validate_and_add_params_to_request(param, value, request, models):
     param_req_type = param['paramType']
 
     # Check the parameter value against its type
-    SwaggerTypeCheck(value, type_, models)
+    # And store the refined value back
+    value = SwaggerTypeCheck(value, type_, models).value
 
     if param_req_type in ('path', 'query'):
         # Parameters in path, query need to be primitive/array types
