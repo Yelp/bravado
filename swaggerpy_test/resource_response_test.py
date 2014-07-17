@@ -194,7 +194,7 @@ class ResourceResponseTest(unittest.TestCase):
             httpretty.GET, "http://localhost/test_http?test_param=foo",
             body='{"some_foo": "bar"}')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resp = resource.testHTTP(test_param="foo")()
+        resp = resource.testHTTP(test_param="foo").result()
         self.assertEqual({"some_foo": "bar"}, resp)
 
     # check array and datetime types
