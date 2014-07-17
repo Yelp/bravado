@@ -443,19 +443,27 @@ def validate_and_add_params_to_request(param, value, request, models):
     type_ = swagger_type.get_swagger_type(param)
     param_req_type = param['paramType']
 
+    if param_req_type == 'path':
+        # Parameters in path need to be primitive/array types
+        if swagger_type.is_complex(type_):
+            raise TypeError("Param %s in path can only be primitive/list" %
+                            pname)
+    elif param_req_type == 'query':
+        # Parameters in query need to be only primitive types
+        if not swagger_type.is_primitive(type_):
+            raise TypeError("Param %s in query can only be primitive" % pname)
+
+    # Allow lists for query params even if type is primitive
+    if isinstance(value, list) and param_req_type == 'query':
+        type_ = swagger_type.ARRAY + swagger_type.COLON + type_
+
     # Check the parameter value against its type
     # And store the refined value back
     value = SwaggerTypeCheck(value, type_, models).value
 
-    if param_req_type in ('path', 'query'):
-        # Parameters in path, query need to be primitive/array types
-        if swagger_type.is_complex(type_):
-            raise TypeError("Param %s is in %s and not primitive" %
-                            (pname, param_req_type))
-
-        # If list, Turn list items into comma separated values
-        if swagger_type.is_array(type_):
-            value = u",".join(str(x) for x in value)
+    # If list in path, Turn list items into comma separated values
+    if isinstance(value, list) and param_req_type == 'path':
+        value = u",".join(str(x) for x in value)
 
     # Add the parameter value to the request object
     if value:

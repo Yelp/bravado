@@ -148,7 +148,7 @@ class ClientTest(unittest.TestCase):
 
         resp = self.uut.pet.findPets(species=['cat', 'dog']).result()
         self.assertEqual([], resp)
-        self.assertEqual({'species': ['cat,dog']},
+        self.assertEqual({'species': ['cat', 'dog']},
                          httpretty.last_request().querystring)
 
     @httpretty.activate
@@ -227,10 +227,7 @@ class ClientTest(unittest.TestCase):
                                             {
                                                 "name": "species",
                                                 "paramType": "query",
-                                                "type": "array",
-                                                "items": {
-                                                    "type": "string"
-                                                },
+                                                "type": "string",
                                                 "allowMultiple": True
                                             }
                                         ]
