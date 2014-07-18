@@ -1,8 +1,8 @@
 About
 -----
 
-Swagger.py is a Python library for using
-`Swagger <https://developers.helloreverb.com/swagger/>`__ defined API's.
+Swagger.py is a Python library forked from `digium/swagger-py <https://github.com/digium/swagger-py/>`__
+for using `Swagger <https://developers.helloreverb.com/swagger/>`__ defined API's.
 
 Swagger itself is best described on the Swagger home page:
 
@@ -14,8 +14,22 @@ The `Swagger
 specification <https://github.com/wordnik/swagger-core/wiki>`__ defines
 how API's may be described using Swagger.
 
-Swagger.py also supports a WebSocket extension, allowing a WebSocket to
-be documented, and auto-generated WebSocket client code.
+
+Features
+--------
+
+* A complete replacement to `swagger codegen <https://github.com/wordnik/swagger-codegen>`__ relieving user from technical debt codegen creates.
+* Powered with tab complete feature on ``Resources`` and ``Operations`` on ipython
+* Response models are converted to Python types and can be used to contruct request bodies.
+
+    That means, ``JSON`` conversions can be completely removed from the code
+* Requests and Responses are validated with Swagger spec 1.2
+* Synchronous and Asynchronous HTTP clients are provided out of the box.
+* A refetch of api-docs is performed before making API call if ``api-docs`` becomes stale than a specified time period.
+
+    Also, caching of api-docs is done to avoid repetitive continous calls.
+* Doc strings are provided for Operations and Models to give more information about the API
+* Local File path to api-docs is also accepted by ``swagger-py``.
 
 Usage
 -----
@@ -33,39 +47,43 @@ Here is a simple one to try from REPL:
 
 .. code:: Python
 
-    from swaggerpy.client import SwaggerClient
-    client = SwaggerClient(u"http://petstore.swagger.wordnik.com/api/api-docs")
-    client.pet.getPetById(petId=2).text
+    from swaggerpy import client
+    swagger_client = swagger_client.get_client("http://petstore.swagger.wordnik.com/api/api-docs")
+    client.pet.getPetById(petId=2).result(timeout=4)  # waits for 4 secs. for complete response
+                                                      # else throws Timeout error. If timeout is
+                                                      # not given, it will keep on waiting.
 
 
-Data model
-==========
+Which results in an instance of ``swaggerpy.swagger_model.Pet`` with attributes ``category``, etc.
 
-The data model presented by the ``swagger_model`` module is nearly
-identical to the original Swagger API resource listing and API
-declaration. This means that if you add extra custom metadata to your
-docs (such as a ``_author`` or ``_copyright`` field), they will carry
-forward into the object model. I recommend prefixing custom fields with
-an underscore, to avoid collisions with future versions of Swagger.
+To use Asynchronous HTTP client:
 
-There are a few meaningful differences.
+.. code:: Python
 
--  Resource listing
--  The ``file`` and ``base_dir`` fields have been added, referencing the
-   original ``.json`` file.
--  The objects in a ``resource_listing``'s ``api`` array contains a
-   field ``api_declaration``, which is the processed result from the
-   referenced API doc.
--  API declaration
--  A ``file`` field has been added, referencing the original ``.json``
-   file.
+    from swaggerpy.async_http_client import AsynchronousHttpClient
+    swagger_client = client.get_client("http://petstore.swagger.wordnik.com/api/api-docs",
+                                       AsynchronousHttpClient())
+    future = swagger_client.pet.getPetById(petId=2)
+    # Some CPU intensive operations while responses are fetched
+    result = future.result(timeout=5)  # waits for <timeout> seconds. (optional)
+
+
+To use Python types in request body:
+
+.. code:: Python
+
+    from swaggerpy import client
+    swagger_client = swagger_client.get_client("http://petstore.swagger.wordnik.com/api/api-docs")
+    Pet = swagger_client.pet.models.Pet
+    Category = swagger_client.pet.model.Category
+    pet = Pet(id=34, category=Category(), name="TestTest")
+    swagger_client.pet.addPet(body=pet).result()
+
 
 Development
 -----------
 
-The code is documented using `Sphinx <http://sphinx-doc.org/>`__, which
-allows `IntelliJ IDEA <http://confluence.jetbrains.net/display/PYH/>`__
-to do a better job at inferring types for autocompletion.
+The code is documented using `Sphinx <http://sphinx-doc.org/>`__.
 
 To keep things isolated, I also recommend installing (and using)
 `virtualenv <http://www.virtualenv.org/>`__.
@@ -87,16 +105,16 @@ the code coverage report. HTML versions of the reports are put in
 
 ::
 
-    $ ./setup.py develop   # prep for development (install deps, launchers, etc.)
-    $ ./setup.py nosetests # run unit tests
-    $ ./setup.py bdist_egg # build distributable
+    $ ./tox  # runs the tests on Py26, Py27 and checks code formatting with flake8
 
 
 
 License
 -------
 
-Copyright (c) 2013, Digium, Inc. All rights reserved.
+Copyright (c) 2013, Digium, Inc. 
+Copyright (c) 2014, Yelp, Inc. All rights reserved.
+
 
 Swagger.py is licensed with a `BSD 3-Clause
 License <http://opensource.org/licenses/BSD-3-Clause>`__.
