@@ -195,6 +195,12 @@ class SynchronousHttpClient(HttpClient):
                   if k == 'Authorization']
         # Pull the URL, which includes query params
         url = preped_req.url
+        # Requests version 2.0.0 (at least) will no longer form a URL for us
+        # for ws scheme types, so we do it manually
+        if params:
+            joined_params = "&".join(["%s=%s" % (k, v)
+                                     for (k, v) in params.items()])
+            url += "?%s" % joined_params
         return websocket.create_connection(url, header=header)
 
     def apply_authentication(self, req):
