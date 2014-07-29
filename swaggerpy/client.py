@@ -14,7 +14,7 @@ from collections import namedtuple
 from urlparse import urlparse
 
 import swagger_type
-from swaggerpy.http_client import SynchronousHttpClient
+from swaggerpy.http_client import APP_FORM, APP_JSON, SynchronousHttpClient
 from swaggerpy.processors import WebsocketProcessor, SwaggerProcessor
 from swaggerpy.response import HTTPFuture, SwaggerResponse
 from swaggerpy.swagger_model import create_model_type, Loader
@@ -392,6 +392,21 @@ def create_operation_docstring(json_):
     return docstring
 
 
+def handle_form_param(name, value, type_, request):
+    request['headers']['content-type'] = APP_FORM
+    if swagger_type.is_file(type_):
+        if 'files' not in request:
+            request['files'] = {}
+        request['files'][name] = value
+    elif swagger_type.is_primitive(type_):
+        if 'data' not in request:
+            request['data'] = {}
+        request['data'][name] = value
+    else:
+        raise AssertionError(
+            u"%s neither primitive nor File" % name)
+
+
 def add_param_to_req(param, value, request):
     """Populates request object with the request parameters
 
@@ -412,10 +427,12 @@ def add_param_to_req(param, value, request):
     elif param_req_type == u'body':
         request['data'] = value
         if not swagger_type.is_primitive(type_):
-            # TODO: model instance is not valid right now
-            #       Must be given as a json string in the body
-            request['headers']['content-type'] = 'application/json'
-    # TODO: accept 'header', 'form' in paramType
+            # If not primitive, body has to be 'dict'
+            # (or has already been converted to dict from model)
+            request['headers']['content-type'] = APP_JSON
+    elif param_req_type == 'form':
+        handle_form_param(pname, value, type_, request)
+    # TODO: accept 'header', in paramType
     else:
         raise AssertionError(
             u"Unsupported Parameter type: %s" % param_req_type)

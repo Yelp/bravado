@@ -68,9 +68,11 @@ class ValidationProcessor(SwaggerProcessor):
         allowed_types = (swagger_type.primitive_types() +
                          model_ids.get('model_ids') + ['void'])
         validate_type_or_ref(operation, model_ids, allowed_types, [], context)
+        validate_params_body_or_form(operation)
 
     def process_parameter(self, resources, resource, api, operation, parameter,
                           context, model_ids):
+        # TODO: check `consumes` in schema has proper header as per paramType
         required_fields = [u'name', u'paramType', u'type']
         validate_required_fields(parameter, required_fields, context)
         allowed_types = (swagger_type.primitive_types() +
@@ -439,6 +441,18 @@ def create_model_repr(model):
         string += ("%s%s=%r" % (separator, prop, getattr(model, prop)))
         separator = ", "
     return ("%s(%s)" % (model.__class__.__name__, string))
+
+
+def validate_params_body_or_form(json):
+    """Validates that form request parameters are present or
+    body request params but not both
+    """
+    has_body = any(param.get('paramType') == 'body'
+                   for param in json['parameters'])
+    has_form = any(param.get('paramType') == 'form'
+                   for param in json['parameters'])
+    if has_body and has_form:
+        raise AttributeError("Both `form` and `body` param types present!")
 
 
 def validate_type_or_ref(json, model_ids, allowed_types,

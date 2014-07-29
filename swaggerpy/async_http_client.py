@@ -18,6 +18,7 @@ import twisted.internet.error
 import twisted.web.client
 from swaggerpy import http_client
 from swaggerpy.exception import HTTPError
+from swaggerpy.multipart_response import create_multipart_content
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.protocol import Protocol
@@ -166,8 +167,14 @@ class _HTTPBodyFetcher(Protocol):
 def stringify_body(request_params):
     """Wraps the data using twisted FileBodyProducer
     """
-    http_client.stringify_body(request_params)
-    data = request_params.get('data')
+    headers = request_params.get('headers', {}) or {}
+    if 'files' in request_params:
+        data = create_multipart_content(request_params, headers)
+    elif headers.get('content-type') == http_client.APP_FORM:
+        data = urllib.urlencode(request_params.get('data', {}))
+    else:
+        http_client.stringify_body(request_params)
+        data = request_params.get('data')
     return FileBodyProducer(StringIO(data)) if data else None
 
 
