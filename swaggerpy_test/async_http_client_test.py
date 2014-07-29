@@ -61,6 +61,40 @@ class AsyncHttpClientTest(unittest.TestCase):
                     mock_stringIO.assert_called_once_with(42)
                     mock_fbp.assert_called_once_with('foo')
 
+    def test_stringify_files_creates_correct_body_content(self):
+        fake_file = Mock()
+        fake_file.read.return_value = "contents"
+        request = {'files': {'fake': fake_file},
+                   'headers': {'content-type': 'tmp'}}
+        with patch('swaggerpy.async_http_client.StringIO',
+                   return_value='foo') as mock_stringIO:
+            with patch('swaggerpy.async_http_client.FileBodyProducer'
+                       ) as mock_fbp:
+                with patch('swaggerpy.async_http_client.get_random_boundary',
+                           return_value='zz'):
+                    swaggerpy.async_http_client.stringify_body(request)
+
+                    expected_contents = (
+                        '--zz\r\nContent-Disposition: form-data; name=fake;' +
+                        ' filename=fake\r\n\r\ncontents\r\n--zz--\r\n')
+                    self.assertEqual('multipart/form-data; boundary=zz',
+                                     request['headers']['content-type'])
+                    mock_stringIO.assert_called_once_with(expected_contents)
+                    mock_fbp.assert_called_once_with('foo')
+
+    def test_stringify_files_creates_correct_form_content(self):
+        request = {'data': {'id': 42, 'name': 'test'},
+                   'headers': {'content-type': swaggerpy.http_client.APP_FORM}}
+        with patch('swaggerpy.async_http_client.StringIO',
+                   return_value='foo') as mock_stringIO:
+            with patch('swaggerpy.async_http_client.FileBodyProducer',
+                       ) as mock_fbp:
+                swaggerpy.async_http_client.stringify_body(request)
+
+                expected_contents = ('id=42&name=test')
+                mock_stringIO.assert_called_once_with(expected_contents)
+                mock_fbp.assert_called_once_with('foo')
+
     def test_listify_headers(self):
         headers = {'a': 'foo', 'b': ['bar', 42]}
         resp = swaggerpy.async_http_client.listify_headers(headers)
