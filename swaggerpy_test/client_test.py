@@ -141,6 +141,18 @@ class ClientTest(unittest.TestCase):
         self.assertEqual([], resp)
 
     @httpretty.activate
+    def test_response_body_is_shown_in_error_message(self):
+        httpretty.register_uri(
+            httpretty.GET, "http://swagger.py/swagger-test/pet",
+            body='{"success": false}', status=500)
+        msg = '500 Server Error: Internal Server Error'
+
+        try:
+            self.uut.pet.listPets().result()
+        except IOError as e:
+            self.assertEqual(msg + ' : {"success": false}', e.args[0])
+
+    @httpretty.activate
     def test_multiple(self):
         httpretty.register_uri(
             httpretty.GET, "http://swagger.py/swagger-test/pet/find",
