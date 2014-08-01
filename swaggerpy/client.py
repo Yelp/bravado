@@ -149,7 +149,7 @@ class Operation(object):
         # be added during this construction w/o changing the former
         request['headers'] = self._http_client._headers.copy()
         for param in self._json.get(u'parameters', []):
-            value = kwargs.pop(param[u'name'], None)
+            value = kwargs.pop(param[u'name'], default_value(param))
             validate_and_add_params_to_request(param, value, request,
                                                self._models)
         if kwargs:
@@ -419,6 +419,13 @@ def add_param_to_req(param, value, request):
     else:
         raise AssertionError(
             u"Unsupported Parameter type: %s" % param_req_type)
+
+
+def default_value(param):
+    """Fetches if present for param, returns None otherwise
+    Validation of the type happens later.
+    """
+    return param.get('defaultValue')
 
 
 def validate_and_add_params_to_request(param, value, request, models):
