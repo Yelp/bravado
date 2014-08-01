@@ -49,10 +49,12 @@ class AsynchronousHttpClient(http_client.HttpClient):
         # request_params has mandatory: method, url, params
         if not request_params.get('headers'):
             request_params['headers'] = self._headers
+        headers_forced = request_params.pop('headers_forced')
         self.request_params = {
             'method': str(request_params['method']),
             'bodyProducer': stringify_body(request_params),
-            'headers': listify_headers(request_params.get('headers')),
+            'headers': listify_headers(merge_headers(
+                request_params.get('headers'), headers_forced)),
             'uri': str(request_params['url'] + '?' + urllib.urlencode(
                 request_params['params'], True))
         }
@@ -178,6 +180,16 @@ def stringify_body(request_params):
         http_client.stringify_body(request_params)
         data = request_params.get('data')
     return FileBodyProducer(StringIO(data)) if data else None
+
+
+def merge_headers(*args):
+    """Merge headers with last overriding the previous
+    """
+    result = {}
+    for header in args:
+        if header:
+            result.update(header)
+    return result
 
 
 def listify_headers(headers):

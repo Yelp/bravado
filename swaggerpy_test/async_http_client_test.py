@@ -20,6 +20,14 @@ import swaggerpy.http_client
 
 
 class AsyncHttpClientTest(unittest.TestCase):
+    def setUp(self):
+        self.req = {
+            'method': 'GET',
+            'url': 'foo',
+            'data': {},
+            'headers': {},
+            'headers_forced': {},
+            'params': ''}
 
     def test_stringify_body_converts_dict_to_str(self):
         request_params = {
@@ -106,21 +114,40 @@ class AsyncHttpClientTest(unittest.TestCase):
                               "version code phrase headers length deliverBody")
         with patch.object(swaggerpy.async_http_client.AsynchronousHttpClient,
                           'fetch_deferred') as mock_Async:
-            req = {
-                'method': 'GET',
-                'url': 'foo',
-                'data': None,
-                'headers': None,
-                'params': ''}
             mock_Async.return_value.wait.return_value = Response(
                 1, 2, 3, 4, 5, 6)
             async_client = swaggerpy.async_http_client.AsynchronousHttpClient(
                 headers={'foo': 'bar'})
-            async_client.setup(req)
+            async_client.setup(self.req)
             resp = async_client.wait(5)
             headers = async_client.request_params['headers']
             self.assertTrue(headers.hasHeader('foo'))
             self.assertEqual(2, resp.code)
+
+    def test_headers_get_added_to_request(self):
+        with patch.object(swaggerpy.async_http_client.AsynchronousHttpClient,
+                          'fetch_deferred') as mock_Async:
+            self.req['headers_forced'] = {'foo': 'bar'}
+            mock_Async.return_value.wait.return_value = {}
+            async_client = swaggerpy.async_http_client.AsynchronousHttpClient()
+            async_client.setup(self.req)
+            headers = async_client.request_params['headers']
+            self.assertEqual(['bar'], headers.getRawHeaders('foo'))
+
+    def test_headers_override_existing_headers_in_request(self):
+        with patch.object(swaggerpy.async_http_client.AsynchronousHttpClient,
+                          'fetch_deferred') as mock_Async:
+            fake_file = Mock()
+            fake_file.read.return_value = "contents"
+            self.req.update({
+                'files': {'fake': fake_file},
+                'headers': {'content-type': 'tmp'},
+                'headers_forced': {'content-type': 'bar'}})
+            mock_Async.return_value.wait.return_value = {}
+            async_client = swaggerpy.async_http_client.AsynchronousHttpClient()
+            async_client.setup(self.req)
+            headers = async_client.request_params['headers']
+            self.assertEqual(['bar'], headers.getRawHeaders('content-type'))
 
 
 class HTTPBodyFetcherTest(unittest.TestCase):

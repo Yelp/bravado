@@ -251,6 +251,46 @@ class ResourceOperationTest(unittest.TestCase):
                          httpretty.last_request().querystring['test_param'])
 
     @httpretty.activate
+    def test_header_is_passed_to_request(self):
+        header_parameter = {
+            "paramType": "header",
+            "name": "header_name",
+            "type": "string"
+        }
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            header_parameter]
+        self.register_urls()
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/test_http?", body='')
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resource.testHTTP(header_name='header_value').result()
+        self.assertEqual('header_value',
+                         httpretty.last_request().headers['header_name'])
+
+    @httpretty.activate
+    def test_header_overrides_existing_header_values_in_request(self):
+        form_parameter = {
+            "paramType": "form",
+            "name": "param_id",
+            "type": "integer"
+        }
+        header_parameter = {
+            "paramType": "header",
+            "name": "content-type",
+            "type": "string"
+        }
+        # form_parameter will add content-type as x-www-form-urlencoded
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            header_parameter, form_parameter]
+        self.register_urls()
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/test_http?", body='')
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resource.testHTTP(**{'content-type': 'xyz', 'param_id': 42}).result()
+        self.assertEqual('xyz',
+                         httpretty.last_request().headers['content-type'])
+
+    @httpretty.activate
     def test_success_on_get_with_array_in_path_and_query_params(self):
         query_parameter = {
             "paramType": "query",
