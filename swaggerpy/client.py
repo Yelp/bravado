@@ -145,6 +145,7 @@ class Operation(object):
         request['method'] = self._json[u'method']
         request['url'] = self._uri
         request['params'] = {}
+        request['headers_forced'] = {}
         # Copy the client's headers so that other headers could
         # be added during this construction w/o changing the former
         request['headers'] = self._http_client._headers.copy()
@@ -432,7 +433,8 @@ def add_param_to_req(param, value, request):
             request['headers']['content-type'] = APP_JSON
     elif param_req_type == 'form':
         handle_form_param(pname, value, type_, request)
-    # TODO: accept 'header', in paramType
+    elif param_req_type == 'header':
+        request['headers_forced'][pname] = value
     else:
         raise AssertionError(
             u"Unsupported Parameter type: %s" % param_req_type)

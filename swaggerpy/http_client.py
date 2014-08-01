@@ -194,6 +194,7 @@ class SynchronousHttpClient(HttpClient):
 
     def setup(self, request_params):
         headers = request_params.get('headers', {}) or {}
+        headers_forced = request_params.pop('headers_forced')
         # if files in request_params OR
         # if content-type is x-www-form-urlencoded, no need to stringify
         if ('files' not in request_params and
@@ -201,6 +202,12 @@ class SynchronousHttpClient(HttpClient):
             stringify_body(request_params)
         self.request_params = request_params
         self.purge_content_types_if_file_present()
+        self.override_headers(headers_forced)
+
+    def override_headers(self, headers):
+        # force headers given in the request params
+        for k, v in headers.items():
+            self.request_params['headers'][k] = v
 
     def set_basic_auth(self, host, username, password):
         self.authenticator = BasicAuthenticator(
