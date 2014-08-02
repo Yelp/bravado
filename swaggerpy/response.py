@@ -55,29 +55,32 @@ class HTTPFuture(object):
 class SwaggerResponse(object):
     """Converts the API json response to Python class models
 
-    Example:
-    API Response
-        {
-            "id": 1,
-            "category": {
-                "name": "chihuahua"
-            },
-            "name": "tommy",
-            "photoUrls": [
-                ""
-            ],
-            "tags": [
-                {
-                    "name": "cute"
-                }
-            ],
-            "status": "available"
-        }
+    Example: ::
 
-    SwaggerResponse
-    Pet(category=Category(id=0L, name=u'chihuahua'),
-        status=u'available', name=u'tommy',
-        tags=[Tag(id=0L, name=u'cute')], photoUrls=[u''], id=1)
+        API Response
+            {
+                "id": 1,
+                "category": {
+                    "name": "chihuahua"
+                },
+                "name": "tommy",
+                "photoUrls": [
+                    ""
+                ],
+                "tags": [
+                    {
+                        "name": "cute"
+                    }
+                ],
+                "status": "available"
+            }
+
+    SwaggerResponse: ::
+
+        Pet(category=Category(id=0L, name=u'chihuahua'),
+            status=u'available', name=u'tommy',
+            tags=[Tag(id=0L, name=u'cute')], photoUrls=[u''], id=1)
+
     """
 
     def __init__(self, response, type_, models):

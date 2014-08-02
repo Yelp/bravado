@@ -344,8 +344,9 @@ def create_model_docstring(props):
        :type props: dict
        :returns: Generated string
 
-       Example:
-       "Pet": {
+    Example: ::
+
+        "Pet": {
             "id": "Pet",
             "properties": {
                 "id": {
@@ -364,14 +365,16 @@ def create_model_docstring(props):
                     "description": "pet status in the store",
                 }
             }
-    }
-    Result:
-    Attributes:
+        }
 
-        category (Category)
-        status (str) : pet status in the store
-        name (str)
-        id (long) : unique identifier for the pet
+    Result: ::
+
+        Attributes:
+
+            category (Category)
+            status (str) : pet status in the store
+            name (str)
+            id (long) : unique identifier for the pet
     """
     types = swagger_type.get_swagger_types(props)
     docstring = "Attributes:\n\n\t"
@@ -402,13 +405,19 @@ def create_flat_dict(model):
        :type model: type
        :returns: flat dict repr of the model
 
-       Ex: Pet(id=3, name="Name", photoUrls=["7"], tags=[Tag(id=2, name='T')])
+    Example: ::
 
-       converts to:
+        Pet(id=3, name="Name", photoUrls=["7"], tags=[Tag(id=2, name='T')])
+
+    converts to: ::
+
         {'id': 3,
          'name': 'Name',
          'photoUrls': ['7'],
-         'tags': [{'id': 2, 'name': 'T'}]}
+         'tags': [{'id': 2,
+                   'name': 'T'}
+                 ]
+         }
     """
     if not hasattr(model, '__dict__'):
         return model

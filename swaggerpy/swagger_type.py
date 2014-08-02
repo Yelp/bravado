@@ -54,7 +54,8 @@ COLON = ':'
 def get_instance(py_type):
     """Factory method to get default constructor invoked for the type
 
-    ..note ::
+    .. note::
+
         get_instance() is meant to be called to get an instance of
         primitive Python type. datetime() is called as primitive in Swagger
         but in Python, it is not. Hence, return None for datetime instance
@@ -190,15 +191,20 @@ def get_swagger_type(json_):
     :type json_: dict
     :rtype: str or unicode
 
-    Example:
-    ...
-    "type": "array",
-    "items": {
-         "type": "integer",
-         "format": "int64"
-         }
-    ...
-    Returns: "array:integer:int64"
+    Example: ::
+
+        ...
+        "type": "array",
+        "items": {
+             "type": "integer",
+             "format": "int64"
+             }
+        ...
+
+    Returns: ::
+
+        "array:integer:int64"
+
     """
     type_ = json_.get('type')
     format_ = json_.get('format')

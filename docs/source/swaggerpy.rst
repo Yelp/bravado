@@ -9,10 +9,42 @@ swaggerpy Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`codegen` Module
+:mod:`http_client` Module
 ---------------------
 
-.. automodule:: swaggerpy.codegen
+.. automodule:: swaggerpy.http_client
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`async_http_client` Module
+---------------------
+
+.. automodule:: swaggerpy.async_http_client
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`swagger_type` Module
+---------------------
+
+.. automodule:: swaggerpy.swagger_type
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`response` Module
+---------------------
+
+.. automodule:: swaggerpy.response
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`exception` Module
+---------------------
+
+.. automodule:: swaggerpy.exception
     :members:
     :undoc-members:
     :show-inheritance:
@@ -33,10 +65,11 @@ swaggerpy Package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
+:mod:`client` Module
+--------------------
 
-.. toctree::
-
-    swaggerpy.client
+.. automodule:: swaggerpy.client
+    :members:
+    :undoc-members:
+    :show-inheritance:
 

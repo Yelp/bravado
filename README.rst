@@ -1,8 +1,16 @@
+Documentation
+=============
+
+Detailed documentation is available at http://swagger-py.readthedocs.org
+
+Quick Summary
+=============
+
 About
 -----
 
-Swagger.py is a Python library for using
-`Swagger <https://developers.helloreverb.com/swagger/>`__ defined API's.
+Swagger.py is a Python library forked from `digium/swagger-py <https://github.com/digium/swagger-py/>`__
+for using `Swagger <https://developers.helloreverb.com/swagger/>`__ defined API's.
 
 Swagger itself is best described on the Swagger home page:
 
@@ -14,8 +22,6 @@ The `Swagger
 specification <https://github.com/wordnik/swagger-core/wiki>`__ defines
 how API's may be described using Swagger.
 
-Swagger.py also supports a WebSocket extension, allowing a WebSocket to
-be documented, and auto-generated WebSocket client code.
 
 Usage
 -----
@@ -33,32 +39,11 @@ Here is a simple one to try from REPL:
 
 .. code:: Python
 
-    from swaggerpy.client import SwaggerClient
-    client = SwaggerClient(u"http://petstore.swagger.wordnik.com/api/api-docs")
-    client.pet.getPetById(petId=2).text
+    from swaggerpy import client
+    swagger_client = client.get_client(
+        "http://petstore.swagger.wordnik.com/api/api-docs")
+    client.pet.getPetById(petId=42).result()
 
-
-Data model
-==========
-
-The data model presented by the ``swagger_model`` module is nearly
-identical to the original Swagger API resource listing and API
-declaration. This means that if you add extra custom metadata to your
-docs (such as a ``_author`` or ``_copyright`` field), they will carry
-forward into the object model. I recommend prefixing custom fields with
-an underscore, to avoid collisions with future versions of Swagger.
-
-There are a few meaningful differences.
-
--  Resource listing
--  The ``file`` and ``base_dir`` fields have been added, referencing the
-   original ``.json`` file.
--  The objects in a ``resource_listing``'s ``api`` array contains a
-   field ``api_declaration``, which is the processed result from the
-   referenced API doc.
--  API declaration
--  A ``file`` field has been added, referencing the original ``.json``
-   file.
 
 Development
 -----------
@@ -97,6 +82,7 @@ License
 -------
 
 Copyright (c) 2013, Digium, Inc. All rights reserved.
+Copyright (c) 2014, Yelp, Inc. All rights reserved.
 
 Swagger.py is licensed with a `BSD 3-Clause
 License <http://opensource.org/licenses/BSD-3-Clause>`__.

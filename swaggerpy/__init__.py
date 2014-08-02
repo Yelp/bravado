@@ -5,7 +5,7 @@
 """Swagger processing libraries.
 
 More information on Swagger can be found `on the Swagger website
-<https://developers.helloreverb.com/swagger/>`
+<https://developers.helloreverb.com/swagger/>`_
 """
 
 __all__ = [u"client", u"processors", u"swagger_model"]

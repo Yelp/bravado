@@ -83,7 +83,9 @@ factory = None
 
 def get_client(*args, **kwargs):
     """Factory method to generate SwaggerClient instance.
-    ..note::
+
+    .. note::
+
         This factory method uses a global which maintains the state of swagger
         client. Use :class:`SwaggerClientFactory` if you want more control.
 

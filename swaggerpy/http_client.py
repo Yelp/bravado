@@ -174,7 +174,6 @@ class ApiKeyAuthenticator(Authenticator):
         request.params[self.param_name] = self.api_key
 
 
-# noinspection PyDocstring
 class SynchronousHttpClient(HttpClient):
     """Synchronous HTTP client implementation.
     """
