@@ -185,4 +185,4 @@ Other alternative way is by using helper method ``load_file``. This doesn't need
         client = client.get_client(load_file('/path/to/api-docs'))
 
 .. note::
-        Both of the above methods also take an optional parameter ``app_base_path`` which can define the base path for the API call. Something like: ``client.get_client('file:///path/to/api-docs', app_base_path='http://foo')``
+        Both of the above methods also take an optional parameter ``api_base_path`` which can define the base path for the API call if basePath in schema is defined as '/'. It can be used like: ``client.get_client('file:///path/to/api-docs', api_base_path='http://foo')``
