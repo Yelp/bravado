@@ -97,12 +97,12 @@ class Resource(object):
     :param http_client: HTTP client API
     """
 
-    def __init__(self, resource, http_client, basePath):
+    def __init__(self, resource, http_client, base_path):
         log.debug(u"Building resource '%s'" % resource[u'name'])
         self.json_ = resource
         decl = resource['api_declaration']
         self._http_client = http_client
-        self._basePath = basePath
+        self._base_path = base_path
         self._set_models()
         self._operations = dict(
             (oper['nickname'], self._build_operation(decl, api, oper))
@@ -165,9 +165,15 @@ class Resource(object):
         log.debug(u"Building operation %s.%s" % (
             self._get_name(), operation[u'nickname']))
         # If basePath is root, use the basePath stored during init
-        basePath = (self._basePath if decl[u'basePath'] == '/'
-                    else decl[u'basePath'])
-        uri = basePath + api[u'path']
+        if decl[u'basePath'] == '/':
+            if urlparse(self._base_path).scheme == 'file':
+                raise AssertionError(
+                    "Base path can't be / for local specs." +
+                    " Pass api_base_path param to SwaggerClient.")
+            base_path = self._base_path
+        else:
+            base_path = decl[u'basePath']
+        uri = base_path.strip('/') + api[u'path']
         return Operation(uri, operation, self._http_client, self.models)
 
 
@@ -179,9 +185,11 @@ class SwaggerClient(object):
     :type url_or_resource: dict or str
     :param http_client: HTTP client API
     :type  http_client: HttpClient
+    :param api_base_path: Base Path for making API calls
+    :type api_base_path: str
     """
 
-    def __init__(self, url_or_resource, http_client=None):
+    def __init__(self, url_or_resource, http_client=None, api_base_path=None):
         if not http_client:
             http_client = SynchronousHttpClient()
         self._http_client = http_client
@@ -196,23 +204,26 @@ class SwaggerClient(object):
             log.debug(u"Loading from %s" % url_or_resource)
             self._api_docs = loader.load_resource_listing(url_or_resource)
             parsed_uri = urlparse(url_or_resource)
-            basePath = "{uri.scheme}://{uri.netloc}".format(uri=parsed_uri)
+            if not api_base_path:
+                api_base_path = "{uri.scheme}://{uri.netloc}".format(
+                    uri=parsed_uri)
         else:
-            log.debug(u"Loading from %s" % url_or_resource.get(u'basePath'))
+            log.debug(u"Loading from %s" % url_or_resource.get(u'url'))
             self._api_docs = url_or_resource
             loader.process_resource_listing(self._api_docs)
-            basePath = url_or_resource.get(u'basePath')
+            if not api_base_path:
+                api_base_path = url_or_resource.get(u'url')
 
         self._resources = {}
         for resource in self._api_docs[u'apis']:
             self._resources[resource[u'name']] = Resource(
-                resource, http_client, basePath)
+                resource, http_client, api_base_path)
             setattr(self, resource['name'],
                     self._get_resource(resource[u'name']))
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__,
-                            self._api_docs.get(u'basePath'))
+                            self._api_docs.get(u'url'))
 
     def __getattr__(self, item):
         """Promote resource objects to be client fields.
