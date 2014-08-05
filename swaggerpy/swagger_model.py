@@ -111,6 +111,9 @@ def json_load_url(http_client, url):
     """
     scheme = urlparse.urlparse(url).scheme
     if scheme == u'file':
+        # if '.json' isnt given, add it by default
+        if not url.endswith('.json'):
+            url += '.json'
         # requests can't handle file: URLs
         fp = urllib.urlopen(url)
         try:
@@ -183,9 +186,6 @@ class Loader(object):
         :param api_dict: api object from resource listing.
         """
         path = api_dict.get(u'path').replace(u'{format}', u'json')
-        # if loading via file and '.json' isnt given, add it by default
-        if base_url.startswith('file:') and '.' not in path:
-            path = path + '.json'
         api_dict[u'url'] = urlparse.urljoin(base_url + u'/', path.strip(u'/'))
         api_dict[u'api_declaration'] = json_load_url(
             self.http_client, api_dict[u'url'])
