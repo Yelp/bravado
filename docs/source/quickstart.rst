@@ -68,6 +68,24 @@ Time to get Twisted! (Asynchronous client)
 
         ``timeout`` parameter here is the timeout (in seconds) the call will block waiting for complete response. The default time is 5 seconds.
 
+This is too fancy for me! I want simple dict response!
+------------------------------------------------------
+
+``swagger-py`` has taken care of that as well. ``result._flat_dict()`` results in complete dict response.
+
+Hello Pet response would look like::
+
+        {'category': {'id': 0L, 'name': u''},
+         'id': 2,
+         'name': u'',
+         'photoUrls': [u''],
+         'status': u'',
+         'tags': [{'id': 0L, 'name': u''}]}
+
+.. note::
+
+        ``result.__dict__`` returns only one level dict conversion, hence should be avoided.
+
 Advanced options
 ================
 
@@ -154,7 +172,17 @@ Api-docs from file path
 
 .. code-block:: python
 
-        client = SwaggerClient('file:///path/to/api-docs', app_base_path='http://foo')
+        client = client.get_client('file:///path/to/api-docs')
 
 .. note::
-        This needs nested level file structure. Resources should be present under ``api-docs/``. File path should not have ``.json`` with the api-docs. It will be added by ``swagger-py``. This feature is still in review (beta) phase. 
+        This needs a nested level file structure. Resources should be present under ``api-docs/``. File path should not have ``.json`` with the api-docs. It will be added by ``swagger-py``. This feature is still in beta phase. 
+
+Other alternative way is by using helper method ``load_file``. This doesn't need the resources to be nested.
+
+.. code-block:: python
+
+        from swaggerpy.swagger_model import load_file
+        client = client.get_client(load_file('/path/to/api-docs'))
+
+.. note::
+        Both of the above methods also take an optional parameter ``app_base_path`` which can define the base path for the API call. Something like: ``client.get_client('file:///path/to/api-docs', app_base_path='http://foo')``
