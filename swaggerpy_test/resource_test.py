@@ -89,6 +89,18 @@ class ResourceTest(unittest.TestCase):
         self.assertEqual([], resp)
 
     @httpretty.activate
+    def test_append_base_path_if_base_path_isnt_absolute(self):
+        self.response["basePath"] = "/append"
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/append/test_http?",
+            body='[]')
+        self.register_urls()
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resource.testHTTP(test_param="foo").result()
+        self.assertEqual(["foo"],
+                         httpretty.last_request().querystring['test_param'])
+
+    @httpretty.activate
     def test_setattrs_on_client_and_resource(self):
         self.register_urls()
         client = SwaggerClient(u'http://localhost/api-docs')

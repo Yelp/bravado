@@ -256,13 +256,13 @@ class Resource(object):
         """
         log.debug(u"Building operation %s.%s" % (
             self._get_name(), operation[u'nickname']))
-        # If basePath is root, use the basePath stored during init
-        if decl[u'basePath'] == '/':
+        # IF basePath starts with /, prepend it with stored host name
+        if decl[u'basePath'].startswith('/'):
             if urlparse(self._base_path).scheme == 'file':
                 raise AssertionError(
-                    "Base path can't be / for local specs." +
-                    " Pass api_base_path param to SwaggerClient.")
-            base_path = self._base_path
+                    "Base path can't start with / for local specs," +
+                    " unless api_base_path is passed to SwaggerClient.")
+            base_path = self._base_path.strip('/') + decl['basePath']
         else:
             base_path = decl[u'basePath']
         uri = base_path.strip('/') + api[u'path']
