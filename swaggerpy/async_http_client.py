@@ -46,6 +46,8 @@ class AsynchronousHttpClient(http_client.HttpClient):
         :type request_params: dict
         """
         # request_params has mandatory: method, url, params
+        if not request_params.get('headers'):
+            request_params['headers'] = self._headers
         self.request_params = {
             'method': str(request_params['method']),
             'bodyProducer': stringify_body(request_params),

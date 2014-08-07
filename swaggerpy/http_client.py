@@ -234,6 +234,8 @@ class SynchronousHttpClient(HttpClient):
         :return: Requests response
         :rtype:  requests.Response
         """
+        if not headers:
+            headers = self._headers
         kwargs = {}
         for i in ('method', 'url', 'params', 'data', 'headers'):
             kwargs[i] = locals()[i]
