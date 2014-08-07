@@ -30,6 +30,8 @@ import unittest
 import httpretty
 
 from swaggerpy.client import SwaggerClient
+from swaggerpy.http_client import SynchronousHttpClient
+from swaggerpy.async_http_client import AsynchronousHttpClient
 from swaggerpy.processors import SwaggerError
 
 
@@ -78,6 +80,24 @@ class ResourceListingTest(unittest.TestCase):
             body='{"swaggerVersion": "1.2", "basePath": "/", "apis":[]}')
         self.client = SwaggerClient(u'http://localhost/api-docs')
         self.assertNotEqual(None, self.client)
+
+    @httpretty.activate
+    def test_headers_present_when_loading_resource_through_Synchronous(self):
+        self.response['apis'] = []
+        self.register_urls()
+        sync_http_client = SynchronousHttpClient(headers={'foo': 'bar'})
+        SwaggerClient(u'http://localhost/api-docs',
+                      http_client=sync_http_client)
+        self.assertEqual('bar', httpretty.last_request().headers['foo'])
+
+    @httpretty.activate
+    def test_headers_present_when_loading_resource_through_Asynchronous(self):
+        self.response['apis'] = []
+        self.register_urls()
+        async_http_client = AsynchronousHttpClient(headers={'foo': 'bar'})
+        SwaggerClient(u'http://localhost/api-docs',
+                      http_client=async_http_client)
+        self.assertEqual('bar', httpretty.last_request().headers['foo'])
 
 if __name__ == '__main__':
     unittest.main()

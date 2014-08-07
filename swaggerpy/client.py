@@ -288,7 +288,8 @@ class SwaggerClient(object):
 
         # Load Swagger APIs always synchronously
         loader = Loader(
-            SynchronousHttpClient(), [WebsocketProcessor(), ClientProcessor()])
+            SynchronousHttpClient(headers=http_client._headers),
+            [WebsocketProcessor(), ClientProcessor()])
 
         # url_or_resource can be url of type str,
         # OR a dict of resource itself.
