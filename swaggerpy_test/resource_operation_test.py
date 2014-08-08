@@ -178,6 +178,17 @@ class ResourceOperationTest(unittest.TestCase):
         self.assertEqual(None, resp)
 
     @httpretty.activate
+    def test_success_on_passing_default_value_if_param_not_passed(self):
+        self.parameter['defaultValue'] = 'testString'
+        self.register_urls()
+        httpretty.register_uri(httpretty.GET,
+                               "http://localhost/test_http?", body='')
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resource.testHTTP().result()
+        self.assertEqual(['testString'],
+                         httpretty.last_request().querystring['test_param'])
+
+    @httpretty.activate
     def test_success_on_get_with_array_in_path_and_query_params(self):
         query_parameter = {
             "paramType": "query",

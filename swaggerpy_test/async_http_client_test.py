@@ -80,9 +80,12 @@ class AsyncHttpClientTest(unittest.TestCase):
                 'params': ''}
             mock_Async.return_value.wait.return_value = Response(
                 1, 2, 3, 4, 5, 6)
-            async_client = swaggerpy.async_http_client.AsynchronousHttpClient()
+            async_client = swaggerpy.async_http_client.AsynchronousHttpClient(
+                headers={'foo': 'bar'})
             async_client.setup(req)
             resp = async_client.wait(5)
+            headers = async_client.request_params['headers']
+            self.assertTrue(headers.hasHeader('foo'))
             self.assertEqual(2, resp.code)
 
 

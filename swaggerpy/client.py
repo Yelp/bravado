@@ -151,7 +151,7 @@ class Operation(object):
         # be added during this construction w/o changing the former
         request['headers'] = self._http_client._headers.copy()
         for param in self._json.get(u'parameters', []):
-            value = kwargs.pop(param[u'name'], None)
+            value = kwargs.pop(param[u'name'], default_value(param))
             validate_and_add_params_to_request(param, value, request,
                                                self._models)
         if kwargs:
@@ -257,13 +257,13 @@ class Resource(object):
         """
         log.debug(u"Building operation %s.%s" % (
             self._get_name(), operation[u'nickname']))
-        # If basePath is root, use the basePath stored during init
-        if decl[u'basePath'] == '/':
+        # IF basePath starts with /, prepend it with stored host name
+        if decl[u'basePath'].startswith('/'):
             if urlparse(self._base_path).scheme == 'file':
                 raise AssertionError(
-                    "Base path can't be / for local specs." +
-                    " Pass api_base_path param to SwaggerClient.")
-            base_path = self._base_path
+                    "Base path can't start with / for local specs," +
+                    " unless api_base_path is passed to SwaggerClient.")
+            base_path = self._base_path.strip('/') + decl['basePath']
         else:
             base_path = decl[u'basePath']
         uri = base_path.strip('/') + api[u'path']
@@ -289,7 +289,8 @@ class SwaggerClient(object):
 
         # Load Swagger APIs always synchronously
         loader = Loader(
-            SynchronousHttpClient(), [WebsocketProcessor(), ClientProcessor()])
+            SynchronousHttpClient(headers=http_client._headers),
+            [WebsocketProcessor(), ClientProcessor()])
 
         # url_or_resource can be url of type str,
         # OR a dict of resource itself.
@@ -433,6 +434,13 @@ def add_param_to_req(param, value, request):
     else:
         raise AssertionError(
             u"Unsupported Parameter type: %s" % param_req_type)
+
+
+def default_value(param):
+    """Fetches if present for param, returns None otherwise
+    Validation of the type happens later.
+    """
+    return param.get('defaultValue')
 
 
 def validate_and_add_params_to_request(param, value, request, models):

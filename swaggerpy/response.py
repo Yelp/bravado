@@ -54,7 +54,16 @@ class HTTPFuture(object):
         if self.cancelled():
             raise CancelledError()
         response = self._http_client.wait(timeout)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except IOError as e:
+            if hasattr(e, 'response') and hasattr(e.response, 'text'):
+                # e.args is a tuple, change to list for modifications
+                args = list(e.args)
+                args[0] += (' : ' + e.response.text)
+                e.args = tuple(args)
+            raise
+
         return self._postHTTP_callback(response, **kwargs)
 
 
