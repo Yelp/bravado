@@ -111,6 +111,8 @@ will result in error like so:
 
        If you think it is acceptable for fields in your response to be null, and want the validator to ignore the type check you can add ``allow_null=True`` as a parameter to ``result()``.
 
+       If response validations and type conversions are totally needed to be skipped, you can pass ``raw_response=True`` as a parameter to ``result()`` to get back raw API response.
+
 Caching
 -------
 

@@ -49,6 +49,8 @@ class HTTPFuture(object):
         :type timeout: integer
         :param allow_null: if True, allow null fields in response
         :type allow_null: boolean
+        :param raw_response: if True, return raw response w/o any validations
+        :type raw_response: boolean
         """
         timeout = kwargs.pop('timeout', DEFAULT_TIMEOUT_S)
         if self.cancelled():
@@ -109,6 +111,12 @@ class SwaggerResponse(object):
         :type models: namedtuple
         """
         allow_null = kwargs.pop('allow_null', False)
+        raw_response = kwargs.pop('raw_response', False)
+
+        if raw_response:
+            self.swagger_object = response
+            return
+
         response = SwaggerTypeCheck("Response", response, type_, models,
                                     allow_null).value
         self.swagger_object = SwaggerResponseConstruct(response,
