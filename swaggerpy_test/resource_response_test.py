@@ -197,6 +197,19 @@ class ResourceResponseTest(unittest.TestCase):
         resp = resource.testHTTP(test_param="foo").result()
         self.assertEqual({"some_foo": "bar"}, resp)
 
+    @httpretty.activate
+    def test_success_on_returning_raw_response_if_given_in_parameter(self):
+        self.response["apis"][0]["operations"][0]["type"] = "array"
+        self.response["apis"][0]["operations"][0]["items"] = {
+            "type": "string"}
+        self.register_urls()
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/test_http?",
+            body='{"some_foo": "bar"}')
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resp = resource.testHTTP(test_param="foo").result(raw_response=True)
+        self.assertEqual({"some_foo": "bar"}, resp)
+
     # check array and datetime types
     @httpretty.activate
     def test_success_on_correct_array_type_returned_by_operation(self):
