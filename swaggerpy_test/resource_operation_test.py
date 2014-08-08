@@ -124,6 +124,15 @@ class ResourceOperationTest(unittest.TestCase):
                           u'http://localhost/api-docs')
 
     @httpretty.activate
+    def test_error_on_having_body_and_form_both_in_parameter(self):
+        params = self.response["apis"][0]["operations"][0]["parameters"]
+        params.append({"paramType": "body", "type": "string", "name": "a"})
+        params.append({"paramType": "form", "type": "string", "name": "b"})
+        self.register_urls()
+        self.assertRaises(AttributeError, SwaggerClient,
+                          u'http://localhost/api-docs')
+
+    @httpretty.activate
     def test_error_on_wrong_attr_type_in_parameter(self):
         parameters = self.response["apis"][0]["operations"][0]["parameters"]
         parameters[0]["type"] = "WRONG_TYPE"
@@ -156,6 +165,59 @@ class ResourceOperationTest(unittest.TestCase):
     ######################################################
     # Validate paramType of parameters - path, query, body
     ######################################################
+
+    # Validate form parameters
+    @httpretty.activate
+    def test_success_on_post_with_form_params(self):
+        form_parameter_1 = {
+            "paramType": "form",
+            "name": "param_id",
+            "type": "integer"
+        }
+        form_parameter_2 = {
+            "paramType": "form",
+            "name": "param_name",
+            "type": "string"
+        }
+        self.response["apis"][0]["operations"][0]["method"] = "POST"
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            form_parameter_1, form_parameter_2]
+        self.register_urls()
+        httpretty.register_uri(
+            httpretty.POST, "http://localhost/test_http?", body='')
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resource.testHTTP(param_id=42, param_name="str").result()
+        self.assertEqual('application/x-www-form-urlencoded',
+                         httpretty.last_request().headers['content-type'])
+        self.assertEqual('param_name=str&param_id=42',
+                         httpretty.last_request().body)
+
+    @httpretty.activate
+    def test_success_on_post_with_form_params_with_files(self):
+        form_parameter_1 = {
+            "paramType": "form",
+            "name": "param_id",
+            "type": "integer"
+        }
+        form_parameter_2 = {
+            "paramType": "form",
+            "name": "file_name",
+            "type": "File"
+        }
+        self.response["apis"][0]["operations"][0]["method"] = "POST"
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            form_parameter_1, form_parameter_2]
+        self.register_urls()
+        httpretty.register_uri(
+            httpretty.POST, "http://localhost/test_http?", body='')
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        with open("test-data/1.2/simple/simple.json", "rb") as f:
+            resource.testHTTP(param_id=42, file_name=f).result()
+            content_type = httpretty.last_request().headers['content-type']
+            self.assertTrue(content_type.startswith('multipart/form-data'))
+            self.assertTrue("42" in httpretty.last_request().body)
+            # instead of asserting the contents, just assert filename is there
+            self.assertTrue("simple.json" in httpretty.last_request().body)
 
     @httpretty.activate
     def test_success_on_get_with_path_and_query_params(self):

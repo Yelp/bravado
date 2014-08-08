@@ -26,7 +26,7 @@ SWAGGER_TO_PY_TYPE_MAPPING = {
     'date': datetime,
     'date-time': datetime,
     'byte': bytes,
-    'File': bytes
+    'File': file
 }
 
 
@@ -117,6 +117,13 @@ def is_primitive(type_):
     :rtype: boolean
     """
     return type_ in (primitive_types() + primitive_formats())
+
+
+def is_file(type_):
+    """checks whether the swagger type is file
+    :rtype: boolean
+    """
+    return type_ == 'File'
 
 
 def is_array(type_):

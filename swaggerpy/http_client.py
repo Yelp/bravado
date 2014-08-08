@@ -19,6 +19,9 @@ import websocket
 
 
 log = logging.getLogger(__name__)
+APP_FORM = 'application/x-www-form-urlencoded'
+APP_JSON = 'application/json'
+MULT_FORM = 'multipart/form-data'
 
 
 class HttpClient(object):
@@ -189,9 +192,14 @@ class SynchronousHttpClient(HttpClient):
         # There's no WebSocket factory to close; close connections individually
 
     def setup(self, request_params):
-        # request_params has mandatory: method, url, params
-        stringify_body(request_params)
+        headers = request_params.get('headers', {}) or {}
+        # if files in request_params OR
+        # if content-type is x-www-form-urlencoded, no need to stringify
+        if ('files' not in request_params and
+                headers.get('content-type') != APP_FORM):
+            stringify_body(request_params)
         self.request_params = request_params
+        self.purge_content_types_if_file_present()
 
     def set_basic_auth(self, host, username, password):
         self.authenticator = BasicAuthenticator(
@@ -212,17 +220,19 @@ class SynchronousHttpClient(HttpClient):
         log.info(u"%s %s(%r)", self.request_params['method'],
                  self.request_params['url'],
                  self.request_params['params'])
-        data = self.request_params.get('data')
-        if data and not isinstance(data, (str, unicode)):
-            # datetime is not json serializable, use str()
-            if isinstance(data, (datetime,)):
-                self.request_params['data'] = str(data)
-            else:
-                self.request_params['data'] = json.dumps(data)
         req = requests.Request(**self.request_params)
         self.apply_authentication(req)
         return self.session.send(self.session.prepare_request(req),
                                  timeout=timeout)
+
+    def purge_content_types_if_file_present(self):
+        """'Requests' adds 'multipart/form-data' to content-type if
+        files are in the request. Hence, any existing content-type
+        like application/x-www-form... should be removed
+        """
+        if 'files' in self.request_params:
+            headers = self.request_params.get('headers', {}) or {}
+            headers.pop('content-type', '')
 
     def cancel(self):
         """Nothing to be done for Synchronous client
@@ -271,9 +281,10 @@ class SynchronousHttpClient(HttpClient):
 def stringify_body(request_params):
     """Json dump the data to string if not already in string
     """
-    # If header is None or header's value is None assign {}
-    headers = request_params.get('headers', {}) or {}
-    if headers.get('content-type') == 'application/json':
-        data = request_params['data']
-        if not isinstance(data, (str, unicode)):
+    data = request_params.get('data')
+    if data and not isinstance(data, (str, unicode)):
+        # datetime is not json serializable, use str()
+        if isinstance(data, (datetime,)):
+            request_params['data'] = str(data)
+        else:
             request_params['data'] = json.dumps(data)
