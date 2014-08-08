@@ -105,7 +105,11 @@ will result in error like so:
 
 .. code-block:: console
 
-        TypeError: id's value: I should be integer :( should be in types (<type 'long'>, <type 'int'>)
+        TypeError: id's value: 'I should be integer :(' should be in types (<type 'long'>, <type 'int'>)
+
+.. note::
+
+       If you think it is acceptable for fields in your response to be null, and want the validator to ignore the type check you can add ``allow_null=True`` as a parameter to ``result()``.
 
 Caching
 -------

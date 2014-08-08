@@ -357,6 +357,58 @@ class ResourceTest(unittest.TestCase):
         school = resource.models.School()
         self.assertRaises(TypeError, resource.testHTTP, test_param=school)
 
+    @httpretty.activate
+    def test_alllow_null_in_response_body_if_allow_null_is_given(self):
+        self.register_urls()
+        self.sample_model["schools"].append(None)
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/test_http",
+            body=json.dumps(self.sample_model))
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resp = resource.testHTTP().result(allow_null=True)
+        self.assertTrue(isinstance(resp, resource.models.User))
+
+    @httpretty.activate
+    def test_alllow_null_as_response_if_allow_null_is_given(self):
+        self.register_urls()
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/test_http",
+            body=json.dumps(None))
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resource.testHTTP().result(allow_null=True)
+
+    @httpretty.activate
+    def test_error_if_response_body_has_null_and_allow_null_not_given(self):
+        self.register_urls()
+        self.sample_model["schools"].append(None)
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/test_http",
+            body=json.dumps(self.sample_model))
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        self.assertRaises(TypeError, resource.testHTTP().result)
+
+    @httpretty.activate
+    def test_error_if_response_is_null_and_allow_null_not_given(self):
+        self.register_urls()
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/test_http",
+            body=json.dumps(None))
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        self.assertRaises(TypeError, resource.testHTTP().result)
+
+    @httpretty.activate
+    def test_remove_null_values_when_convert_to_flat_dict(self):
+        self.register_urls()
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/test_http",
+            body=json.dumps(self.sample_model))
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        School = resource.models.School
+        User = resource.models.User
+        user = User(schools=[School(name='a'), None])
+        self.assertEqual(None, user.schools[1])
+        self.assertEqual([{'name': 'a'}], user._flat_dict()['schools'])
+
     #################################################
     # Model Py instance sent in request body
     ################################################

@@ -241,7 +241,7 @@ class SwaggerTypeCheck(object):
     Raises TypeError/AssertionError if validation fails
     """
 
-    def __init__(self, name, value, type_, models=None):
+    def __init__(self, name, value, type_, models=None, allow_null=False):
         """Ctor to set params and then check the value
 
         :param name: name of the field, used for error logging
@@ -252,11 +252,14 @@ class SwaggerTypeCheck(object):
         :type type_: str or unicode
         :param models: namedtuple which maps complex type string to py type
         :type models: namedtuple
+        :param allow_null: if True, ignores null values from type check
+        :type allow_null: boolean
         """
         self.name = name
         self.value = value
         self._type = type_
         self.models = models
+        self.allow_null = allow_null
         self._check_value_format()
 
     def _check_value_format(self):
@@ -264,6 +267,8 @@ class SwaggerTypeCheck(object):
         """
         if self._type == 'void':
             # Ignore any check if type is 'void'
+            return
+        elif self.allow_null and self.value is None:
             return
         elif is_primitive(self._type):
             self._check_primitive_type()
@@ -300,7 +305,7 @@ class SwaggerTypeCheck(object):
         array_item_type = get_array_item_type(self._type)
         self.value = [SwaggerTypeCheck(
             "%s's item" % self.name,
-            item, array_item_type, self.models).value
+            item, array_item_type, self.models, self.allow_null).value
             for item in self.value]
 
     def _check_complex_type(self):
@@ -323,7 +328,8 @@ class SwaggerTypeCheck(object):
             self.value[key] = SwaggerTypeCheck(key,
                                                self.value[key],
                                                klass._swagger_types[key],
-                                               self.models).value
+                                               self.models,
+                                               self.allow_null).value
         if required:
             raise AssertionError("These required fields not present: %s" %
                                  required)

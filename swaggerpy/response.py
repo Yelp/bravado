@@ -40,11 +40,17 @@ class HTTPFuture(object):
         self._cancelled = True
         self._http_client.cancel()
 
-    def result(self, timeout=DEFAULT_TIMEOUT_S):
+    def result(self, **kwargs):
         """Blocking call to wait for API response
         If API was cancelled earlier, CancelledError is raised
         If everything goes fine, callback registered is triggered with response
+
+        :param timeout: timeout in seconds to wait for response
+        :type timeout: integer
+        :param allow_null: if True, allow null fields in response
+        :type allow_null: boolean
         """
+        timeout = kwargs.pop('timeout', DEFAULT_TIMEOUT_S)
         if self.cancelled():
             raise CancelledError()
         response = self._http_client.wait(timeout)
@@ -58,7 +64,7 @@ class HTTPFuture(object):
                 e.args = tuple(args)
             raise
 
-        return self._postHTTP_callback(response)
+        return self._postHTTP_callback(response, **kwargs)
 
 
 class SwaggerResponse(object):
@@ -92,7 +98,7 @@ class SwaggerResponse(object):
 
     """
 
-    def __init__(self, response, type_, models):
+    def __init__(self, response, type_, models, **kwargs):
         """Wrapper to check and construt swagger response instance from API response
 
         :param response: JSON response
@@ -102,7 +108,9 @@ class SwaggerResponse(object):
         :param models: namedtuple which maps complex type string to py type
         :type models: namedtuple
         """
-        response = SwaggerTypeCheck("Response", response, type_, models).value
+        allow_null = kwargs.pop('allow_null', False)
+        response = SwaggerTypeCheck("Response", response, type_, models,
+                                    allow_null).value
         self.swagger_object = SwaggerResponseConstruct(response,
                                                        type_,
                                                        models).create_object()

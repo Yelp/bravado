@@ -166,7 +166,7 @@ class Operation(object):
             raise AssertionError("Websockets aren't supported in this version")
         request = self._construct_request(**kwargs)
 
-        def py_model_convert_callback(response):
+        def py_model_convert_callback(response, **kwargs):
             value = None
             type_ = swagger_type.get_swagger_type(self._json)
             # Assume status is OK,
@@ -175,7 +175,8 @@ class Operation(object):
             if response.text:
                 # Validate and convert API response to Python model instance
                 value = SwaggerResponse(
-                    response.json(), type_, self._models).swagger_object
+                    response.json(), type_, self._models,
+                    **kwargs).swagger_object
             return value
         return HTTPFuture(self._http_client,
                           request, py_model_convert_callback)
