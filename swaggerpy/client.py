@@ -292,6 +292,7 @@ class SwaggerClient(object):
             SynchronousHttpClient(headers=http_client._headers),
             [WebsocketProcessor(), ClientProcessor()])
 
+        forced_api_base_path = api_base_path is not None
         # url_or_resource can be url of type str,
         # OR a dict of resource itself.
         if isinstance(url_or_resource, (str, unicode)):
@@ -310,6 +311,8 @@ class SwaggerClient(object):
 
         self._resources = {}
         for resource in self._api_docs[u'apis']:
+            if forced_api_base_path and 'api_declaration' in resource:
+                resource['api_declaration']['basePath'] = api_base_path
             self._resources[resource[u'name']] = Resource(
                 resource, http_client, api_base_path)
             setattr(self, resource['name'],

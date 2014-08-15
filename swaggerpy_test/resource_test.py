@@ -107,7 +107,20 @@ class ResourceTest(unittest.TestCase):
         self.assertTrue(isinstance(client.api_test, Resource))
         self.assertTrue(isinstance(client.api_test.testHTTP, Operation))
 
-    # Use baesPath mentioned in the API declaration if it is not '/'
+    @httpretty.activate
+    def test_api_base_path_if_passed_is_always_used_as_base_path(self):
+        httpretty.register_uri(
+            httpretty.GET, "http://foo/test_http?", body='')
+        self.response["basePath"] = "http://localhost"
+        self.register_urls()
+        resource = SwaggerClient(u'http://localhost/api-docs',
+                                 api_base_path='http://foo').api_test
+        resource.testHTTP(test_param="foo").result()
+        self.assertEqual(["foo"],
+                         httpretty.last_request().querystring['test_param'])
+
+    # Use basePath mentioned in the API declaration only if
+    # it does not start with '/' & no api_base_path is provided in the params
     @httpretty.activate
     def test_correct_route_with_basePath_no_slash(self):
         httpretty.register_uri(
