@@ -122,6 +122,19 @@ Caching
 
         Caching can totally be bypassed by using ``SwaggerClient()`` (discouraged).
 
+Wrapping HTTP response error with custom class
+----------------------------------------------
+
+``swagger-py`` provided an option ``raise_with`` for wrapping HTTP errors with your custom Exception class. This is helpful for catching particular exception in your code or logging with particular exception class name.
+
+.. code-block:: python
+
+        class MyAwesomeException(Exception):
+            pass
+        swagger_client = client.get_client(
+            "http://petstore.swagger.wordnik.com/api/api-docs",
+            raise_with=MyAwesomeException)
+
 Docstrings
 ----------
 
