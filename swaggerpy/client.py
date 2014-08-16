@@ -280,11 +280,16 @@ class SwaggerClient(object):
     :type  http_client: HttpClient
     :param api_base_path: Base Path for making API calls
     :type api_base_path: str
+    :param raise_with: Custom Exception to wrap the response error with
+    :type raise_with: type
     """
 
-    def __init__(self, url_or_resource, http_client=None, api_base_path=None):
+    def __init__(self, url_or_resource, http_client=None,
+                 api_base_path=None, raise_with=None):
         if not http_client:
             http_client = SynchronousHttpClient()
+        # Wrap http client's errors with raise_with
+        http_client.raise_with = raise_with
         self._http_client = http_client
 
         # Load Swagger APIs always synchronously
