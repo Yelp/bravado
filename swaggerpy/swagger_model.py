@@ -429,7 +429,7 @@ def create_flat_dict(model):
             model_dict[k] = [create_flat_dict(x) for x in v if x is not None]
         elif v is None:
             # Remove None values from dict to avoid their type checking
-            if k in model._required:
+            if model._required and k in model._required:
                 raise AttributeError("Required field %s can not be None" % k)
             model_dict.pop(k)
         else:
