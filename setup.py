@@ -34,7 +34,7 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
     ],
-    tests_require=["nose", "tissue", "coverage", "httpretty"],
+    tests_require=["nose", "tissue", "coverage", "ordereddict", "httpretty"],
     install_requires=(["requests", "python-dateutil"] + websocket_packages +
-        async_packages),
+                      async_packages),
 )

@@ -46,6 +46,7 @@ A sample 'peration' is listed below in 'operations' list.
 
 import json
 import unittest
+import urlparse
 from datetime import datetime
 
 import httpretty
@@ -186,11 +187,11 @@ class ResourceOperationTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.POST, "http://localhost/test_http?", body='')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resource.testHTTP(param_id=42, param_name="str").result()
+        resource.testHTTP(param_id=42, param_name='str').result()
         self.assertEqual('application/x-www-form-urlencoded',
                          httpretty.last_request().headers['content-type'])
-        self.assertEqual('param_name=str&param_id=42',
-                         httpretty.last_request().body)
+        self.assertEqual({'param_name': ['str'], 'param_id': ['42']},
+                         urlparse.parse_qs(httpretty.last_request().body))
 
     @httpretty.activate
     def test_success_on_post_with_form_params_with_files(self):

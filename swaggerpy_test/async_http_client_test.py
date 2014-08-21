@@ -10,9 +10,11 @@ Not Tested:
 2) Timeouts by crochet's wait()
 """
 
+import json
 import unittest
 from collections import namedtuple
 from mock import patch, Mock
+from ordereddict import OrderedDict
 
 import swaggerpy.async_http_client
 import swaggerpy.exception
@@ -26,7 +28,8 @@ class AsyncHttpClientTest(unittest.TestCase):
             'headers': {'content-type': 'application/json'},
             'data': {'foo': 'bar', 'bar': 42}}
         swaggerpy.http_client.stringify_body(request_params)
-        self.assertEqual('{"foo": "bar", "bar": 42}', request_params['data'])
+        self.assertEqual({"foo": "bar", "bar": 42},
+                         json.loads(request_params['data']))
 
     def test_stringify_body_ignores_data_if_header_content_type_not_json(self):
         request_params = {'headers': {}, 'data': 'foo'}
@@ -83,7 +86,7 @@ class AsyncHttpClientTest(unittest.TestCase):
                     mock_fbp.assert_called_once_with('foo')
 
     def test_stringify_files_creates_correct_form_content(self):
-        request = {'data': {'id': 42, 'name': 'test'},
+        request = {'data': OrderedDict([('id', 42), ('name', 'test')]),
                    'headers': {'content-type': swaggerpy.http_client.APP_FORM}}
         with patch('swaggerpy.async_http_client.StringIO',
                    return_value='foo') as mock_stringIO:
@@ -99,7 +102,7 @@ class AsyncHttpClientTest(unittest.TestCase):
         headers = {'a': 'foo', 'b': ['bar', 42]}
         resp = swaggerpy.async_http_client.listify_headers(headers)
         self.assertEqual([('A', ['foo']), ('B', ['bar', 42])],
-                         list(resp.getAllRawHeaders()))
+                         sorted(list(resp.getAllRawHeaders())))
 
     def test_success_AsyncHTTP_response(self):
         Response = namedtuple("MyResponse",

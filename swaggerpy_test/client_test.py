@@ -7,6 +7,7 @@
 """Swagger client tests.
 """
 
+import json
 import unittest
 
 import httpretty
@@ -102,9 +103,9 @@ class ClientTest(unittest.TestCase):
         self.assertTrue(isinstance(client_stub, client.SwaggerClient))
 
     def test_serialization_of_json_dict(self):
-        client.get_client({'apis': [], 'swaggerVersion': '1.2'})
-        serialized_key = '{"swaggerVersion": "1.2", "apis": []}'
-        self.assertTrue(serialized_key in client.factory.cache)
+        client.get_client({'swaggerVersion': '1.2', 'apis': []})
+        self.assertTrue({'swaggerVersion': '1.2', 'apis': []} in
+                        map(json.loads, client.factory.cache.keys()))
 
     @httpretty.activate
     def test_bad_operation(self):
