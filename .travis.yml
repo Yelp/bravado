@@ -1,0 +1,14 @@
+sudo: false
+language: python
+env:
+- TOX_ENV=py26
+- TOX_ENV=py27
+- TOX_ENV=cover
+- TOX_ENV=docs
+- TOX_ENV=flake8
+install:
+- "pip install --use-mirrors tox coveralls"
+script:
+- tox -e $TOX_ENV
+after_success:
+coveralls
