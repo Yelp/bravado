@@ -1,3 +1,7 @@
+.. image:: https://travis-ci.org/Yelp/swagger-py.png?branch=master
+  :target: https://travis-ci.org/Yelp/swagger-py?branch=master
+
+
 Documentation
 =============
 
