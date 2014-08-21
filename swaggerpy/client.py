@@ -6,6 +6,7 @@
 """Swagger client library.
 """
 
+import json
 import logging
 import os.path
 import time
@@ -21,7 +22,6 @@ from swaggerpy.swagger_model import create_model_type, Loader
 from swaggerpy.swagger_type import SwaggerTypeCheck
 
 log = logging.getLogger(__name__)
-cache = dict()
 
 SWAGGER_SPEC_TIMEOUT_S = 300
 
@@ -64,12 +64,17 @@ class SwaggerClientFactory(object):
         :param timeout: (optional) Timeout after which api-docs is stale
         :return: :class:`CachedClient`
         """
-        if (api_docs_url not in self.cache or
-                self.cache[api_docs_url].is_stale()):
-            self.cache[api_docs_url] = self.build_cached_client(api_docs_url,
-                                                                *args,
-                                                                **kwargs)
-        return self.cache[api_docs_url]
+        # Construct cache key out of api_docs_url
+        if isinstance(api_docs_url, (str, unicode)):
+            key = api_docs_url
+        else:
+            key = json.dumps(api_docs_url)
+
+        if (key not in self.cache or
+                self.cache[key].is_stale()):
+            self.cache[key] = self.build_cached_client(api_docs_url, *args,
+                                                       **kwargs)
+        return self.cache[key]
 
     def build_cached_client(self, *args, **kwargs):
         """Builds a fresh SwaggerClient and stores it in a namedtuple which

@@ -56,7 +56,8 @@ class SwaggerClientFactoryTest(unittest.TestCase):
 
     def test_builds_client_if_present_in_cache_but_stale(self):
         with patch('swaggerpy.client.time.time', side_effect=[2, 3]):
-            client.cache['foo'] = client.CachedClient('bar', 0, 1)
+            client.factory = client.SwaggerClientFactory()
+            client.factory.cache['foo'] = client.CachedClient('bar', 0, 1)
             with patch('swaggerpy.client.SwaggerClient') as mock:
                 client.get_client('foo')
                 mock.assert_called_once_with('foo')
@@ -95,6 +96,15 @@ class GetClientMethodTest(unittest.TestCase):
 
 # noinspection PyDocstring
 class ClientTest(unittest.TestCase):
+
+    def test_get_client_allows_json_dict(self):
+        client_stub = client.get_client(self.resource_listing)
+        self.assertTrue(isinstance(client_stub, client.SwaggerClient))
+
+    def test_serialization_of_json_dict(self):
+        client.get_client({'apis': [], 'swaggerVersion': '1.2'})
+        serialized_key = '{"swaggerVersion": "1.2", "apis": []}'
+        self.assertTrue(serialized_key in client.factory.cache)
 
     @httpretty.activate
     def test_bad_operation(self):
