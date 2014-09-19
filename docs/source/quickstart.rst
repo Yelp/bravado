@@ -29,7 +29,7 @@ It will be an instance of ``swaggerpy.swagger_model.Pet`` with attributes ``cate
 
 Sample Response: ::
 
-       Pet(category=Category(id=0L, name=u''), status=u'', name=u'', tags=[Tag(id=0L, name=u'')], photoUrls=[u''], id=2) 
+       Pet(category=Category(id=0L, name=u''), status=u'', name=u'', tags=[Tag(id=0L, name=u'')], photoUrls=[u''], id=2)
 
 If you got a ``404``, try some other petId.
 
@@ -100,7 +100,7 @@ Validation example:
 
         pet = Pet(id="I should be integer :(", name="tommy")
         swagger_client.pet.addPet(body=pet).result()
- 
+
 will result in error like so:
 
 .. code-block:: console
@@ -184,6 +184,20 @@ In the `Pet Store <http://petstore.swagger.wordnik.com/api/api-docs/pet/>`_ exam
 
         swagger_client.pet.findPetByStatus()
 
+
+Adding a custom callback to your client response
+-----------------------
+
+``swagger-py`` allows you to pass a custom callback to be called
+    with the result of your client's response
+
+.. code-block:: python
+        def callback(response_value):
+            return response_value
+
+        swagger_client.pet.findPetByStatus(callback=callback)
+
+
 Api-docs from file path
 -----------------------
 
@@ -194,7 +208,8 @@ Api-docs from file path
         client = client.get_client('file:///path/to/api-docs')
 
 .. note::
-        This needs a nested level file structure. Resources should be present under ``api-docs/``. File path should not have ``.json`` with the api-docs. It will be added by ``swagger-py``. This feature is still in beta phase. 
+        This needs a nested level file structure. Resources should be present under ``api-docs/``. File path should not have ``.json`` with the api-docs. It will be added by ``swagger-py``. This feature is still in beta phase.
+
 
 Other alternative way is by using helper method ``load_file``. This doesn't need the resources to be nested.
 
