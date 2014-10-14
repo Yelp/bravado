@@ -12,7 +12,9 @@ import unittest
 
 import httpretty
 import requests
+from mock import Mock
 from mock import patch
+from mock import sentinel
 
 from swaggerpy import client
 from swaggerpy.http_client import SynchronousHttpClient
@@ -150,6 +152,44 @@ class ClientTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://swagger.py/swagger-test/pet", status=500)
         self.assertRaises(MyException, self.uut.pet.listPets().result)
+
+    @httpretty.activate
+    def test_custom_response_callback_returns_callback_result(self):
+        httpretty.register_uri(
+            httpretty.GET, "http://swagger.py/swagger-test/pet",
+            body='[]')
+
+        custom_callback = Mock(id="custom_callback")
+        custom_callback.return_value = sentinel.custom_callback_return_value
+
+        resp = self.uut.pet.listPets(callback=custom_callback)
+        self.assertEqual(0, custom_callback.call_count)
+
+        result = resp.result()
+
+        self.assertEqual(result, sentinel.custom_callback_return_value)
+
+    @httpretty.activate
+    def test_custom_response_callback_called_with_model_convert_result(self):
+        httpretty.register_uri(
+            httpretty.GET, "http://swagger.py/swagger-test/pet",
+            body='[]')
+
+        custom_callback = Mock(id="custom_callback")
+        custom_callback.return_value = sentinel.custom_callback_return_value
+
+        with patch(
+            'swaggerpy.client.PyModelConvertCallback.__call__',
+            return_value=Mock(id='py_model_convert_callback')
+        ) as convert_callback_mock:
+            convert_callback_mock.return_value = \
+                sentinel.convert_callback_return_value
+
+            self.uut.pet.listPets(callback=custom_callback).result()
+
+            custom_callback.assert_called_once_with(
+                sentinel.convert_callback_return_value
+            )
 
     @httpretty.activate
     def test_get(self):

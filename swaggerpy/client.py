@@ -159,6 +159,9 @@ class Operation(object):
             value = kwargs.pop(param[u'name'], default_value(param))
             validate_and_add_params_to_request(param, value, request,
                                                self._models)
+
+        self.custom_callback = kwargs.pop('callback', None)
+
         if kwargs:
             raise TypeError(u"'%s' does not have parameters %r" % (
                 self._json[u'nickname'], kwargs.keys()))
@@ -171,20 +174,52 @@ class Operation(object):
             raise AssertionError("Websockets aren't supported in this version")
         request = self._construct_request(**kwargs)
 
-        def py_model_convert_callback(response, **kwargs):
-            value = None
-            type_ = swagger_type.get_swagger_type(self._json)
-            # Assume status is OK,
-            # as exception would have been raised otherwise
-            # Validate the response if it is not empty.
-            if response.text:
-                # Validate and convert API response to Python model instance
-                value = SwaggerResponse(
-                    response.json(), type_, self._models,
-                    **kwargs).swagger_object
-            return value
-        return HTTPFuture(self._http_client,
-                          request, py_model_convert_callback)
+        py_model_convert_callback = PyModelConvertCallback(
+            self._json,
+            self._models,
+        )
+
+        if self.custom_callback:
+            callback = CustomResponseCallback(
+                self.custom_callback,
+                py_model_convert_callback,
+            )
+        else:
+            callback = py_model_convert_callback
+
+        return HTTPFuture(self._http_client, request, callback)
+
+
+class PyModelConvertCallback(object):
+
+    def __init__(self, _json, _models):
+        self._json = _json
+        self._models = _models
+
+    def __call__(self, response, **kwargs):
+        value = None
+        type_ = swagger_type.get_swagger_type(self._json)
+        # Assume status is OK,
+        # as exception would have been raised otherwise
+        # Validate the response if it is not empty.
+        if response.text:
+            # Validate and convert API response to Python model instance
+            value = SwaggerResponse(
+                response.json(), type_, self._models,
+                **kwargs).swagger_object
+
+        return value
+
+
+class CustomResponseCallback(object):
+
+    def __init__(self, custom_callback, py_model_convert_callback):
+        self.custom_callback = custom_callback
+        self.py_model_convert_callback = py_model_convert_callback
+
+    def __call__(self, response, **kwargs):
+        results = self.py_model_convert_callback(response, **kwargs)
+        return self.custom_callback(results)
 
 
 class Resource(object):
