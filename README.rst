@@ -2,44 +2,28 @@
   :target: https://travis-ci.org/Yelp/swagger-py?branch=master
 
 
-Documentation
-=============
-
-Detailed documentation is available at http://swagger-py.readthedocs.org
-
-Quick Summary
-=============
+Swagger-py
+==========
 
 About
 -----
 
-Swagger.py is a Python library forked from `digium/swagger-py <https://github.com/digium/swagger-py/>`__
-for using `Swagger <https://developers.helloreverb.com/swagger/>`__ defined API's.
-
-Swagger itself is best described on the Swagger home page:
+From Swagger's home page:
 
     Swagger is a specification and complete framework implementation for
     describing, producing, consuming, and visualizing RESTful web
     services.
 
-The `Swagger
-specification <https://github.com/wordnik/swagger-core/wiki>`__ defines
-how API's may be described using Swagger.
+Client libraries can automatically be generated from the `Swagger
+specification <https://github.com/wordnik/swagger-core/wiki>`__, however Swagger-py
+aims to be a compleate replacement for code generation (`swagger-codegen
+<https://github.com/wordnik/swagger-codegen>`__).
 
+Swagger.py is a forked from `digium/swagger-py <https://github.com/digium/swagger-py/>`__
+for using `Swagger <https://developers.helloreverb.com/swagger/>`__ defined API's.
 
-Usage
------
-
-Install directly from github as:
-
-::
-
-    $ pip install --upgrade git+git://github.com/Yelp/swagger-py
-
-API
-===
-
-Here is a simple one to try from REPL:
+Example Usage
+-------------
 
 .. code:: Python
 
@@ -47,23 +31,28 @@ Here is a simple one to try from REPL:
     swagger_client = client.get_client("http://petstore.swagger.wordnik.com/api/api-docs")
     swagger_client.pet.getPetById(petId=42).result()
 
+Documentation
+-------------
 
-Development
------------
+More documentation is available at http://swagger-py.readthedocs.org
 
-The code is documented using `Sphinx <http://sphinx-doc.org/>`__, which
-allows `IntelliJ IDEA <http://confluence.jetbrains.net/display/PYH/>`__
-to do a better job at inferring types for autocompletion.
-
-To keep things isolated, I also recommend installing (and using)
-`virtualenv <http://www.virtualenv.org/>`__.
+Installation
+------------
 
 ::
 
-    $ sudo pip install virtualenv
-    $ mkdir -p ~/virtualenv
-    $ virtualenv ~/virtualenv/swagger
-    $ . ~/virtualenv/swagger/bin/activate
+    $ pip install --upgrade git+git://github.com/Yelp/swagger-py
+
+Development
+===========
+
+Code is documented using `Sphinx <http://sphinx-doc.org/>`__.
+
+`virtualenv <http://virtualenv.readthedocs.org/en/latest/virtualenv.html>`__. is
+recommended to keep dependencies and libraries isolated.
+
+Setup
+-----
 
 `Setuptools <http://pypi.python.org/pypi/setuptools>`__ is used for
 building. `Nose <http://nose.readthedocs.org/en/latest/>`__ is used
@@ -79,7 +68,14 @@ the code coverage report. HTML versions of the reports are put in
     $ ./setup.py nosetests # run unit tests
     $ ./setup.py bdist_egg # build distributable
 
+Testing
+-------
 
+Use `tox` to install and/or run tests living in `tests/`.
+
+::
+
+    $ tox
 
 License
 -------
