@@ -515,7 +515,7 @@ def validate_and_add_params_to_request(param, value, request, models):
         value = u",".join(str(x) for x in value)
 
     # Add the parameter value to the request object
-    if value:
+    if value is not None:
         add_param_to_req(param, value, request)
     else:
         if param.get(u'required'):
