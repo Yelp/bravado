@@ -44,9 +44,8 @@ Here is a simple one to try from REPL:
 .. code:: Python
 
     from swaggerpy import client
-    swagger_client = client.get_client(
-        "http://petstore.swagger.wordnik.com/api/api-docs")
-    client.pet.getPetById(petId=42).result()
+    swagger_client = client.get_client("http://petstore.swagger.wordnik.com/api/api-docs")
+    swagger_client.pet.getPetById(petId=42).result()
 
 
 Development
