@@ -449,7 +449,8 @@ def add_param_to_req(param, value, request):
 
     if param_req_type == u'path':
         request['url'] = request['url'].replace(
-            u'{%s}' % pname, unicode(value))
+            u'{%s}' % pname,
+            urllib.quote_plus(unicode(value)))
     elif param_req_type == u'query':
         request['params'][pname] = value
     elif param_req_type == u'body':
