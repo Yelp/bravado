@@ -460,7 +460,7 @@ def add_param_to_req(param, value, request):
             request['headers']['content-type'] = APP_JSON
     elif param_req_type == 'form':
         handle_form_param(pname, value, type_, request)
-    # TODO: accept 'header', in paramType
+    # TODO(#31): accept 'header', in paramType
     else:
         raise AssertionError(
             u"Unsupported Parameter type: %s" % param_req_type)
@@ -484,7 +484,6 @@ def validate_and_add_params_to_request(param, value, request, models):
     :param models: models tuple containing all complex model types
     :type models: namedtuple
     """
-
     # If param not given in args, and not required, just ignore.
     if not param.get('required') and not value:
         return

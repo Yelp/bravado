@@ -75,7 +75,7 @@ class AsynchronousHttpClient(http_client.HttpClient):
         log.info(u"%s %s", self.request_params.get('method'),
                  self.request_params.get('uri'))
         # finished_resp is returned here
-        # TODO: catch known exceptions and raise common exceptions
+        # TODO(#44): catch known exceptions and raise common exceptions
         return self.eventual.wait(timeout)
 
     @crochet.run_in_reactor
