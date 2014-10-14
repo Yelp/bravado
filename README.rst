@@ -64,18 +64,9 @@ the code coverage report. HTML versions of the reports are put in
 
 ::
 
-    $ ./setup.py develop   # prep for development (install deps, launchers, etc.)
-    $ ./setup.py nosetests # run unit tests
-    $ ./setup.py bdist_egg # build distributable
-
-Testing
--------
-
-Use `tox` to install and/or run tests living in `tests/`.
-
-::
-
-    $ tox
+    $ make dev   # prep for development (install deps, launchers, etc.)
+    $ make test  # run unit tests
+    $ make build # build distributable
 
 License
 -------
