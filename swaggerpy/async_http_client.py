@@ -18,6 +18,7 @@ import twisted.internet.error
 import twisted.web.client
 from swaggerpy import http_client
 from swaggerpy.exception import HTTPError
+from swaggerpy.exception import TimeoutError
 from swaggerpy.multipart_response import create_multipart_content
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
@@ -75,8 +76,10 @@ class AsynchronousHttpClient(http_client.HttpClient):
         log.info(u"%s %s", self.request_params.get('method'),
                  self.request_params.get('uri'))
         # finished_resp is returned here
-        # TODO: catch known exceptions and raise common exceptions
-        return self.eventual.wait(timeout)
+        try:
+            return self.eventual.wait(timeout)
+        except crochet._eventloop.TimeoutError as e:
+            raise TimeoutError(e)
 
     @crochet.run_in_reactor
     def fetch_deferred(self):
