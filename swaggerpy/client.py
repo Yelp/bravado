@@ -16,7 +16,7 @@ from urlparse import urlparse
 
 import swagger_type
 from swaggerpy.http_client import APP_FORM, APP_JSON, SynchronousHttpClient
-from swaggerpy.processors import WebsocketProcessor, SwaggerProcessor
+from swaggerpy.processors import SwaggerProcessor
 from swaggerpy.response import HTTPFuture, SwaggerResponse
 from swaggerpy.swagger_model import create_model_type, Loader
 from swaggerpy.swagger_type import SwaggerTypeCheck
@@ -167,8 +167,6 @@ class Operation(object):
     def __call__(self, **kwargs):
         log.info(u"%s?%r" % (self._json[u'nickname'],
                              urllib.urlencode(kwargs)))
-        if self._json[u'is_websocket']:
-            raise AssertionError("Websockets aren't supported in this version")
         request = self._construct_request(**kwargs)
 
         def py_model_convert_callback(response, **kwargs):
@@ -300,7 +298,7 @@ class SwaggerClient(object):
         # Load Swagger APIs always synchronously
         loader = Loader(
             SynchronousHttpClient(headers=http_client._headers),
-            [WebsocketProcessor(), ClientProcessor()])
+            [ClientProcessor()])
 
         forced_api_base_path = api_base_path is not None
         # url_or_resource can be url of type str,
