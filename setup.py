@@ -6,7 +6,6 @@ import os
 
 from setuptools import setup
 
-websocket_packages = ["websocket-client"]
 async_packages = ["crochet", "twisted"]
 
 setup(
@@ -16,7 +15,7 @@ setup(
     description="Library for accessing Swagger-enabled API's",
     long_description=open(os.path.join(os.path.dirname(__file__),
                                        "README.rst")).read(),
-    author="Yelp, Inc.",
+    author="Digium, Inc. and Yelp, Inc.",
     author_email="opensource+swaggerpy@yelp.com",
     url="https://github.com/Yelp/swagger-py",
     packages=["swaggerpy"],
@@ -28,7 +27,17 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
     ],
-    tests_require=["nose", "tissue", "coverage", "ordereddict", "httpretty"],
-    install_requires=(["requests", "python-dateutil"] + websocket_packages +
-                      async_packages),
+    tests_require=[
+        "nose",
+        "tissue",
+        "coverage",
+        "ordereddict",
+        "httpretty"
+    ],
+    install_requires=[
+        "requests",
+        "python-dateutil",
+        "crochet",
+        "twisted",
+    ],
 )

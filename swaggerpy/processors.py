@@ -277,38 +277,3 @@ class SwaggerProcessor(object):
         :param context: Current context in the API.
         """
         pass
-
-
-# noinspection PyDocstring
-class WebsocketProcessor(SwaggerProcessor):
-    """Process the WebSocket extension for Swagger
-    """
-
-    def process_resource_api(self, resources, resource, api, context):
-        api.setdefault(u'has_websocket', False)
-
-    def process_operation(self, resources, resource, api, operation,
-                          context, model_ids):
-        operation[u'is_websocket'] = operation.get(u'upgrade') == u'websocket'
-
-        if operation[u'is_websocket']:
-            api[u'has_websocket'] = True
-            if operation[u'method'] != u'GET':
-                raise SwaggerError(
-                    u"upgrade: websocket is only valid on GET operations",
-                    context)
-
-
-# noinspection PyDocstring
-class FlatenningProcessor(SwaggerProcessor):
-    """Flattens model and property dictionaries into lists.
-
-    Mustache requires a regular schema.
-    """
-
-    def process_api_declaration(self, resources, resource, context):
-        resource.model_list = resource.models.values()
-
-    def process_model(self, resources, resource, model, context):
-        # Convert properties dict to list
-        model.property_list = model.properties.values()

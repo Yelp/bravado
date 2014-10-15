@@ -15,7 +15,6 @@ from datetime import datetime
 
 import requests
 import requests.auth
-import websocket
 
 
 log = logging.getLogger(__name__)
@@ -46,18 +45,6 @@ class HttpClient(object):
         :param data: Request body
         :type  data: Dictionary, bytes, or file-like object
         :return: Implementation specific response object
-        """
-        raise NotImplementedError(
-            u"%s: Method not implemented", self.__class__.__name__)
-
-    def ws_connect(self, url, params=None):
-        """Create a WebSocket connection.
-
-        :param url: WebSocket URL.
-        :type  url: str
-        :param params: Query parameters (?key=value)
-        :type  params: dict
-        :return: Implmentation specific WebSocket connection object
         """
         raise NotImplementedError(
             u"%s: Method not implemented", self.__class__.__name__)
@@ -184,12 +171,10 @@ class SynchronousHttpClient(HttpClient):
     def __init__(self, headers={}):
         self.session = requests.Session()
         self.authenticator = None
-        self.websockets = set()
         self._headers = headers
 
     def close(self):
         self.session.close()
-        # There's no WebSocket factory to close; close connections individually
 
     def setup(self, request_params):
         headers = request_params.get('headers', {}) or {}
@@ -210,8 +195,7 @@ class SynchronousHttpClient(HttpClient):
             host=host, api_key=api_key, param_name=param_name)
 
     def wait(self, timeout):
-        """Requests based implemention with timeout
-        No support of Websockets.
+        """Requests based implemention with timeout.
 
         :param timeout: time in seconds to wait for response
         :return: Requests response
@@ -252,26 +236,6 @@ class SynchronousHttpClient(HttpClient):
         req = requests.Request(**kwargs)
         self.apply_authentication(req)
         return self.session.send(self.session.prepare_request(req))
-
-    def ws_connect(self, url, params=None):
-        """Websocket-client based implementation.
-
-        :return: WebSocket connection
-        :rtype:  websocket.WebSocket
-        """
-        # Build a prototype request and apply authentication to it
-        proto_req = requests.Request(u'GET', url, params=params)
-        self.apply_authentication(proto_req)
-        # Prepare the request, so params will be put on the url,
-        # and authenticators can manipulate headers
-        preped_req = proto_req.prepare()
-        # Pull the Authorization header, if needed
-        header = [u"%s: %s" % (k, v)
-                  for (k, v) in preped_req.headers.items()
-                  if k == u'Authorization']
-        # Pull the URL, which includes query params
-        url = preped_req.url
-        return websocket.create_connection(url, header=header)
 
     def apply_authentication(self, req):
         if self.authenticator and self.authenticator.matches(req.url):
