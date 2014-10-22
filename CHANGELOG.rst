@@ -1,3 +1,10 @@
+0.5.7 (2014-10-23)
+------------------
+- Successfully validate objects that have additional fields beyond those
+  specified in the associated model.
+- Store raw deserialized JSON in '_raw' attribute of objects.
+- Ignore '_raw' attribute in object equality checks.
+
 0.2.0 (2013-10-28)
 ------------------
 - Add close() methods to client and http_client.

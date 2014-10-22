@@ -293,14 +293,15 @@ class ResourceTest(unittest.TestCase):
             u'http://localhost/api-docs').api_test.testHTTP().result)
 
     @httpretty.activate
-    def test_error_on_extra_type_instead_of_complex_type(self):
+    def test_success_on_extra_field_in_complex_type(self):
         self.register_urls()
         self.sample_model["extra"] = 42
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http",
             body=json.dumps(self.sample_model))
-        self.assertRaises(TypeError, SwaggerClient(
-            u'http://localhost/api-docs').api_test.testHTTP().result)
+        result = SwaggerClient(
+            u'http://localhost/api-docs').api_test.testHTTP().result()
+        self.assertEqual(result._raw["extra"], 42)
 
     @httpretty.activate
     def test_error_on_wrong_type_instead_of_complex_type(self):

@@ -395,7 +395,14 @@ def compare(first, second):
     If a type composes another model types, .__dict__ recurse on those
     and compares again on those dict values
     """
-    return hasattr(second, '__dict__') and first.__dict__ == second.__dict__
+    if not hasattr(second, '__dict__'):
+        return False
+
+    # Ignore any '_raw' keys
+    def norm_dict(d):
+        return dict((k, d[k]) for k in d if k != '_raw')
+
+    return norm_dict(first.__dict__) == norm_dict(second.__dict__)
 
 
 def create_flat_dict(model):

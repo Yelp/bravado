@@ -331,7 +331,8 @@ class SwaggerTypeCheck(object):
             if key in required:
                 required.remove(key)
             if key not in klass._swagger_types.keys():
-                raise TypeError("Type for '%s' was not defined in spec." % key)
+                # Ignore unrecognized keys
+                continue
             self.value[key] = SwaggerTypeCheck(key,
                                                self.value[key],
                                                klass._swagger_types[key],
