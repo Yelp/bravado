@@ -53,9 +53,9 @@ is validated against its type 'Pet' which is defined like so:
 }
 """
 
+import datetime
 import json
 import unittest
-from datetime import datetime
 from mock import patch, Mock
 
 import httpretty
@@ -210,6 +210,18 @@ class ResourceResponseTest(unittest.TestCase):
         resp = resource.testHTTP(test_param="foo").result(raw_response=True)
         self.assertEqual({"some_foo": "bar"}, resp)
 
+    @httpretty.activate
+    def test_success_on_date_type(self):
+        self.response["apis"][0]["operations"][0]["type"] = "string"
+        self.response["apis"][0]["operations"][0]["format"] = "date"
+        self.register_urls()
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/test_http?test_param=foo",
+            body='"2014-06-10"')
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resp = resource.testHTTP(test_param="foo").result()
+        self.assertEqual(resp, datetime.date(2014, 6, 10))
+
     # check array and datetime types
     @httpretty.activate
     def test_success_on_correct_array_type_returned_by_operation(self):
@@ -224,7 +236,7 @@ class ResourceResponseTest(unittest.TestCase):
             body='["2014-06-10T23:49:54.728+0000"]')
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_param="foo").result()
-        self.assertEqual(resp, [datetime(
+        self.assertEqual(resp, [datetime.datetime(
             2014, 6, 10, 23, 49, 54, 728000, tzinfo=tzutc())])
 
     @httpretty.activate

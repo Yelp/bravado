@@ -7,6 +7,7 @@
 """Swagger client tests.
 """
 
+import datetime
 import json
 import unittest
 
@@ -184,12 +185,17 @@ class ClientTest(unittest.TestCase):
                          httpretty.last_request().querystring)
 
     @httpretty.activate
-    def test_post(self):
+    def test_post_and_optional_params(self):
         httpretty.register_uri(
             httpretty.POST, "http://swagger.py/swagger-test/pet",
             status=requests.codes.ok,
             body='"Spark is born"')
 
+        resp = self.uut.pet.createPet(
+            name='Sparky', birthday=datetime.date(2014, 1, 2)).result()
+        self.assertEqual('Spark is born', resp)
+        self.assertEqual({'name': ['Sparky'], 'birthday': ['2014-01-02']},
+                         httpretty.last_request().querystring)
         resp = self.uut.pet.createPet(name='Sparky').result()
         self.assertEqual('Spark is born', resp)
         self.assertEqual({'name': ['Sparky']},
@@ -226,7 +232,7 @@ class ClientTest(unittest.TestCase):
                                         "nickname": "listPets",
                                         "type": "array",
                                         "items": {
-                                                "type": "string"
+                                            "type": "string"
                                         },
                                         "parameters": []
                                     },
@@ -240,6 +246,13 @@ class ClientTest(unittest.TestCase):
                                                 "paramType": "query",
                                                 "type": "string",
                                                 "required": True
+                                            },
+                                            {
+                                                "name": "birthday",
+                                                "paramType": "query",
+                                                "type": "string",
+                                                "format": "date",
+                                                "required": False
                                             }
                                         ]
                                     }
@@ -253,7 +266,7 @@ class ClientTest(unittest.TestCase):
                                         "nickname": "findPets",
                                         "type": "array",
                                         "items": {
-                                                "type": "string"
+                                            "type": "string"
                                         },
                                         "parameters": [
                                             {

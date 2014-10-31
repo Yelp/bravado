@@ -44,10 +44,10 @@ A sample 'peration' is listed below in 'operations' list.
 }
 """
 
+import datetime
 import json
 import unittest
 import urlparse
-from datetime import datetime
 
 import httpretty
 from dateutil.tz import tzutc
@@ -341,9 +341,29 @@ class ResourceOperationTest(unittest.TestCase):
             httpretty.GET, "http://localhost/test_http", body='')
         self.register_urls()
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        some_date = datetime(2014, 6, 10, 23, 49, 54, 728000, tzinfo=tzutc())
-        resource.testHTTP(test_param=some_date).result()
+        some_datetime = datetime.datetime(
+            2014, 6, 10, 23, 49, 54, 728000, tzinfo=tzutc())
+        resource.testHTTP(test_param=some_datetime).result()
         self.assertEqual(['2014-06-10 23:49:54.728000 00:00'],
+                         httpretty.last_request().querystring['test_param'])
+
+    @httpretty.activate
+    def test_success_on_passing_date_in_param(self):
+        query_parameter = {
+            "paramType": "query",
+            "name": "test_param",
+            "type": "string",
+            "format": "date"
+        }
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            query_parameter]
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/test_http", body='')
+        self.register_urls()
+        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        some_date = datetime.date(2014, 6, 10)
+        resource.testHTTP(test_param=some_date).result()
+        self.assertEqual(['2014-06-10'],
                          httpretty.last_request().querystring['test_param'])
 
     @httpretty.activate
