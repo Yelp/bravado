@@ -5,7 +5,7 @@
 """Code to check the validity of swagger types and conversion to python types
 """
 
-from datetime import datetime
+import datetime
 
 import dateutil.parser
 
@@ -23,8 +23,8 @@ SWAGGER_TO_PY_TYPE_MAPPING = {
     'number': float,
     'string': (str, unicode),
     'boolean': bool,
-    'date': datetime,
-    'date-time': datetime,
+    'date': datetime.date,
+    'date-time': datetime.datetime,
     'byte': bytes,
     'File': file
 }
@@ -50,6 +50,8 @@ ARRAY = 'array'
 
 COLON = ':'
 
+DATETIME_TYPES = set([datetime.datetime, datetime.date])
+
 
 def get_instance(py_type):
     """Factory method to get default constructor invoked for the type
@@ -57,16 +59,16 @@ def get_instance(py_type):
     .. note::
 
         get_instance() is meant to be called to get an instance of
-        primitive Python type. datetime() is called as primitive in Swagger
-        but in Python, it is not. Hence, return None for datetime instance
+        primitive Python type. datetime() and date() are primitives in Swagger
+        but not Python, so return None for these.
 
     Complex models are already set to None in swagger_to_py_type(), hence
     this should be called only for values from SWAGGER_TO_PY_TYPE_MAPPING
     """
     if py_type is None:
         return None
-    # datetime is not a Python primitive type, return None for it.
-    if py_type == datetime:
+    # datetime and date are not Python primitive types, return None for them.
+    if py_type in DATETIME_TYPES:
         return None
     return py_type()
 
@@ -288,13 +290,15 @@ class SwaggerTypeCheck(object):
 
     def _check_primitive_type(self):
         """Validate value is of primitive type
-        Also converts swagger type to py type if needed eg. datetime
+        Also converts swagger type to py type if needed e.g. datetime
         """
         ptype = get_primitive_mapping(self._type)
         if not isinstance(self.value, ptype):
             # convert string datetime to python datetime format
-            if ptype == datetime:
+            if ptype == datetime.datetime:
                 self.value = dateutil.parser.parse(self.value)
+            elif ptype == datetime.date:
+                self.value = dateutil.parser.parse(self.value).date()
             else:
                 # For all the other cases, raise Type mismatch
                 raise TypeError("%s's value: %s should be in types %r" % (
