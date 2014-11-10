@@ -13,11 +13,33 @@ import unittest
 
 import httpretty
 import requests
-from mock import patch
+from mock import Mock, patch
 
 from swaggerpy import client
 from swaggerpy.http_client import SynchronousHttpClient
-from swaggerpy.client import SwaggerClient, SwaggerClientFactory
+from swaggerpy.client import \
+    SwaggerClient, SwaggerClientFactory, validate_and_add_params_to_request
+
+
+class ValidateParamTest(unittest.TestCase):
+    """Unit tests for validate_and_add_params_to_request.
+    """
+
+    def test_unrequired_param_not_added_to_request_when_none(self):
+        param = {
+            'name': 'test_bool_param',
+            'type': 'boolean',
+            'paramType': 'query',
+            'required': False,
+        }
+        mock_request = Mock('requests.Request', autospec=True)
+
+        with patch('swaggerpy.client.add_param_to_req') as mock_add_param:
+            validate_and_add_params_to_request(param, None, mock_request, [])
+            assert not mock_add_param.called
+
+            validate_and_add_params_to_request(param, False, mock_request, [])
+            mock_add_param.assert_called_once_with(param, False, mock_request)
 
 
 class SwaggerClientFactoryTest(unittest.TestCase):

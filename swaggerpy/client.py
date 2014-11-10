@@ -484,7 +484,7 @@ def validate_and_add_params_to_request(param, value, request, models):
     :type models: namedtuple
     """
     # If param not given in args, and not required, just ignore.
-    if not param.get('required') and not value:
+    if not param.get('required') and value is None:
         return
 
     pname = param['name']
