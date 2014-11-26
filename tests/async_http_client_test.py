@@ -55,12 +55,12 @@ class AsyncHttpClientTest(unittest.TestCase):
                        return_value='foo') as mock_stringIO:
                 with patch('swaggerpy.async_http_client.FileBodyProducer',
                            return_value='mock_fbp') as mock_fbp:
-                    resp = swaggerpy.async_http_client.stringify_body(
-                        {'data': 42})
+                    body = {'data': 42, 'headers': {}}
+                    resp = swaggerpy.async_http_client.stringify_body(body)
 
                     self.assertEqual('mock_fbp', resp)
 
-                    mock_stringify.assert_called_once_with({'data': 42})
+                    mock_stringify.assert_called_once_with(body)
                     mock_stringIO.assert_called_once_with(42)
                     mock_fbp.assert_called_once_with('foo')
 
@@ -113,12 +113,11 @@ class AsyncHttpClientTest(unittest.TestCase):
                 'method': 'GET',
                 'url': 'foo',
                 'data': None,
-                'headers': None,
+                'headers': {'foo': 'bar'},
                 'params': ''}
             mock_Async.return_value.wait.return_value = Response(
                 1, 2, 3, 4, 5, 6)
-            async_client = swaggerpy.async_http_client.AsynchronousHttpClient(
-                headers={'foo': 'bar'})
+            async_client = swaggerpy.async_http_client.AsynchronousHttpClient()
             async_client.setup(req)
             resp = async_client.wait(5)
             headers = async_client.request_params['headers']

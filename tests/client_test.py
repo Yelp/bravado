@@ -156,14 +156,29 @@ class ClientTest(unittest.TestCase):
 
     @httpretty.activate
     def test_headers(self):
-        self.uut = SwaggerClient(self.resource_listing,
-                                 SynchronousHttpClient(headers={'foo': 'bar'}))
+        self.uut = SwaggerClient(
+            self.resource_listing, SynchronousHttpClient())
         httpretty.register_uri(
             httpretty.GET, "http://swagger.py/swagger-test/pet",
             body='[]')
 
-        self.uut.pet.listPets().result()
+        self.uut.pet.listPets(
+            _request_options={'headers': {'foo': 'bar'}}).result()
         self.assertEqual('bar', httpretty.last_request().headers['foo'])
+
+    @httpretty.activate
+    def test_multiple_headers(self):
+        self.uut = SwaggerClient(
+            self.resource_listing, SynchronousHttpClient())
+        httpretty.register_uri(
+            httpretty.GET, "http://swagger.py/swagger-test/pet",
+            body='[]')
+
+        self.uut.pet.listPets(
+            _request_options={'headers': {'foo': 'bar', 'sweet': 'bike'}},
+        ).result()
+        self.assertEqual('bar', httpretty.last_request().headers['foo'])
+        self.assertEqual('bike', httpretty.last_request().headers['sweet'])
 
     @httpretty.activate
     def test_raise_with_wrapper(self):

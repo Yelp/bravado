@@ -168,20 +168,18 @@ class SynchronousHttpClient(HttpClient):
     """Synchronous HTTP client implementation.
     """
 
-    def __init__(self, headers={}):
+    def __init__(self):
         self.session = requests.Session()
         self.authenticator = None
-        self._headers = headers
 
     def close(self):
         self.session.close()
 
     def setup(self, request_params):
-        headers = request_params.get('headers', {}) or {}
         # if files in request_params OR
         # if content-type is x-www-form-urlencoded, no need to stringify
         if ('files' not in request_params and
-                headers.get('content-type') != APP_FORM):
+                request_params['headers'].get('content-type') != APP_FORM):
             stringify_body(request_params)
         self.request_params = request_params
         self.purge_content_types_if_file_present()
@@ -215,8 +213,7 @@ class SynchronousHttpClient(HttpClient):
         like application/x-www-form... should be removed
         """
         if 'files' in self.request_params:
-            headers = self.request_params.get('headers', {}) or {}
-            headers.pop('content-type', '')
+            self.request_params['headers'].pop('content-type', '')
 
     def cancel(self):
         """Nothing to be done for Synchronous client
@@ -229,7 +226,7 @@ class SynchronousHttpClient(HttpClient):
         :rtype:  requests.Response
         """
         if not headers:
-            headers = self._headers
+            headers = {}
         kwargs = {}
         for i in ('method', 'url', 'params', 'data', 'headers'):
             kwargs[i] = locals()[i]

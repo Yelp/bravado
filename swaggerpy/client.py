@@ -70,10 +70,11 @@ class SwaggerClientFactory(object):
         else:
             key = json.dumps(api_docs_url)
 
-        if (key not in self.cache or
-                self.cache[key].is_stale()):
-            self.cache[key] = self.build_cached_client(api_docs_url, *args,
-                                                       **kwargs)
+        if (key not in self.cache or self.cache[key].is_stale()):
+            self.cache[key] = self.build_cached_client(
+                api_docs_url, *args, **kwargs
+            )
+
         return self.cache[key]
 
     def build_cached_client(self, *args, **kwargs):
@@ -82,6 +83,7 @@ class SwaggerClientFactory(object):
         """
         timeout = kwargs.pop('timeout', SWAGGER_SPEC_TIMEOUT_S)
         return CachedClient(SwaggerClient(*args, **kwargs), timeout)
+
 
 factory = None
 
@@ -148,13 +150,14 @@ class Operation(object):
         return u"%s(%s)" % (self.__class__.__name__, self._json[u'nickname'])
 
     def _construct_request(self, **kwargs):
+        _request_options = kwargs.pop('_request_options', {}) or {}
+
         request = {}
         request['method'] = self._json[u'method']
         request['url'] = self._uri
         request['params'] = {}
-        # Copy the client's headers so that other headers could
-        # be added during this construction w/o changing the former
-        request['headers'] = self._http_client._headers.copy()
+        request['headers'] = _request_options.get('headers', {}) or {}
+
         for param in self._json.get(u'parameters', []):
             value = kwargs.pop(param[u'name'], default_value(param))
             validate_and_add_params_to_request(param, value, request,
@@ -297,7 +300,7 @@ class SwaggerClient(object):
 
         # Load Swagger APIs always synchronously
         loader = Loader(
-            SynchronousHttpClient(headers=http_client._headers),
+            SynchronousHttpClient(),
             [ClientProcessor()])
 
         forced_api_base_path = api_base_path is not None

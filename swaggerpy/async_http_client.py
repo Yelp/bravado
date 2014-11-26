@@ -31,13 +31,7 @@ log = logging.getLogger(__name__)
 
 class AsynchronousHttpClient(http_client.HttpClient):
     """Asynchronous HTTP client implementation.
-
-    :param headers: headers to be sent with the requests
-    :type headers: dict
     """
-
-    def __init__(self, headers={}):
-        self._headers = headers
 
     def setup(self, request_params):
         """Sets up the request params as per Twisted Agent needs.
@@ -46,13 +40,11 @@ class AsynchronousHttpClient(http_client.HttpClient):
         :param request_params: request parameters for API call
         :type request_params: dict
         """
-        # request_params has mandatory: method, url, params
-        if not request_params.get('headers'):
-            request_params['headers'] = self._headers
+        # request_params has mandatory: method, url, params, headers
         self.request_params = {
             'method': str(request_params['method']),
             'bodyProducer': stringify_body(request_params),
-            'headers': listify_headers(request_params.get('headers')),
+            'headers': listify_headers(request_params['headers']),
             'uri': str(request_params['url'] + '?' + urllib.urlencode(
                 request_params['params'], True))
         }
@@ -169,7 +161,7 @@ class _HTTPBodyFetcher(Protocol):
 def stringify_body(request_params):
     """Wraps the data using twisted FileBodyProducer
     """
-    headers = request_params.get('headers', {}) or {}
+    headers = request_params['headers']
     if 'files' in request_params:
         data = create_multipart_content(request_params, headers)
     elif headers.get('content-type') == http_client.APP_FORM:
@@ -183,7 +175,6 @@ def stringify_body(request_params):
 def listify_headers(headers):
     """Twisted agent requires header values as lists
     """
-    headers = headers or {}
     for key, val in headers.iteritems():
         if not isinstance(val, list):
             headers[key] = [val]
