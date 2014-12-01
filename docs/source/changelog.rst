@@ -1,6 +1,16 @@
 Changelog
 =========
 
+0.7.0 (2014-11-26)
+++++++++++++++++++
+* headers are no longer cached and required as part of async and
+  http client setup.
+
+0.6.0 (2014-10-30)
+++++++++++++++++++
+* format='date' params are now represented and passed as
+  datetime.date objects instead of datetime.datetimes.
+
 0.5.0 (2014-08-08)
 ++++++++++++++++++
 

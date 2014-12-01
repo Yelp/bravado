@@ -29,7 +29,7 @@ It will be an instance of ``swaggerpy.swagger_model.Pet`` with attributes ``cate
 
 Sample Response: ::
 
-       Pet(category=Category(id=0L, name=u''), status=u'', name=u'', tags=[Tag(id=0L, name=u'')], photoUrls=[u''], id=2) 
+       Pet(category=Category(id=0L, name=u''), status=u'', name=u'', tags=[Tag(id=0L, name=u'')], photoUrls=[u''], id=2)
 
 If you got a ``404``, try some other petId.
 
@@ -100,7 +100,7 @@ Validation example:
 
         pet = Pet(id="I should be integer :(", name="tommy")
         swagger_client.pet.addPet(body=pet).result()
- 
+
 will result in error like so:
 
 .. code-block:: console
@@ -121,6 +121,21 @@ Caching
 .. note::
 
         Caching can totally be bypassed by using ``SwaggerClient()`` (discouraged).
+
+Adding Request Headers
+-------
+
+``swagger-py`` allows you to pass request headers along with any request.
+
+.. code-block:: python
+
+        Pet = swagger_client.pet.models.Pet
+        Category = swagger_client.pet.models.Category
+        pet = Pet(id=42, name="tommy", category=Category(id=24))
+        swagger_client.pet.addPet(
+            body=pet,
+            _request_options={"headers": {"foo": "bar"}},
+        ).result()
 
 Wrapping HTTP response error with custom class
 ----------------------------------------------
@@ -194,7 +209,7 @@ Api-docs from file path
         client = client.get_client('file:///path/to/api-docs')
 
 .. note::
-        This needs a nested level file structure. Resources should be present under ``api-docs/``. File path should not have ``.json`` with the api-docs. It will be added by ``swagger-py``. This feature is still in beta phase. 
+        This needs a nested level file structure. Resources should be present under ``api-docs/``. File path should not have ``.json`` with the api-docs. It will be added by ``swagger-py``. This feature is still in beta phase.
 
 Other alternative way is by using helper method ``load_file``. This doesn't need the resources to be nested.
 
