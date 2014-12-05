@@ -434,9 +434,10 @@ class ResourceTest(unittest.TestCase):
         # Also test all None items are removed from array list
         user = resource.models.User(id=42, schools=[School(name='s1'), None])
         future = resource.testHTTP(body=user)
-        self.assertEqual(json.dumps({'id': 42,
-                                     'schools': [{'name': 's1'}]}),
-                         future._http_client.request_params['data'])
+        self.assertEqual(
+            json.dumps({'id': 42, 'schools': [{'name': 's1'}]}),
+            future._request.data,
+        )
 
     @httpretty.activate
     def test_removal_of_none_attributes_from_param_body_model(self):
@@ -454,8 +455,10 @@ class ResourceTest(unittest.TestCase):
         user = resource.models.User(id=42)
         future = resource.testHTTP(body=user)
         # Removed the 'school': None - key, value pair from dict
-        self.assertEqual(json.dumps({'id': 42, 'schools': []}),
-                         future._http_client.request_params['data'])
+        self.assertEqual(
+            json.dumps({'id': 42, 'schools': []}),
+            future._request.data,
+        )
 
     @httpretty.activate
     def test_error_on_finding_required_attributes_none(self):

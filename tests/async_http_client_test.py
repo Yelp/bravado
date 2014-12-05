@@ -16,6 +16,9 @@ from collections import namedtuple
 from mock import patch, Mock
 from ordereddict import OrderedDict
 
+from crochet._eventloop import EventualResult
+from twisted.internet.defer import Deferred
+
 import swaggerpy.async_http_client
 import swaggerpy.exception
 import swaggerpy.http_client
@@ -107,21 +110,26 @@ class AsyncHttpClientTest(unittest.TestCase):
     def test_success_AsyncHTTP_response(self):
         Response = namedtuple("MyResponse",
                               "version code phrase headers length deliverBody")
-        with patch.object(swaggerpy.async_http_client.AsynchronousHttpClient,
-                          'fetch_deferred') as mock_Async:
+        with patch.object(
+            swaggerpy.async_http_client.AsynchronousHttpClient,
+            'fetch_deferred',
+            return_value=Mock(
+                autospec=EventualResult,
+                _deferred=Mock(autospec=Deferred),
+            ),
+        ) as mock_Async:
             req = {
                 'method': 'GET',
                 'url': 'foo',
                 'data': None,
                 'headers': {'foo': 'bar'},
-                'params': ''}
+                'params': ''
+            }
             mock_Async.return_value.wait.return_value = Response(
                 1, 2, 3, 4, 5, 6)
             async_client = swaggerpy.async_http_client.AsynchronousHttpClient()
-            async_client.setup(req)
-            resp = async_client.wait(5)
-            headers = async_client.request_params['headers']
-            self.assertTrue(headers.hasHeader('foo'))
+            eventual = async_client.start_request(req)
+            resp = async_client.wait(5, eventual)
             self.assertEqual(2, resp.code)
 
 

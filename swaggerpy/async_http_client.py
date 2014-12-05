@@ -33,15 +33,17 @@ class AsynchronousHttpClient(http_client.HttpClient):
     """Asynchronous HTTP client implementation.
     """
 
-    def setup(self, request_params):
+    def start_request(self, request_params):
         """Sets up the request params as per Twisted Agent needs.
         Sets up crochet and triggers the API request in background
 
         :param request_params: request parameters for API call
         :type request_params: dict
+
+        :return: crochet EventualResult
         """
         # request_params has mandatory: method, url, params, headers
-        self.request_params = {
+        request_params = {
             'method': str(request_params['method']),
             'bodyProducer': stringify_body(request_params),
             'headers': listify_headers(request_params['headers']),
@@ -50,34 +52,38 @@ class AsynchronousHttpClient(http_client.HttpClient):
         }
 
         crochet.setup()
-        self.eventual = self.fetch_deferred()
+        return self.fetch_deferred(request_params)
 
-    def cancel(self):
+    def cancel(self, eventual):
         """Try to cancel the API call using crochet's cancel() API
-        """
-        self.eventual.cancel()
 
-    def wait(self, timeout):
+        :param eventual: Crochet EventualResult
+        """
+        eventual.cancel()
+
+    def wait(self, timeout, eventual):
         """Requests based implemention with timeout
 
         :param timeout: time in seconds to wait for response
+        :param eventual: Crochet EventualResult
+
         :return: Requests response
         :rtype:  requests.Response
         """
-        log.info(u"%s %s", self.request_params.get('method'),
-                 self.request_params.get('uri'))
         # finished_resp is returned here
         # TODO(#44): catch known exceptions and raise common exceptions
-        return self.eventual.wait(timeout)
+        return eventual.wait(timeout)
 
     @crochet.run_in_reactor
-    def fetch_deferred(self):
+    def fetch_deferred(self, request_params):
         """The main core to start the reacter and run the API
         in the background. Also the callbacks are registered here
+
+        :return: crochet EventualResult
         """
         finished_resp = Deferred()
         agent = Agent(reactor)
-        deferred = agent.request(**self.request_params)
+        deferred = agent.request(**request_params)
 
         def response_callback(response):
             """Callback for response received from server, even 4XX, 5XX possible
@@ -85,7 +91,7 @@ class AsynchronousHttpClient(http_client.HttpClient):
             It needs a callback method to be registered to store the response
             body which is provided using deliverBody
             """
-            response.deliverBody(_HTTPBodyFetcher(self.request_params,
+            response.deliverBody(_HTTPBodyFetcher(request_params,
                                                   response, finished_resp))
         deferred.addCallback(response_callback)
 
@@ -101,10 +107,8 @@ class AsynchronousHttpClient(http_client.HttpClient):
         return finished_resp
 
 
-class AsyncResponse():
-    """AsyncResponse inherits from requests.Response
-    to inherit methods like json(), raise_for_status()
-
+class AsyncResponse(object):
+    """
     Remove the property text and content and make them as overridable attrs
     """
     def __init__(self, req, resp, data):
