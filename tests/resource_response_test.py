@@ -72,7 +72,7 @@ from swaggerpy.response import HTTPFuture
 class HTTPFutureTest(unittest.TestCase):
     def setUp(self):
         http_client = Mock()
-        http_client.setup.return_value = None
+        http_client.start_request.return_value = None
         self.future = HTTPFuture(http_client, None, None)
 
     def test_raise_cancelled_error_if_result_is_called_after_cancel(self):
@@ -89,11 +89,13 @@ class HTTPFutureTest(unittest.TestCase):
     def test_cancel_for_async_cancels_the_api_call(self):
         http_client = AsynchronousHttpClient()
         with patch.object(AsynchronousHttpClient, 'cancel') as mock_cancel:
-            with patch.object(AsynchronousHttpClient, 'setup') as mock_setup:
+            with patch.object(
+                AsynchronousHttpClient, 'start_request',
+            ) as mock_start_request:
                 self.future = HTTPFuture(http_client, None, None)
                 self.future.cancel()
-                mock_setup.assert_called_once_with(None)
-                mock_cancel.assert_called_once_with()
+                mock_start_request.assert_called_once_with(None)
+                mock_cancel.assert_called_once_with(self.future._request)
 
 
 class ResourceResponseTest(unittest.TestCase):

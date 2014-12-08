@@ -71,27 +71,35 @@ class HttpClient(object):
         raise NotImplementedError(
             u"%s: Method not implemented", self.__class__.__name__)
 
-    def setup(self, request_params):
-        """Store the request params for calling later.
-
+    def start_request(self, request_params):
+        """
         :param request_params: Complete request data.
         :type request_params: dict
+
+        :returns: The client's request object
         """
         raise NotImplementedError(
             u"%s: Method not implemented", self.__class__.__name__)
 
-    def wait(self, timeout):
+    def wait(self, timeout, request):
         """Calls the API with request_params and waits till timeout.
 
         :param timeout: time in seconds to wait for response.
         :type timeout: float
+        :param request: request object from the client
+            In the Sync client this is a requests.Request
+            In the Async client this is a crochet.EventualResult
         :return: Implementation specific response
         """
         raise NotImplementedError(
             u"%s: Method not implemented", self.__class__.__name__)
 
-    def cancel(self):
+    def cancel(self, request):
         """Cancels the API call
+
+        :param request: request object from the client
+            In the Sync client this is a requests.Request
+            In the Async client this is a crochet.EventualResult
         """
         raise NotImplementedError(
             u"%s: Method not implemented", self.__class__.__name__)
@@ -143,6 +151,8 @@ class BasicAuthenticator(Authenticator):
     def apply(self, request):
         request.auth = self.auth
 
+        return request
+
 
 # noinspection PyDocstring
 class ApiKeyAuthenticator(Authenticator):
@@ -162,6 +172,7 @@ class ApiKeyAuthenticator(Authenticator):
 
     def apply(self, request):
         request.params[self.param_name] = self.api_key
+        return request
 
 
 class SynchronousHttpClient(HttpClient):
@@ -175,14 +186,21 @@ class SynchronousHttpClient(HttpClient):
     def close(self):
         self.session.close()
 
-    def setup(self, request_params):
+    def start_request(self, request_params):
+        """
+        :return: request
+        :rtype: requests.Request
+        """
         # if files in request_params OR
         # if content-type is x-www-form-urlencoded, no need to stringify
         if ('files' not in request_params and
                 request_params['headers'].get('content-type') != APP_FORM):
             stringify_body(request_params)
-        self.request_params = request_params
-        self.purge_content_types_if_file_present()
+        request_params = self.purge_content_types_if_file_present(
+            request_params,
+        )
+
+        return self.authenticated_request(request_params)
 
     def set_basic_auth(self, host, username, password):
         self.authenticator = BasicAuthenticator(
@@ -192,31 +210,35 @@ class SynchronousHttpClient(HttpClient):
         self.authenticator = ApiKeyAuthenticator(
             host=host, api_key=api_key, param_name=param_name)
 
-    def wait(self, timeout):
+    def wait(self, timeout, request):
         """Requests based implemention with timeout.
 
         :param timeout: time in seconds to wait for response
+        :param request: requests.Request
+
         :return: Requests response
         :rtype:  requests.Response
         """
-        log.info(u"%s %s(%r)", self.request_params['method'],
-                 self.request_params['url'],
-                 self.request_params['params'])
-        req = requests.Request(**self.request_params)
-        self.apply_authentication(req)
-        return self.session.send(self.session.prepare_request(req),
-                                 timeout=timeout)
+        log.info(u"%s %s(%r)", request.method, request.url, request.params)
+        return self.session.send(
+            self.session.prepare_request(request),
+            timeout=timeout,
+        )
 
-    def purge_content_types_if_file_present(self):
+    def purge_content_types_if_file_present(self, request_params):
         """'Requests' adds 'multipart/form-data' to content-type if
         files are in the request. Hence, any existing content-type
         like application/x-www-form... should be removed
         """
-        if 'files' in self.request_params:
-            self.request_params['headers'].pop('content-type', '')
+        if 'files' in request_params:
+            request_params['headers'].pop('content-type', '')
 
-    def cancel(self):
+        return request_params
+
+    def cancel(self, request):
         """Nothing to be done for Synchronous client
+
+        :param request: requests.Request
         """
 
     def request(self, method, url, params=None, data=None, headers=None):
@@ -227,16 +249,20 @@ class SynchronousHttpClient(HttpClient):
         """
         if not headers:
             headers = {}
-        kwargs = {}
+        request_params = {}
         for i in ('method', 'url', 'params', 'data', 'headers'):
-            kwargs[i] = locals()[i]
-        req = requests.Request(**kwargs)
-        self.apply_authentication(req)
-        return self.session.send(self.session.prepare_request(req))
+            request_params[i] = locals()[i]
+        request = self.authenticated_request(request_params)
+        return self.session.send(self.session.prepare_request(request))
 
-    def apply_authentication(self, req):
-        if self.authenticator and self.authenticator.matches(req.url):
-            self.authenticator.apply(req)
+    def authenticated_request(self, request_params):
+        return self.apply_authentication(requests.Request(**request_params))
+
+    def apply_authentication(self, request):
+        if self.authenticator and self.authenticator.matches(request.url):
+            return self.authenticator.apply(request)
+
+        return request
 
 
 def stringify_body(request_params):

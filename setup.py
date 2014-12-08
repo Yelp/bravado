@@ -10,7 +10,7 @@ async_packages = ["crochet", "twisted"]
 
 setup(
     name="swaggerpy",
-    version="0.7.0",
+    version="0.7.1",
     license="BSD 3-Clause License",
     description="Library for accessing Swagger-enabled API's",
     long_description=open(os.path.join(os.path.dirname(__file__),
@@ -32,7 +32,8 @@ setup(
         "tissue",
         "coverage",
         "ordereddict",
-        "httpretty"
+        "httpretty",
+        "bottle"
     ],
     install_requires=[
         "requests",
