@@ -291,7 +291,8 @@ class SwaggerClient(object):
     """
 
     def __init__(self, url_or_resource, http_client=None,
-                 api_base_path=None, raise_with=None):
+                 api_base_path=None, raise_with=None,
+                 api_doc_request_headers=None):
         if not http_client:
             http_client = SynchronousHttpClient()
         # Wrap http client's errors with raise_with
@@ -301,7 +302,9 @@ class SwaggerClient(object):
         # Load Swagger APIs always synchronously
         loader = Loader(
             SynchronousHttpClient(),
-            [ClientProcessor()])
+            [ClientProcessor()],
+            api_doc_request_headers=api_doc_request_headers,
+        )
 
         forced_api_base_path = api_base_path is not None
         # url_or_resource can be url of type str,
