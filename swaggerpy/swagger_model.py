@@ -103,7 +103,7 @@ class ValidationProcessor(SwaggerProcessor):
                              allowed_refs, None)
 
 
-def json_load_url(http_client, url):
+def json_load_url(http_client, url, headers):
     """Download and parse JSON from a URL.
 
     :param http_client: HTTP client interface.
@@ -123,7 +123,7 @@ def json_load_url(http_client, url):
         finally:
             fp.close()
     else:
-        resp = http_client.request(u'GET', url)
+        resp = http_client.request(u'GET', url, headers=headers)
         resp.raise_for_status()
         return resp.json()
 
@@ -137,8 +137,10 @@ class Loader(object):
     :type  processors: list of SwaggerProcessor
     """
 
-    def __init__(self, http_client, processors=None):
+    def __init__(self, http_client, processors=None,
+                 api_doc_request_headers=None):
         self.http_client = http_client
+        self.api_doc_request_headers = api_doc_request_headers
         if processors is None:
             processors = []
             # always go through the validation processor first
@@ -162,7 +164,11 @@ class Loader(object):
         """
 
         # Load the resource listing
-        resource_listing = json_load_url(self.http_client, resources_url)
+        resource_listing = json_load_url(
+            self.http_client,
+            resources_url,
+            self.api_doc_request_headers,
+        )
         self.pre_process_resource_listing(resource_listing)
 
         # Some extra data only known about at load time
@@ -190,7 +196,10 @@ class Loader(object):
         path = api_dict.get(u'path').replace(u'{format}', u'json')
         api_dict[u'url'] = urlparse.urljoin(base_url + u'/', path.strip(u'/'))
         api_dict[u'api_declaration'] = json_load_url(
-            self.http_client, api_dict[u'url'])
+            self.http_client,
+            api_dict[u'url'],
+            self.api_doc_request_headers,
+        )
 
     def pre_process_resource_listing(self, resources):
         """Apply pre-processors before loading resource listing.

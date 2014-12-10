@@ -108,6 +108,19 @@ class ResourceTest(unittest.TestCase):
         self.assertTrue(isinstance(client.api_test.testHTTP, Operation))
 
     @httpretty.activate
+    def test_headers_sendable_with_api_doc_request(self):
+        self.register_urls()
+        SwaggerClient(
+            u'http://localhost/api-docs',
+            api_doc_request_headers={'foot': 'bart'},
+        )
+
+        self.assertEqual(
+            'bart',
+            httpretty.last_request().headers.get('foot'),
+        )
+
+    @httpretty.activate
     def test_api_base_path_if_passed_is_always_used_as_base_path(self):
         httpretty.register_uri(
             httpretty.GET, "http://foo/test_http?", body='')
