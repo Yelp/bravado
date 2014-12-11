@@ -219,7 +219,7 @@ class SynchronousHttpClient(HttpClient):
         :return: Requests response
         :rtype:  requests.Response
         """
-        log.info(u"%s %s(%r)", request.method, request.url, request.params)
+        log.debug(u"%s %s(%r)", request.method, request.url, request.params)
         return self.session.send(
             self.session.prepare_request(request),
             timeout=timeout,
