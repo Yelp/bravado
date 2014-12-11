@@ -168,8 +168,10 @@ class Operation(object):
         return request
 
     def __call__(self, **kwargs):
-        log.info(u"%s?%r" % (self._json[u'nickname'],
-                             urllib.urlencode(kwargs)))
+        log.debug(u"%s?%r" % (
+            self._json[u'nickname'],
+            urllib.urlencode(kwargs)
+        ))
         request = self._construct_request(**kwargs)
 
         def py_model_convert_callback(response, **kwargs):

@@ -1,3 +1,8 @@
+0.7.3 (2014-12-11)
+------------------
+- request logging is now done on the debug level instead of 
+  info level.
+
 0.7.0 (2014-11-26)
 ------------------
 - headers are no longer cached and required as part of async and
