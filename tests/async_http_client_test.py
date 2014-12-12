@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 #
 # Copyright (c) 2014, Yelp, Inc.
@@ -18,6 +19,7 @@ from ordereddict import OrderedDict
 
 from crochet._eventloop import EventualResult
 from twisted.internet.defer import Deferred
+from twisted.web.http_headers import Headers
 
 import swaggerpy.async_http_client
 import swaggerpy.exception
@@ -30,6 +32,16 @@ class AsyncHttpClientTest(unittest.TestCase):
         request_params = {
             'headers': {'content-type': 'application/json'},
             'data': {'foo': 'bar', 'bar': 42}}
+        swaggerpy.http_client.stringify_body(request_params)
+        self.assertEqual({"foo": "bar", "bar": 42},
+                         json.loads(request_params['data']))
+
+    def test_stringify_body_encode_params_to_utf8(self):
+        request_params = {
+            'headers': {'content-type': 'application/json'},
+            'data': {'foo': 'bar', 'bar': 42},
+            'params': {'bar': u'酒場'},
+        }
         swaggerpy.http_client.stringify_body(request_params)
         self.assertEqual({"foo": "bar", "bar": 42},
                          json.loads(request_params['data']))
@@ -131,6 +143,39 @@ class AsyncHttpClientTest(unittest.TestCase):
             eventual = async_client.start_request(req)
             resp = async_client.wait(5, eventual)
             self.assertEqual(2, resp.code)
+
+    def test_url_encode_async_request(self):
+        Response = namedtuple("MyResponse",
+                              "version code phrase headers length deliverBody")
+        with patch.object(
+            swaggerpy.async_http_client.AsynchronousHttpClient,
+            'fetch_deferred',
+            return_value=Mock(
+                autospec=EventualResult,
+                _deferred=Mock(autospec=Deferred),
+            ),
+        ) as mock_fetch_deferred:
+            req = {
+                'method': 'GET',
+                'url': 'foo',
+                'data': None,
+                'headers': {'foo': 'bar'},
+                'params': {'bar': u'酒場'},
+            }
+            mock_fetch_deferred.return_value.wait.return_value = Response(
+                1, 2, 3, 4, 5, 6)
+
+            async_client = swaggerpy.async_http_client.AsynchronousHttpClient()
+            async_client.start_request(req)
+
+            mock_fetch_deferred.assert_called_once_with(
+                {
+                    'headers': Headers({'foo': ['bar']}),
+                    'method': 'GET',
+                    'bodyProducer': None,
+                    'uri': 'foo?bar=%E9%85%92%E5%A0%B4'
+                }
+            )
 
 
 class HTTPBodyFetcherTest(unittest.TestCase):

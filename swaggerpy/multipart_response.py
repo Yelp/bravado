@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from uuid import uuid4
 from swaggerpy import http_client
 

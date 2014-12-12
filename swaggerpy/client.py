@@ -1,8 +1,8 @@
+# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2013, Digium, Inc.
 # Copyright (c) 2014, Yelp, Inc.
 #
-
 """Swagger client library.
 """
 
@@ -13,6 +13,8 @@ import time
 import urllib
 from collections import namedtuple
 from urlparse import urlparse
+
+from yelp_uri import urllib_utf8
 
 import swagger_type
 from swaggerpy.http_client import APP_FORM, APP_JSON, SynchronousHttpClient
@@ -170,7 +172,7 @@ class Operation(object):
     def __call__(self, **kwargs):
         log.debug(u"%s?%r" % (
             self._json[u'nickname'],
-            urllib.urlencode(kwargs)
+            urllib_utf8.urlencode(kwargs)
         ))
         request = self._construct_request(**kwargs)
 
@@ -290,6 +292,8 @@ class SwaggerClient(object):
     :type api_base_path: str
     :param raise_with: Custom Exception to wrap the response error with
     :type raise_with: type
+    :params api_doc_request_headers: Headers to pass with api docs requests
+    :type: dict
     """
 
     def __init__(self, url_or_resource, http_client=None,

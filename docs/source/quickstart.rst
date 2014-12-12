@@ -150,6 +150,18 @@ Wrapping HTTP response error with custom class
             "http://petstore.swagger.wordnik.com/api/api-docs",
             raise_with=MyAwesomeException)
 
+Passing Headers to the api-docs requests
+----------------------------------------------
+
+``swagger-py`` provides an option to pass custom headers with requests to
+api-docs
+
+.. code-block:: python
+
+        swagger_client = client.get_client(
+            "http://petstore.swagger.wordnik.com/api/api-docs",
+            api_doc_request_headers={'foo': 'bar'})
+
 Docstrings
 ----------
 
