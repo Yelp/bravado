@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 #
 # Copyright (c) 2014, Yelp, Inc.
@@ -10,21 +11,21 @@
 from cStringIO import StringIO
 import json
 import logging
-import urllib
 
 import crochet
-
 import twisted.internet.error
 import twisted.web.client
-from swaggerpy import http_client
-from swaggerpy.exception import HTTPError
-from swaggerpy.multipart_response import create_multipart_content
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.protocol import Protocol
 from twisted.web.client import Agent
 from twisted.web.client import FileBodyProducer
 from twisted.web.http_headers import Headers
+from yelp_uri import urllib_utf8
+
+from swaggerpy import http_client
+from swaggerpy.exception import HTTPError
+from swaggerpy.multipart_response import create_multipart_content
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ class AsynchronousHttpClient(http_client.HttpClient):
             'method': str(request_params['method']),
             'bodyProducer': stringify_body(request_params),
             'headers': listify_headers(request_params['headers']),
-            'uri': str(request_params['url'] + '?' + urllib.urlencode(
+            'uri': str(request_params['url'] + '?' + urllib_utf8.urlencode(
                 request_params['params'], True))
         }
 
@@ -169,7 +170,7 @@ def stringify_body(request_params):
     if 'files' in request_params:
         data = create_multipart_content(request_params, headers)
     elif headers.get('content-type') == http_client.APP_FORM:
-        data = urllib.urlencode(request_params.get('data', {}))
+        data = urllib_utf8.urlencode(request_params.get('data', {}))
     else:
         http_client.stringify_body(request_params)
         data = request_params.get('data')

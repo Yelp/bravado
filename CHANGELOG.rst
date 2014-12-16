@@ -1,7 +1,21 @@
+0.7.4 (2014-12-11)
+------------------
+- Requests urlencode params as utf8
+- Docs related to 0.7.2
+- Declare utf-8 encoding for all files
+
 0.7.3 (2014-12-11)
 ------------------
-- request logging is now done on the debug level instead of 
+- request logging is now done on the debug level instead of
   info level.
+
+0.7.2 (2014-12-11)
+------------------
+- Allow headers to be passed in the api_docs request
+
+0.7.1 (2014-12-11)
+------------------
+- Requests no longer mutate clients
 
 0.7.0 (2014-11-26)
 ------------------

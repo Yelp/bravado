@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import base64
 import unittest
 
@@ -21,6 +23,20 @@ class SynchronousClientTestCase(unittest.TestCase):
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
         self.assertEqual({'foo': ['bar']},
+                         httpretty.last_request().querystring)
+
+    @httpretty.activate
+    def test_unicode_to_utf8_encode_params(self):
+        httpretty.register_uri(
+            httpretty.GET, "http://swagger.py/client-test",
+            body='expected')
+
+        uut = SynchronousHttpClient()
+        resp = uut.request('GET', "http://swagger.py/client-test",
+                           params={'foo': u'酒場'})
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual('expected', resp.text)
+        self.assertEqual({'foo': [u'酒場']},
                          httpretty.last_request().querystring)
 
     @httpretty.activate
