@@ -433,16 +433,13 @@ def create_operation_docstring(json_):
 
 def handle_form_param(name, value, type_, request):
     if swagger_type.is_file(type_):
-        if 'files' not in request:
-            request['files'] = {}
+        request.setdefault('files', {})
         request['files'][name] = value
     elif swagger_type.is_primitive(type_):
-        if 'data' not in request:
-            request['data'] = {}
+        request.setdefault('data', {})
         request['data'][name] = value
     else:
-        raise AssertionError(
-            u"%s neither primitive nor File" % name)
+        raise AssertionError(u"%s neither primitive nor File" % name)
 
 
 def add_param_to_req(param, value, request):
@@ -465,12 +462,8 @@ def add_param_to_req(param, value, request):
         request['params'][pname] = value
     elif param_req_type == u'body':
         if not swagger_type.is_primitive(type_):
-            # If not primitive, body has to be 'dict'
-            # (or has already been converted to dict from model)
             request['headers']['content-type'] = APP_JSON
-            request['data'] = json.dumps(value)
-        else:
-            request['data'] = stringify_body(value)
+        request['data'] = stringify_body(value)
     elif param_req_type == 'form':
         handle_form_param(pname, value, type_, request)
     # TODO(#31): accept 'header', in paramType
@@ -535,14 +528,19 @@ def validate_and_add_params_to_request(param, value, request, models):
             raise TypeError(u"Missing required parameter '%s'" % pname)
 
 
+class SwaggerJsonEncoder(json.JSONEncoder):
+    """A JSON encoder that supports all the swagger formats."""
+
+    def default(self, obj):
+        if isinstance(obj, (datetime.datetime, datetime.date)):
+            return obj.isoformat()
+        return super(SwaggerJsonEncoder, self).default(obj)
+
+
 def stringify_body(value):
     """Json dump the value to string if not already in string
     """
-    if value and not isinstance(value, (str, unicode)):
-        # datetime is not json serializable, use str()
-        if isinstance(value, (datetime,)):
-            return str(value)
-        else:
-            return json.dumps(value)
-    else:
+    if not value or isinstance(value, basestring):
         return value
+
+    return json.dumps(value, cls=SwaggerJsonEncoder)
