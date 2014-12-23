@@ -11,7 +11,7 @@ Not Tested:
 2) Timeouts by crochet's wait()
 """
 
-import json
+from swaggerpy.compat import json
 import unittest
 from collections import namedtuple
 from mock import patch, Mock

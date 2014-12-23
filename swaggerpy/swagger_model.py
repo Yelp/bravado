@@ -9,7 +9,7 @@
 """
 
 import logging
-import json
+from swaggerpy.compat import json
 import os
 import urllib
 import urlparse

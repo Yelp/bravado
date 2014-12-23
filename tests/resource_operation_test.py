@@ -46,7 +46,7 @@ A sample 'peration' is listed below in 'operations' list.
 """
 
 import datetime
-import json
+from swaggerpy.compat import json
 import unittest
 import urlparse
 

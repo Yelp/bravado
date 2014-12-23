@@ -24,7 +24,7 @@ A sample 'resource api' is listed in the "apis" list below.
 }
 """
 
-import json
+from swaggerpy.compat import json
 import unittest
 
 import httpretty

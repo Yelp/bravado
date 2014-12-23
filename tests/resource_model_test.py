@@ -48,7 +48,7 @@ A sample 'model' is listed below in models list.
 }
 """
 
-import json
+from swaggerpy.compat import json
 import unittest
 
 import httpretty

@@ -9,7 +9,7 @@
 """
 
 from cStringIO import StringIO
-import json
+from swaggerpy.compat import json
 import logging
 
 import crochet

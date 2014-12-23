@@ -6,7 +6,7 @@
 """Swagger client library.
 """
 
-import json
+from swaggerpy.compat import json
 import logging
 import os.path
 import time

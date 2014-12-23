@@ -25,7 +25,7 @@ Sample 'resource_listing' this test intends to check is like:
 }
 """
 
-import json
+from swaggerpy.compat import json
 import unittest
 
 import httpretty
