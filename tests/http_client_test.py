@@ -11,6 +11,14 @@ from swaggerpy.http_client import SynchronousHttpClient
 
 # noinspection PyDocstring
 class SynchronousClientTestCase(unittest.TestCase):
+
+    def _default_params(self):
+        return {
+            'method': 'GET',
+            'url': 'http://swagger.py/client-test',
+            'headers': {},
+        }
+
     @httpretty.activate
     def test_simple_get(self):
         httpretty.register_uri(
@@ -18,8 +26,11 @@ class SynchronousClientTestCase(unittest.TestCase):
             body='expected')
 
         uut = SynchronousHttpClient()
-        resp = uut.request('GET', "http://swagger.py/client-test",
-                           params={'foo': 'bar'})
+        params = self._default_params()
+        params['params'] = {'foo': 'bar'}
+
+        resp = uut.wait(uut.start_request(params))
+
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
         self.assertEqual({'foo': ['bar']},
@@ -32,8 +43,11 @@ class SynchronousClientTestCase(unittest.TestCase):
             body='expected')
 
         uut = SynchronousHttpClient()
-        resp = uut.request('GET', "http://swagger.py/client-test",
-                           params={'foo': u'酒場'})
+        params = self._default_params()
+        params['params'] = {'foo': u'酒場'}
+
+        resp = uut.wait(uut.start_request(params))
+
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
         self.assertEqual({'foo': [u'酒場']},
@@ -46,10 +60,15 @@ class SynchronousClientTestCase(unittest.TestCase):
             body='expected', content_type='text/json')
 
         uut = SynchronousHttpClient()
-        resp = uut.request('POST', "http://swagger.py/client-test",
-                           data={'foo': 'bar'})
+        params = self._default_params()
+        params['data'] = {'foo': 'bar'}
+        params['method'] = 'POST'
+
+        resp = uut.wait(uut.start_request(params))
+
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
+
         self.assertEqual('application/x-www-form-urlencoded',
                          httpretty.last_request().headers['content-type'])
         self.assertEqual("foo=bar",
@@ -63,8 +82,11 @@ class SynchronousClientTestCase(unittest.TestCase):
 
         uut = SynchronousHttpClient()
         uut.set_basic_auth("swagger.py", 'unit', 'peekaboo')
-        resp = uut.request('GET', "http://swagger.py/client-test",
-                           params={'foo': 'bar'})
+        params = self._default_params()
+        params['params'] = {'foo': 'bar'}
+
+        resp = uut.wait(uut.start_request(params))
+
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
         self.assertEqual({'foo': ['bar']},
@@ -79,10 +101,12 @@ class SynchronousClientTestCase(unittest.TestCase):
             body='expected')
 
         uut = SynchronousHttpClient()
-        uut.set_api_key("swagger.py",
-                        'abc123', param_name='test')
-        resp = uut.request('GET', "http://swagger.py/client-test",
-                           params={'foo': 'bar'})
+        uut.set_api_key("swagger.py", 'abc123', param_name='test')
+        params = self._default_params()
+        params['params'] = {'foo': 'bar'}
+
+        resp = uut.wait(uut.start_request(params))
+
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
         self.assertEqual({'foo': ['bar'], 'test': ['abc123']},
@@ -96,8 +120,12 @@ class SynchronousClientTestCase(unittest.TestCase):
 
         uut = SynchronousHttpClient()
         uut.set_basic_auth("swagger.py", 'unit', 'peekaboo')
-        resp = uut.request('GET', "http://hackerz.py",
-                           params={'foo': 'bar'})
+        params = self._default_params()
+        params['params'] = {'foo': 'bar'}
+        params['url'] = 'http://hackerz.py'
+
+        resp = uut.wait(uut.start_request(params))
+
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
         self.assertEqual({'foo': ['bar']},

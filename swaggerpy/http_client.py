@@ -8,11 +8,8 @@
 
 """HTTP client abstractions.
 """
-
-import json
 import logging
 import urlparse
-from datetime import datetime
 
 import requests
 import requests.auth
@@ -82,14 +79,15 @@ class HttpClient(object):
         raise NotImplementedError(
             u"%s: Method not implemented", self.__class__.__name__)
 
-    def wait(self, timeout, request):
+    def wait(self, request, timeout=None):
         """Calls the API with request_params and waits till timeout.
 
-        :param timeout: time in seconds to wait for response.
-        :type timeout: float
         :param request: request object from the client
             In the Sync client this is a requests.Request
             In the Async client this is a crochet.EventualResult
+        :param timeout: time in seconds to wait for response.
+        :type timeout: float
+
         :return: Implementation specific response
         """
         raise NotImplementedError(
@@ -192,15 +190,6 @@ class SynchronousHttpClient(HttpClient):
         :return: request
         :rtype: requests.Request
         """
-        # if files in request_params OR
-        # if content-type is x-www-form-urlencoded, no need to stringify
-        if ('files' not in request_params and
-                request_params['headers'].get('content-type') != APP_FORM):
-            stringify_body(request_params)
-        request_params = self.purge_content_types_if_file_present(
-            request_params,
-        )
-
         return self.authenticated_request(request_params)
 
     def set_basic_auth(self, host, username, password):
@@ -211,11 +200,11 @@ class SynchronousHttpClient(HttpClient):
         self.authenticator = ApiKeyAuthenticator(
             host=host, api_key=api_key, param_name=param_name)
 
-    def wait(self, timeout, request):
+    def wait(self, request, timeout=None):
         """Requests based implemention with timeout.
 
-        :param timeout: time in seconds to wait for response
         :param request: requests.Request
+        :param timeout: time in seconds to wait for response.
 
         :return: Requests response
         :rtype:  requests.Response
@@ -226,35 +215,11 @@ class SynchronousHttpClient(HttpClient):
             timeout=timeout,
         )
 
-    def purge_content_types_if_file_present(self, request_params):
-        """'Requests' adds 'multipart/form-data' to content-type if
-        files are in the request. Hence, any existing content-type
-        like application/x-www-form... should be removed
-        """
-        if 'files' in request_params:
-            request_params['headers'].pop('content-type', '')
-
-        return request_params
-
     def cancel(self, request):
         """Nothing to be done for Synchronous client
 
         :param request: requests.Request
         """
-
-    def request(self, method, url, params=None, data=None, headers=None):
-        """Requests based implementation.
-
-        :return: Requests response
-        :rtype:  requests.Response
-        """
-        if not headers:
-            headers = {}
-        request_params = {}
-        for i in ('method', 'url', 'params', 'data', 'headers'):
-            request_params[i] = locals()[i]
-        request = self.authenticated_request(request_params)
-        return self.session.send(self.session.prepare_request(request))
 
     def authenticated_request(self, request_params):
         return self.apply_authentication(requests.Request(**request_params))
@@ -264,15 +229,3 @@ class SynchronousHttpClient(HttpClient):
             return self.authenticator.apply(request)
 
         return request
-
-
-def stringify_body(request_params):
-    """Json dump the data to string if not already in string
-    """
-    data = request_params.get('data')
-    if data and not isinstance(data, (str, unicode)):
-        # datetime is not json serializable, use str()
-        if isinstance(data, (datetime,)):
-            request_params['data'] = str(data)
-        else:
-            request_params['data'] = json.dumps(data)

@@ -2,6 +2,7 @@
 
 #
 # Copyright (c) 2013, Digium, Inc.
+# Copyright (c) 2014, Yelp, Inc.
 #
 
 """Code for handling the base Swagger API model.
@@ -105,6 +106,22 @@ class ValidationProcessor(SwaggerProcessor):
                              allowed_refs, None)
 
 
+def is_file_scheme_uri(url):
+    return urlparse.urlparse(url).scheme == u'file'
+
+
+def json_load_file(url):
+    # if '.json' isnt given, add it by default
+    if not url.endswith('.json'):
+        url += '.json'
+    # requests can't handle file: scheme URLs
+    fp = urllib.urlopen(url)
+    try:
+        return json.load(fp)
+    finally:
+        fp.close()
+
+
 def json_load_url(http_client, url, headers):
     """Download and parse JSON from a URL.
 
@@ -113,20 +130,16 @@ def json_load_url(http_client, url, headers):
     :param url: URL for JSON to parse
     :return: Parsed JSON dict
     """
-    scheme = urlparse.urlparse(url).scheme
-    if scheme == u'file':
-        # if '.json' isnt given, add it by default
-        if not url.endswith('.json'):
-            url += '.json'
-        # requests can't handle file: URLs
-        fp = urllib.urlopen(url)
-        try:
-            return json.load(fp)
-        finally:
-            fp.close()
+    if is_file_scheme_uri(url):
+        return json_load_file(url)
     else:
-        resp = http_client.request(u'GET', url, headers=headers)
-        resp.raise_for_status()
+        request_params = {
+            'method': 'GET',
+            'url': url,
+            'headers': headers,
+        }
+        req = http_client.start_request(request_params)
+        resp = http_client.wait(req, timeout=None)
         return resp.json()
 
 
@@ -142,7 +155,7 @@ class Loader(object):
     def __init__(self, http_client, processors=None,
                  api_doc_request_headers=None):
         self.http_client = http_client
-        self.api_doc_request_headers = api_doc_request_headers
+        self.api_doc_request_headers = api_doc_request_headers or {}
         if processors is None:
             processors = []
             # always go through the validation processor first
@@ -195,8 +208,8 @@ class Loader(object):
         :param base_url: Base URL to load from
         :param api_dict: api object from resource listing.
         """
-        path = api_dict.get(u'path').replace(u'{format}', u'json')
-        api_dict[u'url'] = urlparse.urljoin(base_url + u'/', path.strip(u'/'))
+        api_dict[u'url'] = urlparse.urljoin(
+            base_url + u'/', api_dict['path'].strip(u'/'))
         api_dict[u'api_declaration'] = json_load_url(
             self.http_client,
             api_dict[u'url'],

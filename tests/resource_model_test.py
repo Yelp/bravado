@@ -99,14 +99,24 @@ class ResourceTest(unittest.TestCase):
             "type": "User",
             "parameters": []
         }
+        operation_post = {
+            "method": "POST",
+            "nickname": "testHTTPPost",
+            "type": "void",
+            "parameters": []
+        }
         api = {
             "path": "/test_http",
             "operations": [operation]
         }
+        api_post = {
+            "path": "/test_http",
+            "operations": [operation_post]
+        }
         self.response = {
             "swaggerVersion": "1.2",
             "basePath": "/",
-            "apis": [api],
+            "apis": [api, api_post],
             "models": self.models
         }
 
@@ -122,6 +132,10 @@ class ResourceTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/api-docs/api_test",
             body=json.dumps(self.response))
+
+        httpretty.register_uri(
+            httpretty.POST, "http://localhost/test_http",
+            body="")
 
     ################################################################
     # Test that swaggerpy correctly creates model
@@ -427,14 +441,15 @@ class ResourceTest(unittest.TestCase):
             "name": "body",
             "type": "User",
         }
-        self.response["apis"][0]["operations"][0]["parameters"] = [
+        self.response["apis"][1]["operations"][0]["parameters"] = [
             query_parameter]
         self.register_urls()
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
+
         School = resource.models.School
         # Also test all None items are removed from array list
         user = resource.models.User(id=42, schools=[School(name='s1'), None])
-        future = resource.testHTTP(body=user)
+        future = resource.testHTTPPost(body=user)
         self.assertEqual(
             json.dumps({'id': 42, 'schools': [{'name': 's1'}]}),
             future._request.data,
@@ -447,14 +462,14 @@ class ResourceTest(unittest.TestCase):
             "name": "body",
             "type": "User",
         }
-        self.response["apis"][0]["operations"][0]["parameters"] = [
+        self.response["apis"][1]["operations"][0]["parameters"] = [
             query_parameter]
         self.response["models"]["User"]["properties"]["school"] = {
             "$ref": "School"}
         self.register_urls()
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         user = resource.models.User(id=42)
-        future = resource.testHTTP(body=user)
+        future = resource.testHTTPPost(body=user)
         # Removed the 'school': None - key, value pair from dict
         self.assertEqual(
             json.dumps({'id': 42, 'schools': []}),
@@ -468,7 +483,7 @@ class ResourceTest(unittest.TestCase):
             "name": "body",
             "type": "User",
         }
-        self.response["apis"][0]["operations"][0]["parameters"] = [
+        self.response["apis"][1]["operations"][0]["parameters"] = [
             query_parameter]
         self.response["models"]["User"]["properties"]["school"] = {
             "$ref": "School"}
@@ -476,7 +491,7 @@ class ResourceTest(unittest.TestCase):
         self.register_urls()
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
         user = resource.models.User(id=42)
-        self.assertRaises(AttributeError, resource.testHTTP, body=user)
+        self.assertRaises(AttributeError, resource.testHTTPPost, body=user)
 
     #################################################
     # Model JSON sent in request body
@@ -490,15 +505,15 @@ class ResourceTest(unittest.TestCase):
             "type": "School",
         }
         school = {"name": "temp"}
-        self.response["apis"][0]["operations"][0]["type"] = "School"
-        self.response["apis"][0]["operations"][0]["parameters"] = [
+        self.response["apis"][1]["operations"][0]["type"] = "School"
+        self.response["apis"][1]["operations"][0]["parameters"] = [
             query_parameter]
         self.register_urls()
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http",
             body=json.dumps(school))
         resource = SwaggerClient(u'http://localhost/api-docs').api_test
-        resource.testHTTP(body=school).result()
+        resource.testHTTPPost(body=school).result()
         self.assertEqual("application/json", httpretty.last_request().headers[
             'content-type'])
 
@@ -509,13 +524,13 @@ class ResourceTest(unittest.TestCase):
             "name": "body",
             "type": "integer",
         }
-        self.response["apis"][0]["operations"][0]["parameters"] = [
+        self.response["apis"][1]["operations"][0]["parameters"] = [
             query_parameter]
         self.register_urls()
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http",
             body=json.dumps({'id': 1}))
-        SwaggerClient(u'http://localhost/api-docs').api_test.testHTTP(
+        SwaggerClient(u'http://localhost/api-docs').api_test.testHTTPPost(
             body=42).result()
         self.assertFalse('content-type' in httpretty.last_request().headers)
 

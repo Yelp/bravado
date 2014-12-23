@@ -216,6 +216,7 @@ class ResourceOperationTest(unittest.TestCase):
         with open("test-data/1.2/simple/simple.json", "rb") as f:
             resource.testHTTP(param_id=42, file_name=f).result()
             content_type = httpretty.last_request().headers['content-type']
+
             self.assertTrue(content_type.startswith('multipart/form-data'))
             self.assertTrue("42" in httpretty.last_request().body)
             # instead of asserting the contents, just assert filename is there

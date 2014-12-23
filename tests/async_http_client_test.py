@@ -29,43 +29,26 @@ import swaggerpy.http_client
 class AsyncHttpClientTest(unittest.TestCase):
 
     def test_stringify_body_converts_dict_to_str(self):
-        request_params = {
-            'headers': {'content-type': 'application/json'},
-            'data': {'foo': 'bar', 'bar': 42}}
-        swaggerpy.http_client.stringify_body(request_params)
+        data = {'foo': 'bar', 'bar': 42}
+        data = swaggerpy.client.stringify_body(data)
         self.assertEqual({"foo": "bar", "bar": 42},
-                         json.loads(request_params['data']))
+                         json.loads(data))
 
     def test_stringify_body_encode_params_to_utf8(self):
-        request_params = {
-            'headers': {'content-type': 'application/json'},
-            'data': {'foo': 'bar', 'bar': 42},
-            'params': {'bar': u'酒場'},
-        }
-        swaggerpy.http_client.stringify_body(request_params)
+        data = {'foo': 'bar', 'bar': 42}
+        data = swaggerpy.client.stringify_body(data)
         self.assertEqual({"foo": "bar", "bar": 42},
-                         json.loads(request_params['data']))
-
-    def test_stringify_body_ignores_data_if_header_content_type_not_json(self):
-        request_params = {'headers': {}, 'data': 'foo'}
-        swaggerpy.http_client.stringify_body(request_params)
-        self.assertEqual('foo', request_params['data'])
-
-    def test_stringify_body_ignores_data_if_header_not_present(self):
-        request_params = {'data': 'foo'}
-        swaggerpy.http_client.stringify_body(request_params)
-        self.assertEqual('foo', request_params['data'])
+                         json.loads(data))
 
     def test_stringify_body_ignores_data_if_already_str(self):
-        request_params = {
-            'headers': {'content-type': 'application/json'},
-            'data': 'foo'}
-        swaggerpy.http_client.stringify_body(request_params)
-        self.assertEqual('foo', request_params['data'])
+        data = 'foo'
+        swaggerpy.client.stringify_body(data)
+        self.assertEqual('foo', data)
 
     def test_stringify_async_body_returns_file_producer(self):
-        def_str = 'swaggerpy.http_client.stringify_body'
+        def_str = 'swaggerpy.client.stringify_body'
         with patch(def_str) as mock_stringify:
+            mock_stringify.return_value = '42'
             with patch('swaggerpy.async_http_client.StringIO',
                        return_value='foo') as mock_stringIO:
                 with patch('swaggerpy.async_http_client.FileBodyProducer',
@@ -75,8 +58,8 @@ class AsyncHttpClientTest(unittest.TestCase):
 
                     self.assertEqual('mock_fbp', resp)
 
-                    mock_stringify.assert_called_once_with(body)
-                    mock_stringIO.assert_called_once_with(42)
+                    mock_stringify.assert_called_once_with(body['data'])
+                    mock_stringIO.assert_called_once_with('42')
                     mock_fbp.assert_called_once_with('foo')
 
     def test_stringify_files_creates_correct_body_content(self):
@@ -141,7 +124,7 @@ class AsyncHttpClientTest(unittest.TestCase):
                 1, 2, 3, 4, 5, 6)
             async_client = swaggerpy.async_http_client.AsynchronousHttpClient()
             eventual = async_client.start_request(req)
-            resp = async_client.wait(5, eventual)
+            resp = async_client.wait(eventual, 5)
             self.assertEqual(2, resp.code)
 
     def test_url_encode_async_request(self):

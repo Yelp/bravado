@@ -23,6 +23,7 @@ from twisted.web.client import FileBodyProducer
 from twisted.web.http_headers import Headers
 from yelp_uri import urllib_utf8
 
+from swaggerpy import client
 from swaggerpy import http_client
 from swaggerpy.exception import HTTPError
 from swaggerpy.multipart_response import create_multipart_content
@@ -62,11 +63,11 @@ class AsynchronousHttpClient(http_client.HttpClient):
         """
         eventual.cancel()
 
-    def wait(self, timeout, eventual):
+    def wait(self, eventual, timeout=None):
         """Requests based implemention with timeout
 
-        :param timeout: time in seconds to wait for response
         :param eventual: Crochet EventualResult
+        :param timeout: time in seconds to wait for response.
 
         :return: Requests response
         :rtype:  requests.Response
@@ -172,8 +173,7 @@ def stringify_body(request_params):
     elif headers.get('content-type') == http_client.APP_FORM:
         data = urllib_utf8.urlencode(request_params.get('data', {}))
     else:
-        http_client.stringify_body(request_params)
-        data = request_params.get('data')
+        data = client.stringify_body(request_params.get('data', ''))
     return FileBodyProducer(StringIO(data)) if data else None
 
 
