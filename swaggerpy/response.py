@@ -75,7 +75,7 @@ class HTTPFuture(object):
 
         if self.cancelled():
             raise CancelledError()
-        response = self._http_client.wait(timeout, self._request)
+        response = self._http_client.wait(self._request, timeout)
         try:
             response.raise_for_status()
         except Exception as e:

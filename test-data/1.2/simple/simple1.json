@@ -1,7 +1,7 @@
 {
     "swaggerVersion": "1.2",
     "basePath": "/",
-    "resourcePath": "simple.{format}",
+    "resourcePath": "simple.json",
     "apis": [
         {
             "path": "/test_http",

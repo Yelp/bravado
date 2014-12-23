@@ -66,8 +66,8 @@ class TestServer(unittest.TestCase):
 
         eventual_one = client.start_request(request_one_params)
         eventual_two = client.start_request(request_two_params)
-        resp_one = client.wait(1, eventual_one)
-        resp_two = client.wait(1, eventual_two)
+        resp_one = client.wait(eventual_one, 1)
+        resp_two = client.wait(eventual_two, 1)
 
         self.assertEqual(resp_one.text, ROUTE_1_RESPONSE)
         self.assertEqual(resp_two.text, ROUTE_2_RESPONSE)

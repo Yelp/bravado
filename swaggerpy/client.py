@@ -12,12 +12,13 @@ import os.path
 import time
 import urllib
 from collections import namedtuple
+from datetime import datetime
 from urlparse import urlparse
 
 from yelp_uri import urllib_utf8
 
 import swagger_type
-from swaggerpy.http_client import APP_FORM, APP_JSON, SynchronousHttpClient
+from swaggerpy.http_client import APP_JSON, SynchronousHttpClient
 from swaggerpy.processors import SwaggerProcessor
 from swaggerpy.response import HTTPFuture, SwaggerResponse
 from swaggerpy.swagger_model import create_model_type, Loader
@@ -431,7 +432,6 @@ def create_operation_docstring(json_):
 
 
 def handle_form_param(name, value, type_, request):
-    request['headers']['content-type'] = APP_FORM
     if swagger_type.is_file(type_):
         if 'files' not in request:
             request['files'] = {}
@@ -464,11 +464,13 @@ def add_param_to_req(param, value, request):
     elif param_req_type == u'query':
         request['params'][pname] = value
     elif param_req_type == u'body':
-        request['data'] = value
         if not swagger_type.is_primitive(type_):
             # If not primitive, body has to be 'dict'
             # (or has already been converted to dict from model)
             request['headers']['content-type'] = APP_JSON
+            request['data'] = json.dumps(value)
+        else:
+            request['data'] = stringify_body(value)
     elif param_req_type == 'form':
         handle_form_param(pname, value, type_, request)
     # TODO(#31): accept 'header', in paramType
@@ -531,3 +533,16 @@ def validate_and_add_params_to_request(param, value, request, models):
     else:
         if param.get(u'required'):
             raise TypeError(u"Missing required parameter '%s'" % pname)
+
+
+def stringify_body(value):
+    """Json dump the value to string if not already in string
+    """
+    if value and not isinstance(value, (str, unicode)):
+        # datetime is not json serializable, use str()
+        if isinstance(value, (datetime,)):
+            return str(value)
+        else:
+            return json.dumps(value)
+    else:
+        return value
