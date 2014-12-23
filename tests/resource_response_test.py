@@ -55,7 +55,7 @@ is validated against its type 'Pet' which is defined like so:
 """
 
 import datetime
-import json
+from swaggerpy.compat import json
 import unittest
 from mock import patch, Mock
 

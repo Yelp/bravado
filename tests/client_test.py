@@ -9,7 +9,7 @@
 """
 
 import datetime
-import json
+from swaggerpy.compat import json
 import unittest
 
 import httpretty
