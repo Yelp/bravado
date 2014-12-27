@@ -123,7 +123,7 @@ Caching
         Caching can totally be bypassed by using ``SwaggerClient()`` (discouraged).
 
 Adding Request Headers
--------
+----------------------
 
 ``swagger-py`` allows you to pass request headers along with any request.
 
