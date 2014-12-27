@@ -8,8 +8,6 @@ from setuptools import setup
 
 import swaggerpy
 
-async_packages = ["crochet", "twisted"]
-
 setup(
     name="swaggerpy",
     version=swaggerpy.version,
@@ -33,7 +31,7 @@ setup(
         "bottle",
         "coverage",
         "httpretty",
-        "nose",
+        "pytest",
         "ordereddict",
         "tissue",
     ],

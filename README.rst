@@ -54,19 +54,10 @@ recommended to keep dependencies and libraries isolated.
 Setup
 -----
 
-`Setuptools <http://pypi.python.org/pypi/setuptools>`__ is used for
-building. `Nose <http://nose.readthedocs.org/en/latest/>`__ is used
-for unit testing, with the `coverage
-<http://nedbatchelder.com/code/coverage/>`__ plugin installed to
-generated code coverage reports. Pass ``--with-coverage`` to generate
-the code coverage report. HTML versions of the reports are put in
-``cover/index.html``.
-
 ::
 
-    $ make dev   # prep for development (install deps, launchers, etc.)
-    $ make test  # run unit tests
-    $ make build # build distributable
+    tox
+
 
 License
 -------
