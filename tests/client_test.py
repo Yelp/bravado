@@ -17,9 +17,11 @@ import requests
 from mock import Mock, patch
 
 from swaggerpy import client
-from swaggerpy.http_client import SynchronousHttpClient
-from swaggerpy.client import \
-    SwaggerClient, SwaggerClientFactory, validate_and_add_params_to_request
+from swaggerpy.client import (
+    SwaggerClient,
+    SwaggerClientFactory,
+    validate_and_add_params_to_request,
+)
 
 
 class ValidateParamTest(unittest.TestCase):
@@ -63,7 +65,7 @@ class SwaggerClientFactoryTest(unittest.TestCase):
                 self.assertFalse(client.factory.cache['test'].is_stale(11))
 
     def test_build_cached_client_with_proper_values(self):
-        with patch('swaggerpy.client.SwaggerClient') as mock:
+        with patch('swaggerpy.client.SwaggerClient.from_url') as mock:
             mock.return_value = 'foo'
             with patch('swaggerpy.client.time.time',
                        side_effect=[1, 1]):
@@ -74,7 +76,7 @@ class SwaggerClientFactoryTest(unittest.TestCase):
                 self.assertEqual(1, client_object.timestamp)
 
     def test_builds_client_if_not_present_in_cache(self):
-        with patch('swaggerpy.client.SwaggerClient') as mock:
+        with patch('swaggerpy.client.SwaggerClient.from_url') as mock:
             with patch('swaggerpy.client.time.time', side_effect=[1]):
                 client.get_client('foo')
                 mock.assert_called_once_with('foo')
@@ -83,7 +85,7 @@ class SwaggerClientFactoryTest(unittest.TestCase):
         with patch('swaggerpy.client.time.time', side_effect=[2, 3]):
             client.factory = client.SwaggerClientFactory()
             client.factory.cache['foo'] = client.CachedClient('bar', 0, 1)
-            with patch('swaggerpy.client.SwaggerClient') as mock:
+            with patch('swaggerpy.client.SwaggerClient.from_url') as mock:
                 client.get_client('foo')
                 mock.assert_called_once_with('foo')
 
@@ -119,14 +121,16 @@ class GetClientMethodTest(unittest.TestCase):
             self.assertTrue(prev_factory is client.factory)
 
 
-# noinspection PyDocstring
 class ClientTest(unittest.TestCase):
 
     def test_get_client_allows_json_dict(self):
         client_stub = client.get_client(self.resource_listing)
         self.assertTrue(isinstance(client_stub, client.SwaggerClient))
 
+    # TODO: what is this testing? clear() is necessary because other tests
+    # can run first and pollute the cache. should fix
     def test_serialization_of_json_dict(self):
+        client.factory.cache.clear()
         client.get_client({'swaggerVersion': '1.2', 'apis': []})
         self.assertTrue({'swaggerVersion': '1.2', 'apis': []} in
                         map(json.loads, client.factory.cache.keys()))
@@ -157,8 +161,7 @@ class ClientTest(unittest.TestCase):
 
     @httpretty.activate
     def test_headers(self):
-        self.uut = SwaggerClient(
-            self.resource_listing, SynchronousHttpClient())
+        self.uut = SwaggerClient.from_resource_listing(self.resource_listing)
         httpretty.register_uri(
             httpretty.GET, "http://swagger.py/swagger-test/pet",
             body='[]')
@@ -169,8 +172,7 @@ class ClientTest(unittest.TestCase):
 
     @httpretty.activate
     def test_multiple_headers(self):
-        self.uut = SwaggerClient(
-            self.resource_listing, SynchronousHttpClient())
+        self.uut = SwaggerClient.from_resource_listing(self.resource_listing)
         httpretty.register_uri(
             httpretty.GET, "http://swagger.py/swagger-test/pet",
             body='[]')
@@ -331,8 +333,4 @@ class ClientTest(unittest.TestCase):
                 }
             ]
         }
-        self.uut = SwaggerClient(self.resource_listing)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        self.uut = SwaggerClient.from_resource_listing(self.resource_listing)

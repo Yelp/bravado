@@ -12,21 +12,19 @@ import os.path
 import time
 import urllib
 from collections import namedtuple
-from datetime import datetime
 from urlparse import urlparse
 
 from yelp_uri import urllib_utf8
 
 import swagger_type
 from swaggerpy.http_client import APP_JSON, SynchronousHttpClient
-from swaggerpy.processors import SwaggerProcessor
 from swaggerpy.response import HTTPFuture, SwaggerResponse
 from swaggerpy.swagger_model import create_model_type, Loader
 from swaggerpy.swagger_type import SwaggerTypeCheck
 
 log = logging.getLogger(__name__)
 
-SWAGGER_SPEC_TIMEOUT_S = 300
+SWAGGER_SPEC_CACHE_TTL = 300
 
 
 class CachedClient(object):
@@ -60,6 +58,8 @@ class SwaggerClientFactory(object):
     def __init__(self):
         self.cache = dict()
 
+    # TODO: cache resource listing instead of client
+    # TODO: cache needs to use all of args/kwargs
     def __call__(self, api_docs_url, *args, **kwargs):
         """
         :param api_docs_url: url for swagger api docs used to build the client
@@ -80,12 +80,20 @@ class SwaggerClientFactory(object):
 
         return self.cache[key]
 
-    def build_cached_client(self, *args, **kwargs):
+    def build_cached_client(self, api_docs_url, *args, **kwargs):
         """Builds a fresh SwaggerClient and stores it in a namedtuple which
         contains its created timestamp and timeout in seconds
         """
-        timeout = kwargs.pop('timeout', SWAGGER_SPEC_TIMEOUT_S)
-        return CachedClient(SwaggerClient(*args, **kwargs), timeout)
+        # timeout is backwards compatible with 0.7
+        ttl = kwargs.pop('ttl', kwargs.pop('timeout', SWAGGER_SPEC_CACHE_TTL))
+
+        if isinstance(api_docs_url, (str, unicode)):
+            client = SwaggerClient.from_url(api_docs_url, *args, **kwargs)
+        else:
+            client = SwaggerClient.from_resource_listing(
+                api_docs_url, *args, **kwargs)
+
+        return CachedClient(client, ttl)
 
 
 factory = None
@@ -122,24 +130,9 @@ def get_client(*args, **kwargs):
     return factory(*args, **kwargs).swagger_client
 
 
-class ClientProcessor(SwaggerProcessor):
-    """Enriches swagger models for client processing.
-    """
-
-    def process_resource_listing_api(self, resources, listing_api, context):
-        """Add name to listing_api.
-
-        :param resources: Resource listing object
-        :param listing_api: ResourceApi object.
-        :type context: ParsingContext
-        :param context: Current context in the API.
-        """
-        name, ext = os.path.splitext(os.path.basename(listing_api[u'path']))
-        listing_api[u'name'] = name
-
-
 class Operation(object):
-    """Operation object.
+    """Perform a request by taking the kwargs passed to the call and
+    constructing an HTTP request.
     """
 
     def __init__(self, uri, operation, http_client, models):
@@ -198,22 +191,24 @@ class Resource(object):
 
     :param resource: Resource model
     :param http_client: HTTP client API
-    :param basePath: url path used for api-docs fetch
+    :param base_path: base url to perform api requests. Used to override
+        the path provided in the api spec
+    :param url_base: a url path used as the base path for resource definitions
+        that include a relative basePath
     """
 
-    def __init__(self, resource, http_client, base_path):
-        log.debug(u"Building resource '%s'" % resource[u'name'])
+    def __init__(self, resource, http_client, base_path, url_base=None):
+        log.debug(u"Building resource '%s'" % resource['name'])
         self._json = resource
         decl = resource['api_declaration']
         self._http_client = http_client
+        self._url_base = url_base
         self._base_path = base_path
         self._set_models()
         self._operations = dict(
             (oper['nickname'], self._build_operation(decl, api, oper))
             for api in decl['apis']
             for oper in api['operations'])
-        for key in self._operations:
-            setattr(self, key, self._get_operation(key))
 
     def _set_models(self):
         """Create namedtuple of model types created from 'api_declaration'
@@ -268,80 +263,107 @@ class Resource(object):
         """
         log.debug(u"Building operation %s.%s" % (
             self._get_name(), operation[u'nickname']))
-        # IF basePath starts with /, prepend it with stored host name
-        if decl[u'basePath'].startswith('/'):
-            if urlparse(self._base_path).scheme == 'file':
+
+        if self._base_path:
+            base_path = self._base_path
+        elif self._url_base and decl[u'basePath'].startswith('/'):
+            if urlparse(self._url_base).scheme == 'file':
                 raise AssertionError(
                     "Base path can't start with / for local specs," +
                     " unless api_base_path is passed to SwaggerClient.")
-            base_path = self._base_path.strip('/') + decl['basePath']
+            base_path = self._url_base.rstrip('/') + decl['basePath']
         else:
             base_path = decl[u'basePath']
-        uri = base_path.strip('/') + api[u'path']
+        uri = base_path.rstrip('/') + api[u'path']
         return Operation(uri, operation, self._http_client, self.models)
+
+    def __dir__(self):
+        return self._operations.keys()
 
 
 class SwaggerClient(object):
-    """Client object for accessing a Swagger-documented RESTful service.
+    """A client for accessing a Swagger-documented RESTful service.
 
-    :param url_or_resource: Either the parsed resource listing+API decls, or
-                            its URL.
-    :type url_or_resource: dict or str
-    :param http_client: HTTP client API
-    :type  http_client: HttpClient
-    :param api_base_path: Base Path for making API calls
-    :type api_base_path: str
-    :param raise_with: Custom Exception to wrap the response error with
-    :type raise_with: type
-    :params api_doc_request_headers: Headers to pass with api docs requests
-    :type: dict
+    :param api_url: the url for the swagger api docs, only used for the repr.
+    :param resources: a list of :Resource: objects used to perform requests
     """
 
-    def __init__(self, url_or_resource, http_client=None,
-                 api_base_path=None, raise_with=None,
-                 api_doc_request_headers=None):
-        if not http_client:
-            http_client = SynchronousHttpClient()
-        # Wrap http client's errors with raise_with
-        http_client.raise_with = raise_with
-        self._http_client = http_client
+    def __init__(self, api_url, resources):
+        self._api_url = api_url
+        self._resources = resources
 
-        # Load Swagger APIs always synchronously
+    @classmethod
+    def from_url(
+            cls,
+            url,
+            http_client=None,
+            api_base_path=None,
+            api_doc_request_headers=None):
+        """
+        Build a :class:`SwaggerClient` from a url to api docs describing the
+        api.
+
+        :param url: url pointing at the swagger api docs
+        :type url: str
+        :param http_client: an HTTP client used to perform requests
+        :type  http_client: :class:`swaggerpy.http_client.HttpClient`
+        :param api_base_path: a url, override the path used to make api requests
+        :type  api_base_path: str
+        :param api_doc_request_headers: Headers to pass with api docs requests
+        :type  api_doc_request_headers: dict
+        """
+        log.debug(u"Loading from %s" % url)
+        http_client = http_client or SynchronousHttpClient()
+
+        # TODO: better way to customize the request for api-docs, so we don't
+        # have to add new kwargs for everything
         loader = Loader(
-            SynchronousHttpClient(),
-            [ClientProcessor()],
-            api_doc_request_headers=api_doc_request_headers,
-        )
+            http_client,
+            api_doc_request_headers=api_doc_request_headers)
 
-        forced_api_base_path = api_base_path is not None
-        # url_or_resource can be url of type str,
-        # OR a dict of resource itself.
-        if isinstance(url_or_resource, (str, unicode)):
-            log.debug(u"Loading from %s" % url_or_resource)
-            self._api_docs = loader.load_resource_listing(url_or_resource)
-            parsed_uri = urlparse(url_or_resource)
-            if not api_base_path:
-                api_base_path = "{uri.scheme}://{uri.netloc}".format(
-                    uri=parsed_uri)
+        return cls.from_resource_listing(
+            loader.load_resource_listing(url),
+            http_client=http_client,
+            api_base_path=api_base_path,
+            url=url)
+
+    @classmethod
+    def from_resource_listing(
+            cls,
+            resource_listing,
+            http_client=None,
+            api_base_path=None,
+            url=None):
+        """
+        Build a :class:`SwaggerClient` from swagger api docs
+
+        :param resource_listing: a dict with a list of api definitions
+        :param http_client: an HTTP client used to perform requests
+        :type  http_client: :class:`swaggerpy.http_client.HttpClient`
+        :param api_base_path: a url, override the path used to make api requests
+        :type  api_base_path: str
+        :param api_doc_request_headers: Headers to pass with api docs requests
+        :type  api_doc_request_headers: dict
+        :param url: the url used to retrieve the resource listing
+        :type  url: str
+        """
+        url = url or resource_listing.get(u'url')
+        log.debug(u"Using resources from %s" % url)
+
+        if url:
+            url_base = "{uri.scheme}://{uri.netloc}".format(uri=urlparse(url))
         else:
-            log.debug(u"Loading from %s" % url_or_resource.get(u'url'))
-            self._api_docs = url_or_resource
-            loader.process_resource_listing(self._api_docs)
-            if not api_base_path:
-                api_base_path = url_or_resource.get(u'url')
+            url_base = None
 
-        self._resources = {}
-        for resource in self._api_docs[u'apis']:
-            if forced_api_base_path and 'api_declaration' in resource:
-                resource['api_declaration']['basePath'] = api_base_path
-            self._resources[resource[u'name']] = Resource(
-                resource, http_client, api_base_path)
-            setattr(self, resource['name'],
-                    self._get_resource(resource[u'name']))
+        resources = build_resources_from_spec(
+            http_client or SynchronousHttpClient(),
+            map(append_name_to_api, resource_listing['apis']),
+            api_base_path,
+            url_base)
+        return cls(url, resources)
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__,
-                            self._api_docs.get(u'url'))
+        return u"%s(%s)" % (self.__class__.__name__, self._api_url)
 
     def __getattr__(self, item):
         """Promote resource objects to be client fields.
@@ -354,11 +376,6 @@ class SwaggerClient(object):
             raise AttributeError(u"API has no resource '%s'" % item)
         return resource
 
-    def close(self):
-        """Close the SwaggerClient, and underlying resources.
-        """
-        self._http_client.close()
-
     def _get_resource(self, name):
         """Gets a Swagger resource by name.
 
@@ -367,6 +384,22 @@ class SwaggerClient(object):
         :return: Resource, or None if not found.
         """
         return self._resources.get(name)
+
+    def __dir__(self):
+        return self._resources.keys()
+
+
+def build_resources_from_spec(http_client, apis, api_base_path, url_base):
+    return dict(
+        (
+            resource['name'],
+            Resource(resource, http_client, api_base_path, url_base)
+        ) for resource in apis)
+
+
+def append_name_to_api(api_entry):
+    name, ext = os.path.splitext(os.path.basename(api_entry['path']))
+    return dict(api_entry, name=name)
 
 
 def _build_param_string(param):
@@ -515,6 +548,7 @@ def validate_and_add_params_to_request(param, value, request, models):
         if not swagger_type.is_primitive(type_):
             raise TypeError("Param %s in query can only be primitive" % pname)
 
+    # TODO: this needs to move to add_param_to_req, and change logic
     # Allow lists for query params even if type is primitive
     if isinstance(value, list) and param_req_type == 'query':
         type_ = swagger_type.ARRAY + swagger_type.COLON + type_
@@ -538,11 +572,6 @@ def validate_and_add_params_to_request(param, value, request, models):
 def stringify_body(value):
     """Json dump the value to string if not already in string
     """
-    if value and not isinstance(value, (str, unicode)):
-        # datetime is not json serializable, use str()
-        if isinstance(value, (datetime,)):
-            return str(value)
-        else:
-            return json.dumps(value)
-    else:
+    if not value or isinstance(value, basestring):
         return value
+    return json.dumps(value)

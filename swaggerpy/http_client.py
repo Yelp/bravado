@@ -24,13 +24,6 @@ MULT_FORM = 'multipart/form-data'
 class HttpClient(object):
     """Interface for a minimal HTTP client.
     """
-
-    def close(self):
-        """Close this client resource.
-        """
-        raise NotImplementedError(
-            u"%s: Method not implemented", self.__class__.__name__)
-
     def request(self, method, url, params=None, data=None):
         """Issue an HTTP request.
 
@@ -181,9 +174,6 @@ class SynchronousHttpClient(HttpClient):
     def __init__(self):
         self.session = requests.Session()
         self.authenticator = None
-
-    def close(self):
-        self.session.close()
 
     def start_request(self, request_params):
         """

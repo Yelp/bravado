@@ -65,7 +65,7 @@ class ResourceTest(unittest.TestCase):
     def test_error_on_wrong_swagger_version(self):
         self.response["swaggerVersion"] = "XYZ"
         self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient,
+        self.assertRaises(SwaggerError, SwaggerClient.from_url,
                           u'http://localhost/api-docs')
 
     @httpretty.activate
@@ -73,7 +73,7 @@ class ResourceTest(unittest.TestCase):
         def iterate_test(field):
             self.response.pop(field)
             self.register_urls()
-            self.assertRaises(SwaggerError, SwaggerClient,
+            self.assertRaises(SwaggerError, SwaggerClient.from_url,
                               u'http://localhost/api-docs')
         [iterate_test(field) for field in (
             'swaggerVersion', 'basePath', 'apis')]
@@ -85,7 +85,7 @@ class ResourceTest(unittest.TestCase):
             httpretty.GET, "http://localhost/test_http?query=foo",
             body='[]')
         self.register_urls()
-        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_param="foo").result()
         self.assertEqual([], resp)
 
@@ -96,7 +96,7 @@ class ResourceTest(unittest.TestCase):
             httpretty.GET, "http://localhost/append/test_http?",
             body='[]')
         self.register_urls()
-        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
         resource.testHTTP(test_param="foo").result()
         self.assertEqual(["foo"],
                          httpretty.last_request().querystring['test_param'])
@@ -104,14 +104,14 @@ class ResourceTest(unittest.TestCase):
     @httpretty.activate
     def test_setattrs_on_client_and_resource(self):
         self.register_urls()
-        client = SwaggerClient(u'http://localhost/api-docs')
+        client = SwaggerClient.from_url(u'http://localhost/api-docs')
         self.assertTrue(isinstance(client.api_test, Resource))
         self.assertTrue(isinstance(client.api_test.testHTTP, Operation))
 
     @httpretty.activate
     def test_headers_sendable_with_api_doc_request(self):
         self.register_urls()
-        SwaggerClient(
+        SwaggerClient.from_url(
             u'http://localhost/api-docs',
             api_doc_request_headers={'foot': 'bart'},
         )
@@ -127,8 +127,9 @@ class ResourceTest(unittest.TestCase):
             httpretty.GET, "http://foo/test_http?", body='')
         self.response["basePath"] = "http://localhost"
         self.register_urls()
-        resource = SwaggerClient(u'http://localhost/api-docs',
-                                 api_base_path='http://foo').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs',
+            api_base_path='http://foo').api_test
         resource.testHTTP(test_param="foo").result()
         self.assertEqual(["foo"],
                          httpretty.last_request().querystring['test_param'])
@@ -142,7 +143,7 @@ class ResourceTest(unittest.TestCase):
             body=u'""')
         self.response["basePath"] = "http://localhost/lame/test"
         self.register_urls()
-        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_param="foo").result()
         self.assertEqual('', resp)
 

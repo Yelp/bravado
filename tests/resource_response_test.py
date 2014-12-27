@@ -137,7 +137,7 @@ class ResourceResponseTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http?test_param=foo",
             status=500)
-        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
         self.assertRaises(HTTPError,
                           resource.testHTTP(test_param="foo").result)
 
@@ -149,7 +149,7 @@ class ResourceResponseTest(unittest.TestCase):
     def test_error_on_wrong_attr_type_in_operation_type(self):
         self.response["apis"][0]["operations"][0]["type"] = "WRONG_TYPE"
         self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient,
+        self.assertRaises(SwaggerError, SwaggerClient.from_url,
                           u'http://localhost/api-docs')
 
     @httpretty.activate
@@ -167,7 +167,8 @@ class ResourceResponseTest(unittest.TestCase):
             httpretty.register_uri(
                 httpretty.GET, "http://localhost/test_http?test_param=foo",
                 body=types[type_])
-            resource = SwaggerClient(u'http://localhost/api-docs').api_test
+            resource = SwaggerClient.from_url(
+                u'http://localhost/api-docs').api_test
             resp = resource.testHTTP(test_param="foo").result()
             self.assertEqual(json.loads(types[type_]), resp)
 
@@ -185,7 +186,8 @@ class ResourceResponseTest(unittest.TestCase):
             httpretty.register_uri(
                 httpretty.GET, "http://localhost/test_http?test_param=foo",
                 body=types[type_])
-            resource = SwaggerClient(u'http://localhost/api-docs').api_test
+            resource = SwaggerClient.from_url(
+                u'http://localhost/api-docs').api_test
             future = resource.testHTTP(test_param="foo")
             self.assertRaises(TypeError, future)
 
@@ -196,7 +198,7 @@ class ResourceResponseTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http?test_param=foo",
             body='{"some_foo": "bar"}')
-        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_param="foo").result()
         self.assertEqual({"some_foo": "bar"}, resp)
 
@@ -209,7 +211,7 @@ class ResourceResponseTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http?",
             body='{"some_foo": "bar"}')
-        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_param="foo").result(raw_response=True)
         self.assertEqual({"some_foo": "bar"}, resp)
 
@@ -221,7 +223,7 @@ class ResourceResponseTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http?test_param=foo",
             body='"2014-06-10"')
-        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_param="foo").result()
         self.assertEqual(resp, datetime.date(2014, 6, 10))
 
@@ -237,7 +239,7 @@ class ResourceResponseTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http?test_param=foo",
             body='["2014-06-10T23:49:54.728+0000"]')
-        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_param="foo").result()
         self.assertEqual(resp, [datetime.datetime(
             2014, 6, 10, 23, 49, 54, 728000, tzinfo=tzutc())])
@@ -250,7 +252,7 @@ class ResourceResponseTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http?test_param=foo",
             body="123.32")
-        resource = SwaggerClient(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
         future = resource.testHTTP(test_param="foo")
         self.assertRaises(TypeError, future)
 
@@ -258,7 +260,7 @@ class ResourceResponseTest(unittest.TestCase):
     @httpretty.activate
     def test_future_is_returned_from_swagger_client(self):
         self.register_urls()
-        future = SwaggerClient(
+        future = SwaggerClient.from_url(
             u'http://localhost/api-docs').api_test.testHTTP(test_param="a")
         self.assertTrue(isinstance(future, HTTPFuture))
 
