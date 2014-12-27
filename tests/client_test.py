@@ -182,15 +182,6 @@ class ClientTest(unittest.TestCase):
         self.assertEqual('bike', httpretty.last_request().headers['sweet'])
 
     @httpretty.activate
-    def test_raise_with_wrapper(self):
-        class MyException(Exception):
-            pass
-        self.uut = SwaggerClient(self.resource_listing, raise_with=MyException)
-        httpretty.register_uri(
-            httpretty.GET, "http://swagger.py/swagger-test/pet", status=500)
-        self.assertRaises(MyException, self.uut.pet.listPets().result)
-
-    @httpretty.activate
     def test_get(self):
         httpretty.register_uri(
             httpretty.GET, "http://swagger.py/swagger-test/pet",
