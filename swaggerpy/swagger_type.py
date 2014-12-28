@@ -325,7 +325,7 @@ class SwaggerTypeCheck(object):
         """Checks all the fields in the complex type are of proper type
         All the required fields are present and no extra field is present
         """
-        klass = getattr(self.models, self._type)
+        klass = self.models[self._type]
         if isinstance(self.value, klass):
             self.value = self.value._flat_dict()
         # The only valid type from this point on is JSON dict

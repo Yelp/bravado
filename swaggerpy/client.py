@@ -57,7 +57,6 @@ import logging
 import os.path
 import time
 import urllib
-from collections import namedtuple
 from urlparse import urlparse
 
 from yelp_uri import urllib_utf8
@@ -65,7 +64,11 @@ from yelp_uri import urllib_utf8
 import swagger_type
 from swaggerpy.http_client import APP_JSON, SynchronousHttpClient
 from swaggerpy.response import HTTPFuture, post_receive
-from swaggerpy.swagger_model import create_model_type, Loader
+from swaggerpy.swagger_model import (
+    Loader,
+    create_model_type,
+    is_file_scheme_uri,
+)
 from swaggerpy.swagger_type import SwaggerTypeCheck
 
 log = logging.getLogger(__name__)
@@ -208,43 +211,64 @@ class Operation(object):
         return HTTPFuture(self._http_client, request, response_future)
 
 
+def build_models(model_dicts):
+    return dict(
+        (name, create_model_type(model_def))
+        for name, model_def in model_dicts.iteritems())
+
+
+def get_resource_url(base_path, url_base, resource_base_path):
+    if base_path:
+        return base_path
+
+    if url_base and resource_base_path.startswith('/'):
+        if is_file_scheme_uri(url_base):
+            raise AssertionError("Can't resolve relative resource urls with a "
+                                 " file:// url, for %s." % resource_base_path)
+        return url_base.rstrip('/') + resource_base_path
+
+    return resource_base_path
+
+
 class Resource(object):
     """Swagger resource, described in an API declaration.
-
-    :param resource: Resource model
-    :param http_client: HTTP client API
-    :param base_path: base url to perform api requests. Used to override
-        the path provided in the api spec
-    :param url_base: a url path used as the base path for resource definitions
-        that include a relative basePath
     """
 
-    def __init__(self, resource, http_client, base_path, url_base=None):
-        log.debug(u"Building resource '%s'" % resource['name'])
-        self._json = resource
-        decl = resource['api_declaration']
-        self._http_client = http_client
-        self._url_base = url_base
-        self._base_path = base_path
-        self._set_models()
-        self._operations = dict(
-            (oper['nickname'], self._build_operation(decl, api, oper))
-            for api in decl['apis']
-            for oper in api['operations'])
+    def __init__(self, name, operations):
+        log.debug(u"Building resource '%s'" % name)
+        self._name = name
+        self._operations = operations
 
-    def _set_models(self):
-        """Create namedtuple of model types created from 'api_declaration'
+    @classmethod
+    def from_api_doc(cls, api_doc, http_client, base_path, url_base=None):
         """
-        # TODO: what, no
-        models_dict = self._json['api_declaration'].get('models', {})
-        models = namedtuple('models', models_dict.keys())
-        keys_to_models = {}
-        for key in models_dict.keys():
-            keys_to_models[key] = create_model_type(models_dict[key])
-        self.models = models(**keys_to_models)
+        :param api_doc: api doc which defines this resource
+        :param http_client: a :class:`swaggerpy.http_client.HttpClient`
+        :param base_path: base url to perform api requests. Used to override
+                the path provided in the api spec
+        :param url_base: a url used as the base for resource definitions
+                that include a relative basePath
+        """
+        declaration = api_doc['api_declaration']
+        models = build_models(declaration.get('models', {}))
+
+        def build_operation(api_obj, operation):
+            log.debug(u"Building operation %s.%s" % (
+                api_obj.get('name'), operation['nickname']))
+
+            resource_base_path = declaration.get('basePath')
+            url = get_resource_url(base_path, url_base, resource_base_path)
+            url = url.rstrip('/') + api_obj['path']
+            return Operation(url, operation, http_client, models)
+
+        operations = dict(
+            (oper['nickname'], build_operation(api, oper))
+            for api in declaration['apis']
+            for oper in api['operations'])
+        return cls(api_doc['name'], operations)
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self._json[u'name'])
+        return u"%s(%s)" % (self.__class__.__name__, self._name)
 
     def __getattr__(self, item):
         """
@@ -254,40 +278,8 @@ class Resource(object):
         op = self._operations.get(item)
         if not op:
             raise AttributeError(u"Resource '%s' has no operation '%s'" %
-                                 (self._get_name(), item))
+                                 (self._name, item))
         return op
-
-    def _get_name(self):
-        """Returns the name of this resource.
-
-        Name is derived from the filename of the API declaration.
-
-        :return: Resource name.
-        """
-        return self._json.get(u'name')
-
-    def _build_operation(self, decl, api, operation):
-        """Build an operation object
-
-        :param decl: API declaration.
-        :param api: API entry.
-        :param operation: Operation.
-        """
-        log.debug(u"Building operation %s.%s" % (
-            self._get_name(), operation[u'nickname']))
-
-        if self._base_path:
-            base_path = self._base_path
-        elif self._url_base and decl[u'basePath'].startswith('/'):
-            if urlparse(self._url_base).scheme == 'file':
-                raise AssertionError(
-                    "Base path can't start with / for local specs," +
-                    " unless api_base_path is passed to SwaggerClient.")
-            base_path = self._url_base.rstrip('/') + decl['basePath']
-        else:
-            base_path = decl[u'basePath']
-        uri = base_path.rstrip('/') + api[u'path']
-        return Operation(uri, operation, self._http_client, self.models)
 
     def __dir__(self):
         return self._operations.keys()
@@ -378,10 +370,9 @@ class SwaggerClient(object):
         return u"%s(%s)" % (self.__class__.__name__, self._api_url)
 
     def __getattr__(self, item):
-        """Promote resource objects to be client fields.
-
-        :param item: Name of the attribute to get.
-        :return: Resource object.
+        """
+        :param item: name of the resource to return
+        :return: :class:`Resource`
         """
         resource = self._resources.get(item)
         if not resource:
@@ -394,10 +385,9 @@ class SwaggerClient(object):
 
 def build_resources_from_spec(http_client, apis, api_base_path, url_base):
     return dict(
-        (
-            resource['name'],
-            Resource(resource, http_client, api_base_path, url_base)
-        ) for resource in apis)
+        (api_doc['name'],
+         Resource.from_api_doc(api_doc, http_client, api_base_path, url_base))
+        for api_doc in apis)
 
 
 def append_name_to_api(api_entry):

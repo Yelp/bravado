@@ -179,7 +179,7 @@ class SwaggerResponseConstruct(object):
         """Creates empty instance of complex object and then fills it with attrs
         Assume the response is validated and correct
         """
-        klass = getattr(self._models, self._type)
+        klass = self._models[self._type]
         instance = klass()
         setattr(instance, '_raw', self._response)
         for key in self._response.keys():

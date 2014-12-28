@@ -148,7 +148,7 @@ class ResourceTest(unittest.TestCase):
     def test_success_on_model_types_creation(self):
         self.register_urls()
         resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
-        User = resource.models.User
+        User = resource.testHTTP._models['User']
         self.assertEqual({"schools": [], "id": 0L}, User().__dict__)
 
     @httpretty.activate
@@ -161,7 +161,7 @@ class ResourceTest(unittest.TestCase):
             'format': 'date-time'}
         self.register_urls()
         resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
-        User = resource.models.User
+        User = resource.testHTTP._models['User']
         self.assertEqual(
             {"schools": [], "id": 0L, "date": None, "datetime": None},
             User().__dict__
@@ -171,13 +171,14 @@ class ResourceTest(unittest.TestCase):
     def test_success_on_model_types_instantiation(self):
         self.register_urls()
         resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
-        User = resource.models.User
-        School = resource.models.School
+        models = resource.testHTTP._models
+        User = models['User']
+        School = models['School']
         user = User(id=42, schools=[School(name="a"), School(name="b")])
         user1 = User(schools=[School(name="a"), School(name="b")], id=42)
         self.assertEqual(user1, user)
 
-    # ToDo: DocString generated is not validated as of now
+    # TODO: DocString generated is not validated as of now
 
     @httpretty.activate
     def test_error_on_wrong_attr_type_in_model_declaration(self):
@@ -191,8 +192,8 @@ class ResourceTest(unittest.TestCase):
     def test_error_on_extra_attr_during_model_types_instantiation(self):
         self.register_urls()
         resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
-        User = resource.models.User
-        self.assertRaises(AttributeError, User, extra=42)
+        user = resource.testHTTP._models['User']
+        self.assertRaises(AttributeError, user, extra=42)
 
     @httpretty.activate
     def test_error_on_missing_attr(self):
@@ -214,25 +215,23 @@ class ResourceTest(unittest.TestCase):
     def test_setattrs_on_client_and_model(self):
         self.register_urls()
         resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
-        models = resource.models
-        self.assertTrue(isinstance(models, tuple))
-        self.assertNotEqual(None, models.User)
-        self.assertEqual(['id'], models.User._required)
+        models = resource.testHTTP._models
+        self.assertEqual(set(models), set(['User', 'School']))
+        self.assertEqual(['id'], models['User']._required)
         self.assertEqual({
             'schools': 'array:School',
             'id': 'integer:int64'
-        }, models.User._swagger_types)
-        self.assertNotEqual(None, models.School)
-        self.assertEqual(['name'], models.School._required)
-        self.assertEqual({'name': 'string'}, models.School._swagger_types)
+        }, models['User']._swagger_types)
+        self.assertEqual(['name'], models['School']._required)
+        self.assertEqual({'name': 'string'}, models['School']._swagger_types)
 
     @httpretty.activate
     def test_types_of_model_attributes(self):
         self.register_urls()
         resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
-        models = resource.models
-        user = models.User()
-        school = models.School()
+        models = resource.testHTTP._models
+        user = models['User']()
+        school = models['School']()
         self.assertTrue(isinstance(user.id, long))
         self.assertTrue(isinstance(user.schools, list))
         self.assertTrue(isinstance(school.name, str))
@@ -249,7 +248,9 @@ class ResourceTest(unittest.TestCase):
             "$ref": "School"}
         self.register_urls()
         resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
-        self.assertTrue('school' in resource.models.User().__dict__)
+        self.assertTrue(
+            'school' in
+            resource.testHTTP._models['User']().__dict__)
 
     @httpretty.activate
     def test_success_if_type_but_no_ref_in_property(self):
@@ -295,8 +296,9 @@ class ResourceTest(unittest.TestCase):
             body=json.dumps(self.sample_model))
         resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
         resp = resource.testHTTP().result()
-        User = resource.models.User
-        School = resource.models.School
+        models = resource.testHTTP._models
+        User = models['User']
+        School = models['School']
         self.assertTrue(isinstance(resp, User))
         [self.assertTrue(isinstance(x, School)) for x in resp.schools]
         self.assertEqual(User(id=42, schools=[School(
@@ -375,7 +377,7 @@ class ResourceTest(unittest.TestCase):
             query_parameter]
         self.register_urls()
         resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
-        school = resource.models.School()
+        school = resource.testHTTP._models['School']
         self.assertRaises(TypeError, resource.testHTTP, test_param=school)
 
     @httpretty.activate
@@ -387,7 +389,7 @@ class ResourceTest(unittest.TestCase):
             body=json.dumps(self.sample_model))
         resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
         resp = resource.testHTTP().result(allow_null=True)
-        self.assertTrue(isinstance(resp, resource.models.User))
+        self.assertTrue(isinstance(resp, resource.testHTTP._models['User']))
 
     @httpretty.activate
     def test_alllow_null_as_response_if_allow_null_is_given(self):
@@ -424,8 +426,9 @@ class ResourceTest(unittest.TestCase):
             httpretty.GET, "http://localhost/test_http",
             body=json.dumps(self.sample_model))
         resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
-        School = resource.models.School
-        User = resource.models.User
+        models = resource.testHTTP._models
+        User = models['User']
+        School = models['School']
         user = User(schools=[School(name='a'), None])
         self.assertEqual(None, user.schools[1])
         self.assertEqual([{'name': 'a'}], user._flat_dict()['schools'])
@@ -445,10 +448,11 @@ class ResourceTest(unittest.TestCase):
             query_parameter]
         self.register_urls()
         resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
-
-        School = resource.models.School
+        models = resource.testHTTP._models
+        User = models['User']
+        School = models['School']
         # Also test all None items are removed from array list
-        user = resource.models.User(id=42, schools=[School(name='s1'), None])
+        user = User(id=42, schools=[School(name='s1'), None])
         future = resource.testHTTPPost(body=user)
         self.assertEqual(
             json.dumps({'id': 42, 'schools': [{'name': 's1'}]}),
@@ -468,7 +472,7 @@ class ResourceTest(unittest.TestCase):
             "$ref": "School"}
         self.register_urls()
         resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
-        user = resource.models.User(id=42)
+        user = resource.testHTTP._models['User'](id=42)
         future = resource.testHTTPPost(body=user)
         # Removed the 'school': None - key, value pair from dict
         self.assertEqual(
@@ -490,7 +494,7 @@ class ResourceTest(unittest.TestCase):
         self.response["models"]["User"]["required"] = ["school"]
         self.register_urls()
         resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
-        user = resource.models.User(id=42)
+        user = resource.testHTTP._models['User'](id=42)
         self.assertRaises(AttributeError, resource.testHTTPPost, body=user)
 
     #################################################
