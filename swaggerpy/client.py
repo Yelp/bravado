@@ -27,19 +27,19 @@ log = logging.getLogger(__name__)
 SWAGGER_SPEC_CACHE_TTL = 300
 
 
-class CachedClient(object):
+class CacheEntry(object):
     """A wrapper to client which stores the last updated timestamp and the
-    timeout in secs. when the client expires
+    ttl in seconds when the client expires
 
     :param swagger_client: Core SwaggerClient instance
     :type swagger_client: :class:`SwaggerClient`
-    :param timeout: timeout in seconds after which the client expires
-    :type timeout: int
+    :param ttl: time-to-live in seconds after which the client expires
+    :type  ttl: int
     """
 
-    def __init__(self, swagger_client, timeout, timestamp=None):
+    def __init__(self, swagger_client, ttl, timestamp=None):
         self.swagger_client = swagger_client
-        self.timeout = timeout
+        self.ttl = ttl
         self.timestamp = timestamp or time.time()
 
     def is_stale(self, timestamp=None):
@@ -47,7 +47,7 @@ class CachedClient(object):
         :return: true/false whether client is now stale
         """
         current_time = timestamp or time.time()
-        return self.timestamp + self.timeout < current_time
+        return self.timestamp + self.ttl < current_time
 
 
 class SwaggerClientFactory(object):
@@ -65,7 +65,7 @@ class SwaggerClientFactory(object):
         :param api_docs_url: url for swagger api docs used to build the client
         :type api_docs_url: str
         :param timeout: (optional) Timeout after which api-docs is stale
-        :return: :class:`CachedClient`
+        :return: :class:`CacheEntry`
         """
         # Construct cache key out of api_docs_url
         if isinstance(api_docs_url, (str, unicode)):
@@ -93,7 +93,7 @@ class SwaggerClientFactory(object):
             client = SwaggerClient.from_resource_listing(
                 api_docs_url, *args, **kwargs)
 
-        return CachedClient(client, ttl)
+        return CacheEntry(client, ttl)
 
 
 factory = None
@@ -107,19 +107,19 @@ def get_client(*args, **kwargs):
         This factory method uses a global which maintains the state of swagger
         client. Use :class:`SwaggerClientFactory` if you want more control.
 
-    To change the freshness timeout, simply pass an argument: timeout=<sec.>
+    To change the freshness timeout, simply pass an argument: ttl=<seconds>
 
-    To remove the caching functionality, pass: timeout=0
+    To remove the caching functionality, pass: ttl=0
 
     .. note::
 
        It is OKAY to call get_swagger_client(...) again and again.
-       Do not assign a reference to the generated client and make it long
+       Do not keep a reference to the generated client and make it long
        lived as it strips out the refetching functionality.
 
     :param api_docs_url: url for swagger api docs used to build the client
-    :type api_docs_url: str
-    :param timeout: (optional) Timeout in secs. after which api-docs is stale
+    :type  api_docs_url: str
+    :param ttl: (optional) Timeout in secs. after which api-docs is stale
     :return: :class:`SwaggerClient`
     """
     global factory

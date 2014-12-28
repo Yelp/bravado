@@ -52,16 +52,16 @@ class SwaggerClientFactoryTest(unittest.TestCase):
     def setUp(self):
         client.factory = None
 
-    def test_is_stale_returns_true_after_timeout(self):
+    def test_is_stale_returns_true_after_ttl(self):
         with patch('swaggerpy.client.SwaggerClient'):
             with patch('swaggerpy.client.time.time', side_effect=[1]):
-                client.get_client('test', timeout=10)
+                client.get_client('test', ttl=10)
                 self.assertTrue(client.factory.cache['test'].is_stale(12))
 
-    def test_is_stale_returns_false_before_timeout(self):
+    def test_is_stale_returns_false_before_ttl(self):
         with patch('swaggerpy.client.SwaggerClient'):
             with patch('swaggerpy.client.time.time', side_effect=[1]):
-                client.get_client('test', timeout=10)
+                client.get_client('test', ttl=10)
                 self.assertFalse(client.factory.cache['test'].is_stale(11))
 
     def test_build_cached_client_with_proper_values(self):
@@ -70,9 +70,9 @@ class SwaggerClientFactoryTest(unittest.TestCase):
             with patch('swaggerpy.client.time.time',
                        side_effect=[1, 1]):
                 client_object = SwaggerClientFactory().build_cached_client(
-                    'test', timeout=3)
+                    'test', ttl=3)
                 self.assertEqual('foo', client_object.swagger_client)
-                self.assertEqual(3, client_object.timeout)
+                self.assertEqual(3, client_object.ttl)
                 self.assertEqual(1, client_object.timestamp)
 
     def test_builds_client_if_not_present_in_cache(self):
@@ -84,14 +84,14 @@ class SwaggerClientFactoryTest(unittest.TestCase):
     def test_builds_client_if_present_in_cache_but_stale(self):
         with patch('swaggerpy.client.time.time', side_effect=[2, 3]):
             client.factory = client.SwaggerClientFactory()
-            client.factory.cache['foo'] = client.CachedClient('bar', 0, 1)
+            client.factory.cache['foo'] = client.CacheEntry('bar', 0, 1)
             with patch('swaggerpy.client.SwaggerClient.from_url') as mock:
                 client.get_client('foo')
                 mock.assert_called_once_with('foo')
 
     def test_uses_the_cache_if_present_and_fresh(self):
         client.factory = client.SwaggerClientFactory()
-        client.factory.cache['foo'] = client.CachedClient('bar', 2, 1)
+        client.factory.cache['foo'] = client.CacheEntry('bar', 2, 1)
         with patch('swaggerpy.client.SwaggerClient') as mock:
             with patch('swaggerpy.client.time.time', side_effect=[2]):
                 client.get_client('foo')
