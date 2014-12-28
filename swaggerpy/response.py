@@ -29,16 +29,16 @@ def handle_response_errors(e):
 class HTTPFuture(object):
 
     """A future which inputs HTTP params"""
-    def __init__(self, http_client, request_params, postHTTP_callback):
+    def __init__(self, http_client, request_params, post_receive):
         """Kicks API call for Asynchronous client
 
         :param http_client: instance with public methods:
             start_request(), wait(), cancel()
         :param request_params: dict containing API request parameters
-        :param postHTTP_callback: function to callback on finish
+        :param post_receive: function to callback on finish
         """
         self._http_client = http_client
-        self._postHTTP_callback = postHTTP_callback
+        self._post_receive = post_receive
         # A request is an EventualResult in the async client
         self._request = self._http_client.start_request(request_params)
         self._cancelled = False
@@ -77,7 +77,7 @@ class HTTPFuture(object):
         except Exception as e:
             handle_response_errors(e)
 
-        return self._postHTTP_callback(response, **kwargs)
+        return self._post_receive(response, **kwargs)
 
 
 def post_receive(response, type_, models, **kwargs):

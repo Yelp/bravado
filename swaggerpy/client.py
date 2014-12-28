@@ -1,6 +1,56 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2013, Digium, Inc.
-# Copyright (c) 2014, Yelp, Inc.
+"""
+The :class:`SwaggerClient` provides an interface for making API calls based on
+a swagger spec, and returns responses of python objects which build from the
+API response.
+
+
+Structure Diagram::
+
+        +---------------------+           +---------------------+
+        |                     |           |                     |
+        |    SwaggerClient    <-----------+  SwaggerClientCache |
+        |                     |   caches  |                     |
+        +------+--------------+           +---------------------+
+               |
+               |  has many
+               |
+        +------v--------------+
+        |                     |
+        |     Resource        +------------------+
+        |                     |                  |
+        +------+--------------+         has many |
+               |                                 |
+               |  has many                       |
+               |                                 |
+        +------v--------------+           +------v--------------+
+        |                     |           |                     |
+        |     Operation       |           |    SwaggerModel     |
+        |                     |           |                     |
+        +------+--------------+           +---------------------+
+               |
+               |  uses
+               |
+        +------v--------------+
+        |                     |
+        |     HttpClient      |
+        |                     |
+        +---------------------+
+
+
+To get a client with caching
+
+.. code-block:: python
+
+        client = swaggerpy.client.get_client(api_docs_url)
+
+without caching
+
+.. code-block:: python
+
+        client = swaggerpy.client.SwaggerClient.from_url(api_docs_url)
+
+"""
 
 from swaggerpy.compat import json
 import logging
@@ -131,7 +181,7 @@ class Operation(object):
         request['headers'] = _request_options.get('headers', {}) or {}
 
         for param in self._json.get(u'parameters', []):
-            value = kwargs.pop(param[u'name'], default_value(param))
+            value = kwargs.pop(param[u'name'], param.get('defaultValue'))
             validate_and_add_params_to_request(param, value, request,
                                                self._models)
         if kwargs:
@@ -197,26 +247,15 @@ class Resource(object):
         return u"%s(%s)" % (self.__class__.__name__, self._json[u'name'])
 
     def __getattr__(self, item):
-        """Promote operations to be object fields.
-
-        :param item: Name of the attribute to get.
-        :rtype: Resource
-        :return: Resource object.
         """
-        op = self._get_operation(item)
+        :param item: name of the :class:`Operation` to return
+        :return: an :class:`Operation`
+        """
+        op = self._operations.get(item)
         if not op:
             raise AttributeError(u"Resource '%s' has no operation '%s'" %
                                  (self._get_name(), item))
         return op
-
-    def _get_operation(self, name):
-        """Gets the operation with the given nickname.
-
-        :param name: Nickname of the operation.
-        :rtype:  Operation
-        :return: Operation, or None if not found.
-        """
-        return self._operations.get(name)
 
     def _get_name(self):
         """Returns the name of this resource.
@@ -344,19 +383,10 @@ class SwaggerClient(object):
         :param item: Name of the attribute to get.
         :return: Resource object.
         """
-        resource = self._get_resource(item)
+        resource = self._resources.get(item)
         if not resource:
             raise AttributeError(u"API has no resource '%s'" % item)
         return resource
-
-    def _get_resource(self, name):
-        """Gets a Swagger resource by name.
-
-        :param name: Name of the resource to get
-        :rtype: Resource
-        :return: Resource, or None if not found.
-        """
-        return self._resources.get(name)
 
     def __dir__(self):
         return self._resources.keys()
@@ -375,7 +405,7 @@ def append_name_to_api(api_entry):
     return dict(api_entry, name=name)
 
 
-def _build_param_string(param):
+def _build_param_docstring(param):
     """Builds param docstring from the param dict
 
     :param param: data to create docstring from
@@ -427,7 +457,7 @@ def create_operation_docstring(json_):
     if json_["parameters"]:
         docstring += "Args:\n"
         for param in json_["parameters"]:
-            docstring += _build_param_string(param)
+            docstring += _build_param_docstring(param)
     if json_.get('type'):
         docstring += "Returns:\n\t%s\n" % json_["type"]
     if json_.get('responseMessages'):
@@ -483,13 +513,6 @@ def add_param_to_req(param, value, request):
     else:
         raise AssertionError(
             u"Unsupported Parameter type: %s" % param_req_type)
-
-
-def default_value(param):
-    """Fetches if present for param, returns None otherwise
-    Validation of the type happens later.
-    """
-    return param.get('defaultValue')
 
 
 def validate_and_add_params_to_request(param, value, request, models):
