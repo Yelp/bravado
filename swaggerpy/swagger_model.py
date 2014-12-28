@@ -14,6 +14,7 @@ import os
 import urllib
 import urlparse
 from copy import copy
+from operator import methodcaller
 
 import swagger_type
 from swaggerpy.http_client import SynchronousHttpClient
@@ -152,15 +153,15 @@ class Loader(object):
     :type  processors: list of SwaggerProcessor
     """
 
-    def __init__(self, http_client, processors=None,
-                 api_doc_request_headers=None):
+    def __init__(
+            self,
+            http_client,
+            processors=None,
+            api_doc_request_headers=None):
         self.http_client = http_client
         self.api_doc_request_headers = api_doc_request_headers or {}
-        if processors is None:
-            processors = []
-            # always go through the validation processor first
-        # noinspection PyTypeChecker
-        self.processors = [ValidationProcessor()] + processors
+        # always go through the validation processor first
+        self.processors = [ValidationProcessor()] + (processors or [])
 
     def load_resource_listing(self, resources_url, base_url=None):
         """Load a resource listing, loading referenced API declarations.
@@ -177,14 +178,12 @@ class Loader(object):
                             declarations. If not specified, 'basePath' from the
                             resource listing is used.
         """
-
-        # Load the resource listing
         resource_listing = json_load_url(
             self.http_client,
             resources_url,
-            self.api_doc_request_headers,
-        )
-        self.pre_process_resource_listing(resource_listing)
+            self.api_doc_request_headers)
+
+        map(methodcaller('pre_apply', resource_listing), self.processors)
 
         # Some extra data only known about at load time
         resource_listing[u'url'] = resources_url
@@ -195,7 +194,7 @@ class Loader(object):
             self.load_api_declaration(base_url, api)
 
         # Now that the raw object model has been loaded, apply the processors
-        self.process_resource_listing(resource_listing)
+        map(methodcaller('apply', resource_listing), self.processors)
         return resource_listing
 
     def load_api_declaration(self, base_url, api_dict):
@@ -208,6 +207,7 @@ class Loader(object):
         :param base_url: Base URL to load from
         :param api_dict: api object from resource listing.
         """
+        # TODO: is this url used anywhere?
         api_dict[u'url'] = urlparse.urljoin(
             base_url + u'/', api_dict['path'].strip(u'/'))
         api_dict[u'api_declaration'] = json_load_url(
@@ -215,22 +215,6 @@ class Loader(object):
             api_dict[u'url'],
             self.api_doc_request_headers,
         )
-
-    def pre_process_resource_listing(self, resources):
-        """Apply pre-processors before loading resource listing.
-
-        :param resources: Resource listing to process.
-        """
-        for processor in self.processors:
-            processor.pre_apply(resources)
-
-    def process_resource_listing(self, loaded_resources):
-        """Apply processors to a resource listing.
-
-        :param resources: Resource listing to process.
-        """
-        for processor in self.processors:
-            processor.apply(loaded_resources)
 
 
 def validate_required_fields(json, required_fields, context):
@@ -282,29 +266,10 @@ def load_url(resource_listing_url, http_client=None, processors=None,
     :return: Processed object model from
     :raise: IOError, URLError: On error reading api-docs.
     """
-    if http_client is None:
-        http_client = SynchronousHttpClient()
-
+    http_client = http_client or SynchronousHttpClient()
     loader = Loader(http_client=http_client, processors=processors)
     return loader.load_resource_listing(
         resource_listing_url, base_url=base_url)
-
-
-def load_json(resource_listing, http_client=None, processors=None):
-    """Process a resource listing that has already been parsed.
-
-    :param resource_listing: Parsed resource listing.
-    :type  resource_listing: dict
-    :param http_client:
-    :param processors:
-    :return: Processed resource listing.
-    """
-    if http_client is None:
-        http_client = SynchronousHttpClient()
-
-    loader = Loader(http_client=http_client, processors=processors)
-    loader.process_resource_listing(resource_listing)
-    return resource_listing
 
 
 def create_model_type(model):
