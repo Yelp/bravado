@@ -1,15 +1,5 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-#
-# Copyright (c) 2013, Digium, Inc.
-#
-
-"""Swagger client tests.
-"""
-
 import datetime
-from swaggerpy.compat import json
 import unittest
 
 import httpretty
@@ -19,7 +9,7 @@ from mock import Mock, patch
 from swaggerpy import client
 from swaggerpy.client import (
     SwaggerClient,
-    SwaggerClientFactory,
+    SwaggerClientCache,
     validate_and_add_params_to_request,
 )
 
@@ -45,33 +35,35 @@ class ValidateParamTest(unittest.TestCase):
             mock_add_param.assert_called_once_with(param, False, mock_request)
 
 
-class SwaggerClientFactoryTest(unittest.TestCase):
+class SwaggerClientCacheTest(unittest.TestCase):
     """Test the proxy wrapper of SwaggerClient
     """
 
     def setUp(self):
-        client.factory = None
+        client.cache = None
+
+    tearDown = setUp
 
     def test_is_stale_returns_true_after_ttl(self):
         with patch('swaggerpy.client.SwaggerClient'):
             with patch('swaggerpy.client.time.time', side_effect=[1]):
                 client.get_client('test', ttl=10)
-                self.assertTrue(client.factory.cache['test'].is_stale(12))
+                self.assertTrue(client.cache.cache["('test',){}"].is_stale(12))
 
     def test_is_stale_returns_false_before_ttl(self):
         with patch('swaggerpy.client.SwaggerClient'):
             with patch('swaggerpy.client.time.time', side_effect=[1]):
                 client.get_client('test', ttl=10)
-                self.assertFalse(client.factory.cache['test'].is_stale(11))
+                self.assertFalse(client.cache.cache["('test',){}"].is_stale(11))
 
-    def test_build_cached_client_with_proper_values(self):
+    def test_build_cached_item_with_proper_values(self):
         with patch('swaggerpy.client.SwaggerClient.from_url') as mock:
             mock.return_value = 'foo'
             with patch('swaggerpy.client.time.time',
                        side_effect=[1, 1]):
-                client_object = SwaggerClientFactory().build_cached_client(
-                    'test', ttl=3)
-                self.assertEqual('foo', client_object.swagger_client)
+                cache = SwaggerClientCache()
+                client_object = client.CacheEntry(cache.build_client('test'), 3)
+                self.assertEqual('foo', client_object.item)
                 self.assertEqual(3, client_object.ttl)
                 self.assertEqual(1, client_object.timestamp)
 
@@ -83,15 +75,15 @@ class SwaggerClientFactoryTest(unittest.TestCase):
 
     def test_builds_client_if_present_in_cache_but_stale(self):
         with patch('swaggerpy.client.time.time', side_effect=[2, 3]):
-            client.factory = client.SwaggerClientFactory()
-            client.factory.cache['foo'] = client.CacheEntry('bar', 0, 1)
+            client.cache = client.SwaggerClientCache()
+            client.cache.cache['foo'] = client.CacheEntry('bar', 0, 1)
             with patch('swaggerpy.client.SwaggerClient.from_url') as mock:
                 client.get_client('foo')
                 mock.assert_called_once_with('foo')
 
     def test_uses_the_cache_if_present_and_fresh(self):
-        client.factory = client.SwaggerClientFactory()
-        client.factory.cache['foo'] = client.CacheEntry('bar', 2, 1)
+        client.cache = client.SwaggerClientCache()
+        client.cache.cache['foo'] = client.CacheEntry('bar', 2, 1)
         with patch('swaggerpy.client.SwaggerClient') as mock:
             with patch('swaggerpy.client.time.time', side_effect=[2]):
                 client.get_client('foo')
@@ -101,24 +93,32 @@ class SwaggerClientFactoryTest(unittest.TestCase):
 class GetClientMethodTest(unittest.TestCase):
 
     def setUp(self):
-        client.factory = None
+        client.cache = None
+
+    tearDown = setUp
 
     def test_get_client_gets_atleast_one_param(self):
         self.assertRaises(TypeError, client.get_client)
 
     def test_get_client_instantiates_new_factory_if_not_set(self):
-        with patch.object(SwaggerClientFactory, '__call__') as mock_method:
+        with patch.object(SwaggerClientCache, '__call__') as mock_method:
             mock_method.client.return_value = None
             client.get_client()
-            self.assertTrue(client.factory is not None)
+            self.assertTrue(client.cache is not None)
 
     def test_get_client_uses_instantiated_factory_second_time(self):
-        with patch.object(SwaggerClientFactory, '__call__') as mock_method:
+        with patch.object(SwaggerClientCache, '__call__') as mock_method:
             mock_method.client.return_value = None
-            client.factory = SwaggerClientFactory()
-            prev_factory = client.factory
+            client.cache = SwaggerClientCache()
+            prev_factory = client.cache
             client.get_client()
-            self.assertTrue(prev_factory is client.factory)
+            self.assertTrue(prev_factory is client.cache)
+
+    def test_cache_of_a_json_dict(self):
+        client.get_client({'swaggerVersion': '1.2', 'apis': []})
+        self.assertTrue(
+            repr(({'swaggerVersion': '1.2', 'apis': []},)) + "{}" in
+            client.cache.cache)
 
 
 class ClientTest(unittest.TestCase):
@@ -126,14 +126,6 @@ class ClientTest(unittest.TestCase):
     def test_get_client_allows_json_dict(self):
         client_stub = client.get_client(self.resource_listing)
         self.assertTrue(isinstance(client_stub, client.SwaggerClient))
-
-    # TODO: what is this testing? clear() is necessary because other tests
-    # can run first and pollute the cache. should fix
-    def test_serialization_of_json_dict(self):
-        client.factory.cache.clear()
-        client.get_client({'swaggerVersion': '1.2', 'apis': []})
-        self.assertTrue({'swaggerVersion': '1.2', 'apis': []} in
-                        map(json.loads, client.factory.cache.keys()))
 
     @httpretty.activate
     def test_bad_operation(self):

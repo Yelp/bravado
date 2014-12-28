@@ -28,75 +28,55 @@ SWAGGER_SPEC_CACHE_TTL = 300
 
 
 class CacheEntry(object):
-    """A wrapper to client which stores the last updated timestamp and the
-    ttl in seconds when the client expires
+    """An entry in the cache. Each item has it's own ttl.
 
-    :param swagger_client: Core SwaggerClient instance
-    :type swagger_client: :class:`SwaggerClient`
+    :param item: the item to cache
     :param ttl: time-to-live in seconds after which the client expires
     :type  ttl: int
     """
 
-    def __init__(self, swagger_client, ttl, timestamp=None):
-        self.swagger_client = swagger_client
+    def __init__(self, item, ttl, timestamp=None):
+        self.item = item
         self.ttl = ttl
         self.timestamp = timestamp or time.time()
 
     def is_stale(self, timestamp=None):
         """Checks if the instance has become stale
-        :return: true/false whether client is now stale
+        :return: True if the cache item is stale, False otherwise
         """
         current_time = timestamp or time.time()
         return self.timestamp + self.ttl < current_time
 
 
-class SwaggerClientFactory(object):
-    """Factory to store swagger clients and refetch the api-docs if the client
+class SwaggerClientCache(object):
+    """Cache to store swagger clients and refetch the api-docs if the client
     becomes stale
     """
 
     def __init__(self):
         self.cache = dict()
 
-    # TODO: cache resource listing instead of client
-    # TODO: cache needs to use all of args/kwargs
-    def __call__(self, api_docs_url, *args, **kwargs):
-        """
-        :param api_docs_url: url for swagger api docs used to build the client
-        :type api_docs_url: str
-        :param timeout: (optional) Timeout after which api-docs is stale
-        :return: :class:`CacheEntry`
-        """
-        # Construct cache key out of api_docs_url
-        if isinstance(api_docs_url, (str, unicode)):
-            key = api_docs_url
-        else:
-            key = json.dumps(api_docs_url)
+    def __contains__(self, key):
+        return key in self.cache and not self.cache[key].is_stale()
 
-        if (key not in self.cache or self.cache[key].is_stale()):
-            self.cache[key] = self.build_cached_client(
-                api_docs_url, *args, **kwargs
-            )
-
-        return self.cache[key]
-
-    def build_cached_client(self, api_docs_url, *args, **kwargs):
-        """Builds a fresh SwaggerClient and stores it in a namedtuple which
-        contains its created timestamp and timeout in seconds
-        """
+    def __call__(self, *args, **kwargs):
         # timeout is backwards compatible with 0.7
         ttl = kwargs.pop('ttl', kwargs.pop('timeout', SWAGGER_SPEC_CACHE_TTL))
+        key = repr(args) + repr(kwargs)
 
-        if isinstance(api_docs_url, (str, unicode)):
-            client = SwaggerClient.from_url(api_docs_url, *args, **kwargs)
-        else:
-            client = SwaggerClient.from_resource_listing(
-                api_docs_url, *args, **kwargs)
+        if key not in self:
+            self.cache[key] = CacheEntry(
+                self.build_client(*args, **kwargs), ttl)
 
-        return CacheEntry(client, ttl)
+        return self.cache[key].item
+
+    def build_client(self, api_docs, *args, **kwargs):
+        if isinstance(api_docs, basestring):
+            return SwaggerClient.from_url(api_docs, *args, **kwargs)
+        return SwaggerClient.from_resource_listing(api_docs, *args, **kwargs)
 
 
-factory = None
+cache = None
 
 
 def get_client(*args, **kwargs):
@@ -105,7 +85,7 @@ def get_client(*args, **kwargs):
     .. note::
 
         This factory method uses a global which maintains the state of swagger
-        client. Use :class:`SwaggerClientFactory` if you want more control.
+        client. Use :class:`SwaggerClientCache` if you want more control.
 
     To change the freshness timeout, simply pass an argument: ttl=<seconds>
 
@@ -122,12 +102,12 @@ def get_client(*args, **kwargs):
     :param ttl: (optional) Timeout in secs. after which api-docs is stale
     :return: :class:`SwaggerClient`
     """
-    global factory
+    global cache
 
-    if factory is None:
-        factory = SwaggerClientFactory()
+    if cache is None:
+        cache = SwaggerClientCache()
 
-    return factory(*args, **kwargs).swagger_client
+    return cache(*args, **kwargs)
 
 
 class Operation(object):
