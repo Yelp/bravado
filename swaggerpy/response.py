@@ -80,12 +80,13 @@ class HTTPFuture(object):
         return self._postHTTP_callback(response, **kwargs)
 
 
-class SwaggerResponse(object):
-    """Converts the API json response to Python class models
+def post_receive(response, type_, models, **kwargs):
+    """Convert the response body to swagger models.
 
-    Example: ::
+    Example API Response
 
-        API Response
+    .. code-block:: python
+
             {
                 "id": 1,
                 "category": {
@@ -103,36 +104,33 @@ class SwaggerResponse(object):
                 "status": "available"
             }
 
-    SwaggerResponse: ::
+    SwaggerResponse:
+
+    ..code-block:: python
 
         Pet(category=Category(id=0L, name=u'chihuahua'),
             status=u'available', name=u'tommy',
             tags=[Tag(id=0L, name=u'cute')], photoUrls=[u''], id=1)
 
+    :param response: response body
+    :type response: dict
+    :param type_: expected swagger type
+    :type type_: str or unicode
+    :param models: namedtuple which maps complex type string to py type
+    :type models: namedtuple
     """
+    allow_null = kwargs.pop('allow_null', False)
 
-    def __init__(self, response, type_, models, **kwargs):
-        """Wrapper to check and construt swagger response instance from API response
+    if kwargs.pop('raw_response', False):
+        return response
 
-        :param response: JSON response
-        :type response: dict
-        :param type_: type against which the response is to be validated
-        :type type_: str or unicode
-        :param models: namedtuple which maps complex type string to py type
-        :type models: namedtuple
-        """
-        allow_null = kwargs.pop('allow_null', False)
-        raw_response = kwargs.pop('raw_response', False)
-
-        if raw_response:
-            self.swagger_object = response
-            return
-
-        response = SwaggerTypeCheck("Response", response, type_, models,
-                                    allow_null).value
-        self.swagger_object = SwaggerResponseConstruct(response,
-                                                       type_,
-                                                       models).create_object()
+    response = SwaggerTypeCheck(
+        "Response",
+        response,
+        type_,
+        models,
+        allow_null).value
+    return SwaggerResponseConstruct(response, type_, models).create_object()
 
 
 class SwaggerResponseConstruct(object):

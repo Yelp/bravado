@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
-#
 # Copyright (c) 2013, Digium, Inc.
 # Copyright (c) 2014, Yelp, Inc.
-#
-"""Swagger client library.
-"""
 
 from swaggerpy.compat import json
 import logging
@@ -18,7 +14,7 @@ from yelp_uri import urllib_utf8
 
 import swagger_type
 from swaggerpy.http_client import APP_JSON, SynchronousHttpClient
-from swaggerpy.response import HTTPFuture, SwaggerResponse
+from swaggerpy.response import HTTPFuture, post_receive
 from swaggerpy.swagger_model import create_model_type, Loader
 from swaggerpy.swagger_type import SwaggerTypeCheck
 
@@ -146,24 +142,20 @@ class Operation(object):
     def __call__(self, **kwargs):
         log.debug(u"%s?%r" % (
             self._json[u'nickname'],
-            urllib_utf8.urlencode(kwargs)
-        ))
+            urllib_utf8.urlencode(kwargs)))
         request = self._construct_request(**kwargs)
 
-        def py_model_convert_callback(response, **kwargs):
-            value = None
-            type_ = swagger_type.get_swagger_type(self._json)
-            # Assume status is OK,
-            # as exception would have been raised otherwise
-            # Validate the response if it is not empty.
-            if response.text:
-                # Validate and convert API response to Python model instance
-                value = SwaggerResponse(
-                    response.json(), type_, self._models,
-                    **kwargs).swagger_object
-            return value
-        return HTTPFuture(self._http_client,
-                          request, py_model_convert_callback)
+        def response_future(response, **kwargs):
+            # Assume status is OK, an exception would have been raised already
+            if not response.text:
+                return None
+
+            return post_receive(
+                response.json(),
+                swagger_type.get_swagger_type(self._json),
+                self._models,
+                **kwargs)
+        return HTTPFuture(self._http_client, request, response_future)
 
 
 class Resource(object):
@@ -193,6 +185,7 @@ class Resource(object):
     def _set_models(self):
         """Create namedtuple of model types created from 'api_declaration'
         """
+        # TODO: what, no
         models_dict = self._json['api_declaration'].get('models', {})
         models = namedtuple('models', models_dict.keys())
         keys_to_models = {}
