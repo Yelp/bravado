@@ -1,10 +1,5 @@
-.. swagger-py documentation master file, created by
-   sphinx-quickstart on Wed Oct 16 09:33:48 2013.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to swagger-py's documentation!
-======================================
+swagger-py documentation
+========================
 
 This project acts as a generic client library for services which follow *Swagger* schema.
 

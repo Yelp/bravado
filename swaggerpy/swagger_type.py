@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-
-#
-# Copyright (c) Yelp, Inc.
-#
-
 """Code to check the validity of swagger types and conversion to python types
 """
 
@@ -106,9 +101,10 @@ def extract_format(_type_format):
 
 
 def get_primitive_mapping(type_):
-    """returns Python type from swagger internal type string
+    """Returns the Python type from the swagger internal type string
+
     :param type_: swagger type, eg. integer, number:float
-    :type type_: str or unicode
+    :type  type_: str or unicode
     :rtype: type eg. int, string
     """
     if type_ in primitive_formats():
@@ -195,27 +191,31 @@ def swagger_to_py_type_string(type_):
 
 def get_swagger_type(json_):
     """Converts swagger type from json to swagger internal type
-    i.e. array is converted to array:array_type
-         format is converted to type:format
 
-    :param json_: dict containing type and rest of the data
-    :type json_: dict
-    :rtype: str or unicode
+    Example:
 
-    Example: ::
+    .. code-block:: python
 
-        ...
-        "type": "array",
-        "items": {
-             "type": "integer",
-             "format": "int64"
-             }
-        ...
+        {
+            ...
+            "type": "array",
+            "items": {
+                 "type": "integer",
+                 "format": "int64"
+                 }
+            ...
+        }
 
-    Returns: ::
+    Returns:
+
+    .. code-block:: python
 
         "array:integer:int64"
 
+
+    :param json_: dict containing type and rest of the data
+    :type  json_: dict
+    :rtype: str or unicode
     """
     type_ = json_.get('type')
     format_ = json_.get('format')

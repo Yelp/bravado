@@ -17,10 +17,6 @@ test:
 tests: test
 
 clean:
-	@rm -fr .tox
-	@rm -fr build
-	@rm -fr dist
-	@rm -fr docs/build
-	@rm -fr *.egg-info
+	@rm -rf .tox build dist docs/build *.egg-info
 	find . -name '*.pyc' -delete
 	find . -name '__pycache__' -delete
