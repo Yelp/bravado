@@ -243,6 +243,7 @@ class Resource(object):
     def from_api_doc(cls, api_doc, http_client, base_path, url_base=None):
         """
         :param api_doc: api doc which defines this resource
+        :type  api_doc: :class:`dict`
         :param http_client: a :class:`swaggerpy.http_client.HttpClient`
         :param base_path: base url to perform api requests. Used to override
                 the path provided in the api spec
