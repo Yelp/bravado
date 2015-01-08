@@ -18,8 +18,12 @@ from mock import Mock, patch
 
 from swaggerpy import client
 from swaggerpy.http_client import SynchronousHttpClient
-from swaggerpy.client import \
-    SwaggerClient, SwaggerClientFactory, validate_and_add_params_to_request
+from swaggerpy.client import (
+    add_param_to_req,
+    SwaggerClient,
+    SwaggerClientFactory,
+    validate_and_add_params_to_request,
+)
 
 
 class ValidateParamTest(unittest.TestCase):
@@ -341,6 +345,25 @@ class ClientTest(unittest.TestCase):
             ]
         }
         self.uut = SwaggerClient(self.resource_listing)
+
+
+class AddParamToReqTest(unittest.TestCase):
+
+    def test_url_path_parameter_with_spaces_quoted_correctly(self):
+        param_spec = {
+            "name": "review_id",
+            "description": "ID of review that needs to be updated",
+            "required": "true",
+            "type": "string",
+            "paramType": "path",
+            "allowMultiple": "false",
+        }
+        param_value = "${n} review"
+        request = {'url': 'http://foo.com/{review_id}'}
+
+        add_param_to_req(param_spec, param_value, request)
+
+        self.assertEqual(u"http://foo.com/%24%7Bn%7D%20review", request['url'])
 
 
 if __name__ == '__main__':
