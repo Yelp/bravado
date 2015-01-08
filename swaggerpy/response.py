@@ -7,8 +7,6 @@
 """Code for checking the response from API. If correct, it proceeds to convert
 it into Python class types
 """
-import sys
-
 import swagger_type
 from swagger_type import SwaggerTypeCheck
 from swaggerpy.exception import CancelledError
@@ -17,32 +15,30 @@ from swaggerpy.exception import CancelledError
 DEFAULT_TIMEOUT_S = 5.0
 
 
-def handle_response_errors(e, CustomError):
+# TODO: why is this messing with exceptions? It's not going to work with all
+# http clients
+def handle_response_errors(e):
     if hasattr(e, 'response') and hasattr(e.response, 'text'):
         # e.args is a tuple, change to list for modifications
         args = list(e.args)
         args[0] += (' : ' + e.response.text)
         e.args = tuple(args)
-    if CustomError:
-        error_msg = type(e).__name__ + " : " + str(e)
-        raise CustomError(error_msg), None, sys.exc_info()[2]
-    else:
-        raise e
+    raise e
 
 
 class HTTPFuture(object):
 
     """A future which inputs HTTP params"""
-    def __init__(self, http_client, request_params, postHTTP_callback):
+    def __init__(self, http_client, request_params, post_receive):
         """Kicks API call for Asynchronous client
 
         :param http_client: instance with public methods:
             start_request(), wait(), cancel()
         :param request_params: dict containing API request parameters
-        :param postHTTP_callback: function to callback on finish
+        :param post_receive: function to callback on finish
         """
         self._http_client = http_client
-        self._postHTTP_callback = postHTTP_callback
+        self._post_receive = post_receive
         # A request is an EventualResult in the async client
         self._request = self._http_client.start_request(request_params)
         self._cancelled = False
@@ -79,17 +75,18 @@ class HTTPFuture(object):
         try:
             response.raise_for_status()
         except Exception as e:
-            handle_response_errors(e, self._http_client.raise_with)
+            handle_response_errors(e)
 
-        return self._postHTTP_callback(response, **kwargs)
+        return self._post_receive(response, **kwargs)
 
 
-class SwaggerResponse(object):
-    """Converts the API json response to Python class models
+def post_receive(response, type_, models, **kwargs):
+    """Convert the response body to swagger models.
 
-    Example: ::
+    Example API Response
 
-        API Response
+    .. code-block:: python
+
             {
                 "id": 1,
                 "category": {
@@ -107,36 +104,33 @@ class SwaggerResponse(object):
                 "status": "available"
             }
 
-    SwaggerResponse: ::
+    SwaggerResponse:
+
+    ..code-block:: python
 
         Pet(category=Category(id=0L, name=u'chihuahua'),
             status=u'available', name=u'tommy',
             tags=[Tag(id=0L, name=u'cute')], photoUrls=[u''], id=1)
 
+    :param response: response body
+    :type response: dict
+    :param type_: expected swagger type
+    :type type_: str or unicode
+    :param models: namedtuple which maps complex type string to py type
+    :type models: namedtuple
     """
+    allow_null = kwargs.pop('allow_null', False)
 
-    def __init__(self, response, type_, models, **kwargs):
-        """Wrapper to check and construt swagger response instance from API response
+    if kwargs.pop('raw_response', False):
+        return response
 
-        :param response: JSON response
-        :type response: dict
-        :param type_: type against which the response is to be validated
-        :type type_: str or unicode
-        :param models: namedtuple which maps complex type string to py type
-        :type models: namedtuple
-        """
-        allow_null = kwargs.pop('allow_null', False)
-        raw_response = kwargs.pop('raw_response', False)
-
-        if raw_response:
-            self.swagger_object = response
-            return
-
-        response = SwaggerTypeCheck("Response", response, type_, models,
-                                    allow_null).value
-        self.swagger_object = SwaggerResponseConstruct(response,
-                                                       type_,
-                                                       models).create_object()
+    response = SwaggerTypeCheck(
+        "Response",
+        response,
+        type_,
+        models,
+        allow_null).value
+    return SwaggerResponseConstruct(response, type_, models).create_object()
 
 
 class SwaggerResponseConstruct(object):
@@ -185,7 +179,7 @@ class SwaggerResponseConstruct(object):
         """Creates empty instance of complex object and then fills it with attrs
         Assume the response is validated and correct
         """
-        klass = getattr(self._models, self._type)
+        klass = self._models[self._type]
         instance = klass()
         setattr(instance, '_raw', self._response)
         for key in self._response.keys():

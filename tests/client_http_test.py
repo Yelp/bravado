@@ -1,14 +1,8 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 #
 # Copyright (c) 2013, Digium, Inc.
 # Copyright (c) 2014, Yelp, Inc.
 #
-
-"""Swagger client tests.
-"""
-
 import unittest
 
 import httpretty
@@ -72,7 +66,7 @@ class ClientTest(unittest.TestCase):
             body=open('test-data/1.2/simple/simple1.json', 'r').read())
 
         # Default handlers for all swagger.py access
-        self.client = SwaggerClient(u'http://localhost/api-docs')
+        self.client = SwaggerClient.from_url(u'http://localhost/api-docs')
 
 
 if __name__ == '__main__':

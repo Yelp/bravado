@@ -1,94 +1,131 @@
 # -*- coding: utf-8 -*-
-#
-# Copyright (c) 2013, Digium, Inc.
-# Copyright (c) 2014, Yelp, Inc.
-#
-"""Swagger client library.
+"""
+The :class:`SwaggerClient` provides an interface for making API calls based on
+a swagger spec, and returns responses of python objects which build from the
+API response.
+
+
+Structure Diagram::
+
+        +---------------------+           +---------------------+
+        |                     |           |                     |
+        |    SwaggerClient    <-----------+  SwaggerClientCache |
+        |                     |   caches  |                     |
+        +------+--------------+           +---------------------+
+               |
+               |  has many
+               |
+        +------v--------------+
+        |                     |
+        |     Resource        +------------------+
+        |                     |                  |
+        +------+--------------+         has many |
+               |                                 |
+               |  has many                       |
+               |                                 |
+        +------v--------------+           +------v--------------+
+        |                     |           |                     |
+        |     Operation       |           |    SwaggerModel     |
+        |                     |           |                     |
+        +------+--------------+           +---------------------+
+               |
+               |  uses
+               |
+        +------v--------------+
+        |                     |
+        |     HttpClient      |
+        |                     |
+        +---------------------+
+
+
+To get a client with caching
+
+.. code-block:: python
+
+        client = swaggerpy.client.get_client(api_docs_url)
+
+without caching
+
+.. code-block:: python
+
+        client = swaggerpy.client.SwaggerClient.from_url(api_docs_url)
+
 """
 
-import json
+from swaggerpy.compat import json
 import logging
 import os.path
 import time
 import urllib
-from collections import namedtuple
-from datetime import datetime
 from urlparse import urlparse
 
 from yelp_uri import urllib_utf8
 
 import swagger_type
 from swaggerpy.http_client import APP_JSON, SynchronousHttpClient
-from swaggerpy.processors import SwaggerProcessor
-from swaggerpy.response import HTTPFuture, SwaggerResponse
-from swaggerpy.swagger_model import create_model_type, Loader
+from swaggerpy.response import HTTPFuture, post_receive
+from swaggerpy.swagger_model import (
+    Loader,
+    create_model_type,
+    is_file_scheme_uri,
+)
 from swaggerpy.swagger_type import SwaggerTypeCheck
 
 log = logging.getLogger(__name__)
 
-SWAGGER_SPEC_TIMEOUT_S = 300
+SWAGGER_SPEC_CACHE_TTL = 300
 
 
-class CachedClient(object):
-    """A wrapper to client which stores the last updated timestamp and the
-    timeout in secs. when the client expires
+class CacheEntry(object):
+    """An entry in the cache. Each item has it's own ttl.
 
-    :param swagger_client: Core SwaggerClient instance
-    :type swagger_client: :class:`SwaggerClient`
-    :param timeout: timeout in seconds after which the client expires
-    :type timeout: int
+    :param item: the item to cache
+    :param ttl: time-to-live in seconds after which the client expires
+    :type  ttl: int
     """
 
-    def __init__(self, swagger_client, timeout, timestamp=None):
-        self.swagger_client = swagger_client
-        self.timeout = timeout
+    def __init__(self, item, ttl, timestamp=None):
+        self.item = item
+        self.ttl = ttl
         self.timestamp = timestamp or time.time()
 
     def is_stale(self, timestamp=None):
         """Checks if the instance has become stale
-        :return: true/false whether client is now stale
+        :return: True if the cache item is stale, False otherwise
         """
         current_time = timestamp or time.time()
-        return self.timestamp + self.timeout < current_time
+        return self.timestamp + self.ttl < current_time
 
 
-class SwaggerClientFactory(object):
-    """Factory to store swagger clients and refetch the api-docs if the client
+class SwaggerClientCache(object):
+    """Cache to store swagger clients and refetch the api-docs if the client
     becomes stale
     """
 
     def __init__(self):
         self.cache = dict()
 
-    def __call__(self, api_docs_url, *args, **kwargs):
-        """
-        :param api_docs_url: url for swagger api docs used to build the client
-        :type api_docs_url: str
-        :param timeout: (optional) Timeout after which api-docs is stale
-        :return: :class:`CachedClient`
-        """
-        # Construct cache key out of api_docs_url
-        if isinstance(api_docs_url, (str, unicode)):
-            key = api_docs_url
-        else:
-            key = json.dumps(api_docs_url)
+    def __contains__(self, key):
+        return key in self.cache and not self.cache[key].is_stale()
 
-        if (key not in self.cache or self.cache[key].is_stale()):
-            self.cache[key] = self.build_cached_client(
-                api_docs_url, *args, **kwargs
-            )
+    def __call__(self, *args, **kwargs):
+        # timeout is backwards compatible with 0.7
+        ttl = kwargs.pop('ttl', kwargs.pop('timeout', SWAGGER_SPEC_CACHE_TTL))
+        key = repr(args) + repr(kwargs)
 
-        return self.cache[key]
+        if key not in self:
+            self.cache[key] = CacheEntry(
+                self.build_client(*args, **kwargs), ttl)
 
-    def build_cached_client(self, *args, **kwargs):
-        """Builds a fresh SwaggerClient and stores it in a namedtuple which
-        contains its created timestamp and timeout in seconds
-        """
-        timeout = kwargs.pop('timeout', SWAGGER_SPEC_TIMEOUT_S)
-        return CachedClient(SwaggerClient(*args, **kwargs), timeout)
+        return self.cache[key].item
+
+    def build_client(self, api_docs, *args, **kwargs):
+        if isinstance(api_docs, basestring):
+            return SwaggerClient.from_url(api_docs, *args, **kwargs)
+        return SwaggerClient.from_resource_listing(api_docs, *args, **kwargs)
 
 
-factory = None
+cache = None
 
 
 def get_client(*args, **kwargs):
@@ -97,49 +134,34 @@ def get_client(*args, **kwargs):
     .. note::
 
         This factory method uses a global which maintains the state of swagger
-        client. Use :class:`SwaggerClientFactory` if you want more control.
+        client. Use :class:`SwaggerClientCache` if you want more control.
 
-    To change the freshness timeout, simply pass an argument: timeout=<sec.>
+    To change the freshness timeout, simply pass an argument: ttl=<seconds>
 
-    To remove the caching functionality, pass: timeout=0
+    To remove the caching functionality, pass: ttl=0
 
     .. note::
 
        It is OKAY to call get_swagger_client(...) again and again.
-       Do not assign a reference to the generated client and make it long
+       Do not keep a reference to the generated client and make it long
        lived as it strips out the refetching functionality.
 
     :param api_docs_url: url for swagger api docs used to build the client
-    :type api_docs_url: str
-    :param timeout: (optional) Timeout in secs. after which api-docs is stale
+    :type  api_docs_url: str
+    :param ttl: (optional) Timeout in secs. after which api-docs is stale
     :return: :class:`SwaggerClient`
     """
-    global factory
+    global cache
 
-    if factory is None:
-        factory = SwaggerClientFactory()
+    if cache is None:
+        cache = SwaggerClientCache()
 
-    return factory(*args, **kwargs).swagger_client
-
-
-class ClientProcessor(SwaggerProcessor):
-    """Enriches swagger models for client processing.
-    """
-
-    def process_resource_listing_api(self, resources, listing_api, context):
-        """Add name to listing_api.
-
-        :param resources: Resource listing object
-        :param listing_api: ResourceApi object.
-        :type context: ParsingContext
-        :param context: Current context in the API.
-        """
-        name, ext = os.path.splitext(os.path.basename(listing_api[u'path']))
-        listing_api[u'name'] = name
+    return cache(*args, **kwargs)
 
 
 class Operation(object):
-    """Operation object.
+    """Perform a request by taking the kwargs passed to the call and
+    constructing an HTTP request.
     """
 
     def __init__(self, uri, operation, http_client, models):
@@ -162,7 +184,7 @@ class Operation(object):
         request['headers'] = _request_options.get('headers', {}) or {}
 
         for param in self._json.get(u'parameters', []):
-            value = kwargs.pop(param[u'name'], default_value(param))
+            value = kwargs.pop(param[u'name'], param.get('defaultValue'))
             validate_and_add_params_to_request(param, value, request,
                                                self._models)
         if kwargs:
@@ -173,203 +195,208 @@ class Operation(object):
     def __call__(self, **kwargs):
         log.debug(u"%s?%r" % (
             self._json[u'nickname'],
-            urllib_utf8.urlencode(kwargs)
-        ))
+            urllib_utf8.urlencode(kwargs)))
         request = self._construct_request(**kwargs)
 
-        def py_model_convert_callback(response, **kwargs):
-            value = None
-            type_ = swagger_type.get_swagger_type(self._json)
-            # Assume status is OK,
-            # as exception would have been raised otherwise
-            # Validate the response if it is not empty.
-            if response.text:
-                # Validate and convert API response to Python model instance
-                value = SwaggerResponse(
-                    response.json(), type_, self._models,
-                    **kwargs).swagger_object
-            return value
-        return HTTPFuture(self._http_client,
-                          request, py_model_convert_callback)
+        def response_future(response, **kwargs):
+            # Assume status is OK, an exception would have been raised already
+            if not response.text:
+                return None
+
+            return post_receive(
+                response.json(),
+                swagger_type.get_swagger_type(self._json),
+                self._models,
+                **kwargs)
+        return HTTPFuture(self._http_client, request, response_future)
+
+
+def build_models(model_dicts):
+    return dict(
+        (name, create_model_type(model_def))
+        for name, model_def in model_dicts.iteritems())
+
+
+def get_resource_url(base_path, url_base, resource_base_path):
+    if base_path:
+        return base_path
+
+    if url_base and resource_base_path.startswith('/'):
+        if is_file_scheme_uri(url_base):
+            raise AssertionError("Can't resolve relative resource urls with a "
+                                 " file:// url, for %s." % resource_base_path)
+        return url_base.rstrip('/') + resource_base_path
+
+    return resource_base_path
 
 
 class Resource(object):
     """Swagger resource, described in an API declaration.
-
-    :param resource: Resource model
-    :param http_client: HTTP client API
-    :param basePath: url path used for api-docs fetch
     """
 
-    def __init__(self, resource, http_client, base_path):
-        log.debug(u"Building resource '%s'" % resource[u'name'])
-        self._json = resource
-        decl = resource['api_declaration']
-        self._http_client = http_client
-        self._base_path = base_path
-        self._set_models()
-        self._operations = dict(
-            (oper['nickname'], self._build_operation(decl, api, oper))
-            for api in decl['apis']
-            for oper in api['operations'])
-        for key in self._operations:
-            setattr(self, key, self._get_operation(key))
+    def __init__(self, name, operations):
+        log.debug(u"Building resource '%s'" % name)
+        self._name = name
+        self._operations = operations
 
-    def _set_models(self):
-        """Create namedtuple of model types created from 'api_declaration'
+    @classmethod
+    def from_api_doc(cls, api_doc, http_client, base_path, url_base=None):
         """
-        models_dict = self._json['api_declaration'].get('models', {})
-        models = namedtuple('models', models_dict.keys())
-        keys_to_models = {}
-        for key in models_dict.keys():
-            keys_to_models[key] = create_model_type(models_dict[key])
-        self.models = models(**keys_to_models)
+        :param api_doc: api doc which defines this resource
+        :type  api_doc: :class:`dict`
+        :param http_client: a :class:`swaggerpy.http_client.HttpClient`
+        :param base_path: base url to perform api requests. Used to override
+                the path provided in the api spec
+        :param url_base: a url used as the base for resource definitions
+                that include a relative basePath
+        """
+        declaration = api_doc['api_declaration']
+        models = build_models(declaration.get('models', {}))
+
+        def build_operation(api_obj, operation):
+            log.debug(u"Building operation %s.%s" % (
+                api_obj.get('name'), operation['nickname']))
+
+            resource_base_path = declaration.get('basePath')
+            url = get_resource_url(base_path, url_base, resource_base_path)
+            url = url.rstrip('/') + api_obj['path']
+            return Operation(url, operation, http_client, models)
+
+        operations = dict(
+            (oper['nickname'], build_operation(api, oper))
+            for api in declaration['apis']
+            for oper in api['operations'])
+        return cls(api_doc['name'], operations)
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self._json[u'name'])
+        return u"%s(%s)" % (self.__class__.__name__, self._name)
 
     def __getattr__(self, item):
-        """Promote operations to be object fields.
-
-        :param item: Name of the attribute to get.
-        :rtype: Resource
-        :return: Resource object.
         """
-        op = self._get_operation(item)
+        :param item: name of the :class:`Operation` to return
+        :return: an :class:`Operation`
+        """
+        op = self._operations.get(item)
         if not op:
             raise AttributeError(u"Resource '%s' has no operation '%s'" %
-                                 (self._get_name(), item))
+                                 (self._name, item))
         return op
 
-    def _get_operation(self, name):
-        """Gets the operation with the given nickname.
-
-        :param name: Nickname of the operation.
-        :rtype:  Operation
-        :return: Operation, or None if not found.
-        """
-        return self._operations.get(name)
-
-    def _get_name(self):
-        """Returns the name of this resource.
-
-        Name is derived from the filename of the API declaration.
-
-        :return: Resource name.
-        """
-        return self._json.get(u'name')
-
-    def _build_operation(self, decl, api, operation):
-        """Build an operation object
-
-        :param decl: API declaration.
-        :param api: API entry.
-        :param operation: Operation.
-        """
-        log.debug(u"Building operation %s.%s" % (
-            self._get_name(), operation[u'nickname']))
-        # IF basePath starts with /, prepend it with stored host name
-        if decl[u'basePath'].startswith('/'):
-            if urlparse(self._base_path).scheme == 'file':
-                raise AssertionError(
-                    "Base path can't start with / for local specs," +
-                    " unless api_base_path is passed to SwaggerClient.")
-            base_path = self._base_path.strip('/') + decl['basePath']
-        else:
-            base_path = decl[u'basePath']
-        uri = base_path.strip('/') + api[u'path']
-        return Operation(uri, operation, self._http_client, self.models)
+    def __dir__(self):
+        return self._operations.keys()
 
 
 class SwaggerClient(object):
-    """Client object for accessing a Swagger-documented RESTful service.
+    """A client for accessing a Swagger-documented RESTful service.
 
-    :param url_or_resource: Either the parsed resource listing+API decls, or
-                            its URL.
-    :type url_or_resource: dict or str
-    :param http_client: HTTP client API
-    :type  http_client: HttpClient
-    :param api_base_path: Base Path for making API calls
-    :type api_base_path: str
-    :param raise_with: Custom Exception to wrap the response error with
-    :type raise_with: type
-    :params api_doc_request_headers: Headers to pass with api docs requests
-    :type: dict
+    :param api_url: the url for the swagger api docs, only used for the repr.
+    :param resources: a list of :Resource: objects used to perform requests
     """
 
-    def __init__(self, url_or_resource, http_client=None,
-                 api_base_path=None, raise_with=None,
-                 api_doc_request_headers=None):
-        if not http_client:
-            http_client = SynchronousHttpClient()
-        # Wrap http client's errors with raise_with
-        http_client.raise_with = raise_with
-        self._http_client = http_client
+    def __init__(self, api_url, resources):
+        self._api_url = api_url
+        self._resources = resources
 
-        # Load Swagger APIs always synchronously
+    @classmethod
+    def from_url(
+            cls,
+            url,
+            http_client=None,
+            api_base_path=None,
+            api_doc_request_headers=None):
+        """
+        Build a :class:`SwaggerClient` from a url to api docs describing the
+        api.
+
+        :param url: url pointing at the swagger api docs
+        :type url: str
+        :param http_client: an HTTP client used to perform requests
+        :type  http_client: :class:`swaggerpy.http_client.HttpClient`
+        :param api_base_path: a url, override the path used to make api requests
+        :type  api_base_path: str
+        :param api_doc_request_headers: Headers to pass with api docs requests
+        :type  api_doc_request_headers: dict
+        """
+        log.debug(u"Loading from %s" % url)
+        http_client = http_client or SynchronousHttpClient()
+
+        # TODO: better way to customize the request for api-docs, so we don't
+        # have to add new kwargs for everything
         loader = Loader(
-            SynchronousHttpClient(),
-            [ClientProcessor()],
-            api_doc_request_headers=api_doc_request_headers,
-        )
+            http_client,
+            api_doc_request_headers=api_doc_request_headers)
 
-        forced_api_base_path = api_base_path is not None
-        # url_or_resource can be url of type str,
-        # OR a dict of resource itself.
-        if isinstance(url_or_resource, (str, unicode)):
-            log.debug(u"Loading from %s" % url_or_resource)
-            self._api_docs = loader.load_resource_listing(url_or_resource)
-            parsed_uri = urlparse(url_or_resource)
-            if not api_base_path:
-                api_base_path = "{uri.scheme}://{uri.netloc}".format(
-                    uri=parsed_uri)
+        return cls.from_resource_listing(
+            loader.load_resource_listing(url),
+            http_client=http_client,
+            api_base_path=api_base_path,
+            url=url)
+
+    @classmethod
+    def from_resource_listing(
+            cls,
+            resource_listing,
+            http_client=None,
+            api_base_path=None,
+            url=None):
+        """
+        Build a :class:`SwaggerClient` from swagger api docs
+
+        :param resource_listing: a dict with a list of api definitions
+        :param http_client: an HTTP client used to perform requests
+        :type  http_client: :class:`swaggerpy.http_client.HttpClient`
+        :param api_base_path: a url, override the path used to make api requests
+        :type  api_base_path: str
+        :param api_doc_request_headers: Headers to pass with api docs requests
+        :type  api_doc_request_headers: dict
+        :param url: the url used to retrieve the resource listing
+        :type  url: str
+        """
+        url = url or resource_listing.get(u'url')
+        log.debug(u"Using resources from %s" % url)
+
+        if url:
+            url_base = "{uri.scheme}://{uri.netloc}".format(uri=urlparse(url))
         else:
-            log.debug(u"Loading from %s" % url_or_resource.get(u'url'))
-            self._api_docs = url_or_resource
-            loader.process_resource_listing(self._api_docs)
-            if not api_base_path:
-                api_base_path = url_or_resource.get(u'url')
+            url_base = None
 
-        self._resources = {}
-        for resource in self._api_docs[u'apis']:
-            if forced_api_base_path and 'api_declaration' in resource:
-                resource['api_declaration']['basePath'] = api_base_path
-            self._resources[resource[u'name']] = Resource(
-                resource, http_client, api_base_path)
-            setattr(self, resource['name'],
-                    self._get_resource(resource[u'name']))
+        resources = build_resources_from_spec(
+            http_client or SynchronousHttpClient(),
+            map(append_name_to_api, resource_listing['apis']),
+            api_base_path,
+            url_base)
+        return cls(url, resources)
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__,
-                            self._api_docs.get(u'url'))
+        return u"%s(%s)" % (self.__class__.__name__, self._api_url)
 
     def __getattr__(self, item):
-        """Promote resource objects to be client fields.
-
-        :param item: Name of the attribute to get.
-        :return: Resource object.
         """
-        resource = self._get_resource(item)
+        :param item: name of the resource to return
+        :return: :class:`Resource`
+        """
+        resource = self._resources.get(item)
         if not resource:
             raise AttributeError(u"API has no resource '%s'" % item)
         return resource
 
-    def close(self):
-        """Close the SwaggerClient, and underlying resources.
-        """
-        self._http_client.close()
-
-    def _get_resource(self, name):
-        """Gets a Swagger resource by name.
-
-        :param name: Name of the resource to get
-        :rtype: Resource
-        :return: Resource, or None if not found.
-        """
-        return self._resources.get(name)
+    def __dir__(self):
+        return self._resources.keys()
 
 
-def _build_param_string(param):
+def build_resources_from_spec(http_client, apis, api_base_path, url_base):
+    return dict(
+        (api_doc['name'],
+         Resource.from_api_doc(api_doc, http_client, api_base_path, url_base))
+        for api_doc in apis)
+
+
+def append_name_to_api(api_entry):
+    name, ext = os.path.splitext(os.path.basename(api_entry['path']))
+    return dict(api_entry, name=name)
+
+
+def _build_param_docstring(param):
     """Builds param docstring from the param dict
 
     :param param: data to create docstring from
@@ -421,7 +448,7 @@ def create_operation_docstring(json_):
     if json_["parameters"]:
         docstring += "Args:\n"
         for param in json_["parameters"]:
-            docstring += _build_param_string(param)
+            docstring += _build_param_docstring(param)
     if json_.get('type'):
         docstring += "Returns:\n\t%s\n" % json_["type"]
     if json_.get('responseMessages'):
@@ -479,13 +506,6 @@ def add_param_to_req(param, value, request):
             u"Unsupported Parameter type: %s" % param_req_type)
 
 
-def default_value(param):
-    """Fetches if present for param, returns None otherwise
-    Validation of the type happens later.
-    """
-    return param.get('defaultValue')
-
-
 def validate_and_add_params_to_request(param, value, request, models):
     """Validates if a required param is given
     And wraps 'add_param_to_req' to populate a valid request
@@ -515,6 +535,7 @@ def validate_and_add_params_to_request(param, value, request, models):
         if not swagger_type.is_primitive(type_):
             raise TypeError("Param %s in query can only be primitive" % pname)
 
+    # TODO: this needs to move to add_param_to_req, and change logic
     # Allow lists for query params even if type is primitive
     if isinstance(value, list) and param_req_type == 'query':
         type_ = swagger_type.ARRAY + swagger_type.COLON + type_
@@ -538,11 +559,6 @@ def validate_and_add_params_to_request(param, value, request, models):
 def stringify_body(value):
     """Json dump the value to string if not already in string
     """
-    if value and not isinstance(value, (str, unicode)):
-        # datetime is not json serializable, use str()
-        if isinstance(value, (datetime,)):
-            return str(value)
-        else:
-            return json.dumps(value)
-    else:
+    if not value or isinstance(value, basestring):
         return value
+    return json.dumps(value)

@@ -25,7 +25,7 @@ Sample 'resource_listing' this test intends to check is like:
 }
 """
 
-import json
+from swaggerpy.compat import json
 import unittest
 
 import httpretty
@@ -52,14 +52,14 @@ class ResourceListingTest(unittest.TestCase):
     def test_error_on_wrong_swagger_version(self):
         self.response["swaggerVersion"] = "XYZ"
         self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient,
+        self.assertRaises(SwaggerError, SwaggerClient.from_url,
                           u'http://localhost/api-docs')
 
     @httpretty.activate
     def test_error_on_missing_path_in_apis(self):
         self.response['apis'] = [{}]
         self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient,
+        self.assertRaises(SwaggerError, SwaggerClient.from_url,
                           u'http://localhost/api-docs')
 
     @httpretty.activate
@@ -67,7 +67,7 @@ class ResourceListingTest(unittest.TestCase):
         def iterate_test(field):
             self.response.pop(field)
             self.register_urls()
-            self.assertRaises(SwaggerError, SwaggerClient,
+            self.assertRaises(SwaggerError, SwaggerClient.from_url,
                               u'http://localhost/api-docs')
         [iterate_test(field) for field in ('swaggerVersion', 'apis')]
 
@@ -77,7 +77,7 @@ class ResourceListingTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/api-docs/api",
             body='{"swaggerVersion": "1.2", "basePath": "/", "apis":[]}')
-        self.client = SwaggerClient(u'http://localhost/api-docs')
+        self.client = SwaggerClient.from_url(u'http://localhost/api-docs')
         self.assertNotEqual(None, self.client)
 
 
