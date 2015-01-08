@@ -54,6 +54,10 @@ class AsynchronousHttpClient(http_client.HttpClient):
                 urllib_utf8.urlencode(request_params.get('params', []), True))
         }
 
+        # crochet only supports bytes for the url
+        if isinstance(request_params['uri'], unicode):
+            request_params['uri'] = request_params['uri'].encode('utf-8')
+
         crochet.setup()
         return self.fetch_deferred(request_params)
 
