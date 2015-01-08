@@ -46,11 +46,12 @@ class AsynchronousHttpClient(http_client.HttpClient):
         """
         # request_params has mandatory: method, url, params, headers
         request_params = {
-            'method': str(request_params['method']),
+            'method': str(request_params.get('method', 'GET')),
             'bodyProducer': stringify_body(request_params),
-            'headers': listify_headers(request_params['headers']),
-            'uri': str(request_params['url'] + '?' + urllib_utf8.urlencode(
-                request_params['params'], True))
+            'headers': listify_headers(request_params.get('headers', {})),
+            'uri': '%s?%s' % (
+                request_params['url'],
+                urllib_utf8.urlencode(request_params.get('params', []), True))
         }
 
         crochet.setup()
@@ -167,7 +168,7 @@ class _HTTPBodyFetcher(Protocol):
 def stringify_body(request_params):
     """Wraps the data using twisted FileBodyProducer
     """
-    headers = request_params['headers']
+    headers = request_params.get('headers', {})
     if 'files' in request_params:
         data = create_multipart_content(request_params, headers)
     elif headers.get('content-type') == http_client.APP_FORM:
