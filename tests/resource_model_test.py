@@ -456,7 +456,7 @@ class ResourceTest(unittest.TestCase):
         future = resource.testHTTPPost(body=user)
         self.assertEqual(
             json.dumps({'id': 42, 'schools': [{'name': 's1'}]}),
-            future._request.data,
+            future._request.request.data,
         )
 
     @httpretty.activate
@@ -477,7 +477,7 @@ class ResourceTest(unittest.TestCase):
         # Removed the 'school': None - key, value pair from dict
         self.assertEqual(
             json.dumps({'id': 42, 'schools': []}),
-            future._request.data,
+            future._request.request.data,
         )
 
     @httpretty.activate

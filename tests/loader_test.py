@@ -31,12 +31,8 @@ class LoaderTest(unittest.TestCase):
         self.assertTrue(uut['processed'])
 
     def test_missing(self):
-        try:
-            load_file(
-                'test-data/1.2/missing_resource/resources.json')
-            self.fail("Expected load failure b/c of missing file")
-        except IOError:
-            pass
+        with self.assertRaises(IOError):
+            load_file('test-data/1.2/missing_resource/resources.json')
 
 
 if __name__ == '__main__':

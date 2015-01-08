@@ -124,7 +124,7 @@ class AsyncHttpClientTest(unittest.TestCase):
                 1, 2, 3, 4, 5, 6)
             async_client = swaggerpy.async_http_client.AsynchronousHttpClient()
             eventual = async_client.start_request(req)
-            resp = async_client.wait(eventual, 5)
+            resp = eventual.wait(timeout=5)
             self.assertEqual(2, resp.code)
 
     def test_url_encode_async_request(self):
@@ -164,7 +164,7 @@ class AsyncHttpClientTest(unittest.TestCase):
         url = 'http://example.com/api-docs'
         async_client = swaggerpy.async_http_client.AsynchronousHttpClient()
         # ugly mock, but this method runs in a twisted reactor which is
-        #difficult to mock
+        # difficult to mock
         async_client.fetch_deferred = Mock()
 
         async_client.start_request(dict(url=url))

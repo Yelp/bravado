@@ -25,11 +25,11 @@ class SynchronousClientTestCase(unittest.TestCase):
             httpretty.GET, "http://swagger.py/client-test",
             body='expected')
 
-        uut = SynchronousHttpClient()
+        client = SynchronousHttpClient()
         params = self._default_params()
         params['params'] = {'foo': 'bar'}
 
-        resp = uut.wait(uut.start_request(params))
+        resp = client.start_request(params).wait()
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -42,11 +42,11 @@ class SynchronousClientTestCase(unittest.TestCase):
             httpretty.GET, "http://swagger.py/client-test",
             body='expected')
 
-        uut = SynchronousHttpClient()
+        client = SynchronousHttpClient()
         params = self._default_params()
         params['params'] = {'foo': u'酒場'}
 
-        resp = uut.wait(uut.start_request(params))
+        resp = client.start_request(params).wait()
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -59,12 +59,12 @@ class SynchronousClientTestCase(unittest.TestCase):
             httpretty.POST, "http://swagger.py/client-test",
             body='expected', content_type='text/json')
 
-        uut = SynchronousHttpClient()
+        client = SynchronousHttpClient()
         params = self._default_params()
         params['data'] = {'foo': 'bar'}
         params['method'] = 'POST'
 
-        resp = uut.wait(uut.start_request(params))
+        resp = client.start_request(params).wait()
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -80,12 +80,12 @@ class SynchronousClientTestCase(unittest.TestCase):
             httpretty.GET, "http://swagger.py/client-test",
             body='expected')
 
-        uut = SynchronousHttpClient()
-        uut.set_basic_auth("swagger.py", 'unit', 'peekaboo')
+        client = SynchronousHttpClient()
+        client.set_basic_auth("swagger.py", 'unit', 'peekaboo')
         params = self._default_params()
         params['params'] = {'foo': 'bar'}
 
-        resp = uut.wait(uut.start_request(params))
+        resp = client.start_request(params).wait()
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -100,12 +100,12 @@ class SynchronousClientTestCase(unittest.TestCase):
             httpretty.GET, "http://swagger.py/client-test",
             body='expected')
 
-        uut = SynchronousHttpClient()
-        uut.set_api_key("swagger.py", 'abc123', param_name='test')
+        client = SynchronousHttpClient()
+        client.set_api_key("swagger.py", 'abc123', param_name='test')
         params = self._default_params()
         params['params'] = {'foo': 'bar'}
 
-        resp = uut.wait(uut.start_request(params))
+        resp = client.start_request(params).wait()
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -118,13 +118,13 @@ class SynchronousClientTestCase(unittest.TestCase):
             httpretty.GET, "http://hackerz.py",
             body='expected')
 
-        uut = SynchronousHttpClient()
-        uut.set_basic_auth("swagger.py", 'unit', 'peekaboo')
+        client = SynchronousHttpClient()
+        client.set_basic_auth("swagger.py", 'unit', 'peekaboo')
         params = self._default_params()
         params['params'] = {'foo': 'bar'}
         params['url'] = 'http://hackerz.py'
 
-        resp = uut.wait(uut.start_request(params))
+        resp = client.start_request(params).wait()
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)

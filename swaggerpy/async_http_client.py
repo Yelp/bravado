@@ -57,26 +57,6 @@ class AsynchronousHttpClient(http_client.HttpClient):
         crochet.setup()
         return self.fetch_deferred(request_params)
 
-    def cancel(self, eventual):
-        """Try to cancel the API call using crochet's cancel() API
-
-        :param eventual: Crochet EventualResult
-        """
-        eventual.cancel()
-
-    def wait(self, eventual, timeout=None):
-        """Requests based implemention with timeout
-
-        :param eventual: Crochet EventualResult
-        :param timeout: time in seconds to wait for response.
-
-        :return: Requests response
-        :rtype:  requests.Response
-        """
-        # finished_resp is returned here
-        # TODO(#44): catch known exceptions and raise common exceptions
-        return eventual.wait(timeout)
-
     @crochet.run_in_reactor
     def fetch_deferred(self, request_params):
         """The main core to start the reacter and run the API
