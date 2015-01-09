@@ -194,3 +194,6 @@ class SynchronousEventual(object):
         return self.session.send(
             self.session.prepare_request(request),
             timeout=timeout)
+
+    def cancel(self):
+        pass

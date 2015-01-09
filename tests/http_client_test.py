@@ -1,15 +1,18 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import base64
 import unittest
 
 import httpretty
+import mock
+import pytest
+import requests
 
-from swaggerpy.http_client import SynchronousHttpClient
+from swaggerpy.http_client import (
+    SynchronousHttpClient,
+    SynchronousEventual,
+)
 
 
-# noinspection PyDocstring
 class SynchronousClientTestCase(unittest.TestCase):
 
     def _default_params(self):
@@ -134,5 +137,32 @@ class SynchronousClientTestCase(unittest.TestCase):
             httpretty.last_request().headers.get('Authorization') is None)
 
 
-if __name__ == '__main__':
-    unittest.main()
+@pytest.fixture
+def mock_session():
+    return mock.create_autospec(requests.Session)
+
+
+@pytest.fixture
+def mock_request():
+    return mock.create_autospec(
+        requests.Request,
+        method='GET',
+        url='http://example.com',
+        params={})
+
+
+class TestSynchronousEventual(object):
+
+    def test_wait(self, mock_session, mock_request):
+        timeout = 20
+        sync_eventual = SynchronousEventual(mock_session, mock_request)
+        assert sync_eventual.wait(timeout) == mock_session.send.return_value
+
+        mock_session.send.assert_called_once_with(
+            mock_session.prepare_request.return_value,
+            timeout=timeout)
+
+    def test_cancel(self, mock_session, mock_request):
+        sync_eventual = SynchronousEventual(mock_session, mock_request)
+        # no-op cancel, test that is supports the interface
+        sync_eventual.cancel()
