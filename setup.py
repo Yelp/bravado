@@ -27,14 +27,6 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python",
     ],
-    tests_require=[
-        "bottle",
-        "coverage",
-        "httpretty",
-        "pytest",
-        "ordereddict",
-        "tissue",
-    ],
     install_requires=[
         "crochet",
         "python-dateutil",
