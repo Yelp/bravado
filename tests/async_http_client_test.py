@@ -124,7 +124,7 @@ class AsyncHttpClientTest(unittest.TestCase):
                 1, 2, 3, 4, 5, 6)
             async_client = swaggerpy.async_http_client.AsynchronousHttpClient()
             eventual = async_client.start_request(req)
-            resp = async_client.wait(eventual, 5)
+            resp = eventual.wait(timeout=5)
             self.assertEqual(2, resp.code)
 
     def test_url_encode_async_request(self):
@@ -159,6 +159,22 @@ class AsyncHttpClientTest(unittest.TestCase):
                     'uri': 'foo?bar=%E9%85%92%E5%A0%B4'
                 }
             )
+
+    def test_start_request_with_only_url(self):
+        url = 'http://example.com/api-docs'
+        async_client = swaggerpy.async_http_client.AsynchronousHttpClient()
+        # ugly mock, but this method runs in a twisted reactor which is
+        # difficult to mock
+        async_client.fetch_deferred = Mock()
+
+        async_client.start_request(dict(url=url))
+
+        async_client.fetch_deferred.assert_called_once_with({
+            'headers': Headers({}),
+            'method': 'GET',
+            'bodyProducer': None,
+            'uri': url + '?',
+        })
 
 
 class HTTPBodyFetcherTest(unittest.TestCase):

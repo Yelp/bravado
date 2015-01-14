@@ -46,35 +46,20 @@ class AsynchronousHttpClient(http_client.HttpClient):
         """
         # request_params has mandatory: method, url, params, headers
         request_params = {
-            'method': str(request_params['method']),
+            'method': str(request_params.get('method', 'GET')),
             'bodyProducer': stringify_body(request_params),
-            'headers': listify_headers(request_params['headers']),
-            'uri': str(request_params['url'] + '?' + urllib_utf8.urlencode(
-                request_params['params'], True))
+            'headers': listify_headers(request_params.get('headers', {})),
+            'uri': '%s?%s' % (
+                request_params['url'],
+                urllib_utf8.urlencode(request_params.get('params', []), True))
         }
+
+        # crochet only supports bytes for the url
+        if isinstance(request_params['uri'], unicode):
+            request_params['uri'] = request_params['uri'].encode('utf-8')
 
         crochet.setup()
         return self.fetch_deferred(request_params)
-
-    def cancel(self, eventual):
-        """Try to cancel the API call using crochet's cancel() API
-
-        :param eventual: Crochet EventualResult
-        """
-        eventual.cancel()
-
-    def wait(self, eventual, timeout=None):
-        """Requests based implemention with timeout
-
-        :param eventual: Crochet EventualResult
-        :param timeout: time in seconds to wait for response.
-
-        :return: Requests response
-        :rtype:  requests.Response
-        """
-        # finished_resp is returned here
-        # TODO(#44): catch known exceptions and raise common exceptions
-        return eventual.wait(timeout)
 
     @crochet.run_in_reactor
     def fetch_deferred(self, request_params):
@@ -167,7 +152,7 @@ class _HTTPBodyFetcher(Protocol):
 def stringify_body(request_params):
     """Wraps the data using twisted FileBodyProducer
     """
-    headers = request_params['headers']
+    headers = request_params.get('headers', {})
     if 'files' in request_params:
         data = create_multipart_content(request_params, headers)
     elif headers.get('content-type') == http_client.APP_FORM:

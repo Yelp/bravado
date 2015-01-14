@@ -7,7 +7,7 @@
 
 """Code for handling the base Swagger API model.
 """
-
+import contextlib
 import logging
 from swaggerpy.compat import json
 import os
@@ -111,37 +111,49 @@ def is_file_scheme_uri(url):
     return urlparse.urlparse(url).scheme == u'file'
 
 
-def json_load_file(url):
-    # if '.json' isnt given, add it by default
-    if not url.endswith('.json'):
-        url += '.json'
-    # requests can't handle file: scheme URLs
-    fp = urllib.urlopen(url)
-    try:
-        return json.load(fp)
-    finally:
-        fp.close()
+class FileEventual(object):
+    """Adaptor which supports the :class:`crochet.EventualResult`
+    interface for retrieving api docs from a local file.
+    """
+
+    class FileResponse(object):
+
+        def __init__(self, data):
+            self.data = data
+
+        def json(self):
+            return self.data
+
+    def __init__(self, path):
+        self.path = path
+
+    def wait(self, timeout=None):
+        path = self.path
+        if not path.endswith('.json'):
+            path += '.json'
+        with contextlib.closing(urllib.urlopen(path)) as fp:
+            return self.FileResponse(json.load(fp))
+
+    def cancel(self):
+        pass
 
 
-def json_load_url(http_client, url, headers):
+def start_request(http_client, url, headers):
     """Download and parse JSON from a URL.
 
-    :param http_client: HTTP client interface.
-    :type  http_client: http_client.HttpClient
-    :param url: URL for JSON to parse
-    :return: Parsed JSON dict
+    :param http_client: a :class:`swaggerpy.http_client.HttpClient`
+    :param url: url for api docs
+    :return: an object with a :func`wait` method which returns the api docs
     """
     if is_file_scheme_uri(url):
-        return json_load_file(url)
-    else:
-        request_params = {
-            'method': 'GET',
-            'url': url,
-            'headers': headers,
-        }
-        req = http_client.start_request(request_params)
-        resp = http_client.wait(req, timeout=None)
-        return resp.json()
+        return FileEventual(url)
+
+    request_params = {
+        'method': 'GET',
+        'url': url,
+        'headers': headers,
+    }
+    return http_client.start_request(request_params)
 
 
 def load_resource_listing(
@@ -163,40 +175,34 @@ def load_resource_listing(
     base_url = base_url or url
     processor = ValidationProcessor()
 
-    resource_listing = json_load_url(
-            self.http_client,
-            resources_url,
-            self.api_doc_request_headers)
+
+    resource_listing = start_request(
+        http_client,
+        url,
+        self.api_doc_request_headers,
+    ).wait().json()
 
     processor.pre_apply(resource_listing)
 
     # TODO: is this url used ?
     resource_listing['url'] = url 
 
-    for api in resource_listing.get('apis'):
-        self.load_api_declaration(base_url, api)
+    self.load_api_declarations(base_url, resource_listing)
 
     processor.apply(resource_listing)
     return resource_listing
 
-def load_api_declaration(self, base_url, api_dict):
-        """Load an API declaration file.
+    def load_api_declarations(self, base_url, resource_listing):
+        def get_eventual_for_api(api):
+            return start_request(
+                self.http_client,
+                urlparse.urljoin(base_url + '/', api['path'].strip('/')),
+                self.api_doc_request_headers)
 
-        api_dict is modified with the results of the load:
-         * ['url'] = URL api declaration was loaded from
-         * ['api_declaration'] = Parsed results of the load
-
-        :param base_url: Base URL to load from
-        :param api_dict: api object from resource listing.
-        """
-        # TODO: is this url used anywhere?
-        api_dict[u'url'] = urlparse.urljoin(
-            base_url + u'/', api_dict['path'].strip(u'/'))
-        api_dict[u'api_declaration'] = json_load_url(
-            self.http_client,
-            api_dict[u'url'],
-            self.api_doc_request_headers,
-        )
+        # Start all async requests
+        eventuals = map(get_eventual_for_api, resource_listing['apis'])
+        for api, eventual in zip(resource_listing['apis'], eventuals):
+            api['api_declaration'] = eventual.wait().json()
 
 
 def validate_required_fields(json, required_fields, context):
@@ -215,6 +221,8 @@ def validate_required_fields(json, required_fields, context):
             u"Missing fields: %s" % u', '.join(missing_fields), context)
 
 
+# TODO: Adding the file scheme here just adds complexity to start_request()
+# Is there a better way to handle this?
 def load_file(resource_listing_file, http_client=None):
     """Loads a resource listing file.
 

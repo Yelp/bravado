@@ -456,7 +456,7 @@ class ResourceTest(unittest.TestCase):
         future = resource.testHTTPPost(body=user)
         self.assertEqual(
             json.dumps({'id': 42, 'schools': [{'name': 's1'}]}),
-            future._request.data,
+            future._request.request.data,
         )
 
     @httpretty.activate
@@ -476,8 +476,9 @@ class ResourceTest(unittest.TestCase):
         future = resource.testHTTPPost(body=user)
         # Removed the 'school': None - key, value pair from dict
         self.assertEqual(
-            {'id': 42, 'schools': []},
-            json.loads(future._request.data))
+            json.dumps({'id': 42, 'schools': []}),
+            future._request.request.data,
+        )
 
     @httpretty.activate
     def test_error_on_finding_required_attributes_none(self):

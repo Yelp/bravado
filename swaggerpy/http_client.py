@@ -72,30 +72,6 @@ class HttpClient(object):
         raise NotImplementedError(
             u"%s: Method not implemented", self.__class__.__name__)
 
-    def wait(self, request, timeout=None):
-        """Calls the API with request_params and waits till timeout.
-
-        :param request: request object from the client
-            In the Sync client this is a requests.Request
-            In the Async client this is a crochet.EventualResult
-        :param timeout: time in seconds to wait for response.
-        :type timeout: float
-
-        :return: Implementation specific response
-        """
-        raise NotImplementedError(
-            u"%s: Method not implemented", self.__class__.__name__)
-
-    def cancel(self, request):
-        """Cancels the API call
-
-        :param request: request object from the client
-            In the Sync client this is a requests.Request
-            In the Async client this is a crochet.EventualResult
-        """
-        raise NotImplementedError(
-            u"%s: Method not implemented", self.__class__.__name__)
-
 
 class Authenticator(object):
     """Authenticates requests.
@@ -180,7 +156,9 @@ class SynchronousHttpClient(HttpClient):
         :return: request
         :rtype: requests.Request
         """
-        return self.authenticated_request(request_params)
+        return SynchronousEventual(
+            self.session,
+            self.authenticated_request(request_params))
 
     def set_basic_auth(self, host, username, password):
         self.authenticator = BasicAuthenticator(
@@ -190,27 +168,6 @@ class SynchronousHttpClient(HttpClient):
         self.authenticator = ApiKeyAuthenticator(
             host=host, api_key=api_key, param_name=param_name)
 
-    def wait(self, request, timeout=None):
-        """Requests based implemention with timeout.
-
-        :param request: requests.Request
-        :param timeout: time in seconds to wait for response.
-
-        :return: Requests response
-        :rtype:  requests.Response
-        """
-        log.debug(u"%s %s(%r)", request.method, request.url, request.params)
-        return self.session.send(
-            self.session.prepare_request(request),
-            timeout=timeout,
-        )
-
-    def cancel(self, request):
-        """Nothing to be done for Synchronous client
-
-        :param request: requests.Request
-        """
-
     def authenticated_request(self, request_params):
         return self.apply_authentication(requests.Request(**request_params))
 
@@ -219,3 +176,24 @@ class SynchronousHttpClient(HttpClient):
             return self.authenticator.apply(request)
 
         return request
+
+
+class SynchronousEventual(object):
+    """An adapter which supports the :class:`crochet.EventualResult` interface
+    for the :class:`SynchronousHttpClient` class.
+    """
+
+    def __init__(self, session, request):
+        self.session = session
+        self.request = request
+
+    def wait(self, timeout=None):
+        """Perform the request."""
+        request = self.request
+        log.debug(u"%s %s(%r)", request.method, request.url, request.params)
+        return self.session.send(
+            self.session.prepare_request(request),
+            timeout=timeout)
+
+    def cancel(self):
+        pass

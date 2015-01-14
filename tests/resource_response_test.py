@@ -57,13 +57,12 @@ is validated against its type 'Pet' which is defined like so:
 import datetime
 from swaggerpy.compat import json
 import unittest
-from mock import patch, Mock
+from mock import Mock
 
 import httpretty
 from dateutil.tz import tzutc
 from requests import HTTPError
 
-from swaggerpy.async_http_client import AsynchronousHttpClient
 from swaggerpy.client import SwaggerClient
 from swaggerpy.exception import CancelledError
 from swaggerpy.processors import SwaggerError
@@ -72,9 +71,8 @@ from swaggerpy.response import HTTPFuture
 
 class HTTPFutureTest(unittest.TestCase):
     def setUp(self):
-        http_client = Mock()
-        http_client.start_request.return_value = None
-        self.future = HTTPFuture(http_client, None, None)
+        self.http_client = Mock()
+        self.future = HTTPFuture(self.http_client, None, None)
 
     def test_raise_cancelled_error_if_result_is_called_after_cancel(self):
         self.future.cancel()
@@ -83,20 +81,11 @@ class HTTPFutureTest(unittest.TestCase):
     def test_cancelled_returns_true_if_called_after_cancel(self):
         self.future.cancel()
         self.assertTrue(self.future.cancelled())
+        response = self.http_client.start_request.return_value
+        response.cancel.assert_called_once_with()
 
     def test_cancelled_returns_false_if_called_before_cancel(self):
         self.assertFalse(self.future.cancelled())
-
-    def test_cancel_for_async_cancels_the_api_call(self):
-        http_client = AsynchronousHttpClient()
-        with patch.object(AsynchronousHttpClient, 'cancel') as mock_cancel:
-            with patch.object(
-                AsynchronousHttpClient, 'start_request',
-            ) as mock_start_request:
-                self.future = HTTPFuture(http_client, None, None)
-                self.future.cancel()
-                mock_start_request.assert_called_once_with(None)
-                mock_cancel.assert_called_once_with(self.future._request)
 
 
 class ResourceResponseTest(unittest.TestCase):
