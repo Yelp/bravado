@@ -42,17 +42,17 @@ To get a client with caching
 
 .. code-block:: python
 
-        client = swaggerpy.client.get_client(api_docs_url)
+        client = bravado.client.get_client(api_docs_url)
 
 without caching
 
 .. code-block:: python
 
-        client = swaggerpy.client.SwaggerClient.from_url(api_docs_url)
+        client = bravado.client.SwaggerClient.from_url(api_docs_url)
 
 """
 
-from swaggerpy.compat import json
+from bravado.compat import json
 import logging
 import os.path
 import time
@@ -62,14 +62,14 @@ from urlparse import urlparse
 from yelp_uri import urllib_utf8
 
 import swagger_type
-from swaggerpy.http_client import APP_JSON, SynchronousHttpClient
-from swaggerpy.response import HTTPFuture, post_receive
-from swaggerpy.swagger_model import (
+from bravado.http_client import APP_JSON, SynchronousHttpClient
+from bravado.response import HTTPFuture, post_receive
+from bravado.swagger_model import (
     Loader,
     create_model_type,
     is_file_scheme_uri,
 )
-from swaggerpy.swagger_type import SwaggerTypeCheck
+from bravado.swagger_type import SwaggerTypeCheck
 
 log = logging.getLogger(__name__)
 
@@ -244,7 +244,7 @@ class Resource(object):
         """
         :param api_doc: api doc which defines this resource
         :type  api_doc: :class:`dict`
-        :param http_client: a :class:`swaggerpy.http_client.HttpClient`
+        :param http_client: a :class:`bravado.http_client.HttpClient`
         :param base_path: base url to perform api requests. Used to override
                 the path provided in the api spec
         :param url_base: a url used as the base for resource definitions
@@ -311,7 +311,7 @@ class SwaggerClient(object):
         :param url: url pointing at the swagger api docs
         :type url: str
         :param http_client: an HTTP client used to perform requests
-        :type  http_client: :class:`swaggerpy.http_client.HttpClient`
+        :type  http_client: :class:`bravado.http_client.HttpClient`
         :param api_base_path: a url, override the path used to make api requests
         :type  api_base_path: str
         :param api_doc_request_headers: Headers to pass with api docs requests
@@ -344,7 +344,7 @@ class SwaggerClient(object):
 
         :param resource_listing: a dict with a list of api definitions
         :param http_client: an HTTP client used to perform requests
-        :type  http_client: :class:`swaggerpy.http_client.HttpClient`
+        :type  http_client: :class:`bravado.http_client.HttpClient`
         :param api_base_path: a url, override the path used to make api requests
         :type  api_base_path: str
         :param api_doc_request_headers: Headers to pass with api docs requests

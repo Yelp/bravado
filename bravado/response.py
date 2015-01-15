@@ -9,7 +9,7 @@ it into Python class types
 """
 import swagger_type
 from swagger_type import SwaggerTypeCheck
-from swaggerpy.exception import CancelledError
+from bravado.exception import CancelledError
 
 
 DEFAULT_TIMEOUT_S = 5.0

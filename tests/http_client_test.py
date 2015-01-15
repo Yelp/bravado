@@ -6,7 +6,7 @@ import unittest
 
 import httpretty
 
-from swaggerpy.http_client import SynchronousHttpClient
+from bravado.http_client import SynchronousHttpClient
 
 
 # noinspection PyDocstring

@@ -1,5 +1,5 @@
 
-from swaggerpy import version
+from bravado import version
 
 # -- General configuration -----------------------------------------------------
 
@@ -21,8 +21,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'swagger-py'
-copyright = u'2013, Digium, Inc.; 2014, Yelp, Inc'
+project = u'bravado'
+copyright = u'2013, Digium, Inc.; 2014-2015, Yelp, Inc'
 
 exclude_patterns = []
 
@@ -35,7 +35,7 @@ html_theme = 'sphinxdoc'
 
 html_static_path = ['_static']
 
-htmlhelp_basename = 'swagger-pydoc'
+htmlhelp_basename = 'bravado-pydoc'
 
 
 intersphinx_mapping = {

@@ -9,15 +9,15 @@
 """
 
 import logging
-from swaggerpy.compat import json
+from bravado.compat import json
 import os
 import urllib
 import urlparse
 from copy import copy
 
 import swagger_type
-from swaggerpy.http_client import SynchronousHttpClient
-from swaggerpy.processors import SwaggerProcessor, SwaggerError
+from bravado.http_client import SynchronousHttpClient
+from bravado.processors import SwaggerProcessor, SwaggerError
 
 SWAGGER_VERSIONS = [u"1.2"]
 

@@ -6,8 +6,8 @@ import httpretty
 import requests
 from mock import Mock, patch
 
-from swaggerpy import client
-from swaggerpy.client import (
+from bravado import client
+from bravado.client import (
     add_param_to_req,
     SwaggerClient,
     SwaggerClientCache,
@@ -28,7 +28,7 @@ class ValidateParamTest(unittest.TestCase):
         }
         mock_request = Mock('requests.Request', autospec=True)
 
-        with patch('swaggerpy.client.add_param_to_req') as mock_add_param:
+        with patch('bravado.client.add_param_to_req') as mock_add_param:
             validate_and_add_params_to_request(param, None, mock_request, [])
             assert not mock_add_param.called
 
@@ -46,21 +46,21 @@ class SwaggerClientCacheTest(unittest.TestCase):
     tearDown = setUp
 
     def test_is_stale_returns_true_after_ttl(self):
-        with patch('swaggerpy.client.SwaggerClient'):
-            with patch('swaggerpy.client.time.time', side_effect=[1]):
+        with patch('bravado.client.SwaggerClient'):
+            with patch('bravado.client.time.time', side_effect=[1]):
                 client.get_client('test', ttl=10)
                 self.assertTrue(client.cache.cache["('test',){}"].is_stale(12))
 
     def test_is_stale_returns_false_before_ttl(self):
-        with patch('swaggerpy.client.SwaggerClient'):
-            with patch('swaggerpy.client.time.time', side_effect=[1]):
+        with patch('bravado.client.SwaggerClient'):
+            with patch('bravado.client.time.time', side_effect=[1]):
                 client.get_client('test', ttl=10)
                 self.assertFalse(client.cache.cache["('test',){}"].is_stale(11))
 
     def test_build_cached_item_with_proper_values(self):
-        with patch('swaggerpy.client.SwaggerClient.from_url') as mock:
+        with patch('bravado.client.SwaggerClient.from_url') as mock:
             mock.return_value = 'foo'
-            with patch('swaggerpy.client.time.time',
+            with patch('bravado.client.time.time',
                        side_effect=[1, 1]):
                 cache = SwaggerClientCache()
                 client_object = client.CacheEntry(cache.build_client('test'), 3)
@@ -69,24 +69,24 @@ class SwaggerClientCacheTest(unittest.TestCase):
                 self.assertEqual(1, client_object.timestamp)
 
     def test_builds_client_if_not_present_in_cache(self):
-        with patch('swaggerpy.client.SwaggerClient.from_url') as mock:
-            with patch('swaggerpy.client.time.time', side_effect=[1]):
+        with patch('bravado.client.SwaggerClient.from_url') as mock:
+            with patch('bravado.client.time.time', side_effect=[1]):
                 client.get_client('foo')
                 mock.assert_called_once_with('foo')
 
     def test_builds_client_if_present_in_cache_but_stale(self):
-        with patch('swaggerpy.client.time.time', side_effect=[2, 3]):
+        with patch('bravado.client.time.time', side_effect=[2, 3]):
             client.cache = client.SwaggerClientCache()
             client.cache.cache['foo'] = client.CacheEntry('bar', 0, 1)
-            with patch('swaggerpy.client.SwaggerClient.from_url') as mock:
+            with patch('bravado.client.SwaggerClient.from_url') as mock:
                 client.get_client('foo')
                 mock.assert_called_once_with('foo')
 
     def test_uses_the_cache_if_present_and_fresh(self):
         client.cache = client.SwaggerClientCache()
         client.cache.cache['foo'] = client.CacheEntry('bar', 2, 1)
-        with patch('swaggerpy.client.SwaggerClient') as mock:
-            with patch('swaggerpy.client.time.time', side_effect=[2]):
+        with patch('bravado.client.SwaggerClient') as mock:
+            with patch('bravado.client.time.time', side_effect=[2]):
                 client.get_client('foo')
                 assert not mock.called
 
