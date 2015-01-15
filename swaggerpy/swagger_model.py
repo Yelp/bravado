@@ -26,6 +26,7 @@ SWAGGER_VERSIONS = [u"1.2"]
 log = logging.getLogger(__name__)
 
 
+# TODO: replace with swagger_schema_validator
 class ValidationProcessor(SwaggerProcessor):
     """A processor that validates the Swagger model.
     """
@@ -138,21 +139,21 @@ class FileEventual(object):
         pass
 
 
-def start_request(http_client, url, headers):
+def start_request(http_client, url, request_options):
     """Download and parse JSON from a URL.
 
     :param http_client: a :class:`swaggerpy.http_client.HttpClient`
     :param url: url for api docs
+    :param request_options: additional fields to send with the request
     :return: an object with a :func`wait` method which returns the api docs
     """
     if is_file_scheme_uri(url):
         return FileEventual(url)
 
-    request_params = {
-        'method': 'GET',
-        'url': url,
-        'headers': headers,
-    }
+    request_params = dict(
+        method='GET',
+        url=url,
+        **request_options)
     return http_client.start_request(request_params)
 
 
@@ -175,34 +176,31 @@ def load_resource_listing(
     base_url = base_url or url
     processor = ValidationProcessor()
 
+    def get_eventual_for_api(api):
+        return start_request(
+            http_client,
+            urlparse.urljoin(base_url + '/', api['path'].strip('/')),
+            request_options)
+
+    def add_api_docs(resource_listing):
+        # Start all async requests
+        eventuals = map(get_eventual_for_api, resource_listing['apis'])
+        for api, eventual in zip(resource_listing['apis'], eventuals):
+            api['api_declaration'] = eventual.wait().json()
 
     resource_listing = start_request(
         http_client,
         url,
-        self.api_doc_request_headers,
+        request_options
     ).wait().json()
 
     processor.pre_apply(resource_listing)
 
     # TODO: is this url used ?
     resource_listing['url'] = url 
-
-    self.load_api_declarations(base_url, resource_listing)
-
+    add_api_docs(resource_listing)
     processor.apply(resource_listing)
     return resource_listing
-
-    def load_api_declarations(self, base_url, resource_listing):
-        def get_eventual_for_api(api):
-            return start_request(
-                self.http_client,
-                urlparse.urljoin(base_url + '/', api['path'].strip('/')),
-                self.api_doc_request_headers)
-
-        # Start all async requests
-        eventuals = map(get_eventual_for_api, resource_listing['apis'])
-        for api, eventual in zip(resource_listing['apis'], eventuals):
-            api['api_declaration'] = eventual.wait().json()
 
 
 def validate_required_fields(json, required_fields, context):
@@ -239,7 +237,7 @@ def load_file(resource_listing_file, http_client=None):
     return load_url(url, http_client=http_client, base_url=base_url)
 
 
-def load_url(resource_listing_url, http_client=None, base_url=None):
+def load_url(url, http_client=None, **kwargs):
     """Loads a resource listing.
 
     :param resource_listing_url: URL for a resource listing.
@@ -251,9 +249,7 @@ def load_url(resource_listing_url, http_client=None, base_url=None):
     :raise: IOError, URLError: On error reading api-docs.
     """
     http_client = http_client or SynchronousHttpClient()
-    loader = Loader(http_client=http_client)
-    return loader.load_resource_listing(
-        resource_listing_url, base_url=base_url)
+    return load_resource_listing(url, http_client, **kwargs)
 
 
 def create_model_type(model):
