@@ -48,13 +48,13 @@ A sample 'model' is listed below in models list.
 }
 """
 
-from swaggerpy.compat import json
+from bravado.compat import json
 import unittest
 
 import httpretty
 
-from swaggerpy.client import SwaggerClient
-from swaggerpy.processors import SwaggerError
+from bravado.client import SwaggerClient
+from bravado.processors import SwaggerError
 
 
 class ResourceTest(unittest.TestCase):
@@ -138,7 +138,7 @@ class ResourceTest(unittest.TestCase):
             body="")
 
     ################################################################
-    # Test that swaggerpy correctly creates model
+    # Test that bravado correctly creates model
     # classes from swagger model definitions
     # API calls are not triggered here.
     # Scope is limited to model definition in swagger api spec

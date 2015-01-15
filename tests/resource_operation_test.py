@@ -46,15 +46,15 @@ A sample 'peration' is listed below in 'operations' list.
 """
 
 import datetime
-from swaggerpy.compat import json
+from bravado.compat import json
 import unittest
 import urlparse
 
 import httpretty
 from dateutil.tz import tzutc
 
-from swaggerpy.client import SwaggerClient
-from swaggerpy.processors import SwaggerError
+from bravado.client import SwaggerClient
+from bravado.processors import SwaggerError
 
 
 class ResourceOperationTest(unittest.TestCase):

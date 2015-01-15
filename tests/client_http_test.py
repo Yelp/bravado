@@ -7,7 +7,7 @@ import unittest
 
 import httpretty
 
-from swaggerpy.client import SwaggerClient
+from bravado.client import SwaggerClient
 
 
 # noinspection PyDocstring

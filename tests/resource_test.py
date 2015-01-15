@@ -20,13 +20,13 @@ A sample 'resource' is listed below.
 }
 """
 
-from swaggerpy.compat import json
+from bravado.compat import json
 import unittest
 
 import httpretty
 
-from swaggerpy.client import SwaggerClient, Resource, Operation
-from swaggerpy.processors import SwaggerError
+from bravado.client import SwaggerClient, Resource, Operation
+from bravado.processors import SwaggerError
 
 
 class ResourceTest(unittest.TestCase):

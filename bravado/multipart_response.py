@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from uuid import uuid4
-from swaggerpy import http_client
+from bravado import http_client
 
 
 def add_lines(name, content, is_file, boundary, lines):

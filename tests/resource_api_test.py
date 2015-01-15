@@ -24,13 +24,13 @@ A sample 'resource api' is listed in the "apis" list below.
 }
 """
 
-from swaggerpy.compat import json
+from bravado.compat import json
 import unittest
 
 import httpretty
 
-from swaggerpy.client import SwaggerClient
-from swaggerpy.processors import SwaggerError
+from bravado.client import SwaggerClient
+from bravado.processors import SwaggerError
 
 
 class ResourceApiTest(unittest.TestCase):
