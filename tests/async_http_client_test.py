@@ -11,7 +11,7 @@ Not Tested:
 2) Timeouts by crochet's wait()
 """
 
-from swaggerpy.compat import json
+from bravado.compat import json
 import unittest
 from collections import namedtuple
 from mock import patch, Mock
@@ -21,40 +21,40 @@ from crochet._eventloop import EventualResult
 from twisted.internet.defer import Deferred
 from twisted.web.http_headers import Headers
 
-import swaggerpy.async_http_client
-import swaggerpy.exception
-import swaggerpy.http_client
+import bravado.async_http_client
+import bravado.exception
+import bravado.http_client
 
 
 class AsyncHttpClientTest(unittest.TestCase):
 
     def test_stringify_body_converts_dict_to_str(self):
         data = {'foo': 'bar', 'bar': 42}
-        data = swaggerpy.client.stringify_body(data)
+        data = bravado.client.stringify_body(data)
         self.assertEqual({"foo": "bar", "bar": 42},
                          json.loads(data))
 
     def test_stringify_body_encode_params_to_utf8(self):
         data = {'foo': 'bar', 'bar': 42}
-        data = swaggerpy.client.stringify_body(data)
+        data = bravado.client.stringify_body(data)
         self.assertEqual({"foo": "bar", "bar": 42},
                          json.loads(data))
 
     def test_stringify_body_ignores_data_if_already_str(self):
         data = 'foo'
-        swaggerpy.client.stringify_body(data)
+        bravado.client.stringify_body(data)
         self.assertEqual('foo', data)
 
     def test_stringify_async_body_returns_file_producer(self):
-        def_str = 'swaggerpy.client.stringify_body'
+        def_str = 'bravado.client.stringify_body'
         with patch(def_str) as mock_stringify:
             mock_stringify.return_value = '42'
-            with patch('swaggerpy.async_http_client.StringIO',
+            with patch('bravado.async_http_client.StringIO',
                        return_value='foo') as mock_stringIO:
-                with patch('swaggerpy.async_http_client.FileBodyProducer',
+                with patch('bravado.async_http_client.FileBodyProducer',
                            return_value='mock_fbp') as mock_fbp:
                     body = {'data': 42, 'headers': {}}
-                    resp = swaggerpy.async_http_client.stringify_body(body)
+                    resp = bravado.async_http_client.stringify_body(body)
 
                     self.assertEqual('mock_fbp', resp)
 
@@ -67,13 +67,13 @@ class AsyncHttpClientTest(unittest.TestCase):
         fake_file.read.return_value = "contents"
         request = {'files': {'fake': fake_file},
                    'headers': {'content-type': 'tmp'}}
-        with patch('swaggerpy.async_http_client.StringIO',
+        with patch('bravado.async_http_client.StringIO',
                    return_value='foo') as mock_stringIO:
-            with patch('swaggerpy.async_http_client.FileBodyProducer'
+            with patch('bravado.async_http_client.FileBodyProducer'
                        ) as mock_fbp:
-                with patch('swaggerpy.multipart_response.get_random_boundary',
+                with patch('bravado.multipart_response.get_random_boundary',
                            return_value='zz'):
-                    swaggerpy.async_http_client.stringify_body(request)
+                    bravado.async_http_client.stringify_body(request)
 
                     expected_contents = (
                         '--zz\r\nContent-Disposition: form-data; name=fake;' +
@@ -85,12 +85,12 @@ class AsyncHttpClientTest(unittest.TestCase):
 
     def test_stringify_files_creates_correct_form_content(self):
         request = {'data': OrderedDict([('id', 42), ('name', 'test')]),
-                   'headers': {'content-type': swaggerpy.http_client.APP_FORM}}
-        with patch('swaggerpy.async_http_client.StringIO',
+                   'headers': {'content-type': bravado.http_client.APP_FORM}}
+        with patch('bravado.async_http_client.StringIO',
                    return_value='foo') as mock_stringIO:
-            with patch('swaggerpy.async_http_client.FileBodyProducer',
+            with patch('bravado.async_http_client.FileBodyProducer',
                        ) as mock_fbp:
-                swaggerpy.async_http_client.stringify_body(request)
+                bravado.async_http_client.stringify_body(request)
 
                 expected_contents = ('id=42&name=test')
                 mock_stringIO.assert_called_once_with(expected_contents)
@@ -98,7 +98,7 @@ class AsyncHttpClientTest(unittest.TestCase):
 
     def test_listify_headers(self):
         headers = {'a': 'foo', 'b': ['bar', 42]}
-        resp = swaggerpy.async_http_client.listify_headers(headers)
+        resp = bravado.async_http_client.listify_headers(headers)
         self.assertEqual([('A', ['foo']), ('B', ['bar', 42])],
                          sorted(list(resp.getAllRawHeaders())))
 
@@ -106,7 +106,7 @@ class AsyncHttpClientTest(unittest.TestCase):
         Response = namedtuple("MyResponse",
                               "version code phrase headers length deliverBody")
         with patch.object(
-            swaggerpy.async_http_client.AsynchronousHttpClient,
+            bravado.async_http_client.AsynchronousHttpClient,
             'fetch_deferred',
             return_value=Mock(
                 autospec=EventualResult,
@@ -122,7 +122,7 @@ class AsyncHttpClientTest(unittest.TestCase):
             }
             mock_Async.return_value.wait.return_value = Response(
                 1, 2, 3, 4, 5, 6)
-            async_client = swaggerpy.async_http_client.AsynchronousHttpClient()
+            async_client = bravado.async_http_client.AsynchronousHttpClient()
             eventual = async_client.start_request(req)
             resp = eventual.wait(timeout=5)
             self.assertEqual(2, resp.code)
@@ -131,7 +131,7 @@ class AsyncHttpClientTest(unittest.TestCase):
         Response = namedtuple("MyResponse",
                               "version code phrase headers length deliverBody")
         with patch.object(
-            swaggerpy.async_http_client.AsynchronousHttpClient,
+            bravado.async_http_client.AsynchronousHttpClient,
             'fetch_deferred',
             return_value=Mock(
                 autospec=EventualResult,
@@ -148,7 +148,7 @@ class AsyncHttpClientTest(unittest.TestCase):
             mock_fetch_deferred.return_value.wait.return_value = Response(
                 1, 2, 3, 4, 5, 6)
 
-            async_client = swaggerpy.async_http_client.AsynchronousHttpClient()
+            async_client = bravado.async_http_client.AsynchronousHttpClient()
             async_client.start_request(req)
 
             mock_fetch_deferred.assert_called_once_with(
@@ -162,7 +162,7 @@ class AsyncHttpClientTest(unittest.TestCase):
 
     def test_start_request_with_only_url(self):
         url = 'http://example.com/api-docs'
-        async_client = swaggerpy.async_http_client.AsynchronousHttpClient()
+        async_client = bravado.async_http_client.AsynchronousHttpClient()
         # ugly mock, but this method runs in a twisted reactor which is
         # difficult to mock
         async_client.fetch_deferred = Mock()
@@ -180,7 +180,7 @@ class AsyncHttpClientTest(unittest.TestCase):
 class HTTPBodyFetcherTest(unittest.TestCase):
 
     def setUp(self):
-        self.http_body_fetcher = swaggerpy.async_http_client._HTTPBodyFetcher(
+        self.http_body_fetcher = bravado.async_http_client._HTTPBodyFetcher(
             'req', 'resp', Mock())
 
     def test_HTTP_body_fetcher_data_received(self):
@@ -189,7 +189,7 @@ class HTTPBodyFetcherTest(unittest.TestCase):
                          self.http_body_fetcher.buffer.getvalue())
 
     def test_success_HTTP_body_fetcher_connection_lost(self):
-        response_str = 'swaggerpy.async_http_client.AsyncResponse'
+        response_str = 'bravado.async_http_client.AsyncResponse'
         with patch(response_str) as mock_resp:
             self.http_body_fetcher.finished.callback.return_value = None
             reason = Mock(**{'check.return_value': True})
@@ -208,10 +208,10 @@ class AsyncResponseTest(unittest.TestCase):
 
     def test_build_async_response(self):
         headers_orig = {'a': 'foo', 'b': ['bar', 42]}
-        headers = swaggerpy.async_http_client.listify_headers(headers_orig)
+        headers = bravado.async_http_client.listify_headers(headers_orig)
         resp = Mock(**{'code': 200, 'headers': headers})
         req = Mock()
-        async_resp = swaggerpy.async_http_client.AsyncResponse(
+        async_resp = bravado.async_http_client.AsyncResponse(
             req, resp, '{"valid":"json"}')
         self.assertEqual(200, async_resp.status_code)
         self.assertEqual(req, async_resp.request)
@@ -219,19 +219,19 @@ class AsyncResponseTest(unittest.TestCase):
         self.assertEqual({"valid": "json"}, async_resp.json())
 
     def test_raise_for_status_client_error(self):
-        headers = swaggerpy.async_http_client.listify_headers({})
+        headers = bravado.async_http_client.listify_headers({})
         resp = Mock(**{'code': 400, 'headers': headers})
-        async = swaggerpy.async_http_client.AsyncResponse(None, resp, None)
+        async = bravado.async_http_client.AsyncResponse(None, resp, None)
         try:
             async.raise_for_status()
-        except swaggerpy.exception.HTTPError as e:
+        except bravado.exception.HTTPError as e:
             self.assertEqual('400 Client Error', str(e))
 
     def test_raise_for_status_server_error(self):
-        headers = swaggerpy.async_http_client.listify_headers({})
+        headers = bravado.async_http_client.listify_headers({})
         resp = Mock(**{'code': 500, 'headers': headers})
-        async = swaggerpy.async_http_client.AsyncResponse(None, resp, None)
+        async = bravado.async_http_client.AsyncResponse(None, resp, None)
         try:
             async.raise_for_status()
-        except swaggerpy.exception.HTTPError as e:
+        except bravado.exception.HTTPError as e:
             self.assertEqual('500 Server Error', str(e))

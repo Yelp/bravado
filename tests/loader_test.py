@@ -2,11 +2,11 @@ import unittest
 
 import pytest
 
-import swaggerpy
-from swaggerpy.swagger_model import load_file
+import bravado
+from bravado.swagger_model import load_file
 
 
-class TestProcessor(swaggerpy.swagger_model.SwaggerProcessor):
+class TestProcessor(bravado.swagger_model.SwaggerProcessor):
     def process_resource_listing(self, resources, context):
         resources['processed'] = True
 

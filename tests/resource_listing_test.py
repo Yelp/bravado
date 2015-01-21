@@ -25,13 +25,13 @@ Sample 'resource_listing' this test intends to check is like:
 }
 """
 
-from swaggerpy.compat import json
+from bravado.compat import json
 import unittest
 
 import httpretty
 
-from swaggerpy.client import SwaggerClient
-from swaggerpy.processors import SwaggerError
+from bravado.client import SwaggerClient
+from bravado.processors import SwaggerError
 
 
 class ResourceListingTest(unittest.TestCase):

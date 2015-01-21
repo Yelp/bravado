@@ -6,7 +6,7 @@ import datetime
 
 import dateutil.parser
 
-from swaggerpy.processors import SwaggerError
+from bravado.processors import SwaggerError
 
 # Tuple is added to allow a response '4' which is of
 # python type 'int' but swagger_type could be 'int64'

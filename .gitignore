@@ -8,4 +8,4 @@ nosetests.xml
 build
 *.swp
 *.tox
-.idea
+.idea/

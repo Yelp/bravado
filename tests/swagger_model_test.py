@@ -1,7 +1,7 @@
 
 import mock
 
-from swaggerpy import swagger_model
+from bravado import swagger_model
 
 
 class TestCreateModelType(object):
@@ -43,7 +43,7 @@ class TestCreateModelType(object):
         }
         assert model_type._required == ['id', 'category']
 
-    @mock.patch('swaggerpy.swagger_model.create_model_docstring', autospec=True)
+    @mock.patch('bravado.swagger_model.create_model_docstring', autospec=True)
     def test_create_model_type_lazy_docstring(self, mock_create_docstring):
         model_type = swagger_model.create_model_type(self.model)
         assert not mock_create_docstring.called

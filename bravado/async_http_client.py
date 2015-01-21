@@ -9,7 +9,7 @@
 """
 
 from cStringIO import StringIO
-from swaggerpy.compat import json
+from bravado.compat import json
 import logging
 
 import crochet
@@ -23,10 +23,10 @@ from twisted.web.client import FileBodyProducer
 from twisted.web.http_headers import Headers
 from yelp_uri import urllib_utf8
 
-from swaggerpy import client
-from swaggerpy import http_client
-from swaggerpy.exception import HTTPError
-from swaggerpy.multipart_response import create_multipart_content
+from bravado import client
+from bravado import http_client
+from bravado.exception import HTTPError
+from bravado.multipart_response import create_multipart_content
 
 log = logging.getLogger(__name__)
 
