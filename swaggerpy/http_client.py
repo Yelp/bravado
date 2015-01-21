@@ -188,7 +188,10 @@ class SynchronousEventual(object):
         self.request = request
 
     def wait(self, timeout=None):
-        """Perform the request."""
+        """Perform the request.
+
+        :param timeout: timeout for the request, in seconds
+        """
         request = self.request
         log.debug(u"%s %s(%r)", request.method, request.url, request.params)
         return self.session.send(

@@ -126,11 +126,13 @@ class FileEventual(object):
     def __init__(self, path):
         self.path = path
 
+    def get_path(self):
+        if not self.path.endswith('.json'):
+            return self.path + '.json'
+        return self.path
+
     def wait(self, timeout=None):
-        path = self.path
-        if not path.endswith('.json'):
-            path += '.json'
-        with contextlib.closing(urllib.urlopen(path)) as fp:
+        with contextlib.closing(urllib.urlopen(self.get_path())) as fp:
             return self.FileResponse(json.load(fp))
 
     def cancel(self):
