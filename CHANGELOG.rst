@@ -1,3 +1,7 @@
+0.7.x (2015-xx-xx)
+------------------
+- Handle request path parameters with spaces correctly
+
 0.7.4 (2014-12-11)
 ------------------
 - Requests urlencode params as utf8
