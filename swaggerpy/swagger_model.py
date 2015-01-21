@@ -1,22 +1,14 @@
 # -*- coding: utf-8 -*-
-
-#
-# Copyright (c) 2013, Digium, Inc.
-# Copyright (c) 2014, Yelp, Inc.
-#
-
-"""Code for handling the base Swagger API model.
-"""
 import contextlib
+from copy import copy
+from functools import partial
 import logging
-from swaggerpy.compat import json
 import os
 import urllib
 import urlparse
-from copy import copy
-from operator import methodcaller
 
-import swagger_type
+from swaggerpy import swagger_type
+from swaggerpy.compat import json
 from swaggerpy.exception import SwaggerError
 from swaggerpy.http_client import SynchronousHttpClient
 from swaggerpy.processors import SwaggerProcessor
@@ -128,11 +120,13 @@ class FileEventual(object):
     def __init__(self, path):
         self.path = path
 
+    def get_path(self):
+        if not self.path.endswith('.json'):
+            return self.path + '.json'
+        return self.path
+
     def wait(self, timeout=None):
-        path = self.path
-        if not path.endswith('.json'):
-            path += '.json'
-        with contextlib.closing(urllib.urlopen(path)) as fp:
+        with contextlib.closing(urllib.urlopen(self.get_path())) as fp:
             return self.FileResponse(json.load(fp))
 
     def cancel(self):
@@ -160,7 +154,7 @@ def start_request(http_client, url, request_options):
 def load_resource_listing(
         url,
         http_client,
-        base_url=None, 
+        base_url=None,
         request_options=None):
     """Load a complete swagger api spec and return all schemas compiled
     into a single dict.
@@ -197,7 +191,7 @@ def load_resource_listing(
     processor.pre_apply(resource_listing)
 
     # TODO: is this url used ?
-    resource_listing['url'] = url 
+    resource_listing['url'] = url
     add_api_docs(resource_listing)
     processor.apply(resource_listing)
     return resource_listing
@@ -252,35 +246,39 @@ def load_url(url, http_client=None, **kwargs):
     return load_resource_listing(url, http_client, **kwargs)
 
 
+class docstring_property(object):
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, _cls, _owner):
+        return self.func()
+
+
 def create_model_type(model):
-    """creates a dynamic model from the model data present in the json
-       :param model: Resource Model json containing id, properties
-       :type model: dict
-       :returns: dynamic type created with attributes, docstrings attached
-       :rtype: type
+    """Create a dynamic class from the model data defined in the swagger spec.
+
+    The docstring for this class is dynamically generated because generating
+    the docstring is relatively expensive, and would only be used in rare
+    cases for interactive debugging in a REPL.
+
+    :param model: Resource model :class:`dict` with keys `id` and `properties`
+    :returns: dynamic type created with attributes, docstrings attached
+    :rtype: type
     """
     props = model['properties']
     name = str(model['id'])
+
     methods = dict(
-        # Magic Methods :
-        # Define the docstring
-        __doc__=create_model_docstring(props),
-        # Make equality work for dict & type OR type & type
+        __doc__=docstring_property(partial(create_model_docstring, props)),
         __eq__=lambda self, other: compare(self, other),
-        # Define the constructor for the type
         __init__=lambda self, **kwargs: set_props(self, **kwargs),
-        # Define the str repr of the type
         __repr__=lambda self: create_model_repr(self),
-        # Instance methods :
-        # Generates flat dict from the model instance
-        _flat_dict=lambda self: create_flat_dict(self))
-    model_type = type(name, (object,), methods)
-    # Define a class variable to store types of its attributes
-    setattr(model_type, '_swagger_types',
-            swagger_type.get_swagger_types(props))
-    # Define a class variable to store all required fields
-    setattr(model_type, '_required', model.get('required'))
-    return model_type
+        __dir__=lambda self: props.keys(),
+        _flat_dict=lambda self: create_flat_dict(self),
+        _swagger_types=swagger_type.get_swagger_types(props),
+        _required=model.get('required'),
+    )
+    return type(name, (object,), methods)
 
 
 def set_props(model, **kwargs):

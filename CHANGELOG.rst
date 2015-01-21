@@ -1,6 +1,8 @@
-0.7.x (2015-xx-xx)
+0.7.5 (2015-01-21)
 ------------------
 - Handle request path parameters with spaces correctly
+- Performance improvements for loading large api docs
+- Misc bug fixes
 
 0.7.4 (2014-12-11)
 ------------------

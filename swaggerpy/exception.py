@@ -37,4 +37,3 @@ class SwaggerError(Exception):
 
     def __init__(self, msg, context, cause=None):
         super(Exception, self).__init__(msg, context, cause)
-
