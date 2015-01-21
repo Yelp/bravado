@@ -1,11 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-#
-# Copyright (c) 2013, Digium, Inc.
-#
-
 import unittest
+
+import pytest
 
 import swaggerpy
 from swaggerpy.swagger_model import load_file
@@ -31,12 +26,8 @@ class LoaderTest(unittest.TestCase):
         self.assertTrue(uut['processed'])
 
     def test_missing(self):
-        try:
-            load_file(
-                'test-data/1.2/missing_resource/resources.json')
-            self.fail("Expected load failure b/c of missing file")
-        except IOError:
-            pass
+        with pytest.raises(IOError):
+            load_file('test-data/1.2/missing_resource/resources.json')
 
 
 if __name__ == '__main__':
