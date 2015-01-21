@@ -308,7 +308,11 @@ class docstring_property(object):
 
 
 def create_model_type(model):
-    """creates a dynamic model from the model data present in the json
+    """Create a dynamic class from the model data defined in the swagger spec.
+
+    The docstring for this class is dynamically generated because generating
+    the docstring is relatively expensive, and would only be used in rare
+    cases for interactive debugging in a REPL.
 
     :param model: Resource model :class:`dict` with keys `id` and `properties`
     :returns: dynamic type created with attributes, docstrings attached
