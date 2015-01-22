@@ -1,21 +1,14 @@
 # -*- coding: utf-8 -*-
-
-#
-# Copyright (c) 2013, Digium, Inc.
-# Copyright (c) 2014, Yelp, Inc.
-#
-
-"""Code for handling the base Swagger API model.
-"""
-
+import contextlib
+from copy import copy
+from functools import partial
 import logging
-from bravado.compat import json
 import os
 import urllib
 import urlparse
-from copy import copy
 
-import swagger_type
+from bravado import swagger_type
+from bravado.compat import json
 from bravado.http_client import SynchronousHttpClient
 from bravado.processors import SwaggerProcessor, SwaggerError
 
@@ -110,39 +103,54 @@ def is_file_scheme_uri(url):
     return urlparse.urlparse(url).scheme == u'file'
 
 
-def json_load_file(url):
-    # if '.json' isnt given, add it by default
-    if not url.endswith('.json'):
-        url += '.json'
-    # requests can't handle file: scheme URLs
-    fp = urllib.urlopen(url)
-    try:
-        return json.load(fp)
-    finally:
-        fp.close()
+class FileEventual(object):
+    """Adaptor which supports the :class:`crochet.EventualResult`
+    interface for retrieving api docs from a local file.
+    """
+
+    class FileResponse(object):
+
+        def __init__(self, data):
+            self.data = data
+
+        def json(self):
+            return self.data
+
+    def __init__(self, path):
+        self.path = path
+
+    def get_path(self):
+        if not self.path.endswith('.json'):
+            return self.path + '.json'
+        return self.path
+
+    def wait(self, timeout=None):
+        with contextlib.closing(urllib.urlopen(self.get_path())) as fp:
+            return self.FileResponse(json.load(fp))
+
+    def cancel(self):
+        pass
 
 
-def json_load_url(http_client, url, headers):
+def start_request(http_client, url, headers):
     """Download and parse JSON from a URL.
 
-    :param http_client: HTTP client interface.
-    :type  http_client: http_client.HttpClient
-    :param url: URL for JSON to parse
-    :return: Parsed JSON dict
+    :param http_client: a :class:`swaggerpy.http_client.HttpClient`
+    :param url: url for api docs
+    :return: an object with a :func`wait` method which returns the api docs
     """
     if is_file_scheme_uri(url):
-        return json_load_file(url)
-    else:
-        request_params = {
-            'method': 'GET',
-            'url': url,
-            'headers': headers,
-        }
-        req = http_client.start_request(request_params)
-        resp = http_client.wait(req, timeout=None)
-        return resp.json()
+        return FileEventual(url)
+
+    request_params = {
+        'method': 'GET',
+        'url': url,
+        'headers': headers,
+    }
+    return http_client.start_request(request_params)
 
 
+# TODO: remove processors parameter
 class Loader(object):
     """Abstraction for loading Swagger API's.
 
@@ -178,43 +186,34 @@ class Loader(object):
                             resource listing is used.
         """
 
-        # Load the resource listing
-        resource_listing = json_load_url(
+        resource_listing = start_request(
             self.http_client,
             resources_url,
             self.api_doc_request_headers,
-        )
+        ).wait().json()
         self.pre_process_resource_listing(resource_listing)
 
         # Some extra data only known about at load time
         resource_listing[u'url'] = resources_url
         base_url = base_url if base_url else resources_url
 
-        # Load the API declarations
-        for api in resource_listing.get(u'apis'):
-            self.load_api_declaration(base_url, api)
+        self.load_api_declarations(base_url, resource_listing)
 
         # Now that the raw object model has been loaded, apply the processors
         self.process_resource_listing(resource_listing)
         return resource_listing
 
-    def load_api_declaration(self, base_url, api_dict):
-        """Load an API declaration file.
+    def load_api_declarations(self, base_url, resource_listing):
+        def get_eventual_for_api(api):
+            return start_request(
+                self.http_client,
+                urlparse.urljoin(base_url + '/', api['path'].strip('/')),
+                self.api_doc_request_headers)
 
-        api_dict is modified with the results of the load:
-         * ['url'] = URL api declaration was loaded from
-         * ['api_declaration'] = Parsed results of the load
-
-        :param base_url: Base URL to load from
-        :param api_dict: api object from resource listing.
-        """
-        api_dict[u'url'] = urlparse.urljoin(
-            base_url + u'/', api_dict['path'].strip(u'/'))
-        api_dict[u'api_declaration'] = json_load_url(
-            self.http_client,
-            api_dict[u'url'],
-            self.api_doc_request_headers,
-        )
+        # Start all async requests
+        eventuals = map(get_eventual_for_api, resource_listing['apis'])
+        for api, eventual in zip(resource_listing['apis'], eventuals):
+            api['api_declaration'] = eventual.wait().json()
 
     def pre_process_resource_listing(self, resources):
         """Apply pre-processors before loading resource listing.
@@ -249,6 +248,8 @@ def validate_required_fields(json, required_fields, context):
             u"Missing fields: %s" % u', '.join(missing_fields), context)
 
 
+# TODO: Adding the file scheme here just adds complexity to start_request()
+# Is there a better way to handle this?
 def load_file(resource_listing_file, http_client=None, processors=None):
     """Loads a resource listing file, applying the given processors.
 
@@ -290,52 +291,39 @@ def load_url(resource_listing_url, http_client=None, processors=None,
         resource_listing_url, base_url=base_url)
 
 
-def load_json(resource_listing, http_client=None, processors=None):
-    """Process a resource listing that has already been parsed.
+class docstring_property(object):
+    def __init__(self, func):
+        self.func = func
 
-    :param resource_listing: Parsed resource listing.
-    :type  resource_listing: dict
-    :param http_client:
-    :param processors:
-    :return: Processed resource listing.
-    """
-    if http_client is None:
-        http_client = SynchronousHttpClient()
-
-    loader = Loader(http_client=http_client, processors=processors)
-    loader.process_resource_listing(resource_listing)
-    return resource_listing
+    def __get__(self, _cls, _owner):
+        return self.func()
 
 
 def create_model_type(model):
-    """creates a dynamic model from the model data present in the json
-       :param model: Resource Model json containing id, properties
-       :type model: dict
-       :returns: dynamic type created with attributes, docstrings attached
-       :rtype: type
+    """Create a dynamic class from the model data defined in the swagger spec.
+
+    The docstring for this class is dynamically generated because generating
+    the docstring is relatively expensive, and would only be used in rare
+    cases for interactive debugging in a REPL.
+
+    :param model: Resource model :class:`dict` with keys `id` and `properties`
+    :returns: dynamic type created with attributes, docstrings attached
+    :rtype: type
     """
     props = model['properties']
     name = str(model['id'])
+
     methods = dict(
-        # Magic Methods :
-        # Define the docstring
-        __doc__=create_model_docstring(props),
-        # Make equality work for dict & type OR type & type
+        __doc__=docstring_property(partial(create_model_docstring, props)),
         __eq__=lambda self, other: compare(self, other),
-        # Define the constructor for the type
         __init__=lambda self, **kwargs: set_props(self, **kwargs),
-        # Define the str repr of the type
         __repr__=lambda self: create_model_repr(self),
-        # Instance methods :
-        # Generates flat dict from the model instance
-        _flat_dict=lambda self: create_flat_dict(self))
-    model_type = type(name, (object,), methods)
-    # Define a class variable to store types of its attributes
-    setattr(model_type, '_swagger_types',
-            swagger_type.get_swagger_types(props))
-    # Define a class variable to store all required fields
-    setattr(model_type, '_required', model.get('required'))
-    return model_type
+        __dir__=lambda self: props.keys(),
+        _flat_dict=lambda self: create_flat_dict(self),
+        _swagger_types=swagger_type.get_swagger_types(props),
+        _required=model.get('required'),
+    )
+    return type(name, (object,), methods)
 
 
 def set_props(model, **kwargs):

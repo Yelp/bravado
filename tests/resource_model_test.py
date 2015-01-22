@@ -145,13 +145,6 @@ class ResourceTest(unittest.TestCase):
     ################################################################
 
     @httpretty.activate
-    def test_success_on_model_types_creation(self):
-        self.register_urls()
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
-        User = resource.testHTTP._models['User']
-        self.assertEqual({"schools": [], "id": 0L}, User().__dict__)
-
-    @httpretty.activate
     def test_nones_for_dates_on_model_types_creation(self):
         self.models['User']['properties']['date'] = {
             'type': 'string',
@@ -166,19 +159,6 @@ class ResourceTest(unittest.TestCase):
             {"schools": [], "id": 0L, "date": None, "datetime": None},
             User().__dict__
         )
-
-    @httpretty.activate
-    def test_success_on_model_types_instantiation(self):
-        self.register_urls()
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
-        models = resource.testHTTP._models
-        User = models['User']
-        School = models['School']
-        user = User(id=42, schools=[School(name="a"), School(name="b")])
-        user1 = User(schools=[School(name="a"), School(name="b")], id=42)
-        self.assertEqual(user1, user)
-
-    # TODO: DocString generated is not validated as of now
 
     @httpretty.activate
     def test_error_on_wrong_attr_type_in_model_declaration(self):
@@ -456,7 +436,7 @@ class ResourceTest(unittest.TestCase):
         future = resource.testHTTPPost(body=user)
         self.assertEqual(
             json.dumps({'id': 42, 'schools': [{'name': 's1'}]}),
-            future._request.data,
+            future._request.request.data,
         )
 
     @httpretty.activate
@@ -477,7 +457,7 @@ class ResourceTest(unittest.TestCase):
         # Removed the 'school': None - key, value pair from dict
         self.assertEqual(
             json.dumps({'id': 42, 'schools': []}),
-            future._request.data,
+            future._request.request.data,
         )
 
     @httpretty.activate
