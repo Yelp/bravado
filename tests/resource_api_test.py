@@ -30,7 +30,7 @@ import unittest
 import httpretty
 
 from bravado.client import SwaggerClient
-from bravado.processors import SwaggerError
+from exception import SwaggerError
 
 
 class ResourceApiTest(unittest.TestCase):

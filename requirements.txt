@@ -1,0 +1,2 @@
+# TODO(spatel): Remove once integrated with a packaged version of swagger_spec_validator
+-e /nail/home/spatel/git/swagger_spec_validator_analogue

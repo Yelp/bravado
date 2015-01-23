@@ -66,7 +66,7 @@ from requests import HTTPError
 from bravado.async_http_client import AsynchronousHttpClient
 from bravado.client import SwaggerClient
 from bravado.exception import CancelledError
-from bravado.processors import SwaggerError
+from exception import SwaggerError
 from bravado.response import HTTPFuture
 
 

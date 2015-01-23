@@ -31,6 +31,7 @@ setup(
         "crochet",
         "python-dateutil",
         "requests",
+        "swagger-spec-validator",
         "twisted",
         "yelp_uri",
     ],

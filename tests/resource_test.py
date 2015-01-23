@@ -26,7 +26,7 @@ import unittest
 import httpretty
 
 from bravado.client import SwaggerClient, Resource, Operation
-from bravado.processors import SwaggerError
+from exception import SwaggerError
 
 
 class ResourceTest(unittest.TestCase):
@@ -75,8 +75,9 @@ class ResourceTest(unittest.TestCase):
             self.register_urls()
             self.assertRaises(SwaggerError, SwaggerClient.from_url,
                               u'http://localhost/api-docs')
-        [iterate_test(field) for field in (
-            'swaggerVersion', 'basePath', 'apis')]
+
+        for field in ('swaggerVersion', 'basePath', 'apis'):
+            iterate_test(field)
 
     # Use baesPath as api domain if it is '/' in the API declaration
     @httpretty.activate

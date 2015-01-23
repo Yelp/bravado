@@ -54,7 +54,7 @@ import httpretty
 from dateutil.tz import tzutc
 
 from bravado.client import SwaggerClient
-from bravado.processors import SwaggerError
+from exception import SwaggerError
 
 
 class ResourceOperationTest(unittest.TestCase):
