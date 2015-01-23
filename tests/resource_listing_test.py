@@ -31,7 +31,7 @@ import unittest
 import httpretty
 
 from bravado.client import SwaggerClient
-from bravado.processors import SwaggerError
+from exception import SwaggerError
 
 
 class ResourceListingTest(unittest.TestCase):
@@ -47,13 +47,6 @@ class ResourceListingTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/api-docs",
             body=json.dumps(self.response))
-
-    @httpretty.activate
-    def test_error_on_wrong_swagger_version(self):
-        self.response["swaggerVersion"] = "XYZ"
-        self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient.from_url,
-                          u'http://localhost/api-docs')
 
     @httpretty.activate
     def test_error_on_missing_path_in_apis(self):

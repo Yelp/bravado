@@ -59,6 +59,7 @@ import time
 import urllib
 from urlparse import urlparse
 
+import swagger_spec_validator
 from yelp_uri import urllib_utf8
 
 import swagger_type
@@ -326,8 +327,16 @@ class SwaggerClient(object):
             http_client,
             api_doc_request_headers=api_doc_request_headers)
 
+        # Loads and validates the spec
+
+        # XXX 1.2
+        #resource_listing = loader.load_resource_listing(url)
+
+        # XXX 2.0
+        spec = loader.load_spec(url)
+
         return cls.from_resource_listing(
-            loader.load_resource_listing(url),
+            resource_listing,
             http_client=http_client,
             api_base_path=api_base_path,
             url=url)

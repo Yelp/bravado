@@ -1,109 +1,22 @@
 # -*- coding: utf-8 -*-
-
-#
-# Copyright (c) 2013, Digium, Inc.
-# Copyright (c) 2014, Yelp, Inc.
-#
-
 """Code for handling the base Swagger API model.
 """
-
+from copy import copy
 import logging
-from bravado.compat import json
 import os
 import urllib
 import urlparse
-from copy import copy
 
-import swagger_type
+from swagger_spec_validator import validator20
+
+from bravado import swagger_type
+from bravado.compat import json
 from bravado.http_client import SynchronousHttpClient
-from bravado.processors import SwaggerProcessor, SwaggerError
+
 
 SWAGGER_VERSIONS = [u"1.2"]
 
 log = logging.getLogger(__name__)
-
-
-# noinspection PyDocstring
-class ValidationProcessor(SwaggerProcessor):
-    """A processor that validates the Swagger model.
-    """
-
-    def process_resource_listing(self, resources, context):
-        required_fields = [u'apis', u'swaggerVersion']
-        validate_required_fields(resources, required_fields, context)
-
-        if not resources[u'swaggerVersion'] in SWAGGER_VERSIONS:
-            raise SwaggerError(
-                u"Unsupported Swagger version %s" %
-                resources[u'swaggerVersion'], context)
-
-    def process_resource_listing_api(self, resources, listing_api, context):
-        # removing 'description' as it is recommended but not required
-        validate_required_fields(listing_api, [u'path'], context)
-
-        if not listing_api[u'path'].startswith(u"/"):
-            raise SwaggerError(u"Path must start with /", context)
-
-    def process_api_declaration(self, resources, resource, context):
-        required_fields = [u'swaggerVersion', u'basePath', u'apis']
-        validate_required_fields(resource, required_fields, context)
-
-        if not resource[u'swaggerVersion'] in SWAGGER_VERSIONS:
-            raise SwaggerError(
-                u"Unsupported Swagger version %s" %
-                resource[u'swaggerVersion'], context)
-        # Check model name and id consistency
-        if u'models' in resource:
-            for (model_name, model) in resource[u'models'].items():
-                if model.get('id') and model_name != model[u'id']:
-                    raise SwaggerError(u"Model id doesn't match name", context)
-
-    def process_resource_api(self, resources, resource, api, context):
-        required_fields = [u'path', u'operations']
-        validate_required_fields(api, required_fields, context)
-
-    # 'type' is MUST for operation as '$ref' isnt possible
-    def process_operation(self, resources, resource, api, operation, context,
-                          model_ids):
-        required_fields = [u'method', u'nickname', u'parameters', u'type']
-        validate_required_fields(operation, required_fields, context)
-        allowed_types = (swagger_type.primitive_types() +
-                         model_ids.get('model_ids') + ['void'])
-        validate_type_or_ref(operation, model_ids, allowed_types, [], context)
-        validate_params_body_or_form(operation)
-
-    def process_parameter(self, resources, resource, api, operation, parameter,
-                          context, model_ids):
-        # TODO: check `consumes` in schema has proper header as per paramType
-        required_fields = [u'name', u'paramType', u'type']
-        validate_required_fields(parameter, required_fields, context)
-        allowed_types = (swagger_type.primitive_types() +
-                         model_ids.get('model_ids'))
-        validate_type_or_ref(parameter, model_ids, allowed_types, [], context)
-
-    def process_response_message(self, resources, resource, api, operation,
-                                 response_message, context, model_ids):
-        required_fields = [u'code', u'message']
-        validate_required_fields(response_message, required_fields, context)
-
-    def process_model(self, resources, resource, model, context):
-        required_fields = [u'id', u'properties']
-        validate_required_fields(model, required_fields, context)
-        # TODO: Check "required" if present should be a list
-        # Move property field name into the object
-        for (prop_name, prop) in model[u'properties'].items():
-            prop[u'name'] = prop_name
-
-    def process_property(self, resources, resource, model, prop,
-                         context, model_ids):
-        required_fields = []
-        validate_required_fields(prop, required_fields, context)
-        # explicit validate special case: type OR ref must exist
-        allowed_types = swagger_type.primitive_types()
-        allowed_refs = model_ids.get('model_ids')
-        validate_type_or_ref(prop, model_ids, allowed_types,
-                             allowed_refs, None)
 
 
 def is_file_scheme_uri(url):
@@ -148,163 +61,76 @@ class Loader(object):
 
     :param http_client: HTTP client interface.
     :type  http_client: http_client.HttpClient
-    :param processors: List of processors to apply to the API.
-    :type  processors: list of SwaggerProcessor
     """
 
-    def __init__(self, http_client, processors=None,
-                 api_doc_request_headers=None):
+    def __init__(self, http_client, api_doc_request_headers=None):
         self.http_client = http_client
         self.api_doc_request_headers = api_doc_request_headers or {}
-        if processors is None:
-            processors = []
-            # always go through the validation processor first
-        # noinspection PyTypeChecker
-        self.processors = [ValidationProcessor()] + processors
 
-    def load_resource_listing(self, resources_url, base_url=None):
-        """Load a resource listing, loading referenced API declarations.
+    def load_spec(self, spec_url, base_url=None):
+        """Load a Swagger Spec from the given URL
 
-        The following fields are added to the resource listing object model.
-         * ['url'] = URL resource listing was loaded from
-         * The ['apis'] array is modified according to load_api_declaration()
-
-        The Loader's processors are applied to the fully loaded resource
-        listing.
-
-        :param resources_url:   File name for resources.json
-        :param base_url:    Optional URL to be the base URL for finding API
-                            declarations. If not specified, 'basePath' from the
-                            resource listing is used.
+        :param spec_url: URL to swagger.json
+        :param base_url: TODO: need this?
+        :returns: validated json spec in dict form
         """
-
-        # Load the resource listing
-        resource_listing = json_load_url(
+        spec_json = json_load_url(
             self.http_client,
-            resources_url,
+            spec_url,
             self.api_doc_request_headers,
         )
-        self.pre_process_resource_listing(resource_listing)
-
-        # Some extra data only known about at load time
-        resource_listing[u'url'] = resources_url
-        base_url = base_url if base_url else resources_url
-
-        # Load the API declarations
-        for api in resource_listing.get(u'apis'):
-            self.load_api_declaration(base_url, api)
-
-        # Now that the raw object model has been loaded, apply the processors
-        self.process_resource_listing(resource_listing)
-        return resource_listing
-
-    def load_api_declaration(self, base_url, api_dict):
-        """Load an API declaration file.
-
-        api_dict is modified with the results of the load:
-         * ['url'] = URL api declaration was loaded from
-         * ['api_declaration'] = Parsed results of the load
-
-        :param base_url: Base URL to load from
-        :param api_dict: api object from resource listing.
-        """
-        api_dict[u'url'] = urlparse.urljoin(
-            base_url + u'/', api_dict['path'].strip(u'/'))
-        api_dict[u'api_declaration'] = json_load_url(
-            self.http_client,
-            api_dict[u'url'],
-            self.api_doc_request_headers,
-        )
-
-    def pre_process_resource_listing(self, resources):
-        """Apply pre-processors before loading resource listing.
-
-        :param resources: Resource listing to process.
-        """
-        for processor in self.processors:
-            processor.pre_apply(resources)
-
-    def process_resource_listing(self, loaded_resources):
-        """Apply processors to a resource listing.
-
-        :param resources: Resource listing to process.
-        """
-        for processor in self.processors:
-            processor.apply(loaded_resources)
+        validator20.validate_spec(spec_json)
+        return spec_json
 
 
-def validate_required_fields(json, required_fields, context):
-    """Checks a JSON object for a set of required fields.
-
-    If any required field is missing, a SwaggerError is raised.
-
-    :param json: JSON object to check.
-    :param required_fields: List of required fields.
-    :param context: Current context in the API.
-    """
-    missing_fields = [f for f in required_fields if f not in json]
-
-    if missing_fields:
-        raise SwaggerError(
-            u"Missing fields: %s" % u', '.join(missing_fields), context)
-
-
-def load_file(resource_listing_file, http_client=None, processors=None):
-    """Loads a resource listing file, applying the given processors.
+def load_file(spec_file, http_client=None):
+    """Loads and validates a Swagger spec file.
 
     :param http_client: HTTP client interface.
-    :param resource_listing_file: File name for a resource listing.
-    :param processors:  List of SwaggerProcessors to apply to the resulting
-                        resource.
-    :return: Processed object model from
-    :raise: IOError: On error reading api-docs.
+    :param spec_file: Path to swagger.json.
+    :return: validated json spec in dict form
+    :raise: IOError: On error reading swagger.json.
     """
-    file_path = os.path.abspath(resource_listing_file)
+    file_path = os.path.abspath(spec_file)
     url = urlparse.urljoin(u'file:', urllib.pathname2url(file_path))
     # When loading from files, everything is relative to the resource listing
     dir_path = os.path.dirname(file_path)
     base_url = urlparse.urljoin(u'file:', urllib.pathname2url(dir_path))
-    return load_url(url, http_client=http_client, processors=processors,
-                    base_url=base_url)
+    return load_url(url, http_client=http_client, base_url=base_url)
 
 
-def load_url(resource_listing_url, http_client=None, processors=None,
-             base_url=None):
-    """Loads a resource listing, applying the given processors.
+def load_url(spec_url, http_client=None, base_url=None):
+    """Loads a Swagger spec.
 
-    :param resource_listing_url: URL for a resource listing.
+    :param spec_url: URL for swagger.json.
     :param http_client: HTTP client interface.
-    :param processors:  List of SwaggerProcessors to apply to the resulting
-                        resource.
     :param base_url:    Optional URL to be the base URL for finding API
                         declarations. If not specified, 'basePath' from the
                         resource listing is used.
-    :return: Processed object model from
+    :return: validated spec in dict form
     :raise: IOError, URLError: On error reading api-docs.
     """
     if http_client is None:
         http_client = SynchronousHttpClient()
 
-    loader = Loader(http_client=http_client, processors=processors)
-    return loader.load_resource_listing(
-        resource_listing_url, base_url=base_url)
+    loader = Loader(http_client=http_client)
+    return loader.load_spec(spec_url, base_url=base_url)
 
 
-def load_json(resource_listing, http_client=None, processors=None):
-    """Process a resource listing that has already been parsed.
+def load_json(spec, http_client=None):
+    """Process a swagger spec that has already been parsed.
 
-    :param resource_listing: Parsed resource listing.
-    :type  resource_listing: dict
+    :param spec: Parsed Swagger spec.
+    :type  spec: dict
     :param http_client:
-    :param processors:
-    :return: Processed resource listing.
+    :return: validated spec in dict form
     """
     if http_client is None:
         http_client = SynchronousHttpClient()
 
-    loader = Loader(http_client=http_client, processors=processors)
-    loader.process_resource_listing(resource_listing)
-    return resource_listing
+    loader = Loader(http_client=http_client)
+    loader.process_spec(spec)
+    return spec
 
 
 def create_model_type(model):
@@ -482,42 +308,3 @@ def create_model_repr(model):
         separator = ", "
     return ("%s(%s)" % (model.__class__.__name__, string))
 
-
-def validate_params_body_or_form(json):
-    """Validates that form request parameters are present or
-    body request params but not both
-    """
-    has_body = any(param.get('paramType') == 'body'
-                   for param in json['parameters'])
-    has_form = any(param.get('paramType') == 'form'
-                   for param in json['parameters'])
-    if has_body and has_form:
-        raise AttributeError("Both `form` and `body` param types present!")
-
-
-def validate_type_or_ref(json, model_ids, allowed_types,
-                         allowed_refs, context):
-    """Validates that either type OR ref is present in the json
-
-       :param json: dict to check whether type or ref is present
-       :param model_ids: list of allowed $ref ids (all models)
-       :param allowed_types: list of all kind of types allowed
-       :param allowed_refs: list of all kind of refs allowed
-       :param context: only used for Request Operation and Paramter
-    """
-    if json.get(u'type') in swagger_type.CONTAINER_TYPES:
-        validate_required_fields(json, [u'items'], context)
-        # OVerride allowed_refs to add model_ids if empty
-        allowed_refs = model_ids.get('model_ids')
-        return validate_type_or_ref(json[u'items'], model_ids,
-                                    allowed_types, allowed_refs, context)
-    if json.get(u'type') not in allowed_types and \
-       json.get(u'$ref') not in allowed_refs:
-        # Show more detailed error with context, if present
-        if context:
-            raise SwaggerError("%s not in allowed types: %s" % (
-                json.get(u'type'), allowed_types), context)
-        else:
-            raise TypeError("%s not in allowed types: %s" % (
-                json.get(u'type') or
-                json.get(u'$ref'), allowed_types + allowed_refs))
