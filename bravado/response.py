@@ -27,13 +27,12 @@ def handle_response_errors(e):
 
 
 class HTTPFuture(object):
-
     """A future which inputs HTTP params"""
+
     def __init__(self, http_client, request_params, post_receive):
         """Kicks API call for Asynchronous client
 
-        :param http_client: instance with public methods:
-            start_request(), wait(), cancel()
+        :param http_client: a :class:`swaggerpy.http_client.HttpClient`
         :param request_params: dict containing API request parameters
         :param post_receive: function to callback on finish
         """
@@ -53,7 +52,7 @@ class HTTPFuture(object):
         """Try to cancel the API (meaningful for Asynchronous client)
         """
         self._cancelled = True
-        self._http_client.cancel(self._request)
+        self._request.cancel()
 
     def result(self, **kwargs):
         """Blocking call to wait for API response
@@ -71,7 +70,7 @@ class HTTPFuture(object):
 
         if self.cancelled():
             raise CancelledError()
-        response = self._http_client.wait(self._request, timeout)
+        response = self._request.wait(timeout=timeout)
         try:
             response.raise_for_status()
         except Exception as e:

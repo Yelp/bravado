@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Code for handling the base Swagger API model.
-"""
+import contextlib
 from copy import copy
+from functools import partial
 import logging
 import os
 import urllib
@@ -13,7 +13,7 @@ from bravado import swagger_type
 from bravado.compat import json
 from bravado.http_client import SynchronousHttpClient
 
-
+# TODO: replace w/ 2.0
 SWAGGER_VERSIONS = [u"1.2"]
 
 log = logging.getLogger(__name__)
@@ -23,37 +23,51 @@ def is_file_scheme_uri(url):
     return urlparse.urlparse(url).scheme == u'file'
 
 
-def json_load_file(url):
-    # if '.json' isnt given, add it by default
-    if not url.endswith('.json'):
-        url += '.json'
-    # requests can't handle file: scheme URLs
-    fp = urllib.urlopen(url)
-    try:
-        return json.load(fp)
-    finally:
-        fp.close()
+class FileEventual(object):
+    """Adaptor which supports the :class:`crochet.EventualResult`
+    interface for retrieving api docs from a local file.
+    """
+
+    class FileResponse(object):
+
+        def __init__(self, data):
+            self.data = data
+
+        def json(self):
+            return self.data
+
+    def __init__(self, path):
+        self.path = path
+
+    def get_path(self):
+        if not self.path.endswith('.json'):
+            return self.path + '.json'
+        return self.path
+
+    def wait(self, timeout=None):
+        with contextlib.closing(urllib.urlopen(self.get_path())) as fp:
+            return self.FileResponse(json.load(fp))
+
+    def cancel(self):
+        pass
 
 
-def json_load_url(http_client, url, headers):
+def start_request(http_client, url, headers):
     """Download and parse JSON from a URL.
 
-    :param http_client: HTTP client interface.
-    :type  http_client: http_client.HttpClient
-    :param url: URL for JSON to parse
-    :return: Parsed JSON dict
+    :param http_client: a :class:`swaggerpy.http_client.HttpClient`
+    :param url: url for api docs
+    :return: an object with a :func`wait` method which returns the api docs
     """
     if is_file_scheme_uri(url):
-        return json_load_file(url)
-    else:
-        request_params = {
-            'method': 'GET',
-            'url': url,
-            'headers': headers,
-        }
-        req = http_client.start_request(request_params)
-        resp = http_client.wait(req, timeout=None)
-        return resp.json()
+        return FileEventual(url)
+
+    request_params = {
+        'method': 'GET',
+        'url': url,
+        'headers': headers,
+    }
+    return http_client.start_request(request_params)
 
 
 class Loader(object):
@@ -61,11 +75,12 @@ class Loader(object):
 
     :param http_client: HTTP client interface.
     :type  http_client: http_client.HttpClient
+    :param request_headers: dict of request headerss
     """
 
-    def __init__(self, http_client, api_doc_request_headers=None):
+    def __init__(self, http_client, request_headers=None):
         self.http_client = http_client
-        self.api_doc_request_headers = api_doc_request_headers or {}
+        self.request_headers = request_headers or {}
 
     def load_spec(self, spec_url, base_url=None):
         """Load a Swagger Spec from the given URL
@@ -74,26 +89,29 @@ class Loader(object):
         :param base_url: TODO: need this?
         :returns: validated json spec in dict form
         """
-        spec_json = json_load_url(
+        spec_json = start_request(
             self.http_client,
             spec_url,
-            self.api_doc_request_headers,
-        )
+            self.request_headers,
+        ).wait().json()
+
         validator20.validate_spec(spec_json)
         return spec_json
 
 
+# TODO: Adding the file scheme here just adds complexity to start_request()
+# Is there a better way to handle this?
 def load_file(spec_file, http_client=None):
-    """Loads and validates a Swagger spec file.
+    """Loads a spec file
 
-    :param http_client: HTTP client interface.
     :param spec_file: Path to swagger.json.
+    :param http_client: HTTP client interface.
     :return: validated json spec in dict form
     :raise: IOError: On error reading swagger.json.
     """
     file_path = os.path.abspath(spec_file)
     url = urlparse.urljoin(u'file:', urllib.pathname2url(file_path))
-    # When loading from files, everything is relative to the resource listing
+    # When loading from files, everything is relative to the spec file
     dir_path = os.path.dirname(file_path)
     base_url = urlparse.urljoin(u'file:', urllib.pathname2url(dir_path))
     return load_url(url, http_client=http_client, base_url=base_url)
@@ -117,51 +135,39 @@ def load_url(spec_url, http_client=None, base_url=None):
     return loader.load_spec(spec_url, base_url=base_url)
 
 
-def load_json(spec, http_client=None):
-    """Process a swagger spec that has already been parsed.
+class docstring_property(object):
+    def __init__(self, func):
+        self.func = func
 
-    :param spec: Parsed Swagger spec.
-    :type  spec: dict
-    :param http_client:
-    :return: validated spec in dict form
-    """
-    if http_client is None:
-        http_client = SynchronousHttpClient()
-
-    loader = Loader(http_client=http_client)
-    loader.process_spec(spec)
-    return spec
+    def __get__(self, _cls, _owner):
+        return self.func()
 
 
 def create_model_type(model):
-    """creates a dynamic model from the model data present in the json
-       :param model: Resource Model json containing id, properties
-       :type model: dict
-       :returns: dynamic type created with attributes, docstrings attached
-       :rtype: type
+    """Create a dynamic class from the model data defined in the swagger spec.
+
+    The docstring for this class is dynamically generated because generating
+    the docstring is relatively expensive, and would only be used in rare
+    cases for interactive debugging in a REPL.
+
+    :param model: Resource model :class:`dict` with keys `id` and `properties`
+    :returns: dynamic type created with attributes, docstrings attached
+    :rtype: type
     """
     props = model['properties']
     name = str(model['id'])
+
     methods = dict(
-        # Magic Methods :
-        # Define the docstring
-        __doc__=create_model_docstring(props),
-        # Make equality work for dict & type OR type & type
+        __doc__=docstring_property(partial(create_model_docstring, props)),
         __eq__=lambda self, other: compare(self, other),
-        # Define the constructor for the type
         __init__=lambda self, **kwargs: set_props(self, **kwargs),
-        # Define the str repr of the type
         __repr__=lambda self: create_model_repr(self),
-        # Instance methods :
-        # Generates flat dict from the model instance
-        _flat_dict=lambda self: create_flat_dict(self))
-    model_type = type(name, (object,), methods)
-    # Define a class variable to store types of its attributes
-    setattr(model_type, '_swagger_types',
-            swagger_type.get_swagger_types(props))
-    # Define a class variable to store all required fields
-    setattr(model_type, '_required', model.get('required'))
-    return model_type
+        __dir__=lambda self: props.keys(),
+        _flat_dict=lambda self: create_flat_dict(self),
+        _swagger_types=swagger_type.get_swagger_types(props),
+        _required=model.get('required'),
+    )
+    return type(name, (object,), methods)
 
 
 def set_props(model, **kwargs):
