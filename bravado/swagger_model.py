@@ -13,8 +13,6 @@ from bravado import swagger_type
 from bravado.compat import json
 from bravado.http_client import SynchronousHttpClient
 
-# TODO: replace w/ 2.0
-SWAGGER_VERSIONS = [u"1.2"]
 
 log = logging.getLogger(__name__)
 

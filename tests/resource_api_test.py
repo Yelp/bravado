@@ -30,10 +30,11 @@ import unittest
 import httpretty
 
 from bravado.client import SwaggerClient
-from exception import SwaggerError
+from bravado.exception import SwaggerError
 
 
 class ResourceApiTest(unittest.TestCase):
+
     def setUp(self):
         parameter = {
             "paramType": "query",
@@ -76,7 +77,9 @@ class ResourceApiTest(unittest.TestCase):
             self.register_urls()
             self.assertRaises(SwaggerError, SwaggerClient.from_url,
                               u'http://localhost/api-docs')
-        [iterate_test(field) for field in ('path', 'operations')]
+
+        for field in ('path', 'operations'):
+            iterate_test(field)
 
 
 if __name__ == '__main__':

@@ -6,11 +6,13 @@
 import unittest
 
 import httpretty
+import pytest
 
 from bravado.client import SwaggerClient
 
 
 # noinspection PyDocstring
+@pytest.mark.xfail
 class ClientTest(unittest.TestCase):
 
     # Pass body if available and send header as json
