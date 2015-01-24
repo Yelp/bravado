@@ -167,6 +167,7 @@ def load_resource_listing(
         the http request to fetch resources.
     """
     request_options = request_options or {}
+    timeout = request_options.get('timeout', 5)
     base_url = base_url or url
     processor = ValidationProcessor()
 
@@ -180,13 +181,13 @@ def load_resource_listing(
         # Start all async requests
         eventuals = map(get_eventual_for_api, resource_listing['apis'])
         for api, eventual in zip(resource_listing['apis'], eventuals):
-            api['api_declaration'] = eventual.wait().json()
+            api['api_declaration'] = eventual.wait(timeout=timeout).json()
 
     resource_listing = start_request(
         http_client,
         url,
         request_options
-    ).wait().json()
+    ).wait(timeout=timeout).json()
 
     processor.pre_apply(resource_listing)
 
