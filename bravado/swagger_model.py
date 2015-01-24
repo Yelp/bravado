@@ -311,4 +311,3 @@ def create_model_repr(model):
         string += ("%s%s=%r" % (separator, prop, getattr(model, prop)))
         separator = ", "
     return ("%s(%s)" % (model.__class__.__name__, string))
-

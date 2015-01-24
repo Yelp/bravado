@@ -54,12 +54,10 @@ without caching
 
 from bravado.compat import json
 import logging
-import os.path
 import time
 import urllib
 import urlparse
 
-import swagger_spec_validator
 from yelp_uri import urllib_utf8
 
 import swagger_type
@@ -340,7 +338,8 @@ class SwaggerClient(object):
     #     :param resource_listing: a dict with a list of api definitions
     #     :param http_client: an HTTP client used to perform requests
     #     :type  http_client: :class:`bravado.http_client.HttpClient`
-    #     :param api_base_path: a url, override the path used to make api requests
+    #     :param api_base_path: a url, override the path used to make api
+    #       requests
     #     :type  api_base_path: str
     #     :param api_doc_request_headers: Headers to pass with api docs requests
     #     :type  api_doc_request_headers: dict
@@ -375,7 +374,8 @@ class SwaggerClient(object):
         """
         api_serving_url = build_api_serving_url(spec, origin_url)
         http_client or SynchronousHttpClient()
-        resources = build_resources_from_spec(http_client, spec, api_serving_url)
+        resources = build_resources_from_spec(
+            http_client, spec, api_serving_url)
         return cls(api_serving_url, resources)
 
     def __repr__(self):
@@ -420,7 +420,7 @@ def build_api_serving_url(spec, origin_url, preferred_scheme=None):
         the default scheme to be used is the one used to access the
         specification.
 
-    See https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#swagger-object-
+    See https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#swagger-object-   # noqa
 
     @param spec: the Swagger spec in json-like dict form
     @param origin_url: the URL from which the spec was retrieved
@@ -461,7 +461,7 @@ def build_resources_from_spec(http_client, spec, api_base_path, url_base):
     return dict(
         (api_doc['name'],
          Resource.from_api_doc(api_doc, http_client, api_base_path, url_base))
-        for api_doc in apis)
+        for api_doc in spec['paths'])
 
 
 def _build_param_docstring(param):
