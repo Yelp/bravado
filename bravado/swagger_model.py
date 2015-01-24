@@ -141,6 +141,7 @@ class docstring_property(object):
         return self.func()
 
 
+# AAA 1.2 - TODO purge w/ 1.2
 def create_model_type(model):
     """Create a dynamic class from the model data defined in the swagger spec.
 
@@ -167,30 +168,16 @@ def create_model_type(model):
     )
     return type(name, (object,), methods)
 
+# AAA 2.0 - TODO remove detour
+def create_definition_type(definition):
+    from bravado.mapping.definition import create_definition_type
+    return create_definition_type(definition)
 
+
+# XXX TODO remove detour
 def set_props(model, **kwargs):
-    """Constructor for the generated type - assigns given or default values
-
-       :param model: generated model type reference
-       :type model: type
-       :param kwargs: attributes to override default values of constructor
-       :type kwargs: dict
-    """
-    types = getattr(model, '_swagger_types')
-    arg_keys = kwargs.keys()
-    for property_name, property_swagger_type in types.iteritems():
-        swagger_py_type = swagger_type.swagger_to_py_type(
-            property_swagger_type)
-        # Assign all property values specified in kwargs
-        if property_name in arg_keys:
-            property_value = kwargs[property_name]
-            arg_keys.remove(property_name)
-        else:
-            # If not in kwargs, provide a default value to the type
-            property_value = swagger_type.get_instance(swagger_py_type)
-        setattr(model, property_name, property_value)
-    if arg_keys:
-        raise AttributeError(" %s are not defined for %s." % (arg_keys, model))
+    from bravado.mapping.definition import set_props
+    return set_props(model, **kwargs)
 
 
 def create_model_docstring(props):
@@ -243,20 +230,10 @@ def create_model_docstring(props):
     return docstring
 
 
+# XXX 1.2 - remove detour
 def compare(first, second):
-    """Compares the two types for equivalence.
-
-    If a type composes another model types, .__dict__ recurse on those
-    and compares again on those dict values
-    """
-    if not hasattr(second, '__dict__'):
-        return False
-
-    # Ignore any '_raw' keys
-    def norm_dict(d):
-        return dict((k, d[k]) for k in d if k != '_raw')
-
-    return norm_dict(first.__dict__) == norm_dict(second.__dict__)
+    from bravado.mapping.definition import compare
+    return compare(first, second)
 
 
 def create_flat_dict(model):
