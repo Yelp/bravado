@@ -52,12 +52,15 @@ from bravado.compat import json
 import unittest
 
 import httpretty
+import pytest
 
 from bravado.client import SwaggerClient
-from exception import SwaggerError
+from bravado.exception import SwaggerError
 
 
+@pytest.mark.xfail(reason='Re-write when Resource ported over to swagger 2.0')
 class ResourceTest(unittest.TestCase):
+
     def setUp(self):
         self.models = {
             "School": {

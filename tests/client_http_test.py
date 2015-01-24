@@ -12,7 +12,7 @@ from bravado.client import SwaggerClient
 
 
 # noinspection PyDocstring
-@pytest.mark.xfail
+@pytest.mark.xfail(reason='Re-write when client ported over to Swagger 2.0')
 class ClientTest(unittest.TestCase):
 
     # Pass body if available and send header as json
