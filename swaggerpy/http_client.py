@@ -24,6 +24,7 @@ MULT_FORM = 'multipart/form-data'
 class HttpClient(object):
     """Interface for a minimal HTTP client.
     """
+
     def request(self, method, url, params=None, data=None):
         """Issue an HTTP request.
 

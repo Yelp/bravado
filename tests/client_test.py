@@ -62,7 +62,8 @@ class SwaggerClientCacheTest(unittest.TestCase):
             with patch('swaggerpy.client.time.time',
                        side_effect=[1, 1]):
                 cache = SwaggerClientCache()
-                client_object = client.CacheEntry(cache.build_client('test'), 3)
+                client_object = client.CacheEntry(
+                    cache.build_client('test'), 3)
                 self.assertEqual('foo', client_object.item)
                 self.assertEqual(3, client_object.ttl)
                 self.assertEqual(1, client_object.timestamp)

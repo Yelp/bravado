@@ -3,6 +3,7 @@
   sha: 5fe82b
   hooks:
     - id: autopep8-wrapper
+      args: ['-i', '--ignore=E309']
     - id: check-json
     - id: check-yaml
     - id: debug-statements
@@ -13,7 +14,9 @@
     - id: requirements-txt-fixer
       files: 'requirements-dev.txt'
 
-- repo: git://github.com/FalconSocial/pre-commit-python-sorter
-  sha: 1.0.1
-  hooks:
-    - id: python-import-sorter
+# TODO: re-enable in bravado, disabled for now to avoid excessive merge
+# conflicts
+#- repo: git://github.com/FalconSocial/pre-commit-python-sorter
+#  sha: 1.0.1
+#  hooks:
+#    - id: python-import-sorter
