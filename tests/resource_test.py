@@ -24,11 +24,12 @@ from bravado.compat import json
 import unittest
 
 import httpretty
+import pytest
 
 from bravado.client import SwaggerClient, Resource, Operation
-from bravado.processors import SwaggerError
 
 
+@pytest.mark.xfail(reason='Rewrite when Resource/Operation/Model for 2.0 done')
 class ResourceTest(unittest.TestCase):
     def setUp(self):
         parameter = {
@@ -60,23 +61,6 @@ class ResourceTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/api-docs/api_test",
             body=json.dumps(self.response))
-
-    @httpretty.activate
-    def test_error_on_wrong_swagger_version(self):
-        self.response["swaggerVersion"] = "XYZ"
-        self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient.from_url,
-                          u'http://localhost/api-docs')
-
-    @httpretty.activate
-    def test_error_on_missing_attr(self):
-        def iterate_test(field):
-            self.response.pop(field)
-            self.register_urls()
-            self.assertRaises(SwaggerError, SwaggerClient.from_url,
-                              u'http://localhost/api-docs')
-        [iterate_test(field) for field in (
-            'swaggerVersion', 'basePath', 'apis')]
 
     # Use baesPath as api domain if it is '/' in the API declaration
     @httpretty.activate
