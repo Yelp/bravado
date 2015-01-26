@@ -111,7 +111,7 @@ class SwaggerClientCache(object):
     def __call__(self, *args, **kwargs):
         # timeout is backwards compatible with 0.7
         ttl = kwargs.pop('ttl', kwargs.pop('timeout', SWAGGER_SPEC_CACHE_TTL))
-        key = repr(args) + repr(kwargs)
+        key = repr(args) + repr(sorted(kwargs.iteritems()))
 
         if key not in self:
             self.cache[key] = CacheEntry(

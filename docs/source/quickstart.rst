@@ -120,7 +120,14 @@ Caching
 
 .. note::
 
-        Caching can totally be bypassed by using ``SwaggerClient()`` (discouraged).
+    Caching can totally be bypassed by using
+    :class:`bravado.client.SwaggerClient()` directly.
+
+    .. code-block:: python
+
+        client = SwaggerClient.from_url(
+            "http://petstore.swagger.wordnik.com/api/api-docs")
+
 
 Adding Request Headers
 ----------------------
