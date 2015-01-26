@@ -85,7 +85,8 @@ class ResourceTest(unittest.TestCase):
             httpretty.GET, "http://localhost/test_http?query=foo",
             body='[]')
         self.register_urls()
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_param="foo").result()
         self.assertEqual([], resp)
 
@@ -96,7 +97,8 @@ class ResourceTest(unittest.TestCase):
             httpretty.GET, "http://localhost/append/test_http?",
             body='[]')
         self.register_urls()
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
         resource.testHTTP(test_param="foo").result()
         self.assertEqual(["foo"],
                          httpretty.last_request().querystring['test_param'])
@@ -143,7 +145,8 @@ class ResourceTest(unittest.TestCase):
             body=u'""')
         self.response["basePath"] = "http://localhost/lame/test"
         self.register_urls()
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_param="foo").result()
         self.assertEqual('', resp)
 

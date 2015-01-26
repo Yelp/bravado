@@ -1,5 +1,6 @@
 bottle
 httpretty
 mock
-pytest
 ordereddict
+pre-commit
+pytest
