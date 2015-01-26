@@ -3,4 +3,5 @@ bottle
 httpretty
 mock
 ordereddict
+pre-commit
 pytest

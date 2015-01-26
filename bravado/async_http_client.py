@@ -98,6 +98,7 @@ class AsyncResponse(object):
     """
     Remove the property text and content and make them as overridable attrs
     """
+
     def __init__(self, req, resp, data):
         self.request = req
         self.status_code = resp.code
@@ -129,6 +130,7 @@ class _HTTPBodyFetcher(Protocol):
 
     Eventually AsyncResponse() is created on receiving complete response
     """
+
     def __init__(self, request, response, finished):
         self.buffer = StringIO()
         self.request = request
