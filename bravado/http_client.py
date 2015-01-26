@@ -72,6 +72,9 @@ class HttpClient(object):
         raise NotImplementedError(
             u"%s: Method not implemented", self.__class__.__name__)
 
+    def __repr__(self):
+        return "{0}()".format(type(self))
+
 
 class Authenticator(object):
     """Authenticates requests.
