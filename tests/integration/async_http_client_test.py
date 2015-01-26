@@ -6,9 +6,7 @@ import time
 import unittest
 
 import bottle
-
 from bravado.async_http_client import AsynchronousHttpClient
-
 
 ROUTE_1_RESPONSE = "HEY BUDDY"
 ROUTE_2_RESPONSE = "BYE BUDDY"

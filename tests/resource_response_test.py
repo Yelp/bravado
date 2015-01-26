@@ -55,19 +55,17 @@ is validated against its type 'Pet' which is defined like so:
 """
 
 import datetime
-from bravado.compat import json
 import unittest
-from mock import Mock
 
 import httpretty
-from dateutil.tz import tzutc
 import pytest
-from requests import HTTPError
-
 from bravado.client import SwaggerClient
-from bravado.exception import CancelledError
-from bravado.exception import SwaggerError
+from bravado.compat import json
+from bravado.exception import CancelledError, SwaggerError
 from bravado.response import HTTPFuture
+from dateutil.tz import tzutc
+from mock import Mock
+from requests import HTTPError
 
 
 class HTTPFutureTest(unittest.TestCase):

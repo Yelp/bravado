@@ -6,11 +6,7 @@ import httpretty
 import mock
 import pytest
 import requests
-
-from bravado.http_client import (
-    SynchronousHttpClient,
-    SynchronousEventual,
-)
+from bravado.http_client import SynchronousEventual, SynchronousHttpClient
 
 
 class SynchronousClientTestCase(unittest.TestCase):

@@ -6,9 +6,9 @@
 #
 
 import unittest
-from mock import Mock
 
 from bravado.exception import HTTPError
+from mock import Mock
 
 
 class HTTPErrorTest(unittest.TestCase):

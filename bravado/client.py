@@ -52,23 +52,19 @@ without caching
 
 """
 
-from bravado.compat import json
 import logging
 import time
 import urllib
 import urlparse
 
-from yelp_uri import urllib_utf8
-
 import swagger_type
+from bravado.compat import json
 from bravado.http_client import APP_JSON, SynchronousHttpClient
 from bravado.response import HTTPFuture, post_receive
-from bravado.swagger_model import (
-    Loader,
-    create_model_type,
-    is_file_scheme_uri,
-)
+from bravado.swagger_model import (create_model_type, is_file_scheme_uri,
+                                   load_resource_listing)
 from bravado.swagger_type import SwaggerTypeCheck
+from yelp_uri import urllib_utf8
 
 log = logging.getLogger(__name__)
 
@@ -301,7 +297,8 @@ class SwaggerClient(object):
             cls,
             url,
             http_client=None,
-            request_headers=None):
+            api_base_path=None,
+            request_options=None):
         """
         Build a :class:`SwaggerClient` from a url to api docs describing the
         api.
@@ -310,20 +307,18 @@ class SwaggerClient(object):
         :type url: str
         :param http_client: an HTTP client used to perform requests
         :type  http_client: :class:`bravado.http_client.HttpClient`
-        :param request_headers: Headers to pass with api docs requests
-        :type  request_headers: dict
+        :param api_base_path: a url, override the path used to make api requests
+        :type  api_base_path: str
+        :param request_options: extra values to pass with api docs requests
+        :type  request_options: dict
         """
         log.debug(u"Loading from %s" % url)
         http_client = http_client or SynchronousHttpClient()
 
-        # TODO: better way to customize the request for api-docs, so we don't
-        # have to add new kwargs for everything
-        loader = Loader(http_client, request_headers=request_headers)
-
-        # Loads and validates the spec
-        spec = loader.load_spec(url)
-
-        return cls.from_spec(spec, http_client, origin_url=url)
+        return cls.from_spec(
+            load_resource_listing(url, http_client, None, request_options),
+            http_client=http_client,
+            original_url=url)
 
     # @classmethod
     # def from_resource_listing(
@@ -341,8 +336,6 @@ class SwaggerClient(object):
     #     :param api_base_path: a url, override the path used to make api
     #       requests
     #     :type  api_base_path: str
-    #     :param api_doc_request_headers: Headers to pass with api docs requests
-    #     :type  api_doc_request_headers: dict
     #     :param url: the url used to retrieve the resource listing
     #     :type  url: str
     #     """

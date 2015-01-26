@@ -49,12 +49,11 @@ import datetime
 import unittest
 import urlparse
 
-from dateutil.tz import tzutc
 import httpretty
 import pytest
-
 from bravado.client import SwaggerClient
 from bravado.compat import json
+from dateutil.tz import tzutc
 
 
 @pytest.mark.xfail(reason='Re-write when Operation ported over to Swagger 2.0')

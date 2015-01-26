@@ -3,18 +3,14 @@ import datetime
 import unittest
 
 import httpretty
-import requests
-from mock import Mock, patch
 import pytest
-
+import requests
 from bravado import client
 from bravado.async_http_client import AsynchronousHttpClient
-from bravado.client import (
-    add_param_to_req,
-    SwaggerClient,
-    SwaggerClientCache,
-    validate_and_add_params_to_request,
-)
+from bravado.client import (SwaggerClient, SwaggerClientCache,
+                            add_param_to_req,
+                            validate_and_add_params_to_request)
+from mock import Mock, patch
 
 
 class ValidateParamTest(unittest.TestCase):

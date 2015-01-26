@@ -28,15 +28,13 @@ class CancelledError():
 
 
 class SwaggerError(Exception):
-    """Raised when an error is encountered mapping the JSON objects into the
+    """Raised when an error is encountered mapping a response objects into a
     model.
+
+    :param msg: String message for the error.
+    :param context: ParsingContext object
+    :param cause: Optional exception that caused this one.
     """
 
     def __init__(self, msg, context, cause=None):
-        """Ctor.
-
-        :param msg: String message for the error.
-        :param context: ParsingContext object
-        :param cause: Optional exception that caused this one.
-        """
         super(Exception, self).__init__(msg, context, cause)

@@ -1,6 +1,4 @@
-
 import mock
-
 from bravado import swagger_model
 
 
