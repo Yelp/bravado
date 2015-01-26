@@ -46,17 +46,18 @@ A sample 'peration' is listed below in 'operations' list.
 """
 
 import datetime
-from swaggerpy.compat import json
 import unittest
 import urlparse
 
-import httpretty
 from dateutil.tz import tzutc
+import httpretty
+import pytest
 
-from swaggerpy.client import SwaggerClient
-from swaggerpy.processors import SwaggerError
+from bravado.client import SwaggerClient
+from bravado.compat import json
 
 
+@pytest.mark.xfail(reason='Re-write when Operation ported over to Swagger 2.0')
 class ResourceOperationTest(unittest.TestCase):
     def setUp(self):
         self.parameter = {
@@ -93,37 +94,10 @@ class ResourceOperationTest(unittest.TestCase):
             httpretty.GET, "http://localhost/api-docs/api_test",
             body=json.dumps(self.response))
 
-    @httpretty.activate
-    def test_error_on_missing_attr(self):
-        def iterate_test(field):
-            self.response["apis"][0]["operations"][0].pop(field)
-            self.register_urls()
-            self.assertRaises(SwaggerError, SwaggerClient.from_url,
-                              u'http://localhost/api-docs')
-        [iterate_test(field) for field in ('method', 'nickname', 'type',
-                                           'parameters')]
-
     #############################
     # Validate param in operation
     #############################
     # ToDo: Check correctness if $ref is passed (and no type)
-
-    @httpretty.activate
-    def test_error_on_missing_attr_in_parameter(self):
-        def iterate_test(field):
-            self.response["apis"][0]["operations"][0]["parameters"][0].pop(
-                field)
-            self.register_urls()
-            self.assertRaises(SwaggerError, SwaggerClient.from_url,
-                              u'http://localhost/api-docs')
-        [iterate_test(field) for field in ('type', 'paramType', 'name')]
-
-    @httpretty.activate
-    def test_error_on_missing_items_param_in_array_parameter(self):
-        self.response["apis"][0]["operations"][0]["type"] = "array"
-        self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient.from_url,
-                          u'http://localhost/api-docs')
 
     @httpretty.activate
     def test_error_on_having_body_and_form_both_in_parameter(self):
@@ -133,36 +107,6 @@ class ResourceOperationTest(unittest.TestCase):
         self.register_urls()
         self.assertRaises(AttributeError, SwaggerClient.from_url,
                           u'http://localhost/api-docs')
-
-    @httpretty.activate
-    def test_error_on_wrong_attr_type_in_parameter(self):
-        parameters = self.response["apis"][0]["operations"][0]["parameters"]
-        parameters[0]["type"] = "WRONG_TYPE"
-        self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient.from_url,
-                          u'http://localhost/api-docs')
-
-    @httpretty.activate
-    def test_error_on_wrong_attr_type_in_array_parameter(self):
-        parameters = self.response["apis"][0]["operations"][0]["parameters"]
-        parameters[0]["type"] = "array"
-        parameters[0]["items"] = {"type": "WRONG_TYPE"}
-        self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient.from_url,
-                          u'http://localhost/api-docs')
-
-    @httpretty.activate
-    def test_error_on_missing_param_in_error_response(self):
-        msg = {"code": 400, "message": "some message"}
-
-        def iterate_test(field):
-            operations = self.response["apis"][0]["operations"]
-            operations[0]["responseMessages"] = [msg]
-            operations[0]["responseMessages"][0].pop(field)
-            self.register_urls()
-            self.assertRaises(SwaggerError, SwaggerClient.from_url,
-                              u'http://localhost/api-docs')
-        [iterate_test(field) for field in ('code', 'message')]
 
     ######################################################
     # Validate paramType of parameters - path, query, body
@@ -422,7 +366,7 @@ class ResourceOperationTest(unittest.TestCase):
     # ToDo: Wrong body type not being checked as of now...
     @httpretty.activate
     def test_error_on_post_with_wrong_type_body(self):
-        pass
+        pytest.mark.xfail(reason='TODO')
 
 
 if __name__ == '__main__':

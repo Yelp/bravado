@@ -1,13 +1,13 @@
-swaggerpy Package
+bravado Package
 =================
 
-:mod:`swaggerpy` Package
+:mod:`bravado` Package
 ------------------------
 
 :mod:`http_client` Module
 -------------------------
 
-.. automodule:: swaggerpy.http_client
+.. automodule:: bravado.http_client
     :members:
     :undoc-members:
     :show-inheritance:
@@ -15,7 +15,7 @@ swaggerpy Package
 :mod:`async_http_client` Module
 -------------------------------
 
-.. automodule:: swaggerpy.async_http_client
+.. automodule:: bravado.async_http_client
     :members:
     :undoc-members:
     :show-inheritance:
@@ -23,7 +23,7 @@ swaggerpy Package
 :mod:`swagger_type` Module
 --------------------------
 
-.. automodule:: swaggerpy.swagger_type
+.. automodule:: bravado.swagger_type
     :members:
     :undoc-members:
     :show-inheritance:
@@ -31,7 +31,7 @@ swaggerpy Package
 :mod:`response` Module
 ----------------------
 
-.. automodule:: swaggerpy.response
+.. automodule:: bravado.response
     :members:
     :undoc-members:
     :show-inheritance:
@@ -39,7 +39,7 @@ swaggerpy Package
 :mod:`exception` Module
 -----------------------
 
-.. automodule:: swaggerpy.exception
+.. automodule:: bravado.exception
     :members:
     :undoc-members:
     :show-inheritance:
@@ -47,7 +47,7 @@ swaggerpy Package
 :mod:`processors` Module
 ------------------------
 
-.. automodule:: swaggerpy.processors
+.. automodule:: bravado.processors
     :members:
     :undoc-members:
     :show-inheritance:
@@ -55,7 +55,7 @@ swaggerpy Package
 :mod:`swagger_model` Module
 ---------------------------
 
-.. automodule:: swaggerpy.swagger_model
+.. automodule:: bravado.swagger_model
     :members:
     :undoc-members:
     :show-inheritance:
@@ -63,7 +63,7 @@ swaggerpy Package
 :mod:`client` Module
 --------------------
 
-.. automodule:: swaggerpy.client
+.. automodule:: bravado.client
     :members:
     :undoc-members:
     :show-inheritance:

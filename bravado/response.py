@@ -9,7 +9,7 @@ it into Python class types
 """
 import swagger_type
 from swagger_type import SwaggerTypeCheck
-from swaggerpy.exception import CancelledError
+from bravado.exception import CancelledError
 
 
 DEFAULT_TIMEOUT_S = 5.0
@@ -32,7 +32,7 @@ class HTTPFuture(object):
     def __init__(self, http_client, request_params, post_receive):
         """Kicks API call for Asynchronous client
 
-        :param http_client: a :class:`swaggerpy.http_client.HttpClient`
+        :param http_client: a :class:`bravado.http_client.HttpClient`
         :param request_params: dict containing API request parameters
         :param post_receive: function to callback on finish
         """

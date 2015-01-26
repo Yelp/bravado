@@ -48,16 +48,19 @@ A sample 'model' is listed below in models list.
 }
 """
 
-from swaggerpy.compat import json
+from bravado.compat import json
 import unittest
 
 import httpretty
+import pytest
 
-from swaggerpy.client import SwaggerClient
-from swaggerpy.processors import SwaggerError
+from bravado.client import SwaggerClient
+from bravado.exception import SwaggerError
 
 
+@pytest.mark.xfail(reason='Re-write when Resource ported over to swagger 2.0')
 class ResourceTest(unittest.TestCase):
+
     def setUp(self):
         self.models = {
             "School": {
@@ -138,7 +141,7 @@ class ResourceTest(unittest.TestCase):
             body="")
 
     ################################################################
-    # Test that swaggerpy correctly creates model
+    # Test that bravado correctly creates model
     # classes from swagger model definitions
     # API calls are not triggered here.
     # Scope is limited to model definition in swagger api spec

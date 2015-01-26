@@ -42,34 +42,34 @@ To get a client with caching
 
 .. code-block:: python
 
-        client = swaggerpy.client.get_client(api_docs_url)
+        client = bravado.client.get_client(api_docs_url)
 
 without caching
 
 .. code-block:: python
 
-        client = swaggerpy.client.SwaggerClient.from_url(api_docs_url)
+        client = bravado.client.SwaggerClient.from_url(api_docs_url)
 
 """
 
-from swaggerpy.compat import json
+from bravado.compat import json
 import logging
-import os.path
 import time
 import urllib
-from urlparse import urlparse
+import urlparse
 
 from yelp_uri import urllib_utf8
 
 import swagger_type
-from swaggerpy.http_client import APP_JSON, SynchronousHttpClient
-from swaggerpy.response import HTTPFuture, post_receive
-from swaggerpy.swagger_model import (
+from bravado.http_client import APP_JSON, SynchronousHttpClient
+from bravado.response import HTTPFuture, post_receive
+from bravado.swagger_model import (
+    Loader,
     create_model_type,
     is_file_scheme_uri,
     load_resource_listing,
 )
-from swaggerpy.swagger_type import SwaggerTypeCheck
+from bravado.swagger_type import SwaggerTypeCheck
 
 log = logging.getLogger(__name__)
 
@@ -119,10 +119,10 @@ class SwaggerClientCache(object):
 
         return self.cache[key].item
 
-    def build_client(self, api_docs, *args, **kwargs):
-        if isinstance(api_docs, basestring):
-            return SwaggerClient.from_url(api_docs, *args, **kwargs)
-        return SwaggerClient.from_resource_listing(api_docs, *args, **kwargs)
+    def build_client(self, spec_url_or_dict, *args, **kwargs):
+        if isinstance(spec_url_or_dict, basestring):
+            return SwaggerClient.from_url(spec_url_or_dict, *args, **kwargs)
+        return SwaggerClient.from_spec(spec_url_or_dict, *args, **kwargs)
 
 
 cache = None
@@ -244,7 +244,7 @@ class Resource(object):
         """
         :param api_doc: api doc which defines this resource
         :type  api_doc: :class:`dict`
-        :param http_client: a :class:`swaggerpy.http_client.HttpClient`
+        :param http_client: a :class:`bravado.http_client.HttpClient`
         :param base_path: base url to perform api requests. Used to override
                 the path provided in the api spec
         :param url_base: a url used as the base for resource definitions
@@ -311,7 +311,7 @@ class SwaggerClient(object):
         :param url: url pointing at the swagger api docs
         :type url: str
         :param http_client: an HTTP client used to perform requests
-        :type  http_client: :class:`swaggerpy.http_client.HttpClient`
+        :type  http_client: :class:`bravado.http_client.HttpClient`
         :param api_base_path: a url, override the path used to make api requests
         :type  api_base_path: str
         :param request_options: extra values to pass with api docs requests
@@ -320,44 +320,63 @@ class SwaggerClient(object):
         log.debug(u"Loading from %s" % url)
         http_client = http_client or SynchronousHttpClient()
 
-        return cls.from_resource_listing(
+        return cls.from_spec(
             load_resource_listing(url, http_client, None, request_options),
             http_client=http_client,
-            api_base_path=api_base_path,
-            url=url)
+            original_url=url)
+
+    # @classmethod
+    # def from_resource_listing(
+    #         cls,
+    #         resource_listing,
+    #         http_client=None,
+    #         api_base_path=None,
+    #         url=None):
+    #     """
+    #     Build a :class:`SwaggerClient` from swagger api docs
+    #
+    #     :param resource_listing: a dict with a list of api definitions
+    #     :param http_client: an HTTP client used to perform requests
+    #     :type  http_client: :class:`bravado.http_client.HttpClient`
+    #     :param api_base_path: a url, override the path used to make api
+    #       requests
+    #     :type  api_base_path: str
+    #     :param api_doc_request_headers: Headers to pass with api docs requests
+    #     :type  api_doc_request_headers: dict
+    #     :param url: the url used to retrieve the resource listing
+    #     :type  url: str
+    #     """
+    #     url = url or resource_listing.get(u'url')
+    #     log.debug(u"Using resources from %s" % url)
+    #
+    #     if url:
+    #         url_base = "{uri.scheme}://{uri.netloc}".format(uri=urlparse(url))
+    #     else:
+    #         url_base = None
+    #
+    #     resources = build_resources_from_spec(
+    #         http_client or SynchronousHttpClient(),
+    #         map(append_name_to_api, resource_listing['apis']),
+    #         api_base_path,
+    #         url_base)
+    #     return cls(url, resources)
 
     @classmethod
-    def from_resource_listing(
-            cls,
-            resource_listing,
-            http_client=None,
-            api_base_path=None,
-            url=None):
+    def from_spec(cls, spec, http_client=None, origin_url=None):
         """
         Build a :class:`SwaggerClient` from swagger api docs
 
-        :param resource_listing: a dict with a list of api definitions
+        :param spec: a dict with a Swagger spec in json-like form
         :param http_client: an HTTP client used to perform requests
-        :type  http_client: :class:`swaggerpy.http_client.HttpClient`
-        :param api_base_path: a url, override the path used to make api requests
-        :type  api_base_path: str
-        :param url: the url used to retrieve the resource listing
-        :type  url: str
+        :type  http_client: :class:`bravado.http_client.HttpClient`
+        :param origin_url: the url used to retrieve the spec
+        :type  origin_url: str
         """
-        url = url or resource_listing.get(u'url')
-        log.debug(u"Using resources from %s" % url)
-
-        if url:
-            url_base = "{uri.scheme}://{uri.netloc}".format(uri=urlparse(url))
-        else:
-            url_base = None
-
+        api_serving_url = build_api_serving_url(spec, origin_url)
+        http_client or SynchronousHttpClient()
         resources = build_resources_from_spec(
-            http_client or SynchronousHttpClient(),
-            map(append_name_to_api, resource_listing['apis']),
-            api_base_path,
-            url_base)
-        return cls(url, resources)
+            http_client, spec, api_serving_url)
+        return cls(api_serving_url, resources)
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self._api_url)
@@ -376,16 +395,73 @@ class SwaggerClient(object):
         return self._resources.keys()
 
 
-def build_resources_from_spec(http_client, apis, api_base_path, url_base):
+def build_api_serving_url(spec, origin_url, preferred_scheme=None):
+    """The URL used to service API requests does not necessarily have to be the
+    same URL that was used to retrieve the API spec.
+
+    The existence of three fields in the root of the specification govern
+    the value of the api_serving_url:
+
+    - host string
+        The host (name or ip) serving the API. This MUST be the host only and
+        does not include the scheme nor sub-paths. It MAY include a port.
+        If the host is not included, the host serving the documentation is to
+        be used (including the port). The host does not support path templating.
+
+    - basePath string
+        The base path on which the API is served, which is relative to the
+        host. If it is not included, the API is served directly under the host.
+        The value MUST start with a leading slash (/). The basePath does not
+        support path templating.
+
+    - schemes [string]
+        The transfer protocol of the API. Values MUST be from the list:
+        "http", "https", "ws", "wss". If the schemes is not included,
+        the default scheme to be used is the one used to access the
+        specification.
+
+    See https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#swagger-object-   # noqa
+
+    @param spec: the Swagger spec in json-like dict form
+    @param origin_url: the URL from which the spec was retrieved
+    @param preferred_scheme: preferred scheme to use if more than one scheme is
+        supported by the API.
+    """
+    origin = urlparse.urlparse(origin_url)
+
+    def pick_a_scheme(schemes):
+        if not schemes:
+            return origin.scheme
+
+        if preferred_scheme:
+            if preferred_scheme in schemes:
+                return preferred_scheme
+            raise Exception(
+                "Preferred scheme {0} not supported by API. Available schemes "
+                "include {1}".format(preferred_scheme, schemes))
+
+        if origin.scheme in schemes:
+            return origin.scheme
+
+        if len(schemes) == 1:
+            return schemes[0]
+
+        raise Exception(
+            "Origin scheme {0} not supported by API. Available schemes "
+            "include {1}".format(origin.scheme, schemes))
+
+    netloc = spec.get('host', origin.netloc)
+    path = spec.get('basePath', origin.path)
+    scheme = pick_a_scheme(spec.get('schemes'))
+
+    return urlparse.urlunparse((scheme, netloc, path, None, None, None))
+
+
+def build_resources_from_spec(http_client, spec, api_base_path, url_base):
     return dict(
         (api_doc['name'],
          Resource.from_api_doc(api_doc, http_client, api_base_path, url_base))
-        for api_doc in apis)
-
-
-def append_name_to_api(api_entry):
-    name, ext = os.path.splitext(os.path.basename(api_entry['path']))
-    return dict(api_entry, name=name)
+        for api_doc in spec['paths'])
 
 
 def _build_param_docstring(param):

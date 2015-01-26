@@ -1,4 +1,4 @@
-swagger-py documentation
+bravado documentation
 ========================
 
 This project acts as a generic client library for services which follow *Swagger* schema.
@@ -14,7 +14,7 @@ Features include:
  
 * Caching of api-docs with regular staleness check.
 
-* Strict validations to check swagger spec is `v1.2 <https://github.com/wordnik/swagger-spec/blob/master/versions/1.2.md/>`_ compatible.
+* Strict validations to check swagger spec is `v2.0 <https://github.com/wordnik/swagger-spec/blob/master/versions/2.0.md/>`_ compatible.
 
 * Validations on the parameter and response types.
 
@@ -32,7 +32,7 @@ Contents:
    quickstart
    changelog
    configuration
-   swaggerpy
+   bravado
 
 Indices and tables
 ==================

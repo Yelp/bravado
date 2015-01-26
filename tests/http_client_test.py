@@ -7,7 +7,7 @@ import mock
 import pytest
 import requests
 
-from swaggerpy.http_client import (
+from bravado.http_client import (
     SynchronousHttpClient,
     SynchronousEventual,
 )

@@ -8,7 +8,7 @@
 import unittest
 from mock import Mock
 
-from swaggerpy.exception import HTTPError
+from bravado.exception import HTTPError
 
 
 class HTTPErrorTest(unittest.TestCase):
