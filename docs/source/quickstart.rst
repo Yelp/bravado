@@ -121,7 +121,7 @@ Caching
 .. note::
 
     Caching can totally be bypassed by using
-    :class:`swaggerpy.client.SwaggerClient()` directly.
+    :class:`bravado.client.SwaggerClient()` directly.
 
     .. code-block:: python
 

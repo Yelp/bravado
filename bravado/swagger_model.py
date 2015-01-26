@@ -53,7 +53,7 @@ class FileEventual(object):
 def start_request(http_client, url, headers):
     """Download and parse JSON from a URL.
 
-    :param http_client: a :class:`swaggerpy.http_client.HttpClient`
+    :param http_client: a :class:`bravado.http_client.HttpClient`
     :param url: url for api docs
     :return: an object with a :func`wait` method which returns the api docs
     """
