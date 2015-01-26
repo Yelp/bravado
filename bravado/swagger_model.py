@@ -50,51 +50,67 @@ class FileEventual(object):
         pass
 
 
-def start_request(http_client, url, headers):
+def start_request(http_client, url, request_options):
     """Download and parse JSON from a URL.
 
     :param http_client: a :class:`bravado.http_client.HttpClient`
     :param url: url for api docs
+    :param request_options: additional fields to send with the request
     :return: an object with a :func`wait` method which returns the api docs
     """
     if is_file_scheme_uri(url):
         return FileEventual(url)
 
-    request_params = {
-        'method': 'GET',
-        'url': url,
-        'headers': headers,
-    }
+    request_params = dict(
+        method='GET',
+        url=url,
+        **request_options)
     return http_client.start_request(request_params)
 
 
-class Loader(object):
-    """Abstraction for loading Swagger API's.
+def load_resource_listing(
+        url,
+        http_client,
+        base_url=None,
+        request_options=None):
+    """Load a complete swagger api spec and return all schemas compiled
+    into a single dict.
 
-    :param http_client: HTTP client interface.
-    :type  http_client: http_client.HttpClient
-    :param request_headers: dict of request headerss
+    :param url: url to the swagger spec (file or http)
+    :param http_client: a :class:`bravado.http_client.HttpClient` for
+        performing the requests to fetch api documents.
+    :param base_url: optional url to use as the base url for api doc paths
+    :param request_options: mapping of additional fields to specify in
+        the http request to fetch resources.
     """
+    request_options = request_options or {}
+    timeout = request_options.get('timeout', 5)
+    base_url = base_url or url
 
-    def __init__(self, http_client, request_headers=None):
-        self.http_client = http_client
-        self.request_headers = request_headers or {}
+    def get_eventual_for_api(api):
+        return start_request(
+            http_client,
+            urlparse.urljoin(base_url + '/', api['path'].strip('/')),
+            request_options)
 
-    def load_spec(self, spec_url, base_url=None):
-        """Load a Swagger Spec from the given URL
+    def add_api_docs(resource_listing):
+        if not resource_listing.get('apis'):
+            return
 
-        :param spec_url: URL to swagger.json
-        :param base_url: TODO: need this?
-        :returns: validated json spec in dict form
-        """
-        spec_json = start_request(
-            self.http_client,
-            spec_url,
-            self.request_headers,
-        ).wait().json()
+        # Start all async requests
+        eventuals = map(get_eventual_for_api, resource_listing['apis'])
+        for api, eventual in zip(resource_listing['apis'], eventuals):
+            api['api_declaration'] = eventual.wait(timeout=timeout).json()
 
-        validator20.validate_spec(spec_json)
-        return spec_json
+    spec_json = start_request(
+        http_client,
+        url,
+        request_options
+    ).wait(timeout=timeout).json()
+
+    validator20.validate_spec(spec_json)
+    add_api_docs(spec_json)
+    return spec_json
 
 
 # TODO: Adding the file scheme here just adds complexity to start_request()
@@ -126,11 +142,8 @@ def load_url(spec_url, http_client=None, base_url=None):
     :return: validated spec in dict form
     :raise: IOError, URLError: On error reading api-docs.
     """
-    if http_client is None:
-        http_client = SynchronousHttpClient()
-
-    loader = Loader(http_client=http_client)
-    return loader.load_spec(spec_url, base_url=base_url)
+    http_client = http_client or SynchronousHttpClient()
+    return load_resource_listing(spec_url, http_client, base_url=base_url)
 
 
 class docstring_property(object):

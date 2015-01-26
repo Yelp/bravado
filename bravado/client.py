@@ -64,7 +64,6 @@ import swagger_type
 from bravado.http_client import APP_JSON, SynchronousHttpClient
 from bravado.response import HTTPFuture, post_receive
 from bravado.swagger_model import (
-    Loader,
     create_model_type,
     is_file_scheme_uri,
     load_resource_listing,
@@ -341,8 +340,6 @@ class SwaggerClient(object):
     #     :param api_base_path: a url, override the path used to make api
     #       requests
     #     :type  api_base_path: str
-    #     :param api_doc_request_headers: Headers to pass with api docs requests
-    #     :type  api_doc_request_headers: dict
     #     :param url: the url used to retrieve the resource listing
     #     :type  url: str
     #     """
