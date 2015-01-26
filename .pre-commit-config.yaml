@@ -14,9 +14,7 @@
     - id: requirements-txt-fixer
       files: 'requirements-dev.txt'
 
-# TODO: re-enable in bravado, disabled for now to avoid excessive merge
-# conflicts
-#- repo: git://github.com/FalconSocial/pre-commit-python-sorter
-#  sha: 1.0.1
-#  hooks:
-#    - id: python-import-sorter
+- repo: git://github.com/FalconSocial/pre-commit-python-sorter
+  sha: 1.0.1
+  hooks:
+    - id: python-import-sorter

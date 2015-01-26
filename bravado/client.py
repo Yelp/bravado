@@ -52,23 +52,19 @@ without caching
 
 """
 
-from bravado.compat import json
 import logging
 import time
 import urllib
 import urlparse
 
-from yelp_uri import urllib_utf8
-
 import swagger_type
+from bravado.compat import json
 from bravado.http_client import APP_JSON, SynchronousHttpClient
 from bravado.response import HTTPFuture, post_receive
-from bravado.swagger_model import (
-    create_model_type,
-    is_file_scheme_uri,
-    load_resource_listing,
-)
+from bravado.swagger_model import (create_model_type, is_file_scheme_uri,
+                                   load_resource_listing)
 from bravado.swagger_type import SwaggerTypeCheck
+from yelp_uri import urllib_utf8
 
 log = logging.getLogger(__name__)
 

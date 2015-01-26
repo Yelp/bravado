@@ -48,13 +48,12 @@ A sample 'model' is listed below in models list.
 }
 """
 
-from bravado.compat import json
 import unittest
 
 import httpretty
 import pytest
-
 from bravado.client import SwaggerClient
+from bravado.compat import json
 from bravado.exception import SwaggerError
 
 

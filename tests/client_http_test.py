@@ -7,7 +7,6 @@ import unittest
 
 import httpretty
 import pytest
-
 from bravado.client import SwaggerClient
 
 

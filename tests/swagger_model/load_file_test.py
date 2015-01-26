@@ -1,5 +1,4 @@
 import pytest
-
 from bravado.swagger_model import load_file
 
 

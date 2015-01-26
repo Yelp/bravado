@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 import contextlib
-from copy import copy
-from functools import partial
 import logging
 import os
 import urllib
 import urlparse
-
-from swagger_spec_validator import validator20
+from copy import copy
+from functools import partial
 
 from bravado import swagger_type
 from bravado.compat import json
 from bravado.http_client import SynchronousHttpClient
-
+from swagger_spec_validator import validator20
 
 log = logging.getLogger(__name__)
 

@@ -5,7 +5,6 @@
 import datetime
 
 import dateutil.parser
-
 from exception import SwaggerError
 
 # Tuple is added to allow a response '4' which is of

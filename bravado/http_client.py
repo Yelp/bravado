@@ -14,7 +14,6 @@ import urlparse
 import requests
 import requests.auth
 
-
 log = logging.getLogger(__name__)
 APP_FORM = 'application/x-www-form-urlencoded'
 APP_JSON = 'application/json'

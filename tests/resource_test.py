@@ -20,13 +20,12 @@ A sample 'resource' is listed below.
 }
 """
 
-from bravado.compat import json
 import unittest
 
 import httpretty
 import pytest
-
-from bravado.client import SwaggerClient, Resource, Operation
+from bravado.client import Operation, Resource, SwaggerClient
+from bravado.compat import json
 
 
 @pytest.mark.xfail(reason='Rewrite when Resource/Operation/Model for 2.0 done')

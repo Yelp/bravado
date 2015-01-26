@@ -1,5 +1,4 @@
 import pytest
-
 from bravado.client import build_api_serving_url
 
 

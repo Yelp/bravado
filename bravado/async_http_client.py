@@ -8,25 +8,22 @@
 """Asynchronous HTTP client abstractions.
 """
 
-from cStringIO import StringIO
-from bravado.compat import json
 import logging
+from cStringIO import StringIO
 
 import crochet
 import twisted.internet.error
 import twisted.web.client
+from bravado import client, http_client
+from bravado.compat import json
+from bravado.exception import HTTPError
+from bravado.multipart_response import create_multipart_content
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.protocol import Protocol
-from twisted.web.client import Agent
-from twisted.web.client import FileBodyProducer
+from twisted.web.client import Agent, FileBodyProducer
 from twisted.web.http_headers import Headers
 from yelp_uri import urllib_utf8
-
-from bravado import client
-from bravado import http_client
-from bravado.exception import HTTPError
-from bravado.multipart_response import create_multipart_content
 
 log = logging.getLogger(__name__)
 

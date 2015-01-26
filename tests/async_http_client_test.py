@@ -11,19 +11,19 @@ Not Tested:
 2) Timeouts by crochet's wait()
 """
 
-from bravado.compat import json
 import unittest
 from collections import namedtuple
-from mock import patch, Mock
-from ordereddict import OrderedDict
 
-from crochet._eventloop import EventualResult
-from twisted.internet.defer import Deferred
-from twisted.web.http_headers import Headers
+from ordereddict import OrderedDict
 
 import bravado.async_http_client
 import bravado.exception
 import bravado.http_client
+from bravado.compat import json
+from crochet._eventloop import EventualResult
+from mock import Mock, patch
+from twisted.internet.defer import Deferred
+from twisted.web.http_headers import Headers
 
 
 class AsyncHttpClientTest(unittest.TestCase):
