@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import contextlib
-from copy import copy
 from functools import partial
 import logging
 import os
@@ -12,7 +11,8 @@ from swagger_spec_validator import validator20
 from bravado import swagger_type
 from bravado.compat import json
 from bravado.http_client import SynchronousHttpClient
-
+from mapping.definition import create_definition_repr, create_flat_dict
+from mapping.docstring import docstring_property, create_definition_docstring
 
 log = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class Loader(object):
 
     :param http_client: HTTP client interface.
     :type  http_client: http_client.HttpClient
-    :param request_headers: dict of request headerss
+    :param request_headers: dict of request headers
     """
 
     def __init__(self, http_client, request_headers=None):
@@ -133,158 +133,29 @@ def load_url(spec_url, http_client=None, base_url=None):
     return loader.load_spec(spec_url, base_url=base_url)
 
 
-class docstring_property(object):
-    def __init__(self, func):
-        self.func = func
-
-    def __get__(self, _cls, _owner):
-        return self.func()
-
-
 # AAA 1.2 - TODO purge w/ 1.2
-def create_model_type(model):
-    """Create a dynamic class from the model data defined in the swagger spec.
-
-    The docstring for this class is dynamically generated because generating
-    the docstring is relatively expensive, and would only be used in rare
-    cases for interactive debugging in a REPL.
-
-    :param model: Resource model :class:`dict` with keys `id` and `properties`
-    :returns: dynamic type created with attributes, docstrings attached
-    :rtype: type
-    """
-    props = model['properties']
-    name = str(model['id'])
-
-    methods = dict(
-        __doc__=docstring_property(partial(create_model_docstring, props)),
-        __eq__=lambda self, other: compare(self, other),
-        __init__=lambda self, **kwargs: set_props(self, **kwargs),
-        __repr__=lambda self: create_model_repr(self),
-        __dir__=lambda self: props.keys(),
-        _flat_dict=lambda self: create_flat_dict(self),
-        _swagger_types=swagger_type.get_swagger_types(props),
-        _required=model.get('required'),
-    )
-    return type(name, (object,), methods)
-
-# AAA 2.0 - TODO remove detour
-def create_definition_type(definition):
-    from bravado.mapping.definition import create_definition_type
-    return create_definition_type(definition)
-
-
-# XXX TODO remove detour
-def set_props(model, **kwargs):
-    from bravado.mapping.definition import set_props
-    return set_props(model, **kwargs)
-
-
-def create_model_docstring(props):
-    """Generates a docstring for the type from the props
-
-       :param props: dict containing properties of the type
-       :type props: dict
-       :returns: Generated string
-
-    Example: ::
-
-        "Pet": {
-            "id": "Pet",
-            "properties": {
-                "id": {
-                    "type": "integer",
-                    "format": "int64",
-                    "description": "unique identifier for the pet",
-                },
-                "category": {
-                    "$ref": "Category"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string",
-                    "description": "pet status in the store",
-                }
-            }
-        }
-
-    Result: ::
-
-        Attributes:
-
-            category (Category)
-            status (str) : pet status in the store
-            name (str)
-            id (long) : unique identifier for the pet
-    """
-    types = swagger_type.get_swagger_types(props)
-    docstring = "Attributes:\n\n\t"
-    for prop in props.keys():
-        py_type = swagger_type.swagger_to_py_type_string(types[prop])
-        docstring += ("%s (%s) " % (prop, py_type))
-        if props[prop].get('description'):
-            docstring += ": " + props[prop]['description']
-        docstring += '\n\t'
-    return docstring
-
-
-# XXX 1.2 - remove detour
-def compare(first, second):
-    from bravado.mapping.definition import compare
-    return compare(first, second)
-
-
-def create_flat_dict(model):
-    """Generates __dict__ of the model traversing recursively
-    each of the list item of an array and calling it again.
-    While __dict__ only converts it on one level.
-
-       :param model: generated model type reference
-       :type model: type
-       :returns: flat dict repr of the model
-
-    Example: ::
-
-        Pet(id=3, name="Name", photoUrls=["7"], tags=[Tag(id=2, name='T')])
-
-    converts to: ::
-
-        {'id': 3,
-         'name': 'Name',
-         'photoUrls': ['7'],
-         'tags': [{'id': 2,
-                   'name': 'T'}
-                 ]
-         }
-    """
-    if not hasattr(model, '__dict__'):
-        return model
-    model_dict = copy(model.__dict__)
-    for k, v in model.__dict__.iteritems():
-        if isinstance(v, list):
-            model_dict[k] = [create_flat_dict(x) for x in v if x is not None]
-        elif v is None:
-            # Remove None values from dict to avoid their type checking
-            if model._required and k in model._required:
-                raise AttributeError("Required field %s can not be None" % k)
-            model_dict.pop(k)
-        else:
-            model_dict[k] = create_flat_dict(v)
-    return model_dict
-
-
-def create_model_repr(model):
-    """Generates the repr string for the model
-
-       :param model: generated model type reference
-       :type model: type
-       :returns: repr string for the model
-    """
-    string = ""
-    separator = ""
-    for prop in getattr(model, '_swagger_types').keys():
-        string += ("%s%s=%r" % (separator, prop, getattr(model, prop)))
-        separator = ", "
-    return ("%s(%s)" % (model.__class__.__name__, string))
+# def create_model_type(definition_dict):
+#     """Create a dynamic class from the definition_dict data defined in the swagger spec.
+#
+#     The docstring for this class is dynamically generated because generating
+#     the docstring is relatively expensive, and would only be used in rare
+#     cases for interactive debugging in a REPL.
+#
+#     :param definition_dict: Resource definition_dict :class:`dict` with keys `id` and `properties`
+#     :returns: dynamic type created with attributes, docstrings attached
+#     :rtype: type
+#     """
+#     props = definition_dict['properties']
+#     name = str(definition_dict['id'])
+#
+#     methods = dict(
+#         __doc__=docstring_property(partial(create_definition_docstring, props)),
+#         __eq__=lambda self, other: compare(self, other),
+#         __init__=lambda self, **kwargs: set_props(self, **kwargs),
+#         __repr__=lambda self: create_definition_repr(self),
+#         __dir__=lambda self: props.keys(),
+#         _flat_dict=lambda self: create_flat_dict(self),
+#         _swagger_types=swagger_type.get_swagger_types(props),
+#         _required=definition_dict.get('required'),
+#     )
+#     return type(name, (object,), methods)

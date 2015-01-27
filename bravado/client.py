@@ -62,13 +62,14 @@ from yelp_uri import urllib_utf8
 
 import swagger_type
 from bravado.http_client import APP_JSON, SynchronousHttpClient
+from bravado.mapping.definition import build_definitions
 from bravado.response import HTTPFuture, post_receive
 from bravado.swagger_model import (
     Loader,
-    create_model_type,
     is_file_scheme_uri,
 )
 from bravado.swagger_type import SwaggerTypeCheck
+
 
 log = logging.getLogger(__name__)
 
@@ -210,16 +211,11 @@ class Operation(object):
         return HTTPFuture(self._http_client, request, response_future)
 
 
-# XXX 2.0 - TODO remove detour
-def build_definitions(definitions_dict):
-    from bravado.mapping.definition import build_definitions
-    return build_definitions(definitions_dict)
-
-# XXX 1.2
-def build_models(model_dicts):
-    return dict(
-        (name, create_model_type(model_def))
-        for name, model_def in model_dicts.iteritems())
+# XXX 1.2 - purge
+# def build_models(model_dicts):
+#     return dict(
+#         (name, create_model_type(model_def))
+#         for name, model_def in model_dicts.iteritems())
 
 
 def get_resource_url(base_path, url_base, resource_base_path):
@@ -420,6 +416,11 @@ class SwaggerClient(object):
         spec['x_origin_url'] = origin_url
         spec['x_api_url'] = build_api_serving_url(spec, origin_url)
         http_client = http_client or SynchronousHttpClient()
+
+        # begin work
+        definitions = build_definitions(spec['definitions'])
+        # end work
+
         resources = build_resources(spec, http_client)
 
         # STOP HERE
@@ -623,7 +624,7 @@ def add_param_to_req(param, value, request):
     elif param_req_type == u'body':
         if not swagger_type.is_primitive(type_):
             # If not primitive, body has to be 'dict'
-            # (or has already been converted to dict from model)
+            # (or has already been converted to dict from definition_dict)
             request['headers']['content-type'] = APP_JSON
             request['data'] = json.dumps(value)
         else:
@@ -644,7 +645,7 @@ def validate_and_add_params_to_request(param, value, request, models):
     :type param: dict
     :param value: value for the param given in the API call
     :param request: request object to be populated
-    :param models: models tuple containing all complex model types
+    :param models: models tuple containing all complex definition_dict types
     :type models: namedtuple
     """
     # If param not given in args, and not required, just ignore.

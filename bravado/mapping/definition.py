@@ -1,23 +1,27 @@
+from copy import copy
+from functools import partial
+
+from bravado import swagger_type
+from bravado.mapping.docstring import docstring_property
+from bravado.mapping.docstring import create_definition_docstring
 
 
-# XXX 2.0
 def build_definitions(definitions_dict):
-    """
-    definition - An object to hold data types produced and consumed by operations.
+    """Builds the objects that hold data types produced and consumed by
+    operations.
 
-    https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#definitionsObject
+    https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#definitionsObject  # noqa
 
     :param definitions_dict: spec['definitions']
-    :returns: dict where (name,value) = (definition name, Definition type)
+    :returns: dict where (name,value) = (definition name, definition type)
     """
     definitions = {}
-    for definition_name, definition_dict in definitions.iteritems():
+    for definition_name, definition_dict in definitions_dict.iteritems():
         definitions[definition_name] = \
             create_definition_type(definition_name, definition_dict)
     return definitions
 
 
-# XXX 2.0
 def create_definition_type(definition_name, definition_dict):
     """Create a dynamic class from the definition data defined in the swagger
     spec.
@@ -28,36 +32,35 @@ def create_definition_type(definition_name, definition_dict):
 
     :param definition_name: definition name
     :param definition_dict: json-like dict that describes a definition.
-        {
-            definitions {
-                $definition_name {
-                    $definition_dict
-                }
-            }
-        }
     :returns: dynamic type created with attributes, docstrings attached
     :rtype: type
     """
     props = definition_dict['properties']
 
     methods = dict(
-        __doc__=docstring_property(partial(create_model_docstring, props)),
+        __doc__=docstring_property(partial(create_definition_docstring, props)),
         __eq__=lambda self, other: compare(self, other),
         __init__=lambda self, **kwargs: set_props(self, **kwargs),
-        __repr__=lambda self: create_model_repr(self),
+        __repr__=lambda self: create_definition_repr(self),
         __dir__=lambda self: props.keys(),
         _flat_dict=lambda self: create_flat_dict(self),
         _swagger_types=swagger_type.get_swagger_types(props),
-        _required=model.get('required'),
+        _required=definition_dict.get('required'),
     )
     return type(definition_name, (object,), methods)
 
 
 def compare(first, second):
-    """Compares the two types for equivalence.
+    """Compares two definition types for equivalence.
 
-    If a type composes another model types, .__dict__ recurse on those
-    and compares again on those dict values
+    If a type composes another definition type, .__dict__ recurse on those
+    and compare again on those dict values.
+
+    :param first: generated definition type reference
+    :type first: type
+    :param second: generated definition type reference
+    :type second: type
+    :returns: True if equivalent, False otherwise
     """
     # TODO: make sure this has a unit test
     if not hasattr(second, '__dict__'):
@@ -70,16 +73,16 @@ def compare(first, second):
     return norm_dict(first.__dict__) == norm_dict(second.__dict__)
 
 
-def set_props(model, **kwargs):
+def set_props(definition, **kwargs):
     """Constructor for the generated type - assigns given or default values
 
-       :param model: generated model type reference
-       :type model: type
-       :param kwargs: attributes to override default values of constructor
-       :type kwargs: dict
+    :param definition: generated definition type reference
+    :type definition: type
+    :param kwargs: attributes to override default values of constructor
+    :type kwargs: dict
     """
     # TODO: make sure this has a unit test
-    types = getattr(model, '_swagger_types')
+    types = getattr(definition, '_swagger_types')
     arg_keys = kwargs.keys()
     for property_name, property_swagger_type in types.iteritems():
         swagger_py_type = swagger_type.swagger_to_py_type(
@@ -91,6 +94,60 @@ def set_props(model, **kwargs):
         else:
             # If not in kwargs, provide a default value to the type
             property_value = swagger_type.get_instance(swagger_py_type)
-        setattr(model, property_name, property_value)
+        setattr(definition, property_name, property_value)
     if arg_keys:
-        raise AttributeError(" %s are not defined for %s." % (arg_keys, model))
+        raise AttributeError(" %s are not defined for %s." % (arg_keys, definition))
+
+
+def create_definition_repr(definition):
+    """Generates the repr string for the definition.
+
+    :param definition: generated definition type
+    :type definition: type
+    :returns: repr string for the definition
+    """
+    string = ""
+    separator = ""
+    for prop in getattr(definition, '_swagger_types').keys():
+        string += ("%s%s=%r" % (separator, prop, getattr(definition, prop)))
+        separator = ", "
+    return "%s(%s)" % (definition.__class__.__name__, string)
+
+
+def create_flat_dict(definition):
+    """Generates __dict__ of the definition traversing recursively
+    each of the list item of an array and calling it again.
+    While __dict__ only converts it on one level.
+
+    :param definition: generated definition type reference
+    :type definition: type
+    :returns: flat dict repr of the definition
+
+    Example: ::
+
+        Pet(id=3, name="Name", photoUrls=["7"], tags=[Tag(id=2, name='T')])
+
+    converts to: ::
+
+        {'id': 3,
+         'name': 'Name',
+         'photoUrls': ['7'],
+         'tags': [{'id': 2,
+                   'name': 'T'}
+                 ]
+         }
+    """
+    if not hasattr(definition, '__dict__'):
+        return definition
+    definition_dict = copy(definition.__dict__)
+    for k, v in definition.__dict__.iteritems():
+        if isinstance(v, list):
+            definition_dict[k] = [create_flat_dict(x) for x in v if x is not None]
+        elif v is None:
+            # Remove None values from dict to avoid their type checking
+            if definition._required and k in definition._required:
+                raise AttributeError("Required field %s can not be None" % k)
+            definition_dict.pop(k)
+        else:
+            definition_dict[k] = create_flat_dict(v)
+    return definition_dict

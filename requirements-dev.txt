@@ -5,3 +5,4 @@ mock
 ordereddict
 pre-commit
 pytest
+pytest-mock
