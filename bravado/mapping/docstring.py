@@ -10,7 +10,7 @@ class docstring_property(object):
         return self.func()
 
 
-def create_definition_docstring(props):
+def create_model_docstring(props):
     """Generates a docstring for the type from the props
 
     :param props: dict containing properties of the type

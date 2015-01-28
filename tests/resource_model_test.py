@@ -5,9 +5,9 @@
 # Copyright (c) 2014, Yelp, Inc.
 #
 
-"""Swagger client tests to validate resource 'definition_dict's
+"""Swagger client tests to validate resource 'model_dict's
 
-A sample 'definition_dict' is listed below in models list.
+A sample 'model_dict' is listed below in models list.
 
 {
     "apiVersion": "1.0.0",
@@ -141,10 +141,10 @@ class ResourceTest(unittest.TestCase):
             body="")
 
     ################################################################
-    # Test that bravado correctly creates definition_dict
-    # classes from swagger definition_dict definitions
+    # Test that bravado correctly creates model_dict
+    # classes from swagger model_dict definitions
     # API calls are not triggered here.
-    # Scope is limited to definition_dict definition in swagger api spec
+    # Scope is limited to model_dict model in swagger api spec
     ################################################################
 
     @httpretty.activate
@@ -242,7 +242,7 @@ class ResourceTest(unittest.TestCase):
 
     @httpretty.activate
     def test_success_if_type_but_no_ref_in_property(self):
-        # Default definition_dict. All success tests test this.
+        # Default model_dict. All success tests test this.
         pass
 
     @httpretty.activate

@@ -11,8 +11,8 @@ from swagger_spec_validator import validator20
 from bravado import swagger_type
 from bravado.compat import json
 from bravado.http_client import SynchronousHttpClient
-from mapping.definition import create_definition_repr, create_flat_dict
-from mapping.docstring import docstring_property, create_definition_docstring
+from mapping.model import create_model_repr, create_flat_dict
+from mapping.docstring import docstring_property, create_model_docstring
 
 log = logging.getLogger(__name__)
 
@@ -134,28 +134,28 @@ def load_url(spec_url, http_client=None, base_url=None):
 
 
 # AAA 1.2 - TODO purge w/ 1.2
-# def create_model_type(definition_dict):
-#     """Create a dynamic class from the definition_dict data defined in the swagger spec.
+# def create_model_type(model_dict):
+#     """Create a dynamic class from the model_dict data defined in the swagger spec.
 #
 #     The docstring for this class is dynamically generated because generating
 #     the docstring is relatively expensive, and would only be used in rare
 #     cases for interactive debugging in a REPL.
 #
-#     :param definition_dict: Resource definition_dict :class:`dict` with keys `id` and `properties`
+#     :param model_dict: Resource model_dict :class:`dict` with keys `id` and `properties`
 #     :returns: dynamic type created with attributes, docstrings attached
 #     :rtype: type
 #     """
-#     props = definition_dict['properties']
-#     name = str(definition_dict['id'])
+#     props = model_dict['properties']
+#     name = str(model_dict['id'])
 #
 #     methods = dict(
-#         __doc__=docstring_property(partial(create_definition_docstring, props)),
+#         __doc__=docstring_property(partial(create_model_docstring, props)),
 #         __eq__=lambda self, other: compare(self, other),
 #         __init__=lambda self, **kwargs: set_props(self, **kwargs),
-#         __repr__=lambda self: create_definition_repr(self),
+#         __repr__=lambda self: create_model_repr(self),
 #         __dir__=lambda self: props.keys(),
 #         _flat_dict=lambda self: create_flat_dict(self),
 #         _swagger_types=swagger_type.get_swagger_types(props),
-#         _required=definition_dict.get('required'),
+#         _required=model_dict.get('required'),
 #     )
 #     return type(name, (object,), methods)

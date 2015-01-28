@@ -62,7 +62,7 @@ from yelp_uri import urllib_utf8
 
 import swagger_type
 from bravado.http_client import APP_JSON, SynchronousHttpClient
-from bravado.mapping.definition import build_definitions
+from bravado.mapping.model import build_models
 from bravado.response import HTTPFuture, post_receive
 from bravado.swagger_model import (
     Loader,
@@ -418,7 +418,7 @@ class SwaggerClient(object):
         http_client = http_client or SynchronousHttpClient()
 
         # begin work
-        definitions = build_definitions(spec['definitions'])
+        definitions = build_models(spec['definitions'])
         # end work
 
         resources = build_resources(spec, http_client)
@@ -624,7 +624,7 @@ def add_param_to_req(param, value, request):
     elif param_req_type == u'body':
         if not swagger_type.is_primitive(type_):
             # If not primitive, body has to be 'dict'
-            # (or has already been converted to dict from definition_dict)
+            # (or has already been converted to dict from model_dict)
             request['headers']['content-type'] = APP_JSON
             request['data'] = json.dumps(value)
         else:
@@ -645,7 +645,7 @@ def validate_and_add_params_to_request(param, value, request, models):
     :type param: dict
     :param value: value for the param given in the API call
     :param request: request object to be populated
-    :param models: models tuple containing all complex definition_dict types
+    :param models: models tuple containing all complex model_dict types
     :type models: namedtuple
     """
     # If param not given in args, and not required, just ignore.
