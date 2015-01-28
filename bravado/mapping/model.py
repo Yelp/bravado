@@ -100,12 +100,11 @@ def create_model_repr(model):
     :type model: type
     :returns: repr string for the model
     """
-    string = ""
-    separator = ""
-    for prop in sorted(getattr(model, '_swagger_types').keys()):
-        string += ("%s%s=%r" % (separator, prop, getattr(model, prop)))
-        separator = ", "
-    return "%s(%s)" % (model.__class__.__name__, string)
+    repr = [
+        ("%s=%r" % (prop, getattr(model, prop)))
+        for prop in sorted(getattr(model, '_swagger_types'))
+    ]
+    return "%s(%s)" % (model.__class__.__name__, ', '.join(repr))
 
 
 def create_flat_dict(model):

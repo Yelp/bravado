@@ -1,3 +1,4 @@
+import mock
 import pytest
 
 from bravado.mapping.model import create_model_type
@@ -57,11 +58,12 @@ def test_pet_model(model_dict):
     assert model_type._required == ['name', 'photoUrls']
 
 
-@pytest.mark.xfail(reason='TODO: fixme')
-def test_create_model_type_lazy_docstring(mocker, model_dict):
-    mock_create_docstring = mocker.patch(
-        'bravado.mapping.docstring.create_model_docstring', autospec=True)
-    model_type = create_model_type('Pet', model_dict)
-    assert mock_create_docstring.call_count == 0
-    assert model_type.__doc__ == mock_create_docstring.return_value
-    mock_create_docstring.assert_called_once_with(model_dict['properties'])
+@mock.patch('bravado.mapping.model.create_model_docstring', autospec=True)
+def test_create_model_type_lazy_docstring(mock_create_docstring):
+    # NOTE: some sort of weird interaction with pytest, pytest-mock and mock
+    #       made using the 'mocker' fixture here a no-go.
+    pet_dict = model_dict()
+    pet_type = create_model_type('Pet', pet_dict)
+    assert not mock_create_docstring.called
+    assert pet_type.__doc__ == mock_create_docstring.return_value
+    mock_create_docstring.assert_called_once_with(pet_dict['properties'])
