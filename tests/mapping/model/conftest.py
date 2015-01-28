@@ -109,3 +109,8 @@ def user_model(definitions_dict):
 def tag_model(definitions_dict):
     tag_dict = definitions_dict['Tag']
     return create_model_type('Tag', tag_dict)
+
+
+@pytest.fixture
+def pet_dict(definitions_dict):
+    return definitions_dict['Pet']
