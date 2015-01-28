@@ -102,7 +102,7 @@ def create_model_repr(model):
     """
     string = ""
     separator = ""
-    for prop in getattr(model, '_swagger_types').keys():
+    for prop in sorted(getattr(model, '_swagger_types').keys()):
         string += ("%s%s=%r" % (separator, prop, getattr(model, prop)))
         separator = ", "
     return "%s(%s)" % (model.__class__.__name__, string)
