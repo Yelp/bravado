@@ -44,7 +44,7 @@ def create_model_type(model_name, model_dict):
         _swagger_types=swagger_type.get_swagger_types(props),
         _required=model_dict.get('required'),
     )
-    return type(model_name, (object,), methods)
+    return type(str(model_name), (object,), methods)
 
 
 def compare(first, second):

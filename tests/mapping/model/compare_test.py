@@ -1,6 +1,4 @@
-import pytest
-
-from bravado.mapping.model import compare, create_model_type
+from bravado.mapping.model import compare
 
 
 def test_true(user_model):

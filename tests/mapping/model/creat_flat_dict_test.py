@@ -32,6 +32,6 @@ def test_model_with_list():
         }
     }
     pet_model = create_model_type('Pet', pet_dict)
-    props = {'photoUrls': ['a','b','c']}
+    props = {'photoUrls': ['a', 'b', 'c']}
     pet = pet_model(**props)
     assert props == create_flat_dict(pet)

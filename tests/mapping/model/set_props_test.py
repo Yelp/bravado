@@ -23,7 +23,7 @@ def test_props_passed_to_constructor(user_model):
 
 
 def test_invalid_props_only_raises_AttributeError(user_model):
-    props = {'foo' : 'bar'}
+    props = {'foo': 'bar'}
     with pytest.raises(AttributeError) as excinfo:
         set_props(user_model, **props)
     assert 'not defined' in str(excinfo.value)
@@ -32,7 +32,7 @@ def test_invalid_props_only_raises_AttributeError(user_model):
 def test_invalid_props_raises_AttributeError(user_model):
     props = {
         'firstName': 'Darwin',
-        'foo' : 'i am an invalid prop'
+        'foo': 'i am an invalid prop'
     }
     with pytest.raises(AttributeError) as excinfo:
         set_props(user_model, **props)

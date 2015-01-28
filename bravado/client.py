@@ -4,7 +4,6 @@ The :class:`SwaggerClient` provides an interface for making API calls based on
 a swagger spec, and returns responses of python objects which build from the
 API response.
 
-
 Structure Diagram::
 
         +---------------------+           +---------------------+
@@ -211,13 +210,6 @@ class Operation(object):
         return HTTPFuture(self._http_client, request, response_future)
 
 
-# XXX 1.2 - purge
-# def build_models(model_dicts):
-#     return dict(
-#         (name, create_model_type(model_def))
-#         for name, model_def in model_dicts.iteritems())
-
-
 def get_resource_url(base_path, url_base, resource_base_path):
     if base_path:
         return base_path
@@ -280,9 +272,11 @@ class Resource(object):
         :param api_url: base URL used to service API requests
         :param http_client: a :class:`bravado.http_client.HttpClient`
         """
+        # TODO: Fix for 2.0
+
         # XXX 1.2
-        #declaration = api_doc['api_declaration']
-        #models = build_models(declaration.get('models', {}))
+        # declaration = api_doc['api_declaration']
+        # models = build_models(declaration.get('models', {}))
 
         # TODO: path_name can be a non-http method: 'parameters'
         # TODO: path_name can be $ref
@@ -291,19 +285,19 @@ class Resource(object):
             log.debug(u"Building operation %s.%s" % (
                 path_name, operation_dict['operationId']))
 
-            #resource_base_path = declaration.get('basePath')
-            #url = get_resource_url(base_path, url_base, resource_base_path)
-            #url = url.rstrip('/') + api_obj['path']
+            # resource_base_path = declaration.get('basePath')
+            # url = get_resource_url(base_path, url_base, resource_base_path)
+            # url = url.rstrip('/') + api_obj['path']
 
             url = api_url + path_name
 
             # TODO: figure out where to get 'models' from
-            return Operation(url, operation_dict, http_client, models)
+            return Operation(url, operation_dict, http_client, models=None)
 
         operations = {}
         for http_method, operation_dict in path_dict.items():
             operation = build_operation(http_method, operation_dict)
-            operations[operation['nickname'] = operation
+            operations[operation['nickname']] = operation
 
         return cls(path_name, operations)
 
@@ -413,15 +407,18 @@ class SwaggerClient(object):
         :param origin_url: the url used to retrieve the spec
         :type  origin_url: str
         """
+
+        # Using 'x_' for the time being to identify things that
+        # have been "tacked" onto the original spec dict
         spec['x_origin_url'] = origin_url
         spec['x_api_url'] = build_api_serving_url(spec, origin_url)
         http_client = http_client or SynchronousHttpClient()
-
-        # begin work
         definitions = build_models(spec['definitions'])
-        # end work
+        spec['x_definitions'] = definitions
 
-        resources = build_resources(spec, http_client)
+        # TODO: Pick up with 'resources' here
+        # resources = build_resources(spec, http_client)
+        resources = None
 
         # STOP HERE
         return cls(spec['x_api_url'], resources)
