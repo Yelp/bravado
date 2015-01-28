@@ -32,7 +32,7 @@ class SwaggerError(Exception):
     definition_dict.
     """
 
-    def __init__(self, msg, context, cause=None):
+    def __init__(self, msg, context=None, cause=None):
         """Ctor.
 
         :param msg: String message for the error.
