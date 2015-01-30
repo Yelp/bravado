@@ -217,6 +217,9 @@ def get_swagger_type(json_):
     :type  json_: dict
     :rtype: str or unicode
     """
+    # TODO: If the type is not specified, isn't it assumed to be 'object'? Find
+    #       docs where this is stated. #/definitions/{def_name}/ don't have
+    #       a 'type' but it always seems to be assumed as 'object'
     type_ = json_.get('type')
     format_ = json_.get('format')
     ref = json_.get('$ref')

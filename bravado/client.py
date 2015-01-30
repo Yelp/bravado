@@ -4,7 +4,6 @@ The :class:`SwaggerClient` provides an interface for making API calls based on
 a swagger spec, and returns responses of python objects which build from the
 API response.
 
-
 Structure Diagram::
 
         +---------------------+           +---------------------+
@@ -62,13 +61,14 @@ from yelp_uri import urllib_utf8
 
 import swagger_type
 from bravado.http_client import APP_JSON, SynchronousHttpClient
+from bravado.mapping.model import build_models
 from bravado.response import HTTPFuture, post_receive
 from bravado.swagger_model import (
     Loader,
-    create_model_type,
     is_file_scheme_uri,
 )
 from bravado.swagger_type import SwaggerTypeCheck
+
 
 log = logging.getLogger(__name__)
 
@@ -210,12 +210,6 @@ class Operation(object):
         return HTTPFuture(self._http_client, request, response_future)
 
 
-def build_models(model_dicts):
-    return dict(
-        (name, create_model_type(model_def))
-        for name, model_def in model_dicts.iteritems())
-
-
 def get_resource_url(base_path, url_base, resource_base_path):
     if base_path:
         return base_path
@@ -238,34 +232,74 @@ class Resource(object):
         self._name = name
         self._operations = operations
 
+    # XXX 1.2
+    # @classmethod
+    # def from_api_doc(cls, api_doc, http_client, base_path, url_base=None):
+    #     """
+    #     :param api_doc: api doc which defines this resource
+    #     :type  api_doc: :class:`dict`
+    #     :param http_client: a :class:`bravado.http_client.HttpClient`
+    #     :param base_path: base url to perform api requests. Used to override
+    #             the path provided in the api spec
+    #     :param url_base: a url used as the base for resource definitions
+    #             that include a relative basePath
+    #     """
+    #     declaration = api_doc['api_declaration']
+    #     models = build_models(declaration.get('models', {}))
+    #
+    #     def build_operation(api_obj, operation):
+    #         log.debug(u"Building operation %s.%s" % (
+    #             api_obj.get('name'), operation['nickname']))
+    #
+    #         resource_base_path = declaration.get('basePath')
+    #         url = get_resource_url(base_path, url_base, resource_base_path)
+    #         url = url.rstrip('/') + api_obj['path']
+    #         return Operation(url, operation, http_client, models)
+    #
+    #     operations = dict(
+    #         (oper['nickname'], build_operation(api, oper))
+    #         for api in declaration['apis']
+    #         for oper in api['operations'])
+    #     return cls(api_doc['name'], operations)
+
     @classmethod
-    def from_api_doc(cls, api_doc, http_client, base_path, url_base=None):
+    def from_path(cls, path_name, path_dict, api_url, http_client):
         """
-        :param api_doc: api doc which defines this resource
-        :type  api_doc: :class:`dict`
+        :param path_name: Path of the resource. ex: /pets, pets/{id},
+        :param path_dict: json-like dict which defines the resource. The key
+            is usually an http method (get, put, post, delete, options, head,
+            patch)
+        :param api_url: base URL used to service API requests
         :param http_client: a :class:`bravado.http_client.HttpClient`
-        :param base_path: base url to perform api requests. Used to override
-                the path provided in the api spec
-        :param url_base: a url used as the base for resource definitions
-                that include a relative basePath
         """
-        declaration = api_doc['api_declaration']
-        models = build_models(declaration.get('models', {}))
+        # TODO: Fix for 2.0
 
-        def build_operation(api_obj, operation):
+        # XXX 1.2
+        # declaration = api_doc['api_declaration']
+        # models = build_models(declaration.get('models', {}))
+
+        # TODO: path_name can be a non-http method: 'parameters'
+        # TODO: path_name can be $ref
+
+        def build_operation(http_method, operation_dict):
             log.debug(u"Building operation %s.%s" % (
-                api_obj.get('name'), operation['nickname']))
+                path_name, operation_dict['operationId']))
 
-            resource_base_path = declaration.get('basePath')
-            url = get_resource_url(base_path, url_base, resource_base_path)
-            url = url.rstrip('/') + api_obj['path']
-            return Operation(url, operation, http_client, models)
+            # resource_base_path = declaration.get('basePath')
+            # url = get_resource_url(base_path, url_base, resource_base_path)
+            # url = url.rstrip('/') + api_obj['path']
 
-        operations = dict(
-            (oper['nickname'], build_operation(api, oper))
-            for api in declaration['apis']
-            for oper in api['operations'])
-        return cls(api_doc['name'], operations)
+            url = api_url + path_name
+
+            # TODO: figure out where to get 'models' from
+            return Operation(url, operation_dict, http_client, models=None)
+
+        operations = {}
+        for http_method, operation_dict in path_dict.items():
+            operation = build_operation(http_method, operation_dict)
+            operations[operation['nickname']] = operation
+
+        return cls(path_name, operations)
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self._name)
@@ -289,7 +323,8 @@ class SwaggerClient(object):
     """A client for accessing a Swagger-documented RESTful service.
 
     :param api_url: the url for the swagger api docs, only used for the repr.
-    :param resources: a list of :Resource: objects used to perform requests
+    :param resources: a dict of resource name to :Resource: objects used to
+        perform requests.
     """
 
     def __init__(self, api_url, resources):
@@ -372,11 +407,21 @@ class SwaggerClient(object):
         :param origin_url: the url used to retrieve the spec
         :type  origin_url: str
         """
-        api_serving_url = build_api_serving_url(spec, origin_url)
-        http_client or SynchronousHttpClient()
-        resources = build_resources_from_spec(
-            http_client, spec, api_serving_url)
-        return cls(api_serving_url, resources)
+
+        # Using 'x_' for the time being to identify things that
+        # have been "tacked" onto the original spec dict
+        spec['x_origin_url'] = origin_url
+        spec['x_api_url'] = build_api_serving_url(spec, origin_url)
+        http_client = http_client or SynchronousHttpClient()
+        definitions = build_models(spec['definitions'])
+        spec['x_definitions'] = definitions
+
+        # TODO: Pick up with 'resources' here
+        # resources = build_resources(spec, http_client)
+        resources = None
+
+        # STOP HERE
+        return cls(spec['x_api_url'], resources)
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self._api_url)
@@ -422,10 +467,11 @@ def build_api_serving_url(spec, origin_url, preferred_scheme=None):
 
     See https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#swagger-object-   # noqa
 
-    @param spec: the Swagger spec in json-like dict form
-    @param origin_url: the URL from which the spec was retrieved
-    @param preferred_scheme: preferred scheme to use if more than one scheme is
+    :param spec: the Swagger spec in json-like dict form
+    :param origin_url: the URL from which the spec was retrieved
+    :param preferred_scheme: preferred scheme to use if more than one scheme is
         supported by the API.
+    :return: base url which services api requests
     """
     origin = urlparse.urlparse(origin_url)
 
@@ -457,11 +503,25 @@ def build_api_serving_url(spec, origin_url, preferred_scheme=None):
     return urlparse.urlunparse((scheme, netloc, path, None, None, None))
 
 
-def build_resources_from_spec(http_client, spec, api_base_path, url_base):
-    return dict(
-        (api_doc['name'],
-         Resource.from_api_doc(api_doc, http_client, api_base_path, url_base))
-        for api_doc in spec['paths'])
+def build_resources(spec, http_client):
+    """Transforms the REST resources in the json-like spec into rich :Resource:
+    objects that have associated :Operation:s.
+
+    :param spec: json-like spec in dict form
+    :param http_client: an HTTP client used to perform requests
+    :type  http_client: :class:`bravado.http_client.HttpClient`
+    :returns: dict where (key,value) = (resource name, Resource instance)
+    """
+    resources = {}
+    paths = spec['paths']
+    for path_name, path_dict in paths:
+        resources[path_name] = Resource.from_path(
+            path_name,
+            path_dict,
+            spec['x_api_url'],
+            http_client)
+
+    return resources
 
 
 def _build_param_docstring(param):
@@ -561,7 +621,7 @@ def add_param_to_req(param, value, request):
     elif param_req_type == u'body':
         if not swagger_type.is_primitive(type_):
             # If not primitive, body has to be 'dict'
-            # (or has already been converted to dict from model)
+            # (or has already been converted to dict from model_dict)
             request['headers']['content-type'] = APP_JSON
             request['data'] = json.dumps(value)
         else:
@@ -582,7 +642,7 @@ def validate_and_add_params_to_request(param, value, request, models):
     :type param: dict
     :param value: value for the param given in the API call
     :param request: request object to be populated
-    :param models: models tuple containing all complex model types
+    :param models: models tuple containing all complex model_dict types
     :type models: namedtuple
     """
     # If param not given in args, and not required, just ignore.

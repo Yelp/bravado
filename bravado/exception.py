@@ -29,10 +29,10 @@ class CancelledError():
 
 class SwaggerError(Exception):
     """Raised when an error is encountered mapping the JSON objects into the
-    model.
+    model_dict.
     """
 
-    def __init__(self, msg, context, cause=None):
+    def __init__(self, msg, context=None, cause=None):
         """Ctor.
 
         :param msg: String message for the error.
