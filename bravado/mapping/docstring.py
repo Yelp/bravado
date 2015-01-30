@@ -58,3 +58,65 @@ def create_model_docstring(props):
             docstring += ": " + props[prop]['description']
         docstring += '\n\t'
     return docstring
+
+
+def create_operation_docstring(json_):
+    """Builds Operation docstring from the json dict
+
+    :param json_: data to create docstring from
+    :type json_: dict
+    :returns: string giving meta info
+
+    Example: ::
+
+        client.pet.findPetsByStatus?
+
+    Outputs: ::
+
+        [GET] Finds Pets by status
+
+        Multiple status values can be provided with comma seperated strings
+        Args:
+                status (string) : Statuses to be considered for filter
+                from_date (string) : Start date filter
+        Returns:
+                array
+        Raises:
+                400: Invalid status value
+    """
+    docstring = ""
+    if json_.get('summary'):
+        docstring += ("[%s] %s\n\n" % (json_['method'], json_.get('summary')))
+    docstring += (json_["notes"] + "\n") if json_.get("notes") else ''
+
+    if json_["parameters"]:
+        docstring += "Args:\n"
+        for param in json_["parameters"]:
+            docstring += _build_param_docstring(param)
+    if json_.get('type'):
+        docstring += "Returns:\n\t%s\n" % json_["type"]
+    if json_.get('responseMessages'):
+        docstring += "Raises:\n"
+        for msg in json_.get('responseMessages'):
+            docstring += "\t%s: %s\n" % (msg.get("code"), msg.get("message"))
+    return docstring
+
+
+def _build_param_docstring(param):
+    """Builds param docstring from the param dict
+
+    :param param: data to create docstring from
+    :type param: dict
+    :returns: string giving meta info
+
+    Example: ::
+        status (string) : Statuses to be considered for filter
+        from_date (string) : Start date filter"
+    """
+    string = "\t" + param.get("name")
+    type_ = param.get('$ref') or param.get('format') or param.get('type')
+    if type_:
+        string += (" (%s) " % type_)
+    if param.get('description'):
+        string += ": " + param["description"]
+    return string + "\n"
