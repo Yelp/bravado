@@ -81,15 +81,13 @@ class Loader(object):
 
         :param spec_url: URL to swagger.json
         :param base_url: TODO: need this?
-        :returns: validated json spec in dict form
+        :returns: json spec in dict form
         """
         spec_json = start_request(
             self.http_client,
             spec_url,
             self.request_headers,
         ).wait().json()
-
-        validator20.validate_spec(spec_json)
         return spec_json
 
 

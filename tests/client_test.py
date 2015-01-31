@@ -13,8 +13,8 @@ from bravado.client import (
     add_param_to_req,
     SwaggerClient,
     SwaggerClientCache,
-    validate_and_add_params_to_request,
 )
+from mapping.param import validate_and_add_params_to_request, add_param_to_req
 
 
 class ValidateParamTest(unittest.TestCase):

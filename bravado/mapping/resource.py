@@ -6,22 +6,22 @@ from bravado.mapping.operation import Operation
 log = logging.getLogger(__name__)
 
 
-def build_resources(spec, http_client):
+def build_resources(spec, http_client=None):
     """Transforms the REST resources in the json-like spec into rich :Resource:
     objects that have associated :Operation:s.
 
-    :param spec: json-like spec in dict form
+    :type spec: :class:`bravado.mapping.spec.Spec`
     :param http_client: an HTTP client used to perform requests
     :type  http_client: :class:`bravado.http_client.HttpClient`
     :returns: dict where (key,value) = (resource name, Resource instance)
     """
     resources = {}
-    paths = spec['paths']
-    for path_name, path_dict in paths:
+    paths = spec.spec_dict['paths']
+    for path_name, path_dict in paths.iteritems():
         resources[path_name] = Resource.from_path(
+            spec,
             path_name,
             path_dict,
-            spec['x_api_url'],
             http_client)
 
     return resources
@@ -67,41 +67,36 @@ class Resource(object):
     #     return cls(api_doc['name'], operations)
 
     @classmethod
-    def from_path(cls, path_name, path_dict, api_url, http_client):
+    def from_path(cls, spec, path_name, path_dict, http_client=None):
         """
+        :type spec: :class:`bravado.mapping.spec.Spec`
         :param path_name: Path of the resource. ex: /pets, pets/{id},
         :param path_dict: json-like dict which defines the resource. The key
             is usually an http method (get, put, post, delete, options, head,
             patch)
-        :param api_url: base URL used to service API requests
         :param http_client: a :class:`bravado.http_client.HttpClient`
         """
-        # TODO: Fix for 2.0
-
-        # XXX 1.2
-        # declaration = api_doc['api_declaration']
-        # models = build_models(declaration.get('models', {}))
-
         # TODO: path_name can be a non-http method: 'parameters'
         # TODO: path_name can be $ref
 
         def build_operation(http_method, operation_dict):
             log.debug(u"Building operation %s.%s" % (
-                path_name, operation_dict['operationId']))
+                path_name, operation_dict.get('operationId', 'unknown')))
 
             # resource_base_path = declaration.get('basePath')
             # url = get_resource_url(base_path, url_base, resource_base_path)
             # url = url.rstrip('/') + api_obj['path']
 
-            url = api_url + path_name
+            operation_url = spec.api_url + path_name
 
             # TODO: figure out where to get 'models' from
-            return Operation(url, operation_dict, http_client, models=None)
+            return Operation(spec, http_method, operation_dict, http_client)
 
         operations = {}
         for http_method, operation_dict in path_dict.items():
-            operation = build_operation(http_method, operation_dict)
-            operations[operation['nickname']] = operation
+            operation = build_operation(
+                spec, path_name, http_method, operation_dict)
+            operations[operation['operationId']] = operation
 
         return cls(path_name, operations)
 

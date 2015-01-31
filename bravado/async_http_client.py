@@ -27,6 +27,7 @@ from bravado import client
 from bravado import http_client
 from bravado.exception import HTTPError
 from bravado.multipart_response import create_multipart_content
+from mapping.param import stringify_body
 
 log = logging.getLogger(__name__)
 
@@ -160,7 +161,7 @@ def stringify_body(request_params):
     elif headers.get('content-type') == http_client.APP_FORM:
         data = urllib_utf8.urlencode(request_params.get('data', {}))
     else:
-        data = client.stringify_body(request_params.get('data', ''))
+        data = stringify_body(request_params.get('data', ''))
     return FileBodyProducer(StringIO(data)) if data else None
 
 
