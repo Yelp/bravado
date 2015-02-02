@@ -1,14 +1,18 @@
+from functools import partial
 import logging
 
 from yelp_uri import urllib_utf8
 
-#from bravado.client import validate_and_add_params_to_request
-from bravado.mapping.docstring import create_operation_docstring
+from bravado import swagger_type
+from bravado.mapping.docstring import create_operation_docstring, \
+    docstring_property
+from bravado.mapping.param import validate_and_add_params_to_request
 from bravado.response import post_receive, HTTPFuture
 
 log = logging.getLogger(__name__)
 
-
+# TOOD: swagger_type.get_swagger_type() is called so many times (across this
+#       module and param.py. Refactor state in Param class
 class Operation(object):
     """Perform a request by taking the kwargs passed to the call and
     constructing an HTTP request.
@@ -18,11 +22,10 @@ class Operation(object):
         self.path_name = path_name
         self.http_method = http_method
         self.operation_dict = operation_dict
-        #self._uri = uri
-        #self._json = operation
-        #self._http_client = http_client
-        #self._models = models
-        self.__doc__ = create_operation_docstring(self.operation_dict)
+        self._operation_id = None  # use @property getter
+        # lazy docstring
+        self.__doc__ = docstring_property(
+            partial(create_operation_docstring, self.operation_dict))
 
     @property
     def operation_id(self):
@@ -34,12 +37,17 @@ class Operation(object):
 
         :rtype: str
         """
-        operation_id = self.operation_dict.get('operationId')
-        if operation_id is None:
-            verb = self.http_method
-            target = self.path_name.replace('/', '_').replace('{', '_').replace('}', '_')
-            operation_id = verb + target
-        return operation_id
+        if self._operation_id is None:
+            self._operation_id = self.operation_dict.get('operationId')
+            if self._operation_id is None:
+                # build based on the http method and request path
+                self._operation_id = (self.http_method + '_' + self.path_name)\
+                    .replace('/', '_')\
+                    .replace('{', '_')\
+                    .replace('}', '_')\
+                    .replace('__', '_')\
+                    .strip('_')
+        return self._operation_id
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.operation_id)
@@ -61,22 +69,19 @@ class Operation(object):
         for param_dict in self.operation_dict.get('parameters', []):
             param_name = param_dict['name']
             param_value = kwargs.pop(param_name, param_dict.get('default'))
-
             validate_and_add_params_to_request(
                 self.spec,
-                param_name,
+                param_dict,
                 param_value,
                 request)
 
         if kwargs:
-            raise TypeError(u"'%s' does not have parameters %r" % (
-                self._json[u'nickname'], kwargs.keys()))
+            raise TypeError(u"{0} does not have parameters {1}".format(
+                self.operation_id, kwargs.keys()))
         return request
 
     def __call__(self, **kwargs):
-        log.debug(u"%s?%r" % (
-            self._json[u'nickname'],
-            urllib_utf8.urlencode(kwargs)))
+        log.debug(u"%s?%r" % (self.operation_id, urllib_utf8.urlencode(kwargs)))
         request = self._construct_request(**kwargs)
 
         def response_future(response, **kwargs):
@@ -87,6 +92,7 @@ class Operation(object):
             return post_receive(
                 response.json(),
                 swagger_type.get_swagger_type(self._json),
-                self._models,
+                self.spec.definitions,
                 **kwargs)
-        return HTTPFuture(self._http_client, request, response_future)
+
+        return HTTPFuture(self.spec.http_client, request, response_future)

@@ -6,17 +6,16 @@ from bravado import swagger_type
 from bravado.http_client import APP_JSON
 from bravado.swagger_type import SwaggerTypeCheck
 
-
+# TODO: Needs to be thought through some more instead of just carrying over
+#       the impl from 1.2
 def validate_and_add_params_to_request(spec, param_dict, value, request):
     """Validates if a required param_dict is given and wraps 'add_param_to_req'
     to populate a valid request.
 
-    :param param_dict: parameter in json-like dict form
-    :param param_value: value of the parameter passed into the operation
-        invocation
+    :type spec: :class:`bravado.mapping.spec.Spec`
+    :param param_dict: parameter spec in json-like dict form
+    :param value: value of the parameter passed into the operation invocation
     :param request: request object to be populated in dict form
-    :param dict models: models tuple containing all complex model_dict types
-    :type models: namedtuple
     """
     # If param_dict not given in args, and not required, just ignore.
     if not param_dict.get('required') and value is None:
@@ -61,25 +60,25 @@ def validate_and_add_params_to_request(spec, param_dict, value, request):
             raise TypeError(u"Missing required parameter '%s'" % param_name)
 
 
-def add_param_to_req(param, value, request):
+def add_param_to_req(param_dict, value, request):
     """Populates request object with the request parameters
 
-    :param param: swagger spec details of a param
-    :type param: dict
+    :param param_dict: parameters spec in json-like dict form
     :param value: value for the param given in the API call
     :param request: request object to be populated
+    :type request: dict
     """
-    pname = param['name']
-    type_ = swagger_type.get_swagger_type(param)
-    param_req_type = param['paramType']
+    param_name = param_dict['name']
+    type_ = swagger_type.get_swagger_type(param_dict)
+    location = param_dict['in']
 
-    if param_req_type == u'path':
+    if location == u'path':
         request['url'] = request['url'].replace(
-            u'{%s}' % pname,
+            u'{%s}' % param_name,
             urllib.quote(unicode(value)))
-    elif param_req_type == u'query':
-        request['params'][pname] = value
-    elif param_req_type == u'body':
+    elif location == u'query':
+        request['params'][param_name] = value
+    elif location == u'body':
         if not swagger_type.is_primitive(type_):
             # If not primitive, body has to be 'dict'
             # (or has already been converted to dict from model_dict)
@@ -87,12 +86,12 @@ def add_param_to_req(param, value, request):
             request['data'] = json.dumps(value)
         else:
             request['data'] = stringify_body(value)
-    elif param_req_type == 'form':
-        handle_form_param(pname, value, type_, request)
-    # TODO(#31): accept 'header', in paramType
+    elif location == 'formData':
+        handle_form_param(param_name, value, type_, request)
+    elif location == 'header':
+        request['headers'][param_name] = value
     else:
-        raise AssertionError(
-            u"Unsupported Parameter type: %s" % param_req_type)
+        raise AssertionError(u"Unsupported Parameter type: %s" % location)
 
 
 def stringify_body(value):
