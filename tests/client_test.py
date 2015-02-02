@@ -4,38 +4,16 @@ import unittest
 
 import httpretty
 import requests
-from mock import Mock, patch
+from mock import patch
 import pytest
 
 from bravado import client
 from bravado.async_http_client import AsynchronousHttpClient
 from bravado.client import (
-    add_param_to_req,
     SwaggerClient,
     SwaggerClientCache,
 )
-from mapping.param import validate_and_add_params_to_request, add_param_to_req
-
-
-class ValidateParamTest(unittest.TestCase):
-    """Unit tests for validate_and_add_params_to_request.
-    """
-
-    def test_unrequired_param_not_added_to_request_when_none(self):
-        param = {
-            'name': 'test_bool_param',
-            'type': 'boolean',
-            'paramType': 'query',
-            'required': False,
-        }
-        mock_request = Mock('requests.Request', autospec=True)
-
-        with patch('bravado.client.add_param_to_req') as mock_add_param:
-            validate_and_add_params_to_request(param, None, mock_request, [])
-            assert not mock_add_param.called
-
-            validate_and_add_params_to_request(param, False, mock_request, [])
-            mock_add_param.assert_called_once_with(param, False, mock_request)
+from mapping.param import add_param_to_req
 
 
 class SwaggerClientCacheTest(unittest.TestCase):

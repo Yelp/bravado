@@ -1,10 +1,9 @@
 import urllib
-
 import simplejson as json
 
-from http_client import APP_JSON
 
 from bravado import swagger_type
+from bravado.http_client import APP_JSON
 from bravado.swagger_type import SwaggerTypeCheck
 
 
