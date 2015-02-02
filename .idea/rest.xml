@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="ReSTService">
-    <option name="workdir" value="$PROJECT_DIR$/doc" />
-    <option name="DOC_DIR" value="$PROJECT_DIR$/doc" />
-  </component>
-</project>
-

@@ -1,5 +1,5 @@
-from bravado.mapping.spec import Spec
 from bravado.mapping.operation import Operation
+from bravado.mapping.spec import Spec
 
 
 def test_returns_operation_id_from_operation_spec():
