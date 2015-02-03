@@ -11,7 +11,7 @@ def paths_dict():
                     "pet"
                 ],
                 "summary": "Finds Pets by status",
-                "description": "Multiple status values can be provided with comma seperated strings", # noqa
+                "description": "Multiple status values can be provided with comma seperated strings",  # noqa
                 "operationId": "findPetsByStatus",
                 "produces": [
                     "application/json",
@@ -21,7 +21,7 @@ def paths_dict():
                     {
                         "name": "status",
                         "in": "query",
-                        "description": "Status values that need to be considered for filter", # noqa
+                        "description": "Status values that need to be considered for filter",  # noqa
                         "required": False,
                         "type": "array",
                         "items": {

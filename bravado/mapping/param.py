@@ -6,8 +6,10 @@ from bravado import swagger_type
 from bravado.http_client import APP_JSON
 from bravado.swagger_type import SwaggerTypeCheck
 
+
 # TODO: Needs to be thought through some more instead of just carrying over
 #       the impl from 1.2
+
 def validate_and_add_params_to_request(spec, param_dict, value, request):
     """Validates if a required param_dict is given and wraps 'add_param_to_req'
     to populate a valid request.

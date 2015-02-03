@@ -21,5 +21,3 @@ def test_returns_generated_operation_id_with_path_parameters():
     operation_dict = {}
     operation = Operation(spec, '/pet/{petId}', 'get', operation_dict)
     assert 'get_pet_petId' == operation.operation_id
-
-

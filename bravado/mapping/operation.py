@@ -11,8 +11,10 @@ from bravado.response import post_receive, HTTPFuture
 
 log = logging.getLogger(__name__)
 
+
 # TOOD: swagger_type.get_swagger_type() is called so many times (across this
 #       module and param.py. Refactor state in Param class
+
 class Operation(object):
     """Perform a request by taking the kwargs passed to the call and
     constructing an HTTP request.
@@ -89,9 +91,11 @@ class Operation(object):
             if not response.text:
                 return None
 
+            print response.json()
+
             return post_receive(
                 response.json(),
-                swagger_type.get_swagger_type(self._json),
+                swagger_type.get_swagger_type(self.operation_dict),
                 self.spec.definitions,
                 **kwargs)
 

@@ -23,7 +23,6 @@ from twisted.web.client import FileBodyProducer
 from twisted.web.http_headers import Headers
 from yelp_uri import urllib_utf8
 
-from bravado import client
 from bravado import http_client
 from bravado.exception import HTTPError
 from bravado.multipart_response import create_multipart_content

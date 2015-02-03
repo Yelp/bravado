@@ -224,15 +224,3 @@ class SwaggerClient(object):
 
     def __dir__(self):
         return self._resources.keys()
-
-
-
-
-
-
-
-
-
-
-
-

@@ -5,8 +5,6 @@ import os
 import urllib
 import urlparse
 
-from swagger_spec_validator import validator20
-
 from bravado.compat import json
 from bravado.http_client import SynchronousHttpClient
 

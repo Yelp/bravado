@@ -55,7 +55,6 @@ import httpretty
 import pytest
 
 from bravado.client import SwaggerClient
-from bravado.exception import SwaggerError
 
 
 @pytest.mark.xfail(reason='Re-write when Resource ported over to swagger 2.0')

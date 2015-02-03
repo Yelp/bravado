@@ -37,4 +37,3 @@ def test_many_resources_with_the_same_operation_cuz_multiple_tags(paths_dict):
     assert len(tags) == len(resources)
     for tag in tags:
         assert resources[tag].findPetsByStatus
-

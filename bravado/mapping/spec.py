@@ -6,6 +6,12 @@ from bravado.mapping.resource import build_resources
 
 
 class Spec(object):
+    """A Swagger API Specification.
+
+    :param spec_dict: Swagger API specification in json-like dict form
+    :param origin_url: URL from which the spec was retrieved.
+    :param http_client: :class:`bravado.http_client.HTTPClient`
+    """
 
     def __init__(self, spec_dict, origin_url=None, http_client=None):
         self.spec_dict = spec_dict
@@ -34,10 +40,12 @@ class Spec(object):
         self.definitions = build_models(self.spec_dict['definitions'])
 
         # TODO
-        #self.shared_parameters = build_parameters(self.spec_dict.get('parameters', {})
+        # self.shared_parameters =
+        #   build_parameters(self.spec_dict.get('parameters', {})
 
         # TODO
-        #self.shared_responses = build_responses(self.spec_dict.get('responses',{})
+        # self.shared_responses =
+        #   build_responses(self.spec_dict.get('responses',{})
 
         self.resources = build_resources(self)
 
