@@ -1,29 +1,63 @@
+from collections import defaultdict
 import logging
 
 from bravado.mapping.operation import Operation
 
-
 log = logging.getLogger(__name__)
 
 
-def build_resources(spec, http_client=None):
+def convert_path_to_resource(path_name):
+    """
+    Given a path name (#/paths/{path_name}) try to convert it into a resource
+    name on a best effort basis when an operation has no tags.
+
+    Examples:
+      /pet                ->  pet
+      /pet/findByStatus   ->  pet
+      /pet/findByTags     ->  pet
+      /pet/{petId}        ->  pet
+
+    :param path_name: #/paths/{path_name} from a swagger spec
+    :return: name of the resource to which operations under the given path
+        should be associated with.
+    """
+    tokens = path_name.lstrip('/').split('/')
+    err_msg = "Could not extract resource name from path {0}"
+    if not tokens:
+        raise Exception(err_msg.format(path_name))
+    resource_name = tokens[0]
+    if not resource_name:
+        raise Exception(err_msg.format(path_name))
+    return resource_name
+
+
+def build_resources(spec):
     """Transforms the REST resources in the json-like spec into rich :Resource:
     objects that have associated :Operation:s.
 
     :type spec: :class:`bravado.mapping.spec.Spec`
-    :param http_client: an HTTP client used to perform requests
-    :type  http_client: :class:`bravado.http_client.HttpClient`
-    :returns: dict where (key,value) = (resource name, Resource instance)
+    :returns: dict where (key,value) = (resource name, Resource)
     """
-    resources = {}
+    # Map operations to resources using operation tags if available.
+    # - If an operation has multiple tags, it will be associated with multiple
+    #   resources!
+    # - If an operation has no tags, its resource name will be derived from its
+    #   path
+    # key = tag_name   value = { operation_id : Operation }
+    tag_to_operations = defaultdict(dict)
     paths = spec.spec_dict['paths']
     for path_name, path_dict in paths.iteritems():
-        resources[path_name] = Resource.from_path(
-            spec,
-            path_name,
-            path_dict,
-            http_client)
+        for http_method, operation_dict in path_dict.items():
+            operation = Operation(spec, path_name, http_method, operation_dict)
+            tags = operation_dict.get('tags', [])
+            if not tags:
+                tags.append(convert_path_to_resource(path_name))
+            for tag in tags:
+                tag_to_operations[tag][operation.operation_id] = operation
 
+    resources = {}
+    for tag, operations in tag_to_operations.iteritems():
+        resources[tag] = Resource(tag, operations)
     return resources
 
 
@@ -35,70 +69,6 @@ class Resource(object):
         log.debug(u"Building resource '%s'" % name)
         self._name = name
         self._operations = operations
-
-    # XXX 1.2
-    # @classmethod
-    # def from_api_doc(cls, api_doc, http_client, base_path, url_base=None):
-    #     """
-    #     :param api_doc: api doc which defines this resource
-    #     :type  api_doc: :class:`dict`
-    #     :param http_client: a :class:`bravado.http_client.HttpClient`
-    #     :param base_path: base url to perform api requests. Used to override
-    #             the path provided in the api spec
-    #     :param url_base: a url used as the base for resource definitions
-    #             that include a relative basePath
-    #     """
-    #     declaration = api_doc['api_declaration']
-    #     models = build_models(declaration.get('models', {}))
-    #
-    #     def build_operation(api_obj, operation):
-    #         log.debug(u"Building operation %s.%s" % (
-    #             api_obj.get('name'), operation['nickname']))
-    #
-    #         resource_base_path = declaration.get('basePath')
-    #         url = get_resource_url(base_path, url_base, resource_base_path)
-    #         url = url.rstrip('/') + api_obj['path']
-    #         return Operation(url, operation, http_client, models)
-    #
-    #     operations = dict(
-    #         (oper['nickname'], build_operation(api, oper))
-    #         for api in declaration['apis']
-    #         for oper in api['operations'])
-    #     return cls(api_doc['name'], operations)
-
-    @classmethod
-    def from_path(cls, spec, path_name, path_dict, http_client=None):
-        """
-        :type spec: :class:`bravado.mapping.spec.Spec`
-        :param path_name: Path of the resource. ex: /pets, pets/{id},
-        :param path_dict: json-like dict which defines the resource. The key
-            is usually an http method (get, put, post, delete, options, head,
-            patch)
-        :param http_client: a :class:`bravado.http_client.HttpClient`
-        """
-        # TODO: path_name can be a non-http method: 'parameters'
-        # TODO: path_name can be $ref
-
-        def build_operation(http_method, operation_dict):
-            log.debug(u"Building operation %s.%s" % (
-                path_name, operation_dict.get('operationId', 'unknown')))
-
-            # resource_base_path = declaration.get('basePath')
-            # url = get_resource_url(base_path, url_base, resource_base_path)
-            # url = url.rstrip('/') + api_obj['path']
-
-            operation_url = spec.api_url + path_name
-
-            # TODO: figure out where to get 'models' from
-            return Operation(spec, http_method, operation_dict, http_client)
-
-        operations = {}
-        for http_method, operation_dict in path_dict.items():
-            operation = build_operation(
-                spec, path_name, http_method, operation_dict)
-            operations[operation['operationId']] = operation
-
-        return cls(path_name, operations)
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self._name)

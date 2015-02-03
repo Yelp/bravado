@@ -195,10 +195,10 @@ class SwaggerClient(object):
         http_client = http_client or SynchronousHttpClient()
         loader = Loader(http_client, request_headers=request_headers)
         spec_dict = loader.load_spec(url)
-        return cls.from_spec(spec_dict, origin_url=url)
+        return cls.from_spec(spec_dict, origin_url=url, http_client=http_client)
 
     @classmethod
-    def from_spec(cls, spec_dict, origin_url=None):
+    def from_spec(cls, spec_dict, origin_url=None, http_client=None):
         """
         Build a :class:`SwaggerClient` from swagger api docs
 
@@ -206,7 +206,7 @@ class SwaggerClient(object):
         :param origin_url: the url used to retrieve the spec_dict
         :type  origin_url: str
         """
-        spec = Spec.from_dict(spec_dict, origin_url)
+        spec = Spec.from_dict(spec_dict, origin_url, http_client)
         return cls(spec.api_url, spec.resources)
 
     def __repr__(self):

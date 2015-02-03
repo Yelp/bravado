@@ -16,7 +16,7 @@ class Spec(object):
         self.resources = None
 
     @classmethod
-    def from_dict(cls, spec_dict, origin_url=None):
+    def from_dict(cls, spec_dict, origin_url=None, http_client=None):
         """
         Build a :class:`Spec` from Swagger API Specificiation
 
@@ -24,7 +24,7 @@ class Spec(object):
         :param origin_url: the url used to retrieve the spec, if any
         :type  origin_url: str
         """
-        spec = cls(spec_dict, origin_url)
+        spec = cls(spec_dict, origin_url, http_client)
         spec.build()
         return spec
 
