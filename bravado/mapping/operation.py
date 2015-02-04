@@ -27,7 +27,7 @@ class Operation(object):
         self._operation_id = None  # use @property getter
         # lazy docstring
         self.__doc__ = docstring_property(
-            partial(create_operation_docstring, self.operation_dict))
+            partial(create_operation_docstring, self))
 
     @property
     def operation_id(self):

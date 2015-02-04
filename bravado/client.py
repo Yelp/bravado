@@ -175,27 +175,25 @@ class SwaggerClient(object):
         self._resources = resources
 
     @classmethod
-    def from_url(
-            cls,
-            url,
-            http_client=None,
-            request_headers=None):
+    def from_url(cls, spec_url, http_client=None, request_headers=None):
         """
-        Build a :class:`SwaggerClient` from a url to api docs describing the
-        api.
+        Build a :class:`SwaggerClient` from a url to the Swagger
+        specification for a RESTful API.
 
-        :param url: url pointing at the swagger api docs
-        :type url: str
+        :param spec_url: url pointing at the swagger API specification
+        :type spec_url: str
         :param http_client: an HTTP client used to perform requests
         :type  http_client: :class:`bravado.http_client.HttpClient`
-        :param request_headers: Headers to pass with api docs requests
+        :param request_headers: Headers to pass with http requests
         :type  request_headers: dict
         """
-        log.debug(u"Loading from %s" % url)
+        # TODO: better way to customize the request for api calls, so we don't
+        #       have to add new kwargs for everything
+        log.debug(u"Loading from %s" % spec_url)
         http_client = http_client or SynchronousHttpClient()
         loader = Loader(http_client, request_headers=request_headers)
-        spec_dict = loader.load_spec(url)
-        return cls.from_spec(spec_dict, origin_url=url, http_client=http_client)
+        spec_dict = loader.load_spec(spec_url)
+        return cls.from_spec(spec_dict, spec_url, http_client)
 
     @classmethod
     def from_spec(cls, spec_dict, origin_url=None, http_client=None):

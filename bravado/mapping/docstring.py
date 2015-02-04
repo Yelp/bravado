@@ -60,12 +60,11 @@ def create_model_docstring(props):
     return docstring
 
 
-def create_operation_docstring(json_):
-    """Builds Operation docstring from the json dict
+def create_operation_docstring(operation):
+    """Builds a comprehensive docstring for an Operation.
 
-    :param json_: data to create docstring from
-    :type json_: dict
-    :returns: string giving meta info
+    :param operation: :class:`bravado.mapping.operation.Operation`
+    :rtype: str
 
     Example: ::
 
@@ -76,47 +75,66 @@ def create_operation_docstring(json_):
         [GET] Finds Pets by status
 
         Multiple status values can be provided with comma seperated strings
-        Args:
-                status (string) : Statuses to be considered for filter
-                from_date (string) : Start date filter
-        Returns:
-                array
-        Raises:
-                400: Invalid status value
+
+        :param status: Statuses to be considered for filter
+        :type status: str
+        :param from_date: Start date filter
+        :type from_date: str
+        :rtype: list
     """
-    docstring = ""
-    if json_.get('summary'):
-        docstring += ("[%s] %s\n\n" % (json_['method'], json_.get('summary')))
-    docstring += (json_["notes"] + "\n") if json_.get("notes") else ''
+    s = ""
+    op_dict = operation.operation_dict
+    is_deprecated = op_dict.get('deprecated', False)
+    if is_deprecated:
+        s += "** DEPRECATED **\n"
 
-    if json_["parameters"]:
-        docstring += "Args:\n"
-        for param in json_["parameters"]:
-            docstring += _build_param_docstring(param)
-    if json_.get('type'):
-        docstring += "Returns:\n\t%s\n" % json_["type"]
-    if json_.get('responseMessages'):
-        docstring += "Raises:\n"
-        for msg in json_.get('responseMessages'):
-            docstring += "\t%s: %s\n" % (msg.get("code"), msg.get("message"))
-    return docstring
+    summary = op_dict.get('summary')
+    if summary:
+        s += "[{0}] {1}\n\n".format(operation.http_method.upper(), summary)
+
+    desc = op_dict.get('description')
+    if desc:
+        s += "{0}\n\n".format(desc)
+
+    for param_dict in op_dict.get('parameters', []):
+        s += build_param_docstring(param_dict)
+
+    responses = op_dict.get('responses', {})
+    for http_status_code, response_dict in responses.iteritems():
+        response_desc = response_dict.get('description')
+        s += ':returns: {0}: {1}\n'.format(http_status_code, response_desc)
+        response_dict = response_dict.get('schema')
+        if response_dict:
+            s += ':rtype: {0}\n'.format(
+                swagger_type.get_swagger_type(response_dict))
+    return s
 
 
-def _build_param_docstring(param):
-    """Builds param docstring from the param dict
+def build_param_docstring(param_dict):
+    """Builds the docstring for a parameters from its specification.
 
-    :param param: data to create docstring from
-    :type param: dict
-    :returns: string giving meta info
+    :param param_dict: parameter spec in json-line dict form
+    :rtype: str
 
     Example: ::
-        status (string) : Statuses to be considered for filter
-        from_date (string) : Start date filter"
+        :param status: Status to be considered for filter
+        :type status: string
     """
-    string = "\t" + param.get("name")
-    type_ = param.get('$ref') or param.get('format') or param.get('type')
-    if type_:
-        string += (" (%s) " % type_)
-    if param.get('description'):
-        string += ": " + param["description"]
-    return string + "\n"
+    name = param_dict.get('name')
+    desc = param_dict.get('description', 'Document your spec, yo!')
+    default_value = param_dict.get('default')
+
+    s = ":param {0}: {1}".format(name, desc)
+    if default_value is not None:
+        s+= " (Default: {0})".format(default_value)
+    s += "\n"
+
+    location = param_dict.get('in')
+    if location == 'body':
+        param_type = swagger_type.get_swagger_type(param_dict.get('schema'))
+    else:
+        param_type = param_dict.get('type')
+    s += ":type {0}: {1}\n".format(name, param_type)
+
+    # TOOD: Lot more stuff can go in here - see "Parameter Object" in 2.0 Spec.
+    return s
