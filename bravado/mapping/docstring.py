@@ -100,7 +100,7 @@ def create_operation_docstring(operation):
         s += create_param_docstring(param_dict)
 
     responses = op_dict.get('responses')
-    for http_status_code, response_dict in responses.iteritems():
+    for http_status_code, response_dict in iter(sorted(responses.iteritems())):
         response_desc = response_dict.get('description')
         s += ':returns: {0}: {1}\n'.format(http_status_code, response_desc)
         schema_dict = response_dict.get('schema')
