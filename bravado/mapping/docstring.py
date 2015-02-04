@@ -97,20 +97,20 @@ def create_operation_docstring(operation):
         s += "{0}\n\n".format(desc)
 
     for param_dict in op_dict.get('parameters', []):
-        s += build_param_docstring(param_dict)
+        s += create_param_docstring(param_dict)
 
-    responses = op_dict.get('responses', {})
+    responses = op_dict.get('responses')
     for http_status_code, response_dict in responses.iteritems():
         response_desc = response_dict.get('description')
         s += ':returns: {0}: {1}\n'.format(http_status_code, response_desc)
-        response_dict = response_dict.get('schema')
-        if response_dict:
+        schema_dict = response_dict.get('schema')
+        if schema_dict:
             s += ':rtype: {0}\n'.format(
-                swagger_type.get_swagger_type(response_dict))
+                swagger_type.get_swagger_type(schema_dict))
     return s
 
 
-def build_param_docstring(param_dict):
+def create_param_docstring(param_dict):
     """Builds the docstring for a parameters from its specification.
 
     :param param_dict: parameter spec in json-line dict form
@@ -123,18 +123,18 @@ def build_param_docstring(param_dict):
     name = param_dict.get('name')
     desc = param_dict.get('description', 'Document your spec, yo!')
     default_value = param_dict.get('default')
+    location = param_dict.get('in')
 
     s = ":param {0}: {1}".format(name, desc)
     if default_value is not None:
-        s+= " (Default: {0})".format(default_value)
+        s += " (Default: {0})".format(default_value)
     s += "\n"
 
-    location = param_dict.get('in')
     if location == 'body':
         param_type = swagger_type.get_swagger_type(param_dict.get('schema'))
     else:
         param_type = param_dict.get('type')
     s += ":type {0}: {1}\n".format(name, param_type)
 
-    # TOOD: Lot more stuff can go in here - see "Parameter Object" in 2.0 Spec.
+    # TODO: Lot more stuff can go in here - see "Parameter Object" in 2.0 Spec.
     return s
