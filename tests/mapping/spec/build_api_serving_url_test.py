@@ -1,6 +1,6 @@
 import pytest
 
-from bravado.client import build_api_serving_url
+from bravado.mapping.spec import build_api_serving_url
 
 
 @pytest.fixture

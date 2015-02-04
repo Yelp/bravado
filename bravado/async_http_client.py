@@ -23,10 +23,10 @@ from twisted.web.client import FileBodyProducer
 from twisted.web.http_headers import Headers
 from yelp_uri import urllib_utf8
 
-from bravado import client
 from bravado import http_client
 from bravado.exception import HTTPError
 from bravado.multipart_response import create_multipart_content
+from bravado.mapping.param import stringify_body as param_stringify_body
 
 log = logging.getLogger(__name__)
 
@@ -160,7 +160,8 @@ def stringify_body(request_params):
     elif headers.get('content-type') == http_client.APP_FORM:
         data = urllib_utf8.urlencode(request_params.get('data', {}))
     else:
-        data = client.stringify_body(request_params.get('data', ''))
+        # TODO: same method 'stringify_body' exists with different args - fix!
+        data = param_stringify_body(request_params.get('data', ''))
     return FileBodyProducer(StringIO(data)) if data else None
 
 

@@ -4,38 +4,15 @@ import unittest
 
 import httpretty
 import requests
-from mock import Mock, patch
+from mock import patch
 import pytest
 
 from bravado import client
 from bravado.async_http_client import AsynchronousHttpClient
 from bravado.client import (
-    add_param_to_req,
     SwaggerClient,
     SwaggerClientCache,
-    validate_and_add_params_to_request,
 )
-
-
-class ValidateParamTest(unittest.TestCase):
-    """Unit tests for validate_and_add_params_to_request.
-    """
-
-    def test_unrequired_param_not_added_to_request_when_none(self):
-        param = {
-            'name': 'test_bool_param',
-            'type': 'boolean',
-            'paramType': 'query',
-            'required': False,
-        }
-        mock_request = Mock('requests.Request', autospec=True)
-
-        with patch('bravado.client.add_param_to_req') as mock_add_param:
-            validate_and_add_params_to_request(param, None, mock_request, [])
-            assert not mock_add_param.called
-
-            validate_and_add_params_to_request(param, False, mock_request, [])
-            mock_add_param.assert_called_once_with(param, False, mock_request)
 
 
 class SwaggerClientCacheTest(unittest.TestCase):
@@ -340,25 +317,6 @@ class ClientTest(unittest.TestCase):
             ]
         }
         self.uut = SwaggerClient.from_resource_listing(self.resource_listing)
-
-
-class AddParamToReqTest(unittest.TestCase):
-
-    def test_url_path_parameter_with_spaces_quoted_correctly(self):
-        param_spec = {
-            "name": "review_id",
-            "description": "ID of review that needs to be updated",
-            "required": "true",
-            "type": "string",
-            "paramType": "path",
-            "allowMultiple": "false",
-        }
-        param_value = "${n} review"
-        request = {'url': 'http://foo.com/{review_id}'}
-
-        add_param_to_req(param_spec, param_value, request)
-
-        self.assertEqual(u"http://foo.com/%24%7Bn%7D%20review", request['url'])
 
 
 if __name__ == '__main__':

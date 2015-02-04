@@ -10,8 +10,6 @@ Not Tested:
 1) Callbacks triggered by twisted and crochet
 2) Timeouts by crochet's wait()
 """
-
-from bravado.compat import json
 import unittest
 from collections import namedtuple
 from mock import patch, Mock
@@ -28,25 +26,8 @@ import bravado.http_client
 
 class AsyncHttpClientTest(unittest.TestCase):
 
-    def test_stringify_body_converts_dict_to_str(self):
-        data = {'foo': 'bar', 'bar': 42}
-        data = bravado.client.stringify_body(data)
-        self.assertEqual({"foo": "bar", "bar": 42},
-                         json.loads(data))
-
-    def test_stringify_body_encode_params_to_utf8(self):
-        data = {'foo': 'bar', 'bar': 42}
-        data = bravado.client.stringify_body(data)
-        self.assertEqual({"foo": "bar", "bar": 42},
-                         json.loads(data))
-
-    def test_stringify_body_ignores_data_if_already_str(self):
-        data = 'foo'
-        bravado.client.stringify_body(data)
-        self.assertEqual('foo', data)
-
     def test_stringify_async_body_returns_file_producer(self):
-        def_str = 'bravado.client.stringify_body'
+        def_str = 'bravado.async_http_client.param_stringify_body'
         with patch(def_str) as mock_stringify:
             mock_stringify.return_value = '42'
             with patch('bravado.async_http_client.StringIO',

@@ -22,14 +22,14 @@ def test_props_passed_to_constructor(user_model):
     assert user_model.id == 999L
 
 
-def test_invalid_props_only_raises_AttributeError(user_model):
+def test_extra_props_error(user_model):
     props = {'foo': 'bar'}
     with pytest.raises(AttributeError) as excinfo:
         set_props(user_model, **props)
     assert 'not defined' in str(excinfo.value)
 
 
-def test_invalid_props_raises_AttributeError(user_model):
+def test_mixture_of_extra_props_and_valid_props_raises_error(user_model):
     props = {
         'firstName': 'Darwin',
         'foo': 'i am an invalid prop'

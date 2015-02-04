@@ -26,7 +26,9 @@ import unittest
 import httpretty
 import pytest
 
-from bravado.client import SwaggerClient, Resource, Operation
+from bravado.client import SwaggerClient
+from bravado.mapping.operation import Operation
+from bravado.mapping.resource import Resource
 
 
 @pytest.mark.xfail(reason='Rewrite when Resource/Operation/Model for 2.0 done')

@@ -51,24 +51,15 @@ without caching
 
 """
 
-from bravado.compat import json
 import logging
 import time
-import urllib
-import urlparse
 
-from yelp_uri import urllib_utf8
-
-import swagger_type
-from bravado.http_client import APP_JSON, SynchronousHttpClient
-from bravado.mapping.model import build_models
-from bravado.response import HTTPFuture, post_receive
+from bravado.http_client import SynchronousHttpClient
 from bravado.swagger_model import (
     Loader,
     is_file_scheme_uri,
 )
-from bravado.swagger_type import SwaggerTypeCheck
-
+from bravado.mapping.spec import Spec
 
 log = logging.getLogger(__name__)
 
@@ -158,58 +149,6 @@ def get_client(*args, **kwargs):
     return cache(*args, **kwargs)
 
 
-class Operation(object):
-    """Perform a request by taking the kwargs passed to the call and
-    constructing an HTTP request.
-    """
-
-    def __init__(self, uri, operation, http_client, models):
-        self._uri = uri
-        self._json = operation
-        self._http_client = http_client
-        self._models = models
-        self.__doc__ = create_operation_docstring(operation)
-
-    def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self._json[u'nickname'])
-
-    def _construct_request(self, **kwargs):
-        _request_options = kwargs.pop('_request_options', {}) or {}
-
-        request = {}
-        request['method'] = self._json[u'method']
-        request['url'] = self._uri
-        request['params'] = {}
-        request['headers'] = _request_options.get('headers', {}) or {}
-
-        for param in self._json.get(u'parameters', []):
-            value = kwargs.pop(param[u'name'], param.get('defaultValue'))
-            validate_and_add_params_to_request(param, value, request,
-                                               self._models)
-        if kwargs:
-            raise TypeError(u"'%s' does not have parameters %r" % (
-                self._json[u'nickname'], kwargs.keys()))
-        return request
-
-    def __call__(self, **kwargs):
-        log.debug(u"%s?%r" % (
-            self._json[u'nickname'],
-            urllib_utf8.urlencode(kwargs)))
-        request = self._construct_request(**kwargs)
-
-        def response_future(response, **kwargs):
-            # Assume status is OK, an exception would have been raised already
-            if not response.text:
-                return None
-
-            return post_receive(
-                response.json(),
-                swagger_type.get_swagger_type(self._json),
-                self._models,
-                **kwargs)
-        return HTTPFuture(self._http_client, request, response_future)
-
-
 def get_resource_url(base_path, url_base, resource_base_path):
     if base_path:
         return base_path
@@ -221,102 +160,6 @@ def get_resource_url(base_path, url_base, resource_base_path):
         return url_base.rstrip('/') + resource_base_path
 
     return resource_base_path
-
-
-class Resource(object):
-    """Swagger resource, described in an API declaration.
-    """
-
-    def __init__(self, name, operations):
-        log.debug(u"Building resource '%s'" % name)
-        self._name = name
-        self._operations = operations
-
-    # XXX 1.2
-    # @classmethod
-    # def from_api_doc(cls, api_doc, http_client, base_path, url_base=None):
-    #     """
-    #     :param api_doc: api doc which defines this resource
-    #     :type  api_doc: :class:`dict`
-    #     :param http_client: a :class:`bravado.http_client.HttpClient`
-    #     :param base_path: base url to perform api requests. Used to override
-    #             the path provided in the api spec
-    #     :param url_base: a url used as the base for resource definitions
-    #             that include a relative basePath
-    #     """
-    #     declaration = api_doc['api_declaration']
-    #     models = build_models(declaration.get('models', {}))
-    #
-    #     def build_operation(api_obj, operation):
-    #         log.debug(u"Building operation %s.%s" % (
-    #             api_obj.get('name'), operation['nickname']))
-    #
-    #         resource_base_path = declaration.get('basePath')
-    #         url = get_resource_url(base_path, url_base, resource_base_path)
-    #         url = url.rstrip('/') + api_obj['path']
-    #         return Operation(url, operation, http_client, models)
-    #
-    #     operations = dict(
-    #         (oper['nickname'], build_operation(api, oper))
-    #         for api in declaration['apis']
-    #         for oper in api['operations'])
-    #     return cls(api_doc['name'], operations)
-
-    @classmethod
-    def from_path(cls, path_name, path_dict, api_url, http_client):
-        """
-        :param path_name: Path of the resource. ex: /pets, pets/{id},
-        :param path_dict: json-like dict which defines the resource. The key
-            is usually an http method (get, put, post, delete, options, head,
-            patch)
-        :param api_url: base URL used to service API requests
-        :param http_client: a :class:`bravado.http_client.HttpClient`
-        """
-        # TODO: Fix for 2.0
-
-        # XXX 1.2
-        # declaration = api_doc['api_declaration']
-        # models = build_models(declaration.get('models', {}))
-
-        # TODO: path_name can be a non-http method: 'parameters'
-        # TODO: path_name can be $ref
-
-        def build_operation(http_method, operation_dict):
-            log.debug(u"Building operation %s.%s" % (
-                path_name, operation_dict['operationId']))
-
-            # resource_base_path = declaration.get('basePath')
-            # url = get_resource_url(base_path, url_base, resource_base_path)
-            # url = url.rstrip('/') + api_obj['path']
-
-            url = api_url + path_name
-
-            # TODO: figure out where to get 'models' from
-            return Operation(url, operation_dict, http_client, models=None)
-
-        operations = {}
-        for http_method, operation_dict in path_dict.items():
-            operation = build_operation(http_method, operation_dict)
-            operations[operation['nickname']] = operation
-
-        return cls(path_name, operations)
-
-    def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self._name)
-
-    def __getattr__(self, item):
-        """
-        :param item: name of the :class:`Operation` to return
-        :return: an :class:`Operation`
-        """
-        op = self._operations.get(item)
-        if not op:
-            raise AttributeError(u"Resource '%s' has no operation '%s'" %
-                                 (self._name, item))
-        return op
-
-    def __dir__(self):
-        return self._operations.keys()
 
 
 class SwaggerClient(object):
@@ -332,96 +175,37 @@ class SwaggerClient(object):
         self._resources = resources
 
     @classmethod
-    def from_url(
-            cls,
-            url,
-            http_client=None,
-            request_headers=None):
+    def from_url(cls, spec_url, http_client=None, request_headers=None):
         """
-        Build a :class:`SwaggerClient` from a url to api docs describing the
-        api.
+        Build a :class:`SwaggerClient` from a url to the Swagger
+        specification for a RESTful API.
 
-        :param url: url pointing at the swagger api docs
-        :type url: str
+        :param spec_url: url pointing at the swagger API specification
+        :type spec_url: str
         :param http_client: an HTTP client used to perform requests
         :type  http_client: :class:`bravado.http_client.HttpClient`
-        :param request_headers: Headers to pass with api docs requests
+        :param request_headers: Headers to pass with http requests
         :type  request_headers: dict
         """
-        log.debug(u"Loading from %s" % url)
+        # TODO: better way to customize the request for api calls, so we don't
+        #       have to add new kwargs for everything
+        log.debug(u"Loading from %s" % spec_url)
         http_client = http_client or SynchronousHttpClient()
-
-        # TODO: better way to customize the request for api-docs, so we don't
-        # have to add new kwargs for everything
         loader = Loader(http_client, request_headers=request_headers)
-
-        # Loads and validates the spec
-        spec = loader.load_spec(url)
-
-        return cls.from_spec(spec, http_client, origin_url=url)
-
-    # @classmethod
-    # def from_resource_listing(
-    #         cls,
-    #         resource_listing,
-    #         http_client=None,
-    #         api_base_path=None,
-    #         url=None):
-    #     """
-    #     Build a :class:`SwaggerClient` from swagger api docs
-    #
-    #     :param resource_listing: a dict with a list of api definitions
-    #     :param http_client: an HTTP client used to perform requests
-    #     :type  http_client: :class:`bravado.http_client.HttpClient`
-    #     :param api_base_path: a url, override the path used to make api
-    #       requests
-    #     :type  api_base_path: str
-    #     :param api_doc_request_headers: Headers to pass with api docs requests
-    #     :type  api_doc_request_headers: dict
-    #     :param url: the url used to retrieve the resource listing
-    #     :type  url: str
-    #     """
-    #     url = url or resource_listing.get(u'url')
-    #     log.debug(u"Using resources from %s" % url)
-    #
-    #     if url:
-    #         url_base = "{uri.scheme}://{uri.netloc}".format(uri=urlparse(url))
-    #     else:
-    #         url_base = None
-    #
-    #     resources = build_resources_from_spec(
-    #         http_client or SynchronousHttpClient(),
-    #         map(append_name_to_api, resource_listing['apis']),
-    #         api_base_path,
-    #         url_base)
-    #     return cls(url, resources)
+        spec_dict = loader.load_spec(spec_url)
+        return cls.from_spec(spec_dict, spec_url, http_client)
 
     @classmethod
-    def from_spec(cls, spec, http_client=None, origin_url=None):
+    def from_spec(cls, spec_dict, origin_url=None, http_client=None):
         """
         Build a :class:`SwaggerClient` from swagger api docs
 
-        :param spec: a dict with a Swagger spec in json-like form
-        :param http_client: an HTTP client used to perform requests
-        :type  http_client: :class:`bravado.http_client.HttpClient`
-        :param origin_url: the url used to retrieve the spec
+        :param spec_dict: a dict with a Swagger spec in json-like form
+        :param origin_url: the url used to retrieve the spec_dict
         :type  origin_url: str
         """
-
-        # Using 'x_' for the time being to identify things that
-        # have been "tacked" onto the original spec dict
-        spec['x_origin_url'] = origin_url
-        spec['x_api_url'] = build_api_serving_url(spec, origin_url)
-        http_client = http_client or SynchronousHttpClient()
-        definitions = build_models(spec['definitions'])
-        spec['x_definitions'] = definitions
-
-        # TODO: Pick up with 'resources' here
-        # resources = build_resources(spec, http_client)
-        resources = None
-
-        # STOP HERE
-        return cls(spec['x_api_url'], resources)
+        spec = Spec.from_dict(spec_dict, origin_url, http_client)
+        return cls(spec.api_url, spec.resources)
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self._api_url)
@@ -438,255 +222,3 @@ class SwaggerClient(object):
 
     def __dir__(self):
         return self._resources.keys()
-
-
-def build_api_serving_url(spec, origin_url, preferred_scheme=None):
-    """The URL used to service API requests does not necessarily have to be the
-    same URL that was used to retrieve the API spec.
-
-    The existence of three fields in the root of the specification govern
-    the value of the api_serving_url:
-
-    - host string
-        The host (name or ip) serving the API. This MUST be the host only and
-        does not include the scheme nor sub-paths. It MAY include a port.
-        If the host is not included, the host serving the documentation is to
-        be used (including the port). The host does not support path templating.
-
-    - basePath string
-        The base path on which the API is served, which is relative to the
-        host. If it is not included, the API is served directly under the host.
-        The value MUST start with a leading slash (/). The basePath does not
-        support path templating.
-
-    - schemes [string]
-        The transfer protocol of the API. Values MUST be from the list:
-        "http", "https", "ws", "wss". If the schemes is not included,
-        the default scheme to be used is the one used to access the
-        specification.
-
-    See https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#swagger-object-   # noqa
-
-    :param spec: the Swagger spec in json-like dict form
-    :param origin_url: the URL from which the spec was retrieved
-    :param preferred_scheme: preferred scheme to use if more than one scheme is
-        supported by the API.
-    :return: base url which services api requests
-    """
-    origin = urlparse.urlparse(origin_url)
-
-    def pick_a_scheme(schemes):
-        if not schemes:
-            return origin.scheme
-
-        if preferred_scheme:
-            if preferred_scheme in schemes:
-                return preferred_scheme
-            raise Exception(
-                "Preferred scheme {0} not supported by API. Available schemes "
-                "include {1}".format(preferred_scheme, schemes))
-
-        if origin.scheme in schemes:
-            return origin.scheme
-
-        if len(schemes) == 1:
-            return schemes[0]
-
-        raise Exception(
-            "Origin scheme {0} not supported by API. Available schemes "
-            "include {1}".format(origin.scheme, schemes))
-
-    netloc = spec.get('host', origin.netloc)
-    path = spec.get('basePath', origin.path)
-    scheme = pick_a_scheme(spec.get('schemes'))
-
-    return urlparse.urlunparse((scheme, netloc, path, None, None, None))
-
-
-def build_resources(spec, http_client):
-    """Transforms the REST resources in the json-like spec into rich :Resource:
-    objects that have associated :Operation:s.
-
-    :param spec: json-like spec in dict form
-    :param http_client: an HTTP client used to perform requests
-    :type  http_client: :class:`bravado.http_client.HttpClient`
-    :returns: dict where (key,value) = (resource name, Resource instance)
-    """
-    resources = {}
-    paths = spec['paths']
-    for path_name, path_dict in paths:
-        resources[path_name] = Resource.from_path(
-            path_name,
-            path_dict,
-            spec['x_api_url'],
-            http_client)
-
-    return resources
-
-
-def _build_param_docstring(param):
-    """Builds param docstring from the param dict
-
-    :param param: data to create docstring from
-    :type param: dict
-    :returns: string giving meta info
-
-    Example: ::
-        status (string) : Statuses to be considered for filter
-        from_date (string) : Start date filter"
-    """
-    string = "\t" + param.get("name")
-    type_ = param.get('$ref') or param.get('format') or param.get('type')
-    if type_:
-        string += (" (%s) " % type_)
-    if param.get('description'):
-        string += ": " + param["description"]
-    return string + "\n"
-
-
-def create_operation_docstring(json_):
-    """Builds Operation docstring from the json dict
-
-    :param json_: data to create docstring from
-    :type json_: dict
-    :returns: string giving meta info
-
-    Example: ::
-
-        client.pet.findPetsByStatus?
-
-    Outputs: ::
-
-        [GET] Finds Pets by status
-
-        Multiple status values can be provided with comma seperated strings
-        Args:
-                status (string) : Statuses to be considered for filter
-                from_date (string) : Start date filter
-        Returns:
-                array
-        Raises:
-                400: Invalid status value
-    """
-    docstring = ""
-    if json_.get('summary'):
-        docstring += ("[%s] %s\n\n" % (json_['method'], json_.get('summary')))
-    docstring += (json_["notes"] + "\n") if json_.get("notes") else ''
-
-    if json_["parameters"]:
-        docstring += "Args:\n"
-        for param in json_["parameters"]:
-            docstring += _build_param_docstring(param)
-    if json_.get('type'):
-        docstring += "Returns:\n\t%s\n" % json_["type"]
-    if json_.get('responseMessages'):
-        docstring += "Raises:\n"
-        for msg in json_.get('responseMessages'):
-            docstring += "\t%s: %s\n" % (msg.get("code"), msg.get("message"))
-    return docstring
-
-
-def handle_form_param(name, value, type_, request):
-    if swagger_type.is_file(type_):
-        if 'files' not in request:
-            request['files'] = {}
-        request['files'][name] = value
-    elif swagger_type.is_primitive(type_):
-        if 'data' not in request:
-            request['data'] = {}
-        request['data'][name] = value
-    else:
-        raise AssertionError(
-            u"%s neither primitive nor File" % name)
-
-
-def add_param_to_req(param, value, request):
-    """Populates request object with the request parameters
-
-    :param param: swagger spec details of a param
-    :type param: dict
-    :param value: value for the param given in the API call
-    :param request: request object to be populated
-    """
-    pname = param['name']
-    type_ = swagger_type.get_swagger_type(param)
-    param_req_type = param['paramType']
-
-    if param_req_type == u'path':
-        request['url'] = request['url'].replace(
-            u'{%s}' % pname,
-            urllib.quote(unicode(value)))
-    elif param_req_type == u'query':
-        request['params'][pname] = value
-    elif param_req_type == u'body':
-        if not swagger_type.is_primitive(type_):
-            # If not primitive, body has to be 'dict'
-            # (or has already been converted to dict from model_dict)
-            request['headers']['content-type'] = APP_JSON
-            request['data'] = json.dumps(value)
-        else:
-            request['data'] = stringify_body(value)
-    elif param_req_type == 'form':
-        handle_form_param(pname, value, type_, request)
-    # TODO(#31): accept 'header', in paramType
-    else:
-        raise AssertionError(
-            u"Unsupported Parameter type: %s" % param_req_type)
-
-
-def validate_and_add_params_to_request(param, value, request, models):
-    """Validates if a required param is given
-    And wraps 'add_param_to_req' to populate a valid request
-
-    :param param: swagger spec details of a param
-    :type param: dict
-    :param value: value for the param given in the API call
-    :param request: request object to be populated
-    :param models: models tuple containing all complex model_dict types
-    :type models: namedtuple
-    """
-    # If param not given in args, and not required, just ignore.
-    if not param.get('required') and value is None:
-        return
-
-    pname = param['name']
-    type_ = swagger_type.get_swagger_type(param)
-    param_req_type = param['paramType']
-
-    if param_req_type == 'path':
-        # Parameters in path need to be primitive/array types
-        if swagger_type.is_complex(type_):
-            raise TypeError("Param %s in path can only be primitive/list" %
-                            pname)
-    elif param_req_type == 'query':
-        # Parameters in query need to be only primitive types
-        if not swagger_type.is_primitive(type_):
-            raise TypeError("Param %s in query can only be primitive" % pname)
-
-    # TODO: this needs to move to add_param_to_req, and change logic
-    # Allow lists for query params even if type is primitive
-    if isinstance(value, list) and param_req_type == 'query':
-        type_ = swagger_type.ARRAY + swagger_type.COLON + type_
-
-    # Check the parameter value against its type
-    # And store the refined value back
-    value = SwaggerTypeCheck(pname, value, type_, models).value
-
-    # If list in path, Turn list items into comma separated values
-    if isinstance(value, list) and param_req_type == 'path':
-        value = u",".join(str(x) for x in value)
-
-    # Add the parameter value to the request object
-    if value is not None:
-        add_param_to_req(param, value, request)
-    else:
-        if param.get(u'required'):
-            raise TypeError(u"Missing required parameter '%s'" % pname)
-
-
-def stringify_body(value):
-    """Json dump the value to string if not already in string
-    """
-    if not value or isinstance(value, basestring):
-        return value
-    return json.dumps(value)
