@@ -25,9 +25,6 @@ class Operation(object):
         self.http_method = http_method
         self.operation_dict = operation_dict
         self._operation_id = None  # use @property getter
-        # lazy docstring
-        self.__doc__ = docstring_property(
-            partial(create_operation_docstring, self))
 
     @property
     def operation_id(self):

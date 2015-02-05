@@ -1,6 +1,7 @@
 from collections import defaultdict
 import logging
 
+from bravado.mapping.docstring import operation_docstring_wrapper
 from bravado.mapping.operation import Operation
 
 log = logging.getLogger(__name__)
@@ -82,7 +83,7 @@ class Resource(object):
         if not op:
             raise AttributeError(u"Resource '%s' has no operation '%s'" %
                                  (self._name, item))
-        return op
+        return operation_docstring_wrapper(op)
 
     def __dir__(self):
         return self._operations.keys()

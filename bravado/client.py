@@ -205,7 +205,9 @@ class SwaggerClient(object):
         :type  origin_url: str
         """
         spec = Spec.from_dict(spec_dict, origin_url, http_client)
-        return cls(spec.api_url, spec.resources)
+        client = cls(spec.api_url, spec.resources)
+        client.spec = spec
+        return client
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self._api_url)

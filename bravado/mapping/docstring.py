@@ -60,6 +60,45 @@ def create_model_docstring(props):
     return docstring
 
 
+def operation_docstring_wrapper(operation):
+    """
+    Workaround for docstrings to work for operations in a sane way.
+
+    Docstrings can only be specified for modules, classes, and functions. Hence,
+    the docstring for an Operation is static as defined by the Operation class.
+    To make the docstring for an Operation invocation work correctly, it has
+    to be masquaraded as a function. The docstring will then be attached to the
+    function which works quite nicely. Example in REPL:
+
+    >> petstore = client.get_client('http://url_to_petstore/')
+    >> pet = petstore.pet
+    >> help(pet.getPetById)
+
+    Help on function getPetById in module bravado.mapping.resource:
+
+    getPetById(**kwargs)
+        [GET] Find pet by ID
+
+        Returns a pet when ID < 10.  ID > 10 or nonintegers will simulate API error conditions
+
+        :param petId: ID of pet that needs to be fetched
+        :type petId: integer
+        :returns: 200: successful operation
+        :rtype: #/definitions/Pet
+        :returns: 400: Invalid ID supplied
+        :returns: 404: Pet not found
+
+    :param operation: :class:`Operation`
+    :return: callable that executes the operation
+    """
+    def wrapper(**kwargs):
+        return operation(**kwargs)
+
+    wrapper.__doc__ = create_operation_docstring(operation)
+    wrapper.__name__ = str(operation.operation_id)
+    return wrapper
+
+
 def create_operation_docstring(operation):
     """Builds a comprehensive docstring for an Operation.
 
@@ -82,6 +121,7 @@ def create_operation_docstring(operation):
         :type from_date: str
         :rtype: list
     """
+    print 'creating op docstring for %s' % operation.operation_id
     s = ""
     op_dict = operation.operation_dict
     is_deprecated = op_dict.get('deprecated', False)
