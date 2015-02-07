@@ -1,13 +1,11 @@
-from functools import partial
 import logging
 
 from yelp_uri import urllib_utf8
 
 from bravado import swagger_type
-from bravado.mapping.docstring import create_operation_docstring, \
-    docstring_property
 from bravado.mapping.param import validate_and_add_params_to_request
 from bravado.response import post_receive, HTTPFuture
+from bravado.exception import SwaggerError
 
 log = logging.getLogger(__name__)
 
@@ -19,11 +17,11 @@ class Operation(object):
     """Perform a request by taking the kwargs passed to the call and
     constructing an HTTP request.
     """
-    def __init__(self, spec, path_name, http_method, operation_dict):
+    def __init__(self, spec, path_name, http_method, operation_spec):
         self.spec = spec
         self.path_name = path_name
         self.http_method = http_method
-        self.operation_dict = operation_dict
+        self.operation_spec = operation_spec
         self._operation_id = None  # use @property getter
 
     @property
@@ -37,7 +35,7 @@ class Operation(object):
         :rtype: str
         """
         if self._operation_id is None:
-            self._operation_id = self.operation_dict.get('operationId')
+            self._operation_id = self.operation_spec.get('operationId')
             if self._operation_id is None:
                 # build based on the http method and request path
                 self._operation_id = (self.http_method + '_' + self.path_name)\
@@ -65,12 +63,48 @@ class Operation(object):
         request['params'] = {}
         request['headers'] = request_options.get('headers', {})
 
-        for param_dict in self.operation_dict.get('parameters', []):
-            param_name = param_dict['name']
-            param_value = kwargs.pop(param_name, param_dict.get('default'))
+        for param_spec in self.operation_spec.get('parameters', []):
+            param_name = param_spec['name']
+            param_location = param_spec['in']
+            param_value = kwargs.pop(param_name, None)
+            param_default = param_spec.get('default')
+
+            # if param_location == 'body':
+            #     spec_for_param = param_spec['schema']
+            # else:
+            #     spec_for_param = param_spec
+
+            # This is really convoluted! Given a paramever spec like so, the
+            # type is "array" but the default value is the string "available".
+            # Since when is a string an array?!?! The code special cases
+            # array types with a default value and wraps the value in an
+            # array for convenience.
+            #
+            # {
+            #     name: "status",
+            #     in: "query",
+            #     description: "Status values that need to be considered for filter",
+            #     required: false,
+            #     type: "array",
+            #     items: {
+            #         type: "string"
+            #     },
+            #     collectionFormat: "multi",
+            #     default: "available"
+            # }
+            #
+            # Snippet from http://petstore.swagger.wordnik.com/v2/swagger.json
+            # TODO: Unit test
+            if param_value is None and param_default:
+                param_type = param_spec['type']
+                if param_type == 'array':
+                    param_value = [param_default]
+                else:
+                    param_value = param_default
+
             validate_and_add_params_to_request(
                 self.spec,
-                param_dict,
+                param_spec,
                 param_value,
                 request)
 
@@ -80,7 +114,7 @@ class Operation(object):
         return request
 
     def __call__(self, **kwargs):
-        log.debug(u"%s?%r" % (self.operation_id, urllib_utf8.urlencode(kwargs)))
+        log.debug(u"%s(%s)" % (self.operation_id, kwargs))
         request = self._construct_request(**kwargs)
 
         def response_future(response, **kwargs):
@@ -88,11 +122,32 @@ class Operation(object):
             if not response.text:
                 return None
 
-            print response.json()
+            status_code = str(response.status_code)
+            # Handle which repsonse to activate given status_code
+            default_response_spec = self.operation_spec['responses'].get('default', None)
+            response_spec = self.operation_spec['responses'].get(status_code, default_response_spec)
+            if response_spec is None:
+                # reponse code doesn't match and no default provided
+                if status_code == '200':
+                    # it was obviously successful
+                    log.warn("Op {0} was successful by didn't match any responses".format(self.operation_id))
+                else:
+                    raise SwaggerError("Response doesn't match any expected responses: {0}".format(response))
+
+            response_dict = response.json()
+
+            if response_spec and 'schema' in response_spec:
+                swagger_type_ = swagger_type.get_swagger_type(response_spec['schema'])
+            else:
+                swagger_type_ = None
+
+            log.debug('response_dict = %s' % response_dict)
+            log.debug('response_spec = %s' % response_spec)
+            log.debug('swagger_type  = %s' % swagger_type_)
 
             return post_receive(
-                response.json(),
-                swagger_type.get_swagger_type(self.operation_dict),
+                response_dict,
+                swagger_type_,
                 self.spec.definitions,
                 **kwargs)
 

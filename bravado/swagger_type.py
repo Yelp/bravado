@@ -3,10 +3,12 @@
 """
 
 import datetime
-
 import dateutil.parser
+import logging
 
 from exception import SwaggerError
+
+log = logging.getLogger(__name__)
 
 # Tuple is added to allow a response '4' which is of
 # python type 'int' but swagger_type could be 'int64'
@@ -274,6 +276,9 @@ class SwaggerTypeCheck(object):
         self._type = type_
         self.models = models
         self.allow_null = allow_null
+
+        log.debug('name=%s value=%s _type=%s allows_null=%s' % (name, value, type_, allow_null))
+
         self._check_value_format()
 
     def _check_value_format(self):

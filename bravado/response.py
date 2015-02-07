@@ -123,6 +123,11 @@ def post_receive(response, type_, models, **kwargs):
     if kwargs.pop('raw_response', False):
         return response
 
+    # Response had data, but responses in spec didn't match it so type_ is
+    # not known
+    if type_ is None:
+        return response
+
     response = SwaggerTypeCheck(
         "Response",
         response,

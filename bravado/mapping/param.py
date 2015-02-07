@@ -10,23 +10,26 @@ from bravado.swagger_type import SwaggerTypeCheck
 # TODO: Needs to be thought through some more instead of just carrying over
 #       the impl from 1.2
 
-def validate_and_add_params_to_request(spec, param_dict, value, request):
-    """Validates if a required param_dict is given and wraps 'add_param_to_req'
+def validate_and_add_params_to_request(spec, param_spec, value, request):
+    """Validates if a required param_spec is given and wraps 'add_param_to_req'
     to populate a valid request.
 
     :type spec: :class:`bravado.mapping.spec.Spec`
-    :param param_dict: parameter spec in json-like dict form
+    :param param_spec: parameter spec in json-like dict form
     :param value: value of the parameter passed into the operation invocation
     :param request: request object to be populated in dict form
     """
-    # If param_dict not given in args, and not required, just ignore.
-    if not param_dict.get('required') and value is None:
+    # If param_spec not given in args, and not required, just ignore.
+    if not param_spec.get('required') and value is None:
         return
 
     models = spec.definitions
-    param_name = param_dict['name']
-    type_ = swagger_type.get_swagger_type(param_dict)
-    location = param_dict['in']
+    param_name = param_spec['name']
+    location = param_spec['in']
+    if location == 'body':
+        type_ = swagger_type.get_swagger_type(param_spec['schema'])
+    else:
+        type_ = swagger_type.get_swagger_type(param_spec)
 
     if location == 'path':
         # Parameters in path need to be primitive/array types
@@ -36,15 +39,15 @@ def validate_and_add_params_to_request(spec, param_dict, value, request):
                 .format(param_name, value))
     elif location == 'query':
         # Parameters in query need to be only primitive types
-        if not swagger_type.is_primitive(type_):
+        if not swagger_type.is_primitive(type_) and not swagger_type.is_array(type_):
             raise TypeError(
-                "Query parameter {0} with value {1) can only be primitive"
+                "Query parameter {0} with value {1} can only be primitive/list"
                 .format(param_name, value))
 
     # TODO: this needs to move to add_param_to_req, and change logic
     # Allow lists for query params even if type is primitive
-    if isinstance(value, list) and location == 'query':
-        type_ = swagger_type.ARRAY + swagger_type.COLON + type_
+    #if isinstance(value, list) and location == 'query':
+    #    type_ = swagger_type.ARRAY + swagger_type.COLON + type_
 
     # Check the parameter value against its type
     # And store the refined value back
@@ -56,23 +59,28 @@ def validate_and_add_params_to_request(spec, param_dict, value, request):
 
     # Add the parameter value to the request object
     if value is not None:
-        add_param_to_req(param_dict, value, request)
+        add_param_to_req(param_spec, value, request)
     else:
-        if param_dict.get(u'required'):
+        if param_spec.get(u'required'):
             raise TypeError(u"Missing required parameter '%s'" % param_name)
 
 
-def add_param_to_req(param_dict, value, request):
+def add_param_to_req(param_spec, value, request):
     """Populates request object with the request parameters
 
-    :param param_dict: parameters spec in json-like dict form
+    :param param_spec: parameters spec in json-like dict form
     :param value: value for the param given in the API call
     :param request: request object to be populated
     :type request: dict
     """
-    param_name = param_dict['name']
-    type_ = swagger_type.get_swagger_type(param_dict)
-    location = param_dict['in']
+    param_name = param_spec['name']
+    location = param_spec['in']
+
+    # TODO: remove copy/pasta
+    if location == 'body':
+        type_ = swagger_type.get_swagger_type(param_spec['schema'])
+    else:
+        type_ = swagger_type.get_swagger_type(param_spec)
 
     if location == u'path':
         request['url'] = request['url'].replace(

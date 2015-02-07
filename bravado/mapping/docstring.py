@@ -123,47 +123,47 @@ def create_operation_docstring(operation):
     """
     print 'creating op docstring for %s' % operation.operation_id
     s = ""
-    op_dict = operation.operation_dict
-    is_deprecated = op_dict.get('deprecated', False)
+    op_spec = operation.operation_spec
+    is_deprecated = op_spec.get('deprecated', False)
     if is_deprecated:
         s += "** DEPRECATED **\n"
 
-    summary = op_dict.get('summary')
+    summary = op_spec.get('summary')
     if summary:
         s += "[{0}] {1}\n\n".format(operation.http_method.upper(), summary)
 
-    desc = op_dict.get('description')
+    desc = op_spec.get('description')
     if desc:
         s += "{0}\n\n".format(desc)
 
-    for param_dict in op_dict.get('parameters', []):
-        s += create_param_docstring(param_dict)
+    for param_spec in op_spec.get('parameters', []):
+        s += create_param_docstring(param_spec)
 
-    responses = op_dict.get('responses')
-    for http_status_code, response_dict in iter(sorted(responses.iteritems())):
-        response_desc = response_dict.get('description')
+    responses = op_spec.get('responses')
+    for http_status_code, response_spec in iter(sorted(responses.iteritems())):
+        response_desc = response_spec.get('description')
         s += ':returns: {0}: {1}\n'.format(http_status_code, response_desc)
-        schema_dict = response_dict.get('schema')
-        if schema_dict:
+        schema_spec = response_spec.get('schema')
+        if schema_spec:
             s += ':rtype: {0}\n'.format(
-                swagger_type.get_swagger_type(schema_dict))
+                swagger_type.get_swagger_type(schema_spec))
     return s
 
 
-def create_param_docstring(param_dict):
+def create_param_docstring(param_spec):
     """Builds the docstring for a parameters from its specification.
 
-    :param param_dict: parameter spec in json-line dict form
+    :param param_spec: parameter spec in json-line dict form
     :rtype: str
 
     Example: ::
         :param status: Status to be considered for filter
         :type status: string
     """
-    name = param_dict.get('name')
-    desc = param_dict.get('description', 'Document your spec, yo!')
-    default_value = param_dict.get('default')
-    location = param_dict.get('in')
+    name = param_spec.get('name')
+    desc = param_spec.get('description', 'Document your spec, yo!')
+    default_value = param_spec.get('default')
+    location = param_spec.get('in')
 
     s = ":param {0}: {1}".format(name, desc)
     if default_value is not None:
@@ -171,9 +171,9 @@ def create_param_docstring(param_dict):
     s += "\n"
 
     if location == 'body':
-        param_type = swagger_type.get_swagger_type(param_dict.get('schema'))
+        param_type = swagger_type.get_swagger_type(param_spec.get('schema'))
     else:
-        param_type = param_dict.get('type')
+        param_type = param_spec.get('type')
     s += ":type {0}: {1}\n".format(name, param_type)
 
     # TODO: Lot more stuff can go in here - see "Parameter Object" in 2.0 Spec.

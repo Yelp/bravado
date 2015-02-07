@@ -15,7 +15,11 @@ def build_models(definitions_dict):
     """
     models = {}
     for model_name, model_dict in definitions_dict.iteritems():
+        # make models available under both simple name and $ref style name
+        # - Pet <-- TODO: remove eventually
+        # - #/definitions/Pet
         models[model_name] = create_model_type(model_name, model_dict)
+        models['#/definitions/{0}'.format(model_name)] = models[model_name]
     return models
 
 

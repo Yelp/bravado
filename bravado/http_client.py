@@ -16,6 +16,8 @@ import requests.auth
 
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+
 APP_FORM = 'application/x-www-form-urlencoded'
 APP_JSON = 'application/json'
 MULT_FORM = 'multipart/form-data'
@@ -153,6 +155,7 @@ class SynchronousHttpClient(HttpClient):
 
     def __init__(self):
         self.session = requests.Session()
+        self.session.proxies = {'http':'http://localhost:9999'}
         self.authenticator = None
 
     def start_request(self, request_params):
