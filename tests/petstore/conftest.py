@@ -7,6 +7,7 @@ import pytest
 
 from bravado import client
 
+
 @pytest.fixture
 def petstore():
-    return client.get_client('http://petstore.swagger.wordnik.com/v2/swagger.json')
+    return client.get_client('http://petstore.swagger.io/v2/swagger.json')
