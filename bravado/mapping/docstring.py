@@ -162,12 +162,16 @@ def create_param_docstring(param_spec):
     """
     name = param_spec.get('name')
     desc = param_spec.get('description', 'Document your spec, yo!')
+    desc = desc if desc else 'Document your spec, yo!'
     default_value = param_spec.get('default')
     location = param_spec.get('in')
+    required = param_spec.get('required', False)
 
     s = ":param {0}: {1}".format(name, desc)
     if default_value is not None:
         s += " (Default: {0})".format(default_value)
+    if not required:
+        s += " (optional)"
     s += "\n"
 
     if location == 'body':

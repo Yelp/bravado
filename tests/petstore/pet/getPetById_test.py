@@ -9,19 +9,19 @@ def test_200_success(petstore):
     print type(pet)
     pprint(pet)
     assert type(pet).__name__ == 'Pet'
-    assert pet.name == 'doggie'
-    assert pet.status == 'string'
+    assert pet.name
+    assert pet.status
 
     assert type(pet.category).__name__ == 'Category'
-    assert pet.category.id == 1
-    assert pet.category.name == 'string'
+    assert pet.category.id
+    assert pet.category.name
 
     assert type(pet.photoUrls) == list
-    assert pet.photoUrls == ['string']
+    assert pet.photoUrls
 
     assert type(pet.tags) == list
-    assert pet.tags[0].id == 0
-    assert pet.tags[0].name == 'string'
+    assert pet.tags[0].id is not None
+    assert pet.tags[0].name
 
 
 @pytest.mark.xfail(reason="Petstore returns a 500 instead of a 404 - pet not found")
