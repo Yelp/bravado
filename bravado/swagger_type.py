@@ -28,6 +28,13 @@ SWAGGER_TO_PY_TYPE_MAPPING = {
     'File': file
 }
 
+SWAGGER20_PRIMITIVES = [
+    'integer',
+    'number',
+    'string',
+    'boolean',
+    'null'
+]
 
 SWAGGER_PRIMITIVE_TYPE_TO_SWAGGER_FORMAT = {
     u'integer': ['int32', 'int64'],

@@ -6,6 +6,7 @@ from bravado import swagger_type
 from bravado.mapping.param import validate_and_add_params_to_request
 from bravado.response import post_receive, HTTPFuture
 from bravado.exception import SwaggerError
+from bravado.mapping.marshal import Param, marshal_param
 
 log = logging.getLogger(__name__)
 
@@ -23,6 +24,11 @@ class Operation(object):
         self.http_method = http_method
         self.operation_spec = operation_spec
         self._operation_id = None  # use @property getter
+
+        # (key, value) = (param_name, Param)
+        self.params = dict(
+            (param_spec['name'], Param(self.spec, param_spec))
+            for param_spec in self.operation_spec.get('parameters', []))
 
     @property
     def operation_id(self):
@@ -49,6 +55,70 @@ class Operation(object):
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.operation_id)
 
+    # def _construct_request(self, **kwargs):
+    #     """
+    #     :param kwargs: parameter name/value pairs to pass to the invocation of
+    #         the operation
+    #     :return: request in dict form
+    #     """
+    #     request_options = kwargs.pop('_request_options', {})
+    #
+    #     request = {}
+    #     request['method'] = self.http_method
+    #     request['url'] = self.spec.api_url + self.path_name
+    #     request['params'] = {}
+    #     request['headers'] = request_options.get('headers', {})
+    #
+    #     for param_spec in self.operation_spec.get('parameters', []):
+    #         param_name = param_spec['name']
+    #         param_location = param_spec['in']
+    #         param_value = kwargs.pop(param_name, None)
+    #         param_default = param_spec.get('default')
+    #
+    #         # if param_location == 'body':
+    #         #     spec_for_param = param_spec['schema']
+    #         # else:
+    #         #     spec_for_param = param_spec
+    #
+    #         # This is really convoluted! Given a paramever spec like so, the
+    #         # type is "array" but the default value is the string "available".
+    #         # Since when is a string an array?!?! The code special cases
+    #         # array types with a default value and wraps the value in an
+    #         # array for convenience.
+    #         #
+    #         # {
+    #         #     name: "status",
+    #         #     in: "query",
+    #         #     description: "Status values that need to be considered for filter",
+    #         #     required: false,
+    #         #     type: "array",
+    #         #     items: {
+    #         #         type: "string"
+    #         #     },
+    #         #     collectionFormat: "multi",
+    #         #     default: "available"
+    #         # }
+    #         #
+    #         # Snippet from http://petstore.swagger.wordnik.com/v2/swagger.json
+    #         # TODO: Unit test
+    #         if param_value is None and param_default:
+    #             param_type = param_spec['type']
+    #             if param_type == 'array':
+    #                 param_value = [param_default]
+    #             else:
+    #                 param_value = param_default
+    #
+    #         validate_and_add_params_to_request(
+    #             self.spec,
+    #             param_spec,
+    #             param_value,
+    #             request)
+    #
+    #     if kwargs:
+    #         raise TypeError(u"{0} does not have parameters {1}".format(
+    #             self.operation_id, kwargs.keys()))
+    #     return request
+
     def _construct_request(self, **kwargs):
         """
         :param kwargs: parameter name/value pairs to pass to the invocation of
@@ -63,54 +133,12 @@ class Operation(object):
         request['params'] = {}
         request['headers'] = request_options.get('headers', {})
 
-        for param_spec in self.operation_spec.get('parameters', []):
-            param_name = param_spec['name']
-            param_location = param_spec['in']
-            param_value = kwargs.pop(param_name, None)
-            param_default = param_spec.get('default')
-
-            # if param_location == 'body':
-            #     spec_for_param = param_spec['schema']
-            # else:
-            #     spec_for_param = param_spec
-
-            # This is really convoluted! Given a paramever spec like so, the
-            # type is "array" but the default value is the string "available".
-            # Since when is a string an array?!?! The code special cases
-            # array types with a default value and wraps the value in an
-            # array for convenience.
-            #
-            # {
-            #     name: "status",
-            #     in: "query",
-            #     description: "Status values that need to be considered for filter",
-            #     required: false,
-            #     type: "array",
-            #     items: {
-            #         type: "string"
-            #     },
-            #     collectionFormat: "multi",
-            #     default: "available"
-            # }
-            #
-            # Snippet from http://petstore.swagger.wordnik.com/v2/swagger.json
-            # TODO: Unit test
-            if param_value is None and param_default:
-                param_type = param_spec['type']
-                if param_type == 'array':
-                    param_value = [param_default]
-                else:
-                    param_value = param_default
-
-            validate_and_add_params_to_request(
-                self.spec,
-                param_spec,
-                param_value,
-                request)
-
-        if kwargs:
-            raise TypeError(u"{0} does not have parameters {1}".format(
-                self.operation_id, kwargs.keys()))
+        for param_name, param_value in kwargs.iteritems():
+            param = self.params.get(param_name)
+            if param is None:
+                raise TypeError("{0} does not have parameter {1}".format(
+                    self.operation_id, param_name))
+            marshal_param(param, param_value, request)
         return request
 
     def __call__(self, **kwargs):
