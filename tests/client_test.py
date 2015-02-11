@@ -90,7 +90,7 @@ class SwaggerClientCacheTest(unittest.TestCase):
                 client.get_client('foo')
                 assert not mock.called
 
-    @patch('swaggerpy.client.Loader', autospec=True)
+    @patch('swaggerpy.client.load_resource_listing', autospec=True)
     def test_cache_with_async_http_client(self, _):
         url = 'http://example.com/api-docs'
         swagger_client = client.get_client(
