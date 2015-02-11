@@ -1,7 +1,7 @@
 
 from swaggerpy import version
 
-# -- General configuration -----------------------------------------------------
+# -- General configuration -----------------------------------------------
 
 extensions = [
     'sphinx.ext.autodoc',
@@ -29,7 +29,7 @@ exclude_patterns = []
 pygments_style = 'sphinx'
 
 
-# -- Options for HTML output ---------------------------------------------------
+# -- Options for HTML output ---------------------------------------------
 
 html_theme = 'sphinxdoc'
 

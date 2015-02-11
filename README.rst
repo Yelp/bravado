@@ -56,7 +56,10 @@ Setup
 
 ::
 
+    # Run tests
     tox
+    # Install git pre-commit hooks
+    .tox/py27/bin/pre-commit install
 
 
 License

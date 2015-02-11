@@ -187,7 +187,8 @@ class ResourceOperationTest(unittest.TestCase):
         self.register_urls()
         httpretty.register_uri(
             httpretty.POST, "http://localhost/test_http?", body='')
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
         resource.testHTTP(param_id=42, param_name='str').result()
         self.assertEqual('application/x-www-form-urlencoded',
                          httpretty.last_request().headers['content-type'])
@@ -212,7 +213,8 @@ class ResourceOperationTest(unittest.TestCase):
         self.register_urls()
         httpretty.register_uri(
             httpretty.POST, "http://localhost/test_http?", body='')
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
         with open("test-data/1.2/simple/simple.json", "rb") as f:
             resource.testHTTP(param_id=42, file_name=f).result()
             content_type = httpretty.last_request().headers['content-type']
@@ -238,7 +240,8 @@ class ResourceOperationTest(unittest.TestCase):
             httpretty.GET,
             "http://localhost/params/42/test_http?test_param=foo",
             body='')
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_param="foo", param_id="42").result()
         self.assertEqual(None, resp)
 
@@ -248,7 +251,8 @@ class ResourceOperationTest(unittest.TestCase):
         self.register_urls()
         httpretty.register_uri(httpretty.GET,
                                "http://localhost/test_http?", body='')
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
         resource.testHTTP().result()
         self.assertEqual(['testString'],
                          httpretty.last_request().querystring['test_param'])
@@ -272,7 +276,8 @@ class ResourceOperationTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET,
             "http://localhost/params/40,41,42/test_http?", body='')
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_params=["foo", "bar"],
                                  param_ids=[40, 41, 42]).result()
         self.assertEqual(["foo", "bar"],
@@ -289,7 +294,8 @@ class ResourceOperationTest(unittest.TestCase):
         self.response["apis"][0]["operations"][0]["parameters"] = [
             query_parameter]
         self.register_urls()
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
         self.assertRaises(TypeError, resource.testHTTP,
                           test_param="NOT_INTEGER")
 
@@ -304,13 +310,15 @@ class ResourceOperationTest(unittest.TestCase):
         self.response["apis"][0]["operations"][0]["parameters"] = [
             query_parameter]
         self.register_urls()
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
         self.assertRaises(TypeError, resource.testHTTP, test_param=["A", "B"])
 
     @httpretty.activate
     def test_no_error_on_not_passing_non_required_param_in_query(self):
         self.register_urls()
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
         # No error should be raised on not passing test_param (not required)
         resource.testHTTP()
 
@@ -325,7 +333,8 @@ class ResourceOperationTest(unittest.TestCase):
         self.response["apis"][0]["operations"][0]["parameters"] = [
             query_parameter]
         self.register_urls()
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
         self.assertRaises(TypeError, resource.testHTTP,
                           test_param=["NOT_INTEGER"])
 
@@ -342,7 +351,8 @@ class ResourceOperationTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http", body='')
         self.register_urls()
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
         some_datetime = datetime.datetime(
             2014, 6, 10, 23, 49, 54, 728000, tzinfo=tzutc())
         resource.testHTTP(test_param=some_datetime).result()
@@ -362,7 +372,8 @@ class ResourceOperationTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.GET, "http://localhost/test_http", body='')
         self.register_urls()
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
         some_date = datetime.date(2014, 6, 10)
         resource.testHTTP(test_param=some_date).result()
         self.assertEqual(['2014-06-10'],
@@ -391,7 +402,8 @@ class ResourceOperationTest(unittest.TestCase):
         httpretty.register_uri(
             httpretty.POST,
             "http://localhost/params/42/test_http?test_param=foo", body='')
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_param="foo", param_id="42",
                                  body="some_test").result()
         self.assertEqual('some_test', httpretty.last_request().body)
@@ -413,7 +425,8 @@ class ResourceOperationTest(unittest.TestCase):
         self.register_urls()
         httpretty.register_uri(httpretty.POST, "http://localhost/test_http",
                                body='')
-        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(body=["a", "b", "c"]).result()
         self.assertEqual(["a", "b", "c"],
                          json.loads(httpretty.last_request().body))

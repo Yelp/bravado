@@ -9,6 +9,7 @@
 class HTTPError(IOError):
     """Initialize HTTPError with 'response' and 'request' object
     """
+
     def __init__(self, *args, **kwargs):
         response = kwargs.pop('response', None)
         self.response = response

@@ -7,6 +7,7 @@ import requests
 from mock import Mock, patch
 
 from swaggerpy import client
+from swaggerpy.async_http_client import AsynchronousHttpClient
 from swaggerpy.client import (
     add_param_to_req,
     SwaggerClient,
@@ -37,8 +38,6 @@ class ValidateParamTest(unittest.TestCase):
 
 
 class SwaggerClientCacheTest(unittest.TestCase):
-    """Test the proxy wrapper of SwaggerClient
-    """
 
     def setUp(self):
         client.cache = None
@@ -49,13 +48,13 @@ class SwaggerClientCacheTest(unittest.TestCase):
         with patch('swaggerpy.client.SwaggerClient'):
             with patch('swaggerpy.client.time.time', side_effect=[1]):
                 client.get_client('test', ttl=10)
-                self.assertTrue(client.cache.cache["('test',){}"].is_stale(12))
+                assert client.cache.cache["('test',)[]"].is_stale(12)
 
     def test_is_stale_returns_false_before_ttl(self):
         with patch('swaggerpy.client.SwaggerClient'):
             with patch('swaggerpy.client.time.time', side_effect=[1]):
                 client.get_client('test', ttl=10)
-                self.assertFalse(client.cache.cache["('test',){}"].is_stale(11))
+                assert not client.cache.cache["('test',)[]"].is_stale(11)
 
     def test_build_cached_item_with_proper_values(self):
         with patch('swaggerpy.client.SwaggerClient.from_url') as mock:
@@ -63,7 +62,8 @@ class SwaggerClientCacheTest(unittest.TestCase):
             with patch('swaggerpy.client.time.time',
                        side_effect=[1, 1]):
                 cache = SwaggerClientCache()
-                client_object = client.CacheEntry(cache.build_client('test'), 3)
+                client_object = client.CacheEntry(
+                    cache.build_client('test'), 3)
                 self.assertEqual('foo', client_object.item)
                 self.assertEqual(3, client_object.ttl)
                 self.assertEqual(1, client_object.timestamp)
@@ -89,6 +89,15 @@ class SwaggerClientCacheTest(unittest.TestCase):
             with patch('swaggerpy.client.time.time', side_effect=[2]):
                 client.get_client('foo')
                 assert not mock.called
+
+    @patch('swaggerpy.client.Loader', autospec=True)
+    def test_cache_with_async_http_client(self, _):
+        url = 'http://example.com/api-docs'
+        swagger_client = client.get_client(
+            url,
+            http_client=AsynchronousHttpClient())
+        other = client.get_client(url, http_client=AsynchronousHttpClient())
+        assert swagger_client is other
 
 
 class GetClientMethodTest(unittest.TestCase):
@@ -118,7 +127,7 @@ class GetClientMethodTest(unittest.TestCase):
     def test_cache_of_a_json_dict(self):
         client.get_client({'swaggerVersion': '1.2', 'apis': []})
         self.assertTrue(
-            repr(({'swaggerVersion': '1.2', 'apis': []},)) + "{}" in
+            repr(({'swaggerVersion': '1.2', 'apis': []},)) + "[]" in
             client.cache.cache)
 
 

@@ -24,6 +24,7 @@ MULT_FORM = 'multipart/form-data'
 class HttpClient(object):
     """Interface for a minimal HTTP client.
     """
+
     def request(self, method, url, params=None, data=None):
         """Issue an HTTP request.
 
@@ -71,6 +72,9 @@ class HttpClient(object):
         """
         raise NotImplementedError(
             u"%s: Method not implemented", self.__class__.__name__)
+
+    def __repr__(self):
+        return "{0}()".format(type(self))
 
 
 class Authenticator(object):
