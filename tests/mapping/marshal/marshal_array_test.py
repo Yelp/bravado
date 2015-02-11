@@ -1,7 +1,7 @@
 import pytest
 
 from bravado.mapping.marshal import marshal_array
-from bravado.mapping.marshal import Param
+from bravado.mapping.param import Param
 
 
 @pytest.fixture
@@ -20,9 +20,9 @@ def param_spec():
     }
 
 
-def test_query(swagger_object, param_spec):
+def test_query(empty_swagger_spec, param_spec):
     param_spec['in'] = 'query'
-    param = Param(swagger_object, param_spec)
+    param = Param(empty_swagger_spec, param_spec)
     request = {
         'params': {}
     }
@@ -30,9 +30,9 @@ def test_query(swagger_object, param_spec):
     assert {'status': ['a', 'b', 'c']} == request['params']
 
 
-def test_header(swagger_object, param_spec):
+def test_header(empty_swagger_spec, param_spec):
     param_spec['in'] = 'header'
-    param = Param(swagger_object, param_spec)
+    param = Param(empty_swagger_spec, param_spec)
     request = {
         'headers': {}
     }

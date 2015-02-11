@@ -32,11 +32,11 @@ def convert_path_to_resource(path_name):
     return resource_name
 
 
-def build_resources(spec):
-    """Transforms the REST resources in the json-like spec into rich :Resource:
+def build_resources(swagger_spec):
+    """Transforms the REST resources in the json-like swagger_spec into rich :Resource:
     objects that have associated :Operation:s.
 
-    :type spec: :class:`bravado.mapping.spec.Spec`
+    :type swagger_spec: :class:`bravado.mapping.spec.Spec`
     :returns: dict where (key,value) = (resource name, Resource)
     """
     # Map operations to resources using operation tags if available.
@@ -46,10 +46,11 @@ def build_resources(spec):
     #   path
     # key = tag_name   value = { operation_id : Operation }
     tag_to_operations = defaultdict(dict)
-    paths = spec.spec_dict['paths']
+    paths = swagger_spec.spec_dict['paths']
     for path_name, path_dict in paths.iteritems():
         for http_method, operation_dict in path_dict.items():
-            operation = Operation(spec, path_name, http_method, operation_dict)
+            #operation = Operation(swagger_spec, path_name, http_method, operation_dict)
+            operation = Operation.from_spec(swagger_spec, path_name, http_method, operation_dict)
             tags = operation_dict.get('tags', [])
             if not tags:
                 tags.append(convert_path_to_resource(path_name))

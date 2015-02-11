@@ -1,15 +1,15 @@
 import urllib
 import simplejson as json
 
-
 from bravado import swagger_type
 from bravado.http_client import APP_JSON
-from bravado.swagger_type import SwaggerTypeCheck
+from bravado.mapping.marshal import validate_primitive, marshal_primitive, \
+    validate_array, marshal_array
+from bravado.mapping.schema import to_primitive_schema, to_array_schema
+from bravado.swagger_type import SwaggerTypeCheck, SWAGGER20_PRIMITIVES
 
 
-# TODO: Needs to be thought through some more instead of just carrying over
-#       the impl from 1.2
-
+# TODO: remove
 def validate_and_add_params_to_request(spec, param_spec, value, request):
     """Validates if a required param_spec is given and wraps 'add_param_to_req'
     to populate a valid request.
@@ -65,6 +65,7 @@ def validate_and_add_params_to_request(spec, param_spec, value, request):
             raise TypeError(u"Missing required parameter '%s'" % param_name)
 
 
+# TODO: remove
 def add_param_to_req(param_spec, value, request):
     """Populates request object with the request parameters
 
@@ -124,3 +125,99 @@ def handle_form_param(name, value, type_, request):
     else:
         raise AssertionError(
             u"%s neither primitive nor File" % name)
+
+# TODO: generalize for other Swagger object types
+class Param(object):
+    """Thin wrapper around a param_spec dict that provides convenience functions
+    for commonly requested parameter information
+
+    :type swagger_object: :class:`Spec`
+    :type param_spec: parameter specification in dict form
+    """
+    def __init__(self, swagger_object, param_spec):
+        self.swagger_object = swagger_object
+        self.param_spec = param_spec
+
+        # generated on demand and cached by @property
+        self._jsonschema = None
+
+    @property
+    def name(self):
+        return self.param_spec['name']
+
+    @property
+    def location(self):
+        # not using 'in' as the name since it is a keyword in python
+        return self.param_spec['in']
+
+    @property
+    def description(self):
+        return self.param_spec.get('description', None)
+
+    @property
+    def required(self):
+        return self.param_spec.get('required', False)
+
+    @property
+    def swagger_type(self):
+        """Return the swagger type
+
+        :rtype: str
+        """
+        if self.location == 'body':
+            return self.param_spec['schema']['type']
+        return self.param_spec['type']
+
+    @property
+    def jsonschema(self):
+        """Returns the closest approximation of this parameter's swagger spec
+        in valid jsonschema. Cached and used for validation.
+
+        :rtype: dict
+        """
+        # TODO: handle all possible types of 'location'
+        if self._jsonschema is None:
+            if self.swagger_type in SWAGGER20_PRIMITIVES:
+                # integer, number, boolean, null, string
+                self._jsonschema = to_primitive_schema(self.param_spec)
+            elif self.swagger_type == 'array':
+                self._jsonschema = to_array_schema(self.param_spec)
+            else:
+                # object, Model
+                raise NotImplementedError('TODO')
+        return self._jsonschema
+
+    def has_default(self):
+        return 'default' in self.param_spec
+
+    @property
+    def default(self):
+        return self.param_spec['default']
+
+
+def marshal_param(param, value, request):
+    """
+    Given parameter spec and a value, validate and convert the value to
+    wire format in the given request.
+
+    :type param: :class:`Param`
+    :param value: The value to assign to the parameter
+    :type request: dict
+    """
+    # path     => primitive
+    # query    => primitite + array of primitives
+    # header   => primitive + array of primitives
+    # body     => primitive + array of (object or primitives) + object
+    # formData =>
+    location = param.location
+    swagger_type = param.swagger_type
+
+    if swagger_type in SWAGGER20_PRIMITIVES:
+        value = validate_primitive(param, value)
+        marshal_primitive(param, value, request)
+    elif swagger_type == 'array' and location in ('query', 'header'):
+        value = validate_array(param, value)
+        marshal_array(param, value, request)
+    else:
+        # body, formData
+        raise NotImplementedError('TODO')

@@ -8,10 +8,11 @@ def test_uses_default_of_available(petstore):
 
 def test_sold(petstore):
     pets = petstore.pet.findPetsByStatus(status=['sold']).result()
-    assert pets
-    for pet in pets:
-        assert type(pet).__name__ == 'Pet'
-        assert pet.status == 'sold'
+    assert list == type(pets)
+    if pets:
+        for pet in pets:
+            assert type(pet).__name__ == 'Pet'
+            assert pet.status == 'sold'
 
 
 def test_invalid_status(petstore):

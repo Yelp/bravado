@@ -2,7 +2,7 @@ from jsonschema.exceptions import ValidationError
 import pytest
 
 from bravado.mapping.marshal import validate_array
-from bravado.mapping.marshal import Param
+from bravado.mapping.param import Param
 from bravado.exception import SwaggerError
 
 
@@ -22,29 +22,29 @@ def param_spec():
     }
 
 
-def test_valid(swagger_object, param_spec):
-    param = Param(swagger_object, param_spec)
+def test_valid(empty_swagger_spec, param_spec):
+    param = Param(empty_swagger_spec, param_spec)
     value = validate_array(param, ['a','b','c'])
     assert ['a','b','c'] == value
 
 
-def test_uses_default(swagger_object, param_spec):
+def test_uses_default(empty_swagger_spec, param_spec):
     param_spec['default'] = ['available']
-    param = Param(swagger_object, param_spec)
+    param = Param(empty_swagger_spec, param_spec)
     value = validate_array(param, None)
     assert ['available'] == value
 
 
-def test_wraps_default_in_array_when_not_array(swagger_object, param_spec):
-    param = Param(swagger_object, param_spec)
+def test_wraps_default_in_array_when_not_array(empty_swagger_spec, param_spec):
+    param = Param(empty_swagger_spec, param_spec)
     value = validate_array(param, None)
     assert ['available'] == value
 
 
-def test_error_when_required_and_value_is_None(swagger_object, param_spec):
+def test_error_when_required_and_value_is_None(empty_swagger_spec, param_spec):
     del param_spec['default']
     param_spec['required'] = True
-    param = Param(swagger_object, param_spec)
+    param = Param(empty_swagger_spec, param_spec)
     with pytest.raises(SwaggerError) as excinfo:
         validate_array(param, None)
     assert 'status cannot be null' in str(excinfo.value)
@@ -55,32 +55,32 @@ def test_error_when_required_and_value_is_None(swagger_object, param_spec):
 # works as expected and raises the appropriate exception.
 # ========================================================================
 
-def test_fails_type_validation(swagger_object, param_spec):
-    param = Param(swagger_object, param_spec)
+def test_fails_type_validation(empty_swagger_spec, param_spec):
+    param = Param(empty_swagger_spec, param_spec)
     with pytest.raises(ValidationError) as excinfo:
         validate_array(param, [1, 2, 3])
     assert "Failed validating 'type'" in str(excinfo.value)
 
 
-def test_fails_minItems_validation(swagger_object, param_spec):
+def test_fails_minItems_validation(empty_swagger_spec, param_spec):
     param_spec['minItems'] = 2
-    param = Param(swagger_object, param_spec)
+    param = Param(empty_swagger_spec, param_spec)
     with pytest.raises(ValidationError) as excinfo:
         validate_array(param, ['a'])
     assert "is too short" in str(excinfo.value)
 
 
-def test_fails_maxItems_validation(swagger_object, param_spec):
+def test_fails_maxItems_validation(empty_swagger_spec, param_spec):
     param_spec['maxItems'] = 2
-    param = Param(swagger_object, param_spec)
+    param = Param(empty_swagger_spec, param_spec)
     with pytest.raises(ValidationError) as excinfo:
         validate_array(param, ['a', 'b', 'c'])
     assert "is too long" in str(excinfo.value)
 
 
-def test_fails_uniqueItems_validation(swagger_object, param_spec):
+def test_fails_uniqueItems_validation(empty_swagger_spec, param_spec):
     param_spec['uniqueItems'] = True
-    param = Param(swagger_object, param_spec)
+    param = Param(empty_swagger_spec, param_spec)
     with pytest.raises(ValidationError) as excinfo:
         validate_array(param, ['a', 'a', 'a'])
     assert "has non-unique elements" in str(excinfo.value)

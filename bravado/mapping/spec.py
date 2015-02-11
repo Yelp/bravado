@@ -1,8 +1,14 @@
+import logging
 import urlparse
 from swagger_spec_validator import validator20
+from bravado.exception import SwaggerError
 
 from bravado.mapping.model import build_models
+from bravado.mapping.param import Param
 from bravado.mapping.resource import build_resources
+
+
+log = logging.getLogger(__name__)
 
 
 class Spec(object):
@@ -18,8 +24,20 @@ class Spec(object):
         self.origin_url = origin_url
         self.http_client = http_client
         self.api_url = None
+
+        # (key, value) = (simple format def name, Model type)
+        # (key, value) = (#/ format def ref, Model type)
         self.definitions = None
+
+        # (key, value) = (simple resource name, Resource)
+        # (key, value) = (#/ format resource ref, Resource)
         self.resources = None
+
+        # (key, value) = (simple ref name, param_spec in dict form)
+        # (key, value) = (#/ format ref name, param_spec in dict form)
+        self.params = None
+
+        self.responses = None
 
     @classmethod
     def from_dict(cls, spec_dict, origin_url=None, http_client=None):
@@ -38,17 +56,47 @@ class Spec(object):
         validator20.validate_spec(self.spec_dict)
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
         self.definitions = build_models(self.spec_dict['definitions'])
-
-        # TODO
-        # self.shared_parameters =
-        #   build_parameters(self.spec_dict.get('parameters', {})
-
-        # TODO
-        # self.shared_responses =
-        #   build_responses(self.spec_dict.get('responses',{})
-
+        self.params = self.build_params()
+        self.responses = self.build_responses()
         self.resources = build_resources(self)
 
+    def build_params(self):
+        params = {}
+        for ref_name, param_spec in self.spec_dict['parameters'].iteritems():
+            # Register under both 'plain' ref name and #/ style ref name
+            params[ref_name] = param_spec
+            params['#/parameters/{0}'.format(ref_name)] = param_spec
+        return params
+
+    def build_responses(self):
+        log.warn('TODO: implement Spec::build_responses()')
+        return {}
+
+    def resolve(self, object_spec):
+        """Given an object specification, resolve the $ref if it is a $ref
+
+        :param object_spec: object schema
+        :return: dict
+        :rtype: dict
+        """
+        if len(object_spec) == 1 and '$ref' in object_spec:
+            # refs can be to
+            # - #/parameters
+            # - #/definitions
+            # - #/responses
+            #
+            # TODO: consider tightening up the criteria by having the
+            #       caller specify in which context the ref is valid.
+            #       Search all for now
+            ref_name = object_spec['$ref']
+            if ref_name in self.params:
+                return self.params[ref_name]
+            if ref_name in self.definitions:
+                return self.definitions[ref_name]
+            if ref_name in self.responses:
+                return self.responses[ref_name]
+            raise SwaggerError('Cound not resolve $ref {0}'.format(ref_name))
+        return object_spec
 
 def build_api_serving_url(spec_dict, origin_url, preferred_scheme=None):
     """The URL used to service API requests does not necessarily have to be the

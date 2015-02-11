@@ -1,7 +1,6 @@
 import pytest
 
-from bravado.mapping.marshal import marshal_param
-from bravado.mapping.marshal import Param
+from bravado.mapping.param import Param, marshal_param
 
 
 @pytest.fixture

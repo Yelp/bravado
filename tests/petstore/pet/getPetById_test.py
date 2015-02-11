@@ -13,7 +13,7 @@ def test_200_success(petstore):
     assert pet.status
 
     assert type(pet.category).__name__ == 'Category'
-    assert pet.category.id
+    assert pet.category.id is not None
     assert pet.category.name
 
     assert type(pet.photoUrls) == list
