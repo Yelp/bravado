@@ -1,13 +1,13 @@
 import mock
 
 from bravado.mapping.model import create_model_type
-from tests.mapping.model.conftest import pet_dict as pet_dict_fixture
+from tests.mapping.model.conftest import pet_spec as pet_spec_fixture
 from tests.mapping.model.conftest import \
-    definitions_dict as definitions_dict_fixture
+    definitions_spec as definitions_spec_fixture
 
 
-def test_pet_model(pet_dict):
-    Pet = create_model_type('Pet', pet_dict)
+def test_pet_model(pet_spec):
+    Pet = create_model_type('Pet', pet_spec)
     expected = set(['id', 'category', 'name', 'photoUrls', 'tags'])
     pet = Pet(id=1, name='Darwin')
     assert set(vars(pet).keys()) == expected
@@ -24,8 +24,8 @@ def test_pet_model(pet_dict):
     assert Pet._required == ['name', 'photoUrls']
 
 
-def test_no_arg_constructor(pet_dict):
-    Pet = create_model_type('Pet', pet_dict)
+def test_no_arg_constructor(pet_spec):
+    Pet = create_model_type('Pet', pet_spec)
     pet = Pet()
     assert isinstance(pet.id, long)
     assert isinstance(pet.photoUrls, list)
@@ -38,12 +38,12 @@ def test_no_arg_constructor(pet_dict):
 def test_create_model_type_lazy_docstring(mock_create_docstring):
     # NOTE: some sort of weird interaction with pytest, pytest-mock and mock
     #       made using the 'mocker' fixture here a no-go.
-    definitions_dict = definitions_dict_fixture()
-    pet_dict = pet_dict_fixture(definitions_dict)
-    pet_type = create_model_type('Pet', pet_dict)
+    definitions_spec = definitions_spec_fixture()
+    pet_spec = pet_spec_fixture(definitions_spec)
+    pet_type = create_model_type('Pet', pet_spec)
     assert not mock_create_docstring.called
     assert pet_type.__doc__ == mock_create_docstring.return_value
-    mock_create_docstring.assert_called_once_with(pet_dict['properties'])
+    mock_create_docstring.assert_called_once_with(pet_spec['properties'])
 
 
 # ################################################################

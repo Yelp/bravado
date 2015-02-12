@@ -6,24 +6,24 @@ from bravado.mapping.docstring import docstring_property
 from bravado.mapping.docstring import create_model_docstring
 
 
-def build_models(definitions_dict):
+def build_models(definitions_spec):
     """Builds the models contained in a #/definitions dict. This applies
     to more than just definitions - generalize later.
 
-    :param definitions_dict: spec['definitions']
+    :param definitions_spec: spec['definitions'] in dict form
     :returns: dict where (name,value) = (model name, model type)
     """
     models = {}
-    for model_name, model_dict in definitions_dict.iteritems():
+    for model_name, model_spec in definitions_spec.iteritems():
         # make models available under both simple name and $ref style name
         # - Pet <-- TODO: remove eventually
         # - #/definitions/Pet
-        models[model_name] = create_model_type(model_name, model_dict)
+        models[model_name] = create_model_type(model_name, model_spec)
         models['#/definitions/{0}'.format(model_name)] = models[model_name]
     return models
 
 
-def create_model_type(model_name, model_dict):
+def create_model_type(model_name, model_spec):
     """Create a dynamic class from the model data defined in the swagger
     spec.
 
@@ -32,11 +32,11 @@ def create_model_type(model_name, model_dict):
     cases for interactive debugging in a REPL.
 
     :param model_name: model name
-    :param model_dict: json-like dict that describes a model.
+    :param model_spec: json-like dict that describes a model.
     :returns: dynamic type created with attributes, docstrings attached
     :rtype: type
     """
-    props = model_dict['properties']
+    props = model_spec['properties']
 
     methods = dict(
         __doc__=docstring_property(partial(create_model_docstring, props)),
@@ -46,7 +46,7 @@ def create_model_type(model_name, model_dict):
         __dir__=lambda self: props.keys(),
         _flat_dict=lambda self: create_flat_dict(self),
         _swagger_types=swagger_type.get_swagger_types(props),
-        _required=model_dict.get('required'),
+        _required=model_spec.get('required'),
     )
     return type(str(model_name), (object,), methods)
 

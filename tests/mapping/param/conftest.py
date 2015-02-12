@@ -4,6 +4,6 @@ from bravado.mapping.spec import Spec
 
 
 @pytest.fixture
-def swagger_object():
+def empty_swagger_spec():
     return Spec(spec_dict={})
 

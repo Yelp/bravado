@@ -131,11 +131,11 @@ class Param(object):
     """Thin wrapper around a param_spec dict that provides convenience functions
     for commonly requested parameter information
 
-    :type swagger_object: :class:`Spec`
+    :type swagger_spec: :class:`Spec`
     :type param_spec: parameter specification in dict form
     """
-    def __init__(self, swagger_object, param_spec):
-        self.swagger_object = swagger_object
+    def __init__(self, swagger_spec, param_spec):
+        self.swagger_spec = swagger_spec
         self.param_spec = param_spec
 
         # generated on demand and cached by @property

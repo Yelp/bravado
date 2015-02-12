@@ -33,16 +33,16 @@ def array_param_spec():
     }
 
 
-def test_string_in_query(swagger_object, string_param_spec, request_dict):
-    param = Param(swagger_object, string_param_spec)
+def test_string_in_query(empty_swagger_spec, string_param_spec, request_dict):
+    param = Param(empty_swagger_spec, string_param_spec)
     expected = request_dict.copy()
     expected['params']['username'] = 'darwin'
     marshal_param(param, 'darwin', request_dict)
     assert expected == request_dict
 
 
-def test_array_in_query(swagger_object, array_param_spec, request_dict):
-    param = Param(swagger_object, array_param_spec)
+def test_array_in_query(empty_swagger_spec, array_param_spec, request_dict):
+    param = Param(empty_swagger_spec, array_param_spec)
     value = ['cat', 'dog', 'bird']
     expected = request_dict.copy()
     expected['params']['animals'] = value
