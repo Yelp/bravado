@@ -13,6 +13,8 @@ exist)
 import logging
 from itertools import izip
 
+from swaggerpy.exception import SwaggerError
+
 log = logging.getLogger(__name__)
 
 
@@ -73,21 +75,6 @@ class ParsingContext(object):
         """
         del self.args[self.type_stack.pop()]
         self.id_stack.pop()
-
-
-class SwaggerError(Exception):
-    """Raised when an error is encountered mapping the JSON objects into the
-    model.
-    """
-
-    def __init__(self, msg, context, cause=None):
-        """Ctor.
-
-        :param msg: String message for the error.
-        :param context: ParsingContext object
-        :param cause: Optional exception that caused this one.
-        """
-        super(Exception, self).__init__(msg, context, cause)
 
 
 class SwaggerProcessor(object):

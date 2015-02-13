@@ -65,9 +65,9 @@ import swagger_type
 from swaggerpy.http_client import APP_JSON, SynchronousHttpClient
 from swaggerpy.response import HTTPFuture, post_receive
 from swaggerpy.swagger_model import (
-    Loader,
     create_model_type,
     is_file_scheme_uri,
+    load_resource_listing,
 )
 from swaggerpy.swagger_type import SwaggerTypeCheck
 
@@ -303,7 +303,7 @@ class SwaggerClient(object):
             url,
             http_client=None,
             api_base_path=None,
-            api_doc_request_headers=None):
+            request_options=None):
         """
         Build a :class:`SwaggerClient` from a url to api docs describing the
         api.
@@ -314,20 +314,14 @@ class SwaggerClient(object):
         :type  http_client: :class:`swaggerpy.http_client.HttpClient`
         :param api_base_path: a url, override the path used to make api requests
         :type  api_base_path: str
-        :param api_doc_request_headers: Headers to pass with api docs requests
-        :type  api_doc_request_headers: dict
+        :param request_options: extra values to pass with api docs requests
+        :type  request_options: dict
         """
         log.debug(u"Loading from %s" % url)
         http_client = http_client or SynchronousHttpClient()
 
-        # TODO: better way to customize the request for api-docs, so we don't
-        # have to add new kwargs for everything
-        loader = Loader(
-            http_client,
-            api_doc_request_headers=api_doc_request_headers)
-
         return cls.from_resource_listing(
-            loader.load_resource_listing(url),
+            load_resource_listing(url, http_client, None, request_options),
             http_client=http_client,
             api_base_path=api_base_path,
             url=url)
@@ -347,8 +341,6 @@ class SwaggerClient(object):
         :type  http_client: :class:`swaggerpy.http_client.HttpClient`
         :param api_base_path: a url, override the path used to make api requests
         :type  api_base_path: str
-        :param api_doc_request_headers: Headers to pass with api docs requests
-        :type  api_doc_request_headers: dict
         :param url: the url used to retrieve the resource listing
         :type  url: str
         """

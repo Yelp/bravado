@@ -9,15 +9,16 @@ import urlparse
 
 from swaggerpy import swagger_type
 from swaggerpy.compat import json
+from swaggerpy.exception import SwaggerError
 from swaggerpy.http_client import SynchronousHttpClient
-from swaggerpy.processors import SwaggerProcessor, SwaggerError
+from swaggerpy.processors import SwaggerProcessor
 
 SWAGGER_VERSIONS = [u"1.2"]
 
 log = logging.getLogger(__name__)
 
 
-# noinspection PyDocstring
+# TODO: replace with swagger_schema_validator
 class ValidationProcessor(SwaggerProcessor):
     """A processor that validates the Swagger model.
     """
@@ -132,116 +133,81 @@ class FileEventual(object):
         pass
 
 
-def start_request(http_client, url, headers):
+def start_request(http_client, url, request_options):
     """Download and parse JSON from a URL.
 
     :param http_client: a :class:`swaggerpy.http_client.HttpClient`
     :param url: url for api docs
+    :param request_options: additional fields to send with the request
     :return: an object with a :func`wait` method which returns the api docs
     """
     if is_file_scheme_uri(url):
         return FileEventual(url)
 
-    request_params = {
-        'method': 'GET',
-        'url': url,
-        'headers': headers,
-    }
+    request_params = dict(
+        method='GET',
+        url=url,
+        **request_options)
     return http_client.start_request(request_params)
 
 
-# TODO: remove processors parameter
-class Loader(object):
-    """Abstraction for loading Swagger API's.
+def load_resource_listing(
+        url,
+        http_client,
+        base_url=None,
+        request_options=None):
+    """Load a complete swagger api spec and return all schemas compiled
+    into a single dict.
 
-    :param http_client: HTTP client interface.
-    :type  http_client: http_client.HttpClient
-    :param processors: List of processors to apply to the API.
-    :type  processors: list of SwaggerProcessor
+    :param url: url to the swagger spec (file or http)
+    :param http_client: a :class:`swaggerpy.http_client.HttpClient` for
+        performing the requests to fetch api documents.
+    :param base_url: optional url to use as the base url for api doc paths
+    :param request_options: mapping of additional fields to specify in
+        the http request to fetch resources.
     """
+    request_options = request_options or {}
+    timeout = request_options.get('timeout', 5)
+    base_url = base_url or url
+    processor = ValidationProcessor()
 
-    def __init__(self, http_client, processors=None,
-                 api_doc_request_headers=None):
-        self.http_client = http_client
-        self.api_doc_request_headers = api_doc_request_headers or {}
-        if processors is None:
-            processors = []
-            # always go through the validation processor first
-        # noinspection PyTypeChecker
-        self.processors = [ValidationProcessor()] + processors
+    def get_eventual_for_api(api):
+        return start_request(
+            http_client,
+            urlparse.urljoin(base_url + '/', api['path'].strip('/')),
+            request_options)
 
-    def load_resource_listing(self, resources_url, base_url=None):
-        """Load a resource listing, loading referenced API declarations.
-
-        The following fields are added to the resource listing object model.
-         * ['url'] = URL resource listing was loaded from
-         * The ['apis'] array is modified according to load_api_declaration()
-
-        The Loader's processors are applied to the fully loaded resource
-        listing.
-
-        :param resources_url:   File name for resources.json
-        :param base_url:    Optional URL to be the base URL for finding API
-                            declarations. If not specified, 'basePath' from the
-                            resource listing is used.
-        """
-
-        resource_listing = start_request(
-            self.http_client,
-            resources_url,
-            self.api_doc_request_headers,
-        ).wait().json()
-        self.pre_process_resource_listing(resource_listing)
-
-        # Some extra data only known about at load time
-        resource_listing[u'url'] = resources_url
-        base_url = base_url if base_url else resources_url
-
-        self.load_api_declarations(base_url, resource_listing)
-
-        # Now that the raw object model has been loaded, apply the processors
-        self.process_resource_listing(resource_listing)
-        return resource_listing
-
-    def load_api_declarations(self, base_url, resource_listing):
-        def get_eventual_for_api(api):
-            return start_request(
-                self.http_client,
-                urlparse.urljoin(base_url + '/', api['path'].strip('/')),
-                self.api_doc_request_headers)
-
+    def add_api_docs(resource_listing):
         # Start all async requests
         eventuals = map(get_eventual_for_api, resource_listing['apis'])
         for api, eventual in zip(resource_listing['apis'], eventuals):
-            api['api_declaration'] = eventual.wait().json()
+            api['api_declaration'] = eventual.wait(timeout=timeout).json()
 
-    def pre_process_resource_listing(self, resources):
-        """Apply pre-processors before loading resource listing.
+    resource_listing = start_request(
+        http_client,
+        url,
+        request_options
+    ).wait(timeout=timeout).json()
 
-        :param resources: Resource listing to process.
-        """
-        for processor in self.processors:
-            processor.pre_apply(resources)
+    processor.pre_apply(resource_listing)
 
-    def process_resource_listing(self, loaded_resources):
-        """Apply processors to a resource listing.
-
-        :param resources: Resource listing to process.
-        """
-        for processor in self.processors:
-            processor.apply(loaded_resources)
+    # TODO: is this url used ?
+    resource_listing['url'] = url
+    add_api_docs(resource_listing)
+    processor.apply(resource_listing)
+    return resource_listing
 
 
 def validate_required_fields(json, required_fields, context):
     """Checks a JSON object for a set of required fields.
 
-    If any required field is missing, a SwaggerError is raised.
+    If any required field is missing, a :class:`SwaggerError` is raised.
 
     :param json: JSON object to check.
     :param required_fields: List of required fields.
     :param context: Current context in the API.
     """
-    missing_fields = [f for f in required_fields if f not in json]
+    missing_fields = set(required_fields) - set(json)
 
     if missing_fields:
         raise SwaggerError(
@@ -250,13 +216,11 @@ def validate_required_fields(json, required_fields, context):
 
 # TODO: Adding the file scheme here just adds complexity to start_request()
 # Is there a better way to handle this?
-def load_file(resource_listing_file, http_client=None, processors=None):
-    """Loads a resource listing file, applying the given processors.
+def load_file(resource_listing_file, http_client=None):
+    """Loads a resource listing file.
 
     :param http_client: HTTP client interface.
     :param resource_listing_file: File name for a resource listing.
-    :param processors:  List of SwaggerProcessors to apply to the resulting
-                        resource.
     :return: Processed object model from
     :raise: IOError: On error reading api-docs.
     """
@@ -265,30 +229,22 @@ def load_file(resource_listing_file, http_client=None, processors=None):
     # When loading from files, everything is relative to the resource listing
     dir_path = os.path.dirname(file_path)
     base_url = urlparse.urljoin(u'file:', urllib.pathname2url(dir_path))
-    return load_url(url, http_client=http_client, processors=processors,
-                    base_url=base_url)
+    return load_url(url, http_client=http_client, base_url=base_url)
 
 
-def load_url(resource_listing_url, http_client=None, processors=None,
-             base_url=None):
-    """Loads a resource listing, applying the given processors.
+def load_url(url, http_client=None, **kwargs):
+    """Loads a resource listing.
 
     :param resource_listing_url: URL for a resource listing.
     :param http_client: HTTP client interface.
-    :param processors:  List of SwaggerProcessors to apply to the resulting
-                        resource.
     :param base_url:    Optional URL to be the base URL for finding API
                         declarations. If not specified, 'basePath' from the
                         resource listing is used.
     :return: Processed object model from
     :raise: IOError, URLError: On error reading api-docs.
     """
-    if http_client is None:
-        http_client = SynchronousHttpClient()
-
-    loader = Loader(http_client=http_client, processors=processors)
-    return loader.load_resource_listing(
-        resource_listing_url, base_url=base_url)
+    http_client = http_client or SynchronousHttpClient()
+    return load_resource_listing(url, http_client, **kwargs)
 
 
 class docstring_property(object):
@@ -471,6 +427,7 @@ def create_model_repr(model):
     return ("%s(%s)" % (model.__class__.__name__, string))
 
 
+# TODO: should be part of swagger_schema_validator
 def validate_params_body_or_form(json):
     """Validates that form request parameters are present or
     body request params but not both
@@ -483,6 +440,7 @@ def validate_params_body_or_form(json):
         raise AttributeError("Both `form` and `body` param types present!")
 
 
+# TODO: should be part of swagger_schema_validator
 def validate_type_or_ref(json, model_ids, allowed_types,
                          allowed_refs, context):
     """Validates that either type OR ref is present in the json

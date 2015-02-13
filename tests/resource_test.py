@@ -115,7 +115,7 @@ class ResourceTest(unittest.TestCase):
         self.register_urls()
         SwaggerClient.from_url(
             u'http://localhost/api-docs',
-            api_doc_request_headers={'foot': 'bart'},
+            request_options={'headers': {'foot': 'bart'}},
         )
 
         self.assertEqual(
