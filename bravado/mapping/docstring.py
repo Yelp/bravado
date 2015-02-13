@@ -1,4 +1,9 @@
+import logging
+
 from bravado import swagger_type
+
+
+log = logging.getLogger(__name__)
 
 
 class docstring_property(object):
@@ -94,6 +99,7 @@ def operation_docstring_wrapper(operation):
     def wrapper(**kwargs):
         return operation(**kwargs)
 
+    # TODO: make docstring lazy by using 'docstring_property'
     wrapper.__doc__ = create_operation_docstring(operation)
     wrapper.__name__ = str(operation.operation_id)
     return wrapper
@@ -121,7 +127,8 @@ def create_operation_docstring(operation):
         :type from_date: str
         :rtype: list
     """
-    print 'creating op docstring for %s' % operation.operation_id
+    # TODO: remove once lazy docstrings implemented
+    log.debug('creating op docstring for %s' % operation.operation_id)
     s = ""
     op_spec = operation.operation_spec
     is_deprecated = op_spec.get('deprecated', False)
@@ -136,9 +143,11 @@ def create_operation_docstring(operation):
     if desc:
         s += "{0}\n\n".format(desc)
 
+    # TODO: add shared parameters
     for param_spec in op_spec.get('parameters', []):
         s += create_param_docstring(param_spec)
 
+    # TODO: add 'examples' if available
     responses = op_spec.get('responses')
     for http_status_code, response_spec in iter(sorted(responses.iteritems())):
         response_desc = response_spec.get('description')

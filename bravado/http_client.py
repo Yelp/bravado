@@ -16,6 +16,8 @@ import requests.auth
 
 
 log = logging.getLogger(__name__)
+
+# TODO: remove
 log.setLevel(logging.DEBUG)
 
 APP_FORM = 'application/x-www-form-urlencoded'
@@ -155,6 +157,7 @@ class SynchronousHttpClient(HttpClient):
 
     def __init__(self):
         self.session = requests.Session()
+        # TODO: remove
         #self.session.proxies = {'http':'http://localhost:9999'}
         self.authenticator = None
 
