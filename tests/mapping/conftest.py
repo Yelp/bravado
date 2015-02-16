@@ -12,6 +12,24 @@ def empty_swagger_spec():
 
 
 @pytest.fixture
+def minimal_swagger_dict():
+    """Return minimal dict that respresents a swagger spec - useful as a base
+    template.
+    """
+    return {
+        'swagger': '2.0',
+        'info': {
+            'title': 'Test',
+            'version': '1.0',
+        },
+        'paths': {
+        },
+        'definitions': {
+        },
+    }
+
+
+@pytest.fixture
 def petstore_dict():
     my_dir = os.path.abspath(os.path.dirname(__file__))
     fpath = os.path.join(my_dir, '../../test-data/2.0/petstore/swagger.json')

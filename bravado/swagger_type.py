@@ -5,6 +5,7 @@
 import datetime
 import dateutil.parser
 import logging
+import jsonref
 
 from exception import SwaggerError
 
@@ -28,13 +29,23 @@ SWAGGER_TO_PY_TYPE_MAPPING = {
     'File': file
 }
 
-SWAGGER20_PRIMITIVES = [
+SWAGGER20_PRIMITIVES = (
     'integer',
     'number',
     'string',
     'boolean',
     'null'
-]
+)
+
+PY_PRIMITIVES = (
+    int,
+    long,
+    str,
+    unicode,
+    bool,
+    float,
+)
+
 
 SWAGGER_PRIMITIVE_TYPE_TO_SWAGGER_FORMAT = {
     u'integer': ['int32', 'int64'],
@@ -394,3 +405,19 @@ class SwaggerTypeCheck(object):
         if required:
             raise AssertionError("These required fields not present: %s" %
                                  required)
+
+
+def is_dict_like(spec):
+    if type(spec) == dict:
+        return True
+    if type(spec) == jsonref.JsonRef and type(spec.__subject__) == dict:
+        return True
+    return False
+
+
+def is_list_like(spec):
+    if type(spec) == list:
+        return True
+    if type(spec) == jsonref.JsonRef and type(spec.__subject__) == list:
+        return True
+    return False

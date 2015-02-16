@@ -105,10 +105,10 @@ def operation_docstring_wrapper(operation):
     return wrapper
 
 
-def create_operation_docstring(operation):
+def create_operation_docstring(op):
     """Builds a comprehensive docstring for an Operation.
 
-    :param operation: :class:`bravado.mapping.operation.Operation`
+    :param op: :class:`bravado.mapping.operation.Operation`
     :rtype: str
 
     Example: ::
@@ -128,16 +128,16 @@ def create_operation_docstring(operation):
         :rtype: list
     """
     # TODO: remove once lazy docstrings implemented
-    log.debug('creating op docstring for %s' % operation.operation_id)
+    log.debug('creating op docstring for %s' % op.operation_id)
     s = ""
-    op_spec = operation.operation_spec
+    op_spec = op.op_spec
     is_deprecated = op_spec.get('deprecated', False)
     if is_deprecated:
         s += "** DEPRECATED **\n"
 
     summary = op_spec.get('summary')
     if summary:
-        s += "[{0}] {1}\n\n".format(operation.http_method.upper(), summary)
+        s += "[{0}] {1}\n\n".format(op.http_method.upper(), summary)
 
     desc = op_spec.get('description')
     if desc:

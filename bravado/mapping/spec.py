@@ -1,11 +1,14 @@
 import logging
 import urlparse
-from swagger_spec_validator import validator20
-from bravado.exception import SwaggerError
 
+import jsonref
+from swagger_spec_validator import validator20
+
+from bravado.exception import SwaggerError
 from bravado.mapping.model import build_models
-from bravado.mapping.param import Param
 from bravado.mapping.resource import build_resources
+from bravado.mapping.model import tag_models
+from bravado.mapping.model import fix_malformed_model_refs
 
 
 log = logging.getLogger(__name__)
@@ -21,7 +24,7 @@ class Spec(object):
 
     def __init__(self, spec_dict, origin_url=None, http_client=None):
         self.spec_dict = spec_dict
-        self.origin_url = origin_url
+        self.origin_url = origin_url or 'unknown'
         self.http_client = http_client
         self.api_url = None
 
@@ -48,6 +51,9 @@ class Spec(object):
         :param origin_url: the url used to retrieve the spec, if any
         :type  origin_url: str
         """
+        tag_models(spec_dict)
+        fix_malformed_model_refs(spec_dict)
+        spec_dict = jsonref.JsonRef.replace_refs(spec_dict)
         spec = cls(spec_dict, origin_url, http_client)
         spec.build()
         return spec
@@ -56,17 +62,17 @@ class Spec(object):
         validator20.validate_spec(self.spec_dict)
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
         self.definitions = build_models(self.spec_dict['definitions'])
-        self.params = self.build_params()
+        #self.params = self.build_params()
         self.responses = self.build_responses()
         self.resources = build_resources(self)
 
-    def build_params(self):
-        params = {}
-        for ref_name, param_spec in self.spec_dict['parameters'].iteritems():
-            # Register under both 'plain' ref name and #/ style ref name
-            params[ref_name] = param_spec
-            params['#/parameters/{0}'.format(ref_name)] = param_spec
-        return params
+    # def build_params(self):
+    #     params = {}
+    #     for ref_name, param_spec in self.spec_dict['parameters'].iteritems():
+    #         # Register under both 'plain' ref name and #/ style ref name
+    #         params[ref_name] = param_spec
+    #         params['#/parameters/{0}'.format(ref_name)] = param_spec
+    #     return params
 
     def build_responses(self):
         log.warn('TODO: implement Spec::build_responses()')

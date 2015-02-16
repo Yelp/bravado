@@ -6,7 +6,9 @@ from bravado.http_client import APP_JSON
 from bravado.mapping.marshal import validate_primitive, marshal_primitive, \
     validate_array, marshal_array
 from bravado.mapping.schema import to_primitive_schema, to_array_schema
-from bravado.swagger_type import SwaggerTypeCheck, SWAGGER20_PRIMITIVES
+from bravado.swagger_type import SwaggerTypeCheck, SWAGGER20_PRIMITIVES, \
+    is_dict_like, is_list_like
+from bravado.mapping.model import is_model
 
 
 # TODO: remove
@@ -218,6 +220,8 @@ def marshal_param(param, value, request):
     elif swagger_type == 'array' and location in ('query', 'header'):
         value = validate_array(param, value)
         marshal_array(param, value, request)
+    elif location == 'body':
+        result = marshal_schema_object(param.param_spec['schema'], value)
     else:
-        # body, formData
+        # formData
         raise NotImplementedError('TODO')

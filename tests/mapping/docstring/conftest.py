@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.fixture
-def operation_spec():
+def op_spec():
     return {
         "tags": [
             "pet"
@@ -46,5 +46,5 @@ def operation_spec():
 
 
 @pytest.fixture
-def parameter_spec(operation_spec):
-    return operation_spec['parameters'][0]
+def param_spec(op_spec):
+    return op_spec['parameters'][0]

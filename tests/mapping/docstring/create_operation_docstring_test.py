@@ -5,12 +5,7 @@ from bravado.mapping.operation import Operation
 from bravado.mapping.spec import Spec
 
 
-@pytest.fixture
-def root_spec():
-    return Spec({})
-
-
-def test_simple(operation_spec, root_spec):
+def test_simple(op_spec, empty_swagger_spec):
     expected = \
         "[GET] Finds Pets by status\n\n" \
         "Multiple status values can be provided with comma seperated strings\n\n" \
@@ -20,12 +15,12 @@ def test_simple(operation_spec, root_spec):
         ":rtype: array:#/definitions/Pet\n" \
         ":returns: 400: Invalid status value\n"
 
-    operation = Operation(root_spec, '/pet', 'get', operation_spec)
-    assert expected == create_operation_docstring(operation)
+    op = Operation(empty_swagger_spec, '/pet', 'get', op_spec)
+    assert expected == create_operation_docstring(op)
 
 
-def test_no_parameters(operation_spec, root_spec):
-    del operation_spec['parameters']
+def test_no_parameters(op_spec, empty_swagger_spec):
+    del op_spec['parameters']
     expected = \
         "[GET] Finds Pets by status\n\n" \
         "Multiple status values can be provided with comma seperated strings\n\n" \
@@ -33,11 +28,11 @@ def test_no_parameters(operation_spec, root_spec):
         ":rtype: array:#/definitions/Pet\n" \
         ":returns: 400: Invalid status value\n"
 
-    operation = Operation(root_spec, '/pet', 'get', operation_spec)
-    assert expected == create_operation_docstring(operation)
+    op = Operation(empty_swagger_spec, '/pet', 'get', op_spec)
+    assert expected == create_operation_docstring(op)
 
 
-def test_deprecated(operation_spec, root_spec):
+def test_deprecated(op_spec, empty_swagger_spec):
     expected = \
         "** DEPRECATED **\n" \
         "[GET] Finds Pets by status\n\n" \
@@ -48,12 +43,12 @@ def test_deprecated(operation_spec, root_spec):
         ":rtype: array:#/definitions/Pet\n" \
         ":returns: 400: Invalid status value\n"
 
-    operation_spec['deprecated'] = True
-    operation = Operation(root_spec, '/pet', 'get', operation_spec)
-    assert expected == create_operation_docstring(operation)
+    op_spec['deprecated'] = True
+    op = Operation(empty_swagger_spec, '/pet', 'get', op_spec)
+    assert expected == create_operation_docstring(op)
 
 
-def test_no_summary(operation_spec, root_spec):
+def test_no_summary(op_spec, empty_swagger_spec):
     expected = \
         "Multiple status values can be provided with comma seperated strings\n\n" \
         ":param status: the status, yo! (Default: available) (optional)\n" \
@@ -62,12 +57,12 @@ def test_no_summary(operation_spec, root_spec):
         ":rtype: array:#/definitions/Pet\n" \
         ":returns: 400: Invalid status value\n"
 
-    del operation_spec['summary']
-    operation = Operation(root_spec, '/pet', 'get', operation_spec)
-    assert expected == create_operation_docstring(operation)
+    del op_spec['summary']
+    op= Operation(empty_swagger_spec, '/pet', 'get', op_spec)
+    assert expected == create_operation_docstring(op)
 
 
-def test_no_description(operation_spec, root_spec):
+def test_no_description(op_spec, empty_swagger_spec):
     expected = \
         "[GET] Finds Pets by status\n\n" \
         ":param status: the status, yo! (Default: available) (optional)\n" \
@@ -76,6 +71,6 @@ def test_no_description(operation_spec, root_spec):
         ":rtype: array:#/definitions/Pet\n" \
         ":returns: 400: Invalid status value\n"
 
-    del operation_spec['description']
-    operation = Operation(root_spec, '/pet', 'get', operation_spec)
-    assert expected == create_operation_docstring(operation)
+    del op_spec['description']
+    op = Operation(empty_swagger_spec, '/pet', 'get', op_spec)
+    assert expected == create_operation_docstring(op)
