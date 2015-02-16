@@ -2,9 +2,10 @@ import urllib
 import simplejson as json
 
 from bravado import swagger_type
+from bravado.exception import SwaggerError
 from bravado.http_client import APP_JSON
 from bravado.mapping.marshal import validate_primitive, marshal_primitive, \
-    validate_array, marshal_array
+    validate_array, marshal_array, marshal_schema_object
 from bravado.mapping.schema import to_primitive_schema, to_array_schema
 from bravado.swagger_type import SwaggerTypeCheck, SWAGGER20_PRIMITIVES, \
     is_dict_like, is_list_like
@@ -140,8 +141,8 @@ class Param(object):
         self.swagger_spec = swagger_spec
         self.param_spec = param_spec
 
-        # generated on demand and cached by @property
-        self._jsonschema = None
+        # # generated on demand and cached by @property
+        # self._jsonschema = None
 
     @property
     def name(self):
@@ -170,24 +171,24 @@ class Param(object):
             return self.param_spec['schema']['type']
         return self.param_spec['type']
 
-    @property
-    def jsonschema(self):
-        """Returns the closest approximation of this parameter's swagger spec
-        in valid jsonschema. Cached and used for validation.
-
-        :rtype: dict
-        """
-        # TODO: handle all possible types of 'location'
-        if self._jsonschema is None:
-            if self.swagger_type in SWAGGER20_PRIMITIVES:
-                # integer, number, boolean, null, string
-                self._jsonschema = to_primitive_schema(self.param_spec)
-            elif self.swagger_type == 'array':
-                self._jsonschema = to_array_schema(self.param_spec)
-            else:
-                # object, Model
-                raise NotImplementedError('TODO')
-        return self._jsonschema
+    # @property
+    # def jsonschema(self):
+    #     """Returns the closest approximation of this parameter's swagger spec
+    #     in valid jsonschema. Cached and used for validation.
+    #
+    #     :rtype: dict
+    #     """
+    #     # TODO: handle all possible types of 'location'
+    #     if self._jsonschema is None:
+    #         if self.swagger_type in SWAGGER20_PRIMITIVES:
+    #             # integer, number, boolean, null, string
+    #             self._jsonschema = to_primitive_schema(self.param_spec)
+    #         elif self.swagger_type == 'array':
+    #             self._jsonschema = to_array_schema(self.param_spec)
+    #         else:
+    #             # object, Model
+    #             raise NotImplementedError('TODO')
+    #     return self._jsonschema
 
     def has_default(self):
         return 'default' in self.param_spec
@@ -199,29 +200,36 @@ class Param(object):
 
 def marshal_param(param, value, request):
     """
-    Given parameter spec and a value, validate and convert the value to
-    wire format in the given request.
+    Given an operation parameter and its value, marshal the value and place it
+    in the proper request destination.
+
+    Destination is one of:
+        - path - can only accept primitive types
+        - query - can accept primitive and array of primitive types
+        - header - can accept primitive and array of primitive types
+        - body - can accept any type
+        - formdata - TODO
 
     :type param: :class:`Param`
     :param value: The value to assign to the parameter
     :type request: dict
     """
-    # path     => primitive
-    # query    => primitite + array of primitives
-    # header   => primitive + array of primitives
-    # body     => primitive + array of (object or primitives) + object
-    # formData =>
     location = param.location
-    swagger_type = param.swagger_type
+    value = marshal_schema_object(param.swagger_spec, param.param_spec, value)
 
-    if swagger_type in SWAGGER20_PRIMITIVES:
-        value = validate_primitive(param, value)
-        marshal_primitive(param, value, request)
-    elif swagger_type == 'array' and location in ('query', 'header'):
-        value = validate_array(param, value)
-        marshal_array(param, value, request)
-    elif location == 'body':
-        result = marshal_schema_object(param.param_spec['schema'], value)
-    else:
-        # formData
+    if location == 'path':
+        token = u'{%s}' % param.name
+        request['url'] = request['url'].replace(token, urllib.quote(unicode(value)))
+    elif location == 'query':
+        request['params'][param.name] = value
+    elif location == 'header':
+        request['headers'][param.name] = value
+    elif location == 'formData':
         raise NotImplementedError('TODO')
+    elif location == 'body':
+        # TODO: revisit
+        request['data'] = json.dumps(value)
+    else:
+        raise SwaggerError(
+            "Don't know how to marshal_param with location {0}".
+            format(location))
