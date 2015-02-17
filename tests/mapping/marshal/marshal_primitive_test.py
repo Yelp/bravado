@@ -1,3 +1,7 @@
+import mock
+import pytest
+
+from jsonschema.exceptions import ValidationError
 from bravado.mapping.marshal import marshal_primitive
 
 
@@ -7,6 +11,15 @@ def test_integer():
     }
     assert 10 == marshal_primitive(integer_spec, 10)
     assert -10 == marshal_primitive(integer_spec, -10)
+
+
+def test_wrong_type():
+    integer_spec = {
+        'type': 'integer'
+    }
+    with pytest.raises(ValidationError) as excinfo:
+        marshal_primitive(integer_spec, 'i am a string')
+    assert "is not of type 'integer'" in str(excinfo.value)
 
 
 def test_boolean():
@@ -32,48 +45,49 @@ def test_string():
     assert u'bar' == marshal_primitive(string_spec, u'bar')
 
 
-# @pytest.fixture
-# def param_spec():
-#     return {
-#         'name': 'petId',
-#         'description': 'ID of pet that needs to be fetched',
-#         'type': 'integer',
-#         'format': 'int64',
-#     }
+@mock.patch('bravado.mapping.marshal.formatter.to_wire')
+@mock.patch('jsonschema.validate')
+def test_uses_default_and_skips_formatting_and_validation(mock_to_wire, mock_validate):
+    integer_spec = {
+        'type': 'integer',
+        'default': 10,
+    }
+    assert 10 == marshal_primitive(integer_spec, None)
+    assert mock_to_wire.call_count == 0
+    assert mock_validate.call_count == 0
 
-# def test_path(empty_swagger_spec, param_spec):
-#     param_spec['in'] = 'path'
-#     param = Param(empty_swagger_spec, param_spec)
-#     request = {'url': '/pet/{petId}'}
-#     marshal_primitive(param, 34, request)
-#     assert '/pet/34' == request['url']
-#
-#
-# def test_query(empty_swagger_spec, param_spec):
-#     param_spec['in'] = 'query'
-#     param = Param(empty_swagger_spec, param_spec)
-#     request = {
-#         'params': {}
-#     }
-#     marshal_primitive(param, 34, request)
-#     assert {'petId': 34} == request['params']
-#
-#
-# def test_header(empty_swagger_spec, param_spec):
-#     param_spec['in'] = 'header'
-#     param = Param(empty_swagger_spec, param_spec)
-#     request = {
-#         'headers': {}
-#     }
-#     marshal_primitive(param, 34, request)
-#     assert {'petId': 34} == request['headers']
-#
-#
-# @pytest.mark.xfail(reason='TODO')
-# def test_formData():
-#     assert False
-#
-#
-# @pytest.mark.xfail(reason='TODO')
-# def test_body():
-#     assert False
+
+@mock.patch('bravado.mapping.marshal.formatter.to_wire', return_value=99)
+@mock.patch('jsonschema.validate')
+def test_skips_default(mock_to_wire, mock_validate):
+    integer_spec = {
+        'type': 'integer',
+        'default': 10,
+    }
+    assert 99 == marshal_primitive(integer_spec, 99)
+    assert mock_to_wire.call_count == 1
+    assert mock_validate.call_count == 1
+
+
+@mock.patch('jsonschema.validate')
+def test_required(mock_validate):
+    integer_spec = {
+        'type': 'integer',
+        'required': True,
+    }
+    assert 99 == marshal_primitive(integer_spec, 99)
+    # 'required' has to be removed from the spec before calling
+    # jsonschema.validate() for <see reasons in the code>
+    spec_with_required_removed = integer_spec.copy()
+    del spec_with_required_removed['required']
+    assert mock_validate.call_args == mock.call(99, spec_with_required_removed)
+
+
+def test_required_failure():
+    integer_spec = {
+        'type': 'integer',
+        'required': True,
+    }
+    with pytest.raises(TypeError) as excinfo:
+        marshal_primitive(integer_spec, None)
+    assert 'is a required value' in str(excinfo.value)

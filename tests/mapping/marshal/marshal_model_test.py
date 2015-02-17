@@ -20,5 +20,6 @@ def test_pet(petstore_dict):
         ]
     )
     result = marshal_model(petstore_spec, pet_spec, pet)
-    from pprint import pprint
-    pprint(result)
+    assert dict == type(result)
+    #from pprint import pprint
+    #pprint(result)

@@ -11,6 +11,26 @@ JSONSCHEMA_PRIMITIVE_VALIDATIONS = {
 }
 
 
+def has_default(schema_object_spec):
+    return 'default' in schema_object_spec
+
+
+def get_default(schema_object_spec):
+    return schema_object_spec.get('default', None)
+
+
+def is_required(schema_object_spec):
+    return 'required' in schema_object_spec
+
+
+def has_format(schema_object_spec):
+    return 'format' in schema_object_spec
+
+
+def get_format(schema_object_spec):
+    return schema_object_spec.get('format', None)
+
+
 def to_primitive_schema(primitive_spec):
     """Given the swagger spec for a primitive type, create the equivalent
     jsonschema object for the primitive type.

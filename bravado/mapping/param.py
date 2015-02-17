@@ -4,7 +4,7 @@ import simplejson as json
 from bravado import swagger_type
 from bravado.exception import SwaggerError
 from bravado.http_client import APP_JSON
-from bravado.mapping.marshal import validate_primitive, marshal_primitive, \
+from bravado.mapping.marshal import marshal_primitive, \
     validate_array, marshal_array, marshal_schema_object
 from bravado.mapping.schema import to_primitive_schema, to_array_schema
 from bravado.swagger_type import SwaggerTypeCheck, SWAGGER20_PRIMITIVES, \

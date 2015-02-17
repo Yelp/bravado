@@ -20,8 +20,9 @@ def jsonref_petstore_dict():
         validator20.validate_spec(unrefed_petstore)
         return unrefed_petstore
 
-
+@pytest.mark.xfail(reason='This is not a test. Remove later')
 def test_print(jsonref_petstore_dict):
+    assert False
     print '\n'
     print_spec(jsonref_petstore_dict)
 
