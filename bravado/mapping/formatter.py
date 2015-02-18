@@ -57,7 +57,8 @@ def date_from_wire(value):
     value = datetime.date(value)
     return value
 
-
+# TODO: add other 'format' types
+# TODO: revisit int64 formatters
 _formatters = {
     'date': (date_to_wire, date_from_wire, 'Converts a date to/from a string'),
     'int64': (lambda i: long(i), lambda i: long(i),
