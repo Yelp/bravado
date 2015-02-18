@@ -4,7 +4,6 @@ import urlparse
 import jsonref
 from swagger_spec_validator import validator20
 
-from bravado.exception import SwaggerError
 from bravado.mapping.model import build_models
 from bravado.mapping.resource import build_resources
 from bravado.mapping.model import tag_models
