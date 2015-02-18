@@ -12,4 +12,3 @@ def test_success(petstore):
         tags=[Tag(id=102, name='friendly')])
     result = petstore.pet.addPet(body=fido).result()
     print result
-

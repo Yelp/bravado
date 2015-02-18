@@ -123,7 +123,8 @@ class Operation(object):
         # Check required params and non-required params with a 'default' value
         for remaining_param in current_params.itervalues():
             if remaining_param.required:
-                raise TypeError('{0} is a required parameter'.format(remaining_param.name))
+                raise TypeError(
+                    '{0} is a required parameter'.format(remaining_param.name))
             if not remaining_param.required and remaining_param.has_default():
                 marshal_param(remaining_param, None, request)
 
@@ -138,24 +139,33 @@ class Operation(object):
                 return None
 
             status_code = str(response.status_code)
+
             # Handle which repsonse to activate given status_code
-            default_response_spec = self.op_spec['responses'].get('default', None)
-            response_spec = self.op_spec['responses'].get(status_code, default_response_spec)
+            default_response_spec = \
+                self.op_spec['responses'].get('default', None)
+            response_spec = self.op_spec['responses'].get(
+                status_code, default_response_spec)
             if response_spec is None:
                 # reponse code doesn't match and no default provided
                 if status_code == '200':
                     # it was obviously successful
-                    log.warn("Op {0} was successful by didn't match any responses".format(self.operation_id))
+                    log.warn(
+                        "Op {0} was successful by didn't match any responses"
+                        .format(self.operation_id))
                 else:
-                    raise SwaggerError("Response doesn't match any expected responses: {0}".format(response))
+                    raise SwaggerError(
+                        "Response doesn't match any expected responses: {0}"
+                        .format(response))
 
             response_dict = response.json()
 
             if response_spec and 'schema' in response_spec:
-                swagger_type_ = swagger_type.get_swagger_type(response_spec['schema'])
+                swagger_type_ = \
+                    swagger_type.get_swagger_type(response_spec['schema'])
             else:
                 swagger_type_ = None
 
+            # TODO: remove debug
             log.debug('response_dict = %s' % response_dict)
             log.debug('response_spec = %s' % response_spec)
             log.debug('swagger_type  = %s' % swagger_type_)
@@ -166,4 +176,5 @@ class Operation(object):
                 self.swagger_spec.definitions,
                 **kwargs)
 
-        return HTTPFuture(self.swagger_spec.http_client, request, response_future)
+        return HTTPFuture(
+            self.swagger_spec.http_client, request, response_future)

@@ -1,10 +1,11 @@
+import os
+import json
+
 import pytest
 import jsonref
-import json
-import os
 from swagger_spec_validator import validator20
-from bravado.mapping.model import \
-    tag_models, fix_malformed_model_refs, is_list_like
+
+from bravado.mapping.model import tag_models, fix_malformed_model_refs
 from bravado.swagger_type import is_dict_like, is_list_like
 
 
@@ -20,6 +21,7 @@ def jsonref_petstore_dict():
         validator20.validate_spec(unrefed_petstore)
         return unrefed_petstore
 
+
 @pytest.mark.xfail(reason='This is not a test. Remove later')
 def test_print(jsonref_petstore_dict):
     assert False
@@ -30,7 +32,7 @@ def test_print(jsonref_petstore_dict):
 def print_spec(spec, level=0):
     indent = '\t' * level
     if is_dict_like(spec):
-        for k,v in spec.iteritems():
+        for k, v in spec.iteritems():
             print indent + k + ':',
             if is_dict_like(v):
                 print '{'
@@ -56,5 +58,3 @@ def print_spec(spec, level=0):
                 print_spec(element, level + 1)
     else:
         print indent + str(spec) + ', '
-
-

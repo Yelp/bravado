@@ -84,7 +84,7 @@ def operation_docstring_wrapper(operation):
     getPetById(**kwargs)
         [GET] Find pet by ID
 
-        Returns a pet when ID < 10.  ID > 10 or nonintegers will simulate API error conditions
+        Returns a pet when ID < 10.  ID > 10 or nonintegers will simulate API error conditions  # noqa
 
         :param petId: ID of pet that needs to be fetched
         :type petId: integer
@@ -148,6 +148,7 @@ def create_operation_docstring(op):
         s += create_param_docstring(param_spec)
 
     # TODO: add 'examples' if available
+    # TODO: good idea to identify the default response?
     responses = op_spec.get('responses')
     for http_status_code, response_spec in iter(sorted(responses.iteritems())):
         response_desc = response_spec.get('description')

@@ -34,7 +34,7 @@ SWAGGER20_PRIMITIVES = (
     'number',
     'string',
     'boolean',
-    'null'
+    'null'     # TODO: Do we need this?
 )
 
 PY_PRIMITIVES = (
@@ -310,9 +310,6 @@ class SwaggerTypeCheck(object):
         self._type = type_
         self.models = models
         self.allow_null = allow_null
-
-        log.debug('name=%s value=%s _type=%s allows_null=%s' % (name, value, type_, allow_null))
-
         self._check_value_format()
 
     def _check_value_format(self):
@@ -365,19 +362,16 @@ class SwaggerTypeCheck(object):
             for item in self.value]
 
     def _check_object_type(self):
-        klass = dict
-
         if not isinstance(self.value, dict):
             raise TypeError(
-                "Type for {0} is expected to be a dict but is {1) instead".format(
-                    self.value, type(self.value)))
+                "Type for {0} is expected to be a dict but is {1) instead"
+                .format(self.value, type(self.value)))
 
     def _check_complex_type(self):
         """Checks all the fields in the complex type are of proper type
 
         All the required fields are present and no extra field is present
         """
-        print type(self.value)
         klass = self.models.get(self._type)
 
         if isinstance(self.value, klass):
@@ -385,7 +379,8 @@ class SwaggerTypeCheck(object):
 
         # The only valid type from this point on is JSON dict
         if not isinstance(self.value, dict):
-            raise TypeError("Type for {0} is expected to be object".format(self.value))
+            raise TypeError(
+                "Type for {0} is expected to be object".format(self.value))
 
         required = list(klass._required) if klass._required else []
 

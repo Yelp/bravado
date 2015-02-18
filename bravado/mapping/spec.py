@@ -62,17 +62,8 @@ class Spec(object):
         validator20.validate_spec(self.spec_dict)
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
         self.definitions = build_models(self.spec_dict['definitions'])
-        #self.params = self.build_params()
         self.responses = self.build_responses()
         self.resources = build_resources(self)
-
-    # def build_params(self):
-    #     params = {}
-    #     for ref_name, param_spec in self.spec_dict['parameters'].iteritems():
-    #         # Register under both 'plain' ref name and #/ style ref name
-    #         params[ref_name] = param_spec
-    #         params['#/parameters/{0}'.format(ref_name)] = param_spec
-    #     return params
 
     def build_responses(self):
         log.warn('TODO: implement Spec::build_responses()')
@@ -103,6 +94,7 @@ class Spec(object):
                 return self.responses[ref_name]
             raise SwaggerError('Cound not resolve $ref {0}'.format(ref_name))
         return object_spec
+
 
 def build_api_serving_url(spec_dict, origin_url, preferred_scheme=None):
     """The URL used to service API requests does not necessarily have to be the

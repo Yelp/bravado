@@ -30,4 +30,3 @@ def test_simple(empty_swagger_spec):
 
     result = marshal_object(empty_swagger_spec, address_spec, address)
     assert address == result
-

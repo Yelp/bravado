@@ -3,9 +3,9 @@ from bravado import swagger_type
 
 
 JSONSCHEMA_PRIMITIVE_VALIDATIONS = {
-    'string': ('minLength', 'maxLength', 'pattern', 'format', 'enum', 'default'),
-    'integer': ('multipleOf', 'minimum', 'maximum', 'exclusiveMaximum', 'exclusiveMinimum', 'enum', 'default', 'format'),
-    'number': ('multipleOf', 'minimum', 'maximum', 'exclusiveMaximum', 'exclusiveMinimum', 'enum', 'default', 'format'),
+    'string': ('minLength', 'maxLength', 'pattern', 'format', 'enum', 'default'),  # noqa
+    'integer': ('multipleOf', 'minimum', 'maximum', 'exclusiveMaximum', 'exclusiveMinimum', 'enum', 'default', 'format'),  # noqa
+    'number': ('multipleOf', 'minimum', 'maximum', 'exclusiveMaximum', 'exclusiveMinimum', 'enum', 'default', 'format'),   # noqa
     'boolean': ('enum', 'default'),
     'null': (),
 }
@@ -84,7 +84,15 @@ def to_array_schema(array_spec):
     #     - have to implement support for 'default' keyword
     #     - have to implement support for 'collectionFormat'
     #     - have to implmenet support for 'required'
-    transferable_keys = ('type', 'items', 'minItems', 'maxItems', 'uniqueItems', 'name', 'description')
+    transferable_keys = (
+        'type',
+        'items',
+        'minItems',
+        'maxItems',
+        'uniqueItems',
+        'name',
+        'description'
+    )
     schema = {}
     for key, value in array_spec.iteritems():
         if key in transferable_keys:
@@ -98,5 +106,6 @@ def to_array_schema(array_spec):
                     # nested arrays
                     schema[key] = to_array_schema(items_spec)
                 else:
-                    raise SwaggerError('Item type {0} not supported'.format(items_type))
+                    raise SwaggerError(
+                        'Item type {0} not supported'.format(items_type))
     return schema

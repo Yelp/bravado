@@ -1,6 +1,3 @@
-import pytest
-
-
 def test_200_success(petstore):
     User = petstore.get_model('User')
     user = User(

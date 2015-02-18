@@ -26,8 +26,8 @@ def test_boolean():
     boolean_spec = {
         'type': 'boolean'
     }
-    assert True == marshal_primitive(boolean_spec, True)
-    assert False == marshal_primitive(boolean_spec, False)
+    assert marshal_primitive(boolean_spec, True)
+    assert not marshal_primitive(boolean_spec, False)
 
 
 def test_number():
@@ -47,7 +47,8 @@ def test_string():
 
 @mock.patch('bravado.mapping.marshal.formatter.to_wire')
 @mock.patch('jsonschema.validate')
-def test_uses_default_and_skips_formatting_and_validation(mock_to_wire, mock_validate):
+def test_uses_default_and_skips_formatting_and_validation(
+        mock_to_wire, mock_validate):
     integer_spec = {
         'type': 'integer',
         'default': 10,

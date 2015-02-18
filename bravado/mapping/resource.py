@@ -33,8 +33,8 @@ def convert_path_to_resource(path_name):
 
 
 def build_resources(swagger_spec):
-    """Transforms the REST resources in the json-like swagger_spec into rich :Resource:
-    objects that have associated :Operation:s.
+    """Transforms the REST resources in the json-like swagger_spec into rich
+    :Resource: objects that have associated :Operation:s.
 
     :type swagger_spec: :class:`bravado.mapping.spec.Spec`
     :returns: dict where (key,value) = (resource name, Resource)

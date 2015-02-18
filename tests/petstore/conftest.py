@@ -1,11 +1,12 @@
+import pytest
+
+from bravado import client
+
+
 if False:
     import logging
     logging.basicConfig()
     logging.getLogger().setLevel(logging.DEBUG)
-
-import pytest
-
-from bravado import client
 
 
 @pytest.fixture

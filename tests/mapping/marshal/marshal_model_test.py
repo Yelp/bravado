@@ -12,7 +12,7 @@ def test_pet(petstore_dict):
         id=1,
         name='Fido',
         status='sold',
-        photoUrls=['wagtail.png','bark.png'],
+        photoUrls=['wagtail.png', 'bark.png'],
         category=Category(id=200, name='friendly'),
         tags=[
             Tag(id=99, name='mini'),
@@ -21,5 +21,5 @@ def test_pet(petstore_dict):
     )
     result = marshal_model(petstore_spec, pet_spec, pet)
     assert dict == type(result)
-    #from pprint import pprint
-    #pprint(result)
+    assert 1 == result['id']
+    assert 'Fido' == result['name']

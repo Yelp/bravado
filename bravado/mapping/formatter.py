@@ -9,7 +9,8 @@ def register_format(format, to_wire, from_wire, description=None):
 
     :type format: string
     :param to_wire: single argument callable that encodes a value to wire format
-    :param from_wire: single argument callable that decodes a value from wire format
+    :param from_wire: single argument callable that decodes a value from wire
+        format
     :param description: useful description
     """
     _formatters['format'] = (to_wire, from_wire, description)
@@ -59,5 +60,6 @@ def date_from_wire(value):
 
 _formatters = {
     'date': (date_to_wire, date_from_wire, 'Converts a date to/from a string'),
-    'int64': (lambda i: long(i), lambda i: long(i), 'Converts an integer to/from int64')
+    'int64': (lambda i: long(i), lambda i: long(i),
+              'Converts an integer to/from int64')
 }

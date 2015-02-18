@@ -95,10 +95,9 @@ def test_array_of_models(petstore_dict):
     Pet = petstore_spec.definitions['Pet']
     Category = petstore_spec.definitions['Category']
     Tag = petstore_spec.definitions['Tag']
-    pet_spec = petstore_spec.spec_dict['definitions']['Pet']
 
     array_of_pets_spec = {
-        'type' : 'array',
+        'type': 'array',
         'items': petstore_spec.spec_dict['definitions']['Pet']
     }
 
@@ -106,7 +105,7 @@ def test_array_of_models(petstore_dict):
         id=1,
         name='Fido',
         status='sold',
-        photoUrls=['wagtail.png','bark.png'],
+        photoUrls=['wagtail.png', 'bark.png'],
         category=Category(id=200, name='friendly'),
         tags=[
             Tag(id=99, name='mini'),
@@ -118,7 +117,7 @@ def test_array_of_models(petstore_dict):
         id=2,
         name='Darwin',
         status='pending',
-        photoUrls=['snausages.png','bacon.png'],
+        photoUrls=['snausages.png', 'bacon.png'],
         category=Category(id=300, name='mascot'),
         tags=[],
     )
@@ -127,7 +126,7 @@ def test_array_of_models(petstore_dict):
         id=3,
         name='Sumi',
         status='available',
-        photoUrls=['puggies.png','bumblebee.png'],
+        photoUrls=['puggies.png', 'bumblebee.png'],
         category=Category(id=400, name='pugly'),
         tags=[
             Tag(id=101, name='sumiwoo'),
@@ -151,49 +150,3 @@ def test_array_of_models(petstore_dict):
 
         assert expected.category.id == actual['category']['id']
         assert expected.category.name == actual['category']['name']
-
-
-# @pytest.fixture
-# def param_spec():
-#     return {
-#         'name': 'status',
-#         'in': 'TEST WILL REPLACE THIS',
-#         'description': 'Status values that need to be considered for filter',
-#         'required': False,
-#         'type': 'array',
-#         'items': {
-#             'type': 'string'
-#         },
-#         'collectionFormat': 'multi',
-#         'default': 'available'
-#     }
-#
-#
-# def test_query(empty_swagger_spec, param_spec):
-#     param_spec['in'] = 'query'
-#     param = Param(empty_swagger_spec, param_spec)
-#     request = {
-#         'params': {}
-#     }
-#     marshal_array(param, ['a', 'b', 'c'], request)
-#     assert {'status': ['a', 'b', 'c']} == request['params']
-#
-#
-# def test_header(empty_swagger_spec, param_spec):
-#     param_spec['in'] = 'header'
-#     param = Param(empty_swagger_spec, param_spec)
-#     request = {
-#         'headers': {}
-#     }
-#     marshal_array(param, ['a', 'b', 'c'], request)
-#     assert {'status': ['a', 'b', 'c']} == request['headers']
-#
-#
-# @pytest.mark.xfail(reason='TODO')
-# def test_formData():
-#     assert False
-#
-#
-# @pytest.mark.xfail(reason='TODO')
-# def test_body():
-#     assert False

@@ -1,84 +1,11 @@
 import jsonschema
-from bravado import swagger_type
 
 from bravado.exception import SwaggerError
-
-# TODO: generalize for any Swagger Spec object, not just parameters
+from bravado.mapping import schema
+from bravado.mapping import formatter
 from bravado.mapping.model import is_model, MODEL_MARKER
 from bravado.swagger_type import SWAGGER20_PRIMITIVES, is_list_like, \
     is_dict_like
-from bravado.mapping import schema
-from bravado.mapping import formatter
-
-
-# def validate_primitive(param, value):
-#     if value is None and param.has_default():
-#         value = param.default
-#
-#     if param.required and value is None:
-#         raise SwaggerError('Parameter {0} cannot be null'.format(param.name))
-#
-#     jsonschema.validate(value, param.jsonschema)
-#
-#     # TODO: transform
-#     return value
-
-
-# def validate_primitive(spec, value):
-#     """Validate a primitive value against a spec.
-#
-#     :param spec: spec for a primitive type as a dict
-#     :type value: int, long, float, boolean, string, unicode, etc
-#     :return: value (default may be provided in the spec)
-#     :raises: SwaggerError in validation failure
-#     """
-#
-#     return value
-
-
-# def marshal_primitive(param, value, request):
-#     if param.location == 'path':
-#         token = u'{%s}' % param.name
-#         request['url'] = request['url'].replace(token, urllib.quote(unicode(value)))
-#     elif param.location == 'query':
-#         request['params'][param.name] = value
-#     elif param.location == 'header':
-#         request['headers'][param.name] = value
-#     elif param.location == 'formData':
-#         raise NotImplementedError('TODO')
-#     elif param.location == 'body':
-#         raise NotImplementedError('TODO')
-#     else:
-#         raise SwaggerError(
-#             "Don't know how to marshal_primitive with location {0}".
-#             format(param.location))
-
-
-def validate_array(param, value):
-    if value is None and param.has_default():
-        # Wrap if necessary - spec is weird about this
-        if type(param.default) == list:
-            value = param.default
-        else:
-            value = [param.default]
-
-    if param.required and value is None:
-        raise SwaggerError('Parameter {0} cannot be null'.format(param.name))
-
-    jsonschema.validate(value, param.jsonschema)
-    return value
-
-
-# def marshal_array(param, value, request):
-#     if param.location == 'query':
-#         request['params'][param.name] = value
-#     elif param.location == 'header':
-#         request['headers'][param.name] = value
-#     elif param.location == 'formData':
-#         raise NotImplementedError('TODO')
-#     elif param.location == 'body':
-#         raise NotImplementedError('TODO')
-#
 
 
 def marshal_schema_object(swagger_spec, schema_object_spec, value):
@@ -134,7 +61,7 @@ def marshal_primitive(spec, value):
         value = schema.get_default(spec)
 
     if value is None and schema.is_required(spec):
-       raise TypeError('Spec {0} is a required value'.format(spec))
+        raise TypeError('Spec {0} is a required value'.format(spec))
 
     if not default_used:
         value = formatter.to_wire(spec, value)

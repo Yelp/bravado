@@ -24,7 +24,7 @@ def test_200_success(petstore):
     assert pet.tags[0].name
 
 
-@pytest.mark.xfail(reason="Petstore returns a 500 instead of a 404 - pet not found")
+@pytest.mark.xfail(reason="Petstore returns a 500 instead of a 404 - pet not found")  # noqa
 def test_404_pet_not_found(petstore):
     pet_api = petstore.pet
     future = pet_api.getPetById(petId=50)

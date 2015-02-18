@@ -158,7 +158,7 @@ class SynchronousHttpClient(HttpClient):
     def __init__(self):
         self.session = requests.Session()
         # TODO: remove
-        #self.session.proxies = {'http':'http://localhost:9999'}
+        # self.session.proxies = {'http':'http://localhost:9999'}
         self.authenticator = None
 
     def start_request(self, request_params):

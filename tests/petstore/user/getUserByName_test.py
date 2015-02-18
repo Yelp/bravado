@@ -16,4 +16,3 @@ def test_404_user_not_found(petstore):
 def test_400_invalid_username_supplied(petstore):
     result = petstore.user.getUserByName(username='').result()
     assert result is None
-

@@ -30,7 +30,8 @@ def test_404_user_not_found(petstore):
         phone='111-222-3333',
         userStatus=3,
     )
-    result = petstore.user.updateUser(username='i_dont_exist', body=user).result()
+    result = petstore.user.updateUser(
+        username='i_dont_exist', body=user).result()
     print result
 
 

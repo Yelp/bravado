@@ -4,14 +4,11 @@ from functools import partial
 from bravado import swagger_type
 from bravado.mapping.docstring import docstring_property
 from bravado.mapping.docstring import create_model_docstring
-
-
+from bravado.swagger_type import is_dict_like, is_list_like
 
 
 # Models in #/definitions are tagged with this key so that they can be
 # differentiated from 'object' types.
-from bravado.swagger_type import is_dict_like, is_list_like
-
 MODEL_MARKER = 'x-model'
 
 
@@ -203,10 +200,3 @@ def fix_malformed_model_refs(spec):
 
 def is_model(spec):
     return MODEL_MARKER in spec
-
-
-
-
-
-
-
