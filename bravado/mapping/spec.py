@@ -69,32 +69,6 @@ class Spec(object):
         log.warn('TODO: implement Spec::build_responses()')
         return {}
 
-    def resolve(self, object_spec):
-        """Given an object specification, resolve the $ref if it is a $ref
-
-        :param object_spec: object schema
-        :return: dict
-        :rtype: dict
-        """
-        if len(object_spec) == 1 and '$ref' in object_spec:
-            # refs can be to
-            # - #/parameters
-            # - #/definitions
-            # - #/responses
-            #
-            # TODO: consider tightening up the criteria by having the
-            #       caller specify in which context the ref is valid.
-            #       Search all for now
-            ref_name = object_spec['$ref']
-            if ref_name in self.params:
-                return self.params[ref_name]
-            if ref_name in self.definitions:
-                return self.definitions[ref_name]
-            if ref_name in self.responses:
-                return self.responses[ref_name]
-            raise SwaggerError('Cound not resolve $ref {0}'.format(ref_name))
-        return object_spec
-
 
 def build_api_serving_url(spec_dict, origin_url, preferred_scheme=None):
     """The URL used to service API requests does not necessarily have to be the

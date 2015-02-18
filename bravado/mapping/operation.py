@@ -51,6 +51,7 @@ class Operation(object):
         Builds up the list of this operations parameters taking into account
         parameters that may be available for this operation's path component.
         """
+        # TODO: factory method
         self.params = {}
         op_param_specs = self.op_spec.get('parameters', [])
         path_specs = self.swagger_spec.spec_dict['paths'][self.path_name]

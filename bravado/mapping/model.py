@@ -182,6 +182,8 @@ def fix_malformed_model_refs(spec):
 
     :param spec: Swagger spec in dict form
     """
+    # TODO: fix this in a sustainable way in a fork of jsonref and try to
+    #       upstream
     # TODO: unit test
     model_names = [model_name for model_name in spec.get('definitions', {})]
 

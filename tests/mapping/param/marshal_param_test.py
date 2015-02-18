@@ -1,5 +1,6 @@
 import pytest
 
+from bravado.http_client import APP_JSON
 from bravado.mapping.param import Param, marshal_param
 
 
@@ -33,7 +34,17 @@ def array_param_spec():
     }
 
 
-def test_string_in_query(empty_swagger_spec, string_param_spec, request_dict):
+@pytest.fixture
+def param_spec():
+    return {
+        'name': 'petId',
+        'description': 'ID of pet that needs to be fetched',
+        'type': 'integer',
+        'format': 'int64',
+    }
+
+
+def test_query_string(empty_swagger_spec, string_param_spec, request_dict):
     param = Param(empty_swagger_spec, string_param_spec)
     expected = request_dict.copy()
     expected['params']['username'] = 'darwin'
@@ -41,7 +52,7 @@ def test_string_in_query(empty_swagger_spec, string_param_spec, request_dict):
     assert expected == request_dict
 
 
-def test_array_in_query(empty_swagger_spec, array_param_spec, request_dict):
+def test_query_array(empty_swagger_spec, array_param_spec, request_dict):
     param = Param(empty_swagger_spec, array_param_spec)
     value = ['cat', 'dog', 'bird']
     expected = request_dict.copy()
@@ -50,48 +61,49 @@ def test_array_in_query(empty_swagger_spec, array_param_spec, request_dict):
     assert expected == request_dict
 
 
-# @pytest.fixture
-# def param_spec():
-#     return {
-#         'name': 'petId',
-#         'description': 'ID of pet that needs to be fetched',
-#         'type': 'integer',
-#         'format': 'int64',
-#     }
+def test_path_string(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'path'
+    param = Param(empty_swagger_spec, param_spec)
+    request = {'url': '/pet/{petId}'}
+    marshal_param(param, 34, request)
+    assert '/pet/34' == request['url']
 
-# def test_path(empty_swagger_spec, param_spec):
-#     param_spec['in'] = 'path'
-#     param = Param(empty_swagger_spec, param_spec)
-#     request = {'url': '/pet/{petId}'}
-#     marshal_primitive(param, 34, request)
-#     assert '/pet/34' == request['url']
-#
-#
-# def test_query(empty_swagger_spec, param_spec):
-#     param_spec['in'] = 'query'
-#     param = Param(empty_swagger_spec, param_spec)
-#     request = {
-#         'params': {}
-#     }
-#     marshal_primitive(param, 34, request)
-#     assert {'petId': 34} == request['params']
-#
-#
-# def test_header(empty_swagger_spec, param_spec):
-#     param_spec['in'] = 'header'
-#     param = Param(empty_swagger_spec, param_spec)
-#     request = {
-#         'headers': {}
-#     }
-#     marshal_primitive(param, 34, request)
-#     assert {'petId': 34} == request['headers']
-#
-#
-# @pytest.mark.xfail(reason='TODO')
-# def test_formData():
-#     assert False
-#
-#
-# @pytest.mark.xfail(reason='TODO')
-# def test_body():
-#     assert False
+
+def test_header_string(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'header'
+    param_spec['type'] = 'string'
+    del param_spec['format']
+    param = Param(empty_swagger_spec, param_spec)
+    request = {
+        'headers': {}
+    }
+    marshal_param(param, '34', request)
+    assert {'petId': '34'} == request['headers']
+
+
+def test_body(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'body'
+    param_spec['schema'] = {
+        'type': 'integer'
+    }
+    del param_spec['type']
+    del param_spec['format']
+    param = Param(empty_swagger_spec, param_spec)
+    request = {
+        'headers': {
+        }
+    }
+    marshal_param(param, 34, request)
+    assert '34' == request['data']
+    assert APP_JSON == request['headers']['Content-Type']
+
+
+def test_formData(empty_swagger_spec, param_spec):
+    param_spec['in'] = 'formData'
+    param = Param(empty_swagger_spec, param_spec)
+    request = {
+        'headers': {
+        }
+    }
+    marshal_param(param, 34, request)
+    assert 34 == request['data']['petId']

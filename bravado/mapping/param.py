@@ -155,22 +155,31 @@ class Param(object):
     def required(self):
         return self.param_spec.get('required', False)
 
-    @property
-    def swagger_type(self):
-        """Return the swagger type
-
-        :rtype: str
-        """
-        if self.location == 'body':
-            return self.param_spec['schema']['type']
-        return self.param_spec['type']
-
     def has_default(self):
         return 'default' in self.param_spec
 
     @property
     def default(self):
         return self.param_spec['default']
+
+
+def get_param_type_spec(param):
+    """
+    The spec for the parameter 'type' is not always in the same place for a
+    parameter. The notable exception is when the location is 'body' and the
+    schema for the type is in param_spec['schema']
+
+    :rtype: dict
+    :return: the param spec that contains 'type'
+    """
+    location = param.location
+    if location in ('path', 'query', 'header', 'formData'):
+        return param.param_spec
+    elif location == 'body':
+        return param.param_spec['schema']
+    else:
+        raise Exception(
+            "Don't know how to handle location {0}".format(location))
 
 
 def marshal_param(param, value, request):
@@ -183,14 +192,15 @@ def marshal_param(param, value, request):
         - query - can accept primitive and array of primitive types
         - header - can accept primitive and array of primitive types
         - body - can accept any type
-        - formdata - TODO
+        - formdata - can only accept primitive types
 
     :type param: :class:`Param`
     :param value: The value to assign to the parameter
     :type request: dict
     """
+    spec = get_param_type_spec(param)
     location = param.location
-    value = marshal_schema_object(param.swagger_spec, param.param_spec, value)
+    value = marshal_schema_object(param.swagger_spec, spec, value)
 
     if location == 'path':
         token = u'{%s}' % param.name
@@ -201,9 +211,11 @@ def marshal_param(param, value, request):
     elif location == 'header':
         request['headers'][param.name] = value
     elif location == 'formData':
-        raise NotImplementedError('TODO')
+        if request.get('data') is None:
+            request['data'] = {}
+        request['data'][param.name] = value
     elif location == 'body':
-        # TODO: revisit
+        request['headers']['Content-Type'] = APP_JSON
         request['data'] = json.dumps(value)
     else:
         raise SwaggerError(
