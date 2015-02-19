@@ -6,7 +6,7 @@ from bravado.mapping.spec import Spec
 
 
 @pytest.fixture
-def spec():
+def empty_swagger_spec():
     return Spec({})
 
 
@@ -16,7 +16,7 @@ def mock_request():
 
 
 @pytest.fixture
-def param_dict():
+def param_spec():
     return {
         'name': 'test_bool_param',
         'type': 'boolean',
@@ -26,24 +26,29 @@ def param_dict():
 
 
 def test_unrequired_param_not_added_to_request_when_none(
-        spec, param_dict, mock_request):
-    param_dict['required'] = False
+        empty_swagger_spec, param_spec, mock_request):
+    param_spec['required'] = False
 
     with patch('bravado.mapping.param.add_param_to_req') as mock_add_param:
-        validate_and_add_params_to_request(spec, param_dict, None, mock_request)
+        validate_and_add_params_to_request(
+            empty_swagger_spec, param_spec, None, mock_request)
         assert not mock_add_param.called
 
 
 def test_required_param_added_to_request_when_not_none(
-        spec, param_dict, mock_request):
-    param_dict['required'] = True
+        empty_swagger_spec, param_spec, mock_request):
+    param_spec['required'] = True
 
     with patch('bravado.mapping.param.add_param_to_req') as mock_add_param:
-        validate_and_add_params_to_request(spec, param_dict, True, mock_request)
+        validate_and_add_params_to_request(
+            empty_swagger_spec, param_spec, True, mock_request)
         assert mock_add_param.called
 
 
-def test_required_param_raises_error_when_none(spec, param_dict, mock_request):
+def test_required_param_raises_error_when_none(
+        empty_swagger_spec, param_spec, mock_request):
+
     with pytest.raises(TypeError) as excinfo:
-        validate_and_add_params_to_request(spec, param_dict, None, mock_request)
+        validate_and_add_params_to_request(
+            empty_swagger_spec, param_spec, None, mock_request)
     assert 'should be in types' in str(excinfo.value)

@@ -4,7 +4,7 @@ from bravado.mapping.model import create_model_type
 
 
 @pytest.fixture
-def definitions_dict():
+def definitions_spec():
     return {
         "User": {
             "properties": {
@@ -100,17 +100,17 @@ def definitions_dict():
 
 
 @pytest.fixture
-def user_model(definitions_dict):
-    user_dict = definitions_dict['User']
-    return create_model_type('User', user_dict)
+def user_model(definitions_spec):
+    user_spec = definitions_spec['User']
+    return create_model_type('User', user_spec)
 
 
 @pytest.fixture
-def tag_model(definitions_dict):
-    tag_dict = definitions_dict['Tag']
-    return create_model_type('Tag', tag_dict)
+def tag_model(definitions_spec):
+    tag_spec = definitions_spec['Tag']
+    return create_model_type('Tag', tag_spec)
 
 
 @pytest.fixture
-def pet_dict(definitions_dict):
-    return definitions_dict['Pet']
+def pet_spec(definitions_spec):
+    return definitions_spec['Pet']

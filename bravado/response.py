@@ -123,6 +123,11 @@ def post_receive(response, type_, models, **kwargs):
     if kwargs.pop('raw_response', False):
         return response
 
+    # Response had data, but responses in spec didn't match it so type_ is
+    # not known
+    if type_ is None:
+        return response
+
     response = SwaggerTypeCheck(
         "Response",
         response,
@@ -157,10 +162,16 @@ class SwaggerResponseConstruct(object):
         """
         if self._response is None:
             return
-        if swagger_type.is_primitive(self._type) or self._type == 'void':
+
+        if swagger_type.is_primitive(self._type):
             return self._response
+
         if swagger_type.is_array(self._type):
             return self._create_array_object()
+
+        if swagger_type.is_object(self._type):
+            return self._create_object()
+
         return self._create_complex_object()
 
     def _create_array_object(self):
@@ -168,11 +179,16 @@ class SwaggerResponseConstruct(object):
         Assume the response is validated and correct
         """
         array_item_type = swagger_type.get_array_item_type(self._type)
-        return [SwaggerResponseConstruct(item,
-                                         array_item_type,
-                                         self._models
-                                         ).create_object()
-                for item in self._response]
+        return [
+            SwaggerResponseConstruct(
+                item, array_item_type, self._models).create_object()
+            for item in self._response
+        ]
+
+    def _create_object(self):
+        return self._response
+        # need #/paths/{path_name}/{http_method}/responses/{status_code}/schema
+        # to be able to turn the json response into a dict
 
     def _create_complex_object(self):
         """Creates empty instance of complex object and then fills it with attrs
@@ -183,13 +199,18 @@ class SwaggerResponseConstruct(object):
         setattr(instance, '_raw', self._response)
         for key in self._response.keys():
             type_ = klass._swagger_types.get(key)
+
             if type_ is None:
                 # Ignore unrecognized keys.  They will still be accessible in
                 # the '_raw' field if needed.
                 continue
-            swagger_response = SwaggerResponseConstruct(self._response[key],
-                                                        type_,
-                                                        self._models)
+
+            swagger_response = SwaggerResponseConstruct(
+                self._response[key],
+                type_,
+                self._models)
+
             val = swagger_response.create_object()
             setattr(instance, key, val)
+
         return instance

@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.fixture
-def paths_dict():
+def paths_spec():
     # The '#/paths' dict from a spec
     return {
         "/pet/findByStatus": {
@@ -59,5 +59,5 @@ def paths_dict():
 
 
 @pytest.fixture
-def find_by_status_path_dict(paths_dict):
-    return paths_dict['/pet/findByStatus']
+def find_by_status_path_spec(paths_spec):
+    return paths_spec['/pet/findByStatus']

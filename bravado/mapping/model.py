@@ -4,22 +4,32 @@ from functools import partial
 from bravado import swagger_type
 from bravado.mapping.docstring import docstring_property
 from bravado.mapping.docstring import create_model_docstring
+from bravado.swagger_type import is_dict_like, is_list_like
 
 
-def build_models(definitions_dict):
+# Models in #/definitions are tagged with this key so that they can be
+# differentiated from 'object' types.
+MODEL_MARKER = 'x-model'
+
+
+def build_models(definitions_spec):
     """Builds the models contained in a #/definitions dict. This applies
     to more than just definitions - generalize later.
 
-    :param definitions_dict: spec['definitions']
+    :param definitions_spec: spec['definitions'] in dict form
     :returns: dict where (name,value) = (model name, model type)
     """
     models = {}
-    for model_name, model_dict in definitions_dict.iteritems():
-        models[model_name] = create_model_type(model_name, model_dict)
+    for model_name, model_spec in definitions_spec.iteritems():
+        # make models available under both simple name and $ref style name
+        # - Pet <-- TODO: remove eventually
+        # - #/definitions/Pet
+        models[model_name] = create_model_type(model_name, model_spec)
+        models['#/definitions/{0}'.format(model_name)] = models[model_name]
     return models
 
 
-def create_model_type(model_name, model_dict):
+def create_model_type(model_name, model_spec):
     """Create a dynamic class from the model data defined in the swagger
     spec.
 
@@ -28,11 +38,11 @@ def create_model_type(model_name, model_dict):
     cases for interactive debugging in a REPL.
 
     :param model_name: model name
-    :param model_dict: json-like dict that describes a model.
+    :param model_spec: json-like dict that describes a model.
     :returns: dynamic type created with attributes, docstrings attached
     :rtype: type
     """
-    props = model_dict['properties']
+    props = model_spec['properties']
 
     methods = dict(
         __doc__=docstring_property(partial(create_model_docstring, props)),
@@ -42,7 +52,7 @@ def create_model_type(model_name, model_dict):
         __dir__=lambda self: props.keys(),
         _flat_dict=lambda self: create_flat_dict(self),
         _swagger_types=swagger_type.get_swagger_types(props),
-        _required=model_dict.get('required'),
+        _required=model_spec.get('required'),
     )
     return type(str(model_name), (object,), methods)
 
@@ -144,3 +154,51 @@ def create_flat_dict(model):
         else:
             model_dict[k] = create_flat_dict(v)
     return model_dict
+
+
+def tag_models(spec_dict):
+    # TODO: unit test + docstring
+    # Tag #/definitions as being models with a 'x-model' key so that they can
+    # be recognized after jsonref inlines $refs
+    models_dict = spec_dict.get('definitions', {})
+    for model_name, model_spec in models_dict.iteritems():
+        model_type = model_spec.get('type')
+
+        # default type type to 'object' since most swagger specs don't bother
+        # to specify this
+        if model_type is None:
+            model_type = model_spec['type'] = 'object'
+
+        # only tag objects. Not all #/definitions map to a Model type - can
+        # be primitive or array, for example
+        if model_type == 'object':
+            model_spec[MODEL_MARKER] = model_name
+
+
+def fix_malformed_model_refs(spec):
+    """jsonref doesn't understand  { $ref: Category } so just fix it up to
+    { $ref: #/definitions/Category } when the ref name matches a #/definitions
+    name. Yes, this is hacky!
+
+    :param spec: Swagger spec in dict form
+    """
+    # TODO: fix this in a sustainable way in a fork of jsonref and try to
+    #       upstream
+    # TODO: unit test
+    model_names = [model_name for model_name in spec.get('definitions', {})]
+
+    def descend(fragment):
+        if is_dict_like(fragment):
+            for k, v in fragment.iteritems():
+                if k == '$ref' and v in model_names:
+                    fragment[k] = "#/definitions/{0}".format(v)
+                descend(v)
+        elif is_list_like(fragment):
+            for element in fragment:
+                descend(element)
+
+    descend(spec)
+
+
+def is_model(spec):
+    return MODEL_MARKER in spec

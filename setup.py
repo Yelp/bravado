@@ -29,6 +29,7 @@ setup(
     ],
     install_requires=[
         "crochet",
+        "jsonref",
         "python-dateutil",
         "requests",
         "swagger-spec-validator",

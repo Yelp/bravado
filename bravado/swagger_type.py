@@ -3,10 +3,13 @@
 """
 
 import datetime
-
 import dateutil.parser
+import logging
+import jsonref
 
 from exception import SwaggerError
+
+log = logging.getLogger(__name__)
 
 # Tuple is added to allow a response '4' which is of
 # python type 'int' but swagger_type could be 'int64'
@@ -26,6 +29,23 @@ SWAGGER_TO_PY_TYPE_MAPPING = {
     'File': file
 }
 
+SWAGGER20_PRIMITIVES = (
+    'integer',
+    'number',
+    'string',
+    'boolean',
+    'null'     # TODO: Do we need this?
+)
+
+PY_PRIMITIVES = (
+    int,
+    long,
+    str,
+    unicode,
+    bool,
+    float,
+)
+
 
 SWAGGER_PRIMITIVE_TYPE_TO_SWAGGER_FORMAT = {
     u'integer': ['int32', 'int64'],
@@ -35,9 +55,18 @@ SWAGGER_PRIMITIVE_TYPE_TO_SWAGGER_FORMAT = {
     u'File': []
 }
 
+# 1 array A JSON array.
+# 2 boolean A JSON boolean.
+# 3 integer A JSON number without a fraction or exponent part.
+# 4 number Any JSON number. Number includes integer.
+# 5 null The JSON null value.
+# 6 object A JSON object.
+# 7 string A JSON string.
+
 
 CONTAINER_MAPPING = {
-    u'array': list
+    u'array': list,
+    u'object': dict,
 }
 
 
@@ -133,11 +162,18 @@ def is_array(type_):
     return type_.startswith(ARRAY + COLON)
 
 
+def is_object(type_):
+    """Checks whether the swagger type is object
+    :rtype: boolean
+    """
+    return type_ == 'object'
+
+
 def is_complex(type_):
     """checks whether the swagger type is neither primitive nor array
     :rtype: boolean
     """
-    return not is_primitive(type_) and not is_array(type_)
+    return (not is_primitive(type_) and not is_array(type_)) or is_object(type_)
 
 
 def get_array_item_type(type_):
@@ -279,6 +315,7 @@ class SwaggerTypeCheck(object):
     def _check_value_format(self):
         """Check the value as per the type of the value
         """
+        # TOOD: remove - void not in 2.0 spec
         if self._type == 'void':
             # Ignore any check if type is 'void'
             return
@@ -288,10 +325,10 @@ class SwaggerTypeCheck(object):
             self._check_primitive_type()
         elif is_array(self._type):
             self._check_array_type()
-        else:
-            # Ignore check if models tuple is not provided
-            if self.models:
-                self._check_complex_type()
+        elif is_object(self._type):
+            self._check_object_type()
+        elif self.models:
+            self._check_complex_type()
 
     def _check_primitive_type(self):
         """Validate value is of primitive type
@@ -324,29 +361,58 @@ class SwaggerTypeCheck(object):
             item, array_item_type, self.models, self.allow_null).value
             for item in self.value]
 
+    def _check_object_type(self):
+        if not isinstance(self.value, dict):
+            raise TypeError(
+                "Type for {0} is expected to be a dict but is {1) instead"
+                .format(self.value, type(self.value)))
+
     def _check_complex_type(self):
         """Checks all the fields in the complex type are of proper type
+
         All the required fields are present and no extra field is present
         """
-        klass = self.models[self._type]
+        klass = self.models.get(self._type)
+
         if isinstance(self.value, klass):
             self.value = self.value._flat_dict()
+
         # The only valid type from this point on is JSON dict
         if not isinstance(self.value, dict):
-            raise TypeError("Type for %s is expected to be object" %
-                            self.value)
+            raise TypeError(
+                "Type for {0} is expected to be object".format(self.value))
+
         required = list(klass._required) if klass._required else []
+
         for key in self.value.keys():
             if key in required:
                 required.remove(key)
             if key not in klass._swagger_types.keys():
                 # Ignore unrecognized keys
                 continue
-            self.value[key] = SwaggerTypeCheck(key,
-                                               self.value[key],
-                                               klass._swagger_types[key],
-                                               self.models,
-                                               self.allow_null).value
+            self.value[key] = SwaggerTypeCheck(
+                key,
+                self.value[key],
+                klass._swagger_types[key],
+                self.models,
+                self.allow_null).value
+
         if required:
             raise AssertionError("These required fields not present: %s" %
                                  required)
+
+
+def is_dict_like(spec):
+    if type(spec) == dict:
+        return True
+    if type(spec) == jsonref.JsonRef and type(spec.__subject__) == dict:
+        return True
+    return False
+
+
+def is_list_like(spec):
+    if type(spec) == list:
+        return True
+    if type(spec) == jsonref.JsonRef and type(spec.__subject__) == list:
+        return True
+    return False

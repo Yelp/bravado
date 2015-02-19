@@ -165,14 +165,11 @@ def get_resource_url(base_path, url_base, resource_base_path):
 class SwaggerClient(object):
     """A client for accessing a Swagger-documented RESTful service.
 
-    :param api_url: the url for the swagger api docs, only used for the repr.
-    :param resources: a dict of resource name to :Resource: objects used to
-        perform requests.
+    :param swagger_spec: :class:`bravado.mapping.spec.Spec`
     """
 
-    def __init__(self, api_url, resources):
-        self._api_url = api_url
-        self._resources = resources
+    def __init__(self, swagger_spec):
+        self.swagger_spec = swagger_spec
 
     @classmethod
     def from_url(cls, spec_url, http_client=None, request_headers=None):
@@ -204,21 +201,24 @@ class SwaggerClient(object):
         :param origin_url: the url used to retrieve the spec_dict
         :type  origin_url: str
         """
-        spec = Spec.from_dict(spec_dict, origin_url, http_client)
-        return cls(spec.api_url, spec.resources)
+        swagger_spec = Spec.from_dict(spec_dict, origin_url, http_client)
+        return cls(swagger_spec)
+
+    def get_model(self, model_name):
+        return self.swagger_spec.definitions[model_name]
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self._api_url)
+        return u"%s(%s)" % (self.__class__.__name__, self.swagger_spec.api_url)
 
     def __getattr__(self, item):
         """
         :param item: name of the resource to return
         :return: :class:`Resource`
         """
-        resource = self._resources.get(item)
+        resource = self.swagger_spec.resources.get(item)
         if not resource:
             raise AttributeError(u"API has no resource '%s'" % item)
         return resource
 
     def __dir__(self):
-        return self._resources.keys()
+        return self.swagger_spec.resources.keys()

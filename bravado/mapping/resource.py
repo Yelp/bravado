@@ -1,6 +1,7 @@
 from collections import defaultdict
 import logging
 
+from bravado.mapping.docstring import operation_docstring_wrapper
 from bravado.mapping.operation import Operation
 
 log = logging.getLogger(__name__)
@@ -31,11 +32,11 @@ def convert_path_to_resource(path_name):
     return resource_name
 
 
-def build_resources(spec):
-    """Transforms the REST resources in the json-like spec into rich :Resource:
-    objects that have associated :Operation:s.
+def build_resources(swagger_spec):
+    """Transforms the REST resources in the json-like swagger_spec into rich
+    :Resource: objects that have associated :Operation:s.
 
-    :type spec: :class:`bravado.mapping.spec.Spec`
+    :type swagger_spec: :class:`bravado.mapping.spec.Spec`
     :returns: dict where (key,value) = (resource name, Resource)
     """
     # Map operations to resources using operation tags if available.
@@ -45,13 +46,16 @@ def build_resources(spec):
     #   path
     # key = tag_name   value = { operation_id : Operation }
     tag_to_operations = defaultdict(dict)
-    paths = spec.spec_dict['paths']
-    for path_name, path_dict in paths.iteritems():
-        for http_method, operation_dict in path_dict.items():
-            operation = Operation(spec, path_name, http_method, operation_dict)
-            tags = operation_dict.get('tags', [])
+    paths = swagger_spec.spec_dict['paths']
+    for path_name, path_spec in paths.iteritems():
+        for http_method, operation_spec in path_spec.items():
+            operation = Operation.from_spec(
+                swagger_spec, path_name, http_method, operation_spec)
+            tags = operation_spec.get('tags', [])
+
             if not tags:
                 tags.append(convert_path_to_resource(path_name))
+
             for tag in tags:
                 tag_to_operations[tag][operation.operation_id] = operation
 
@@ -82,7 +86,7 @@ class Resource(object):
         if not op:
             raise AttributeError(u"Resource '%s' has no operation '%s'" %
                                  (self._name, item))
-        return op
+        return operation_docstring_wrapper(op)
 
     def __dir__(self):
         return self._operations.keys()
