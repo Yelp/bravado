@@ -1,5 +1,7 @@
 import logging
 
+import requests.models
+
 from bravado import swagger_type
 from bravado.response import post_receive, HTTPFuture
 from bravado.exception import SwaggerError
@@ -130,52 +132,135 @@ class Operation(object):
                 marshal_param(remaining_param, None, request)
 
     def __call__(self, **kwargs):
-        # TODO: rewrite/simplify
         log.debug(u"%s(%s)" % (self.operation_id, kwargs))
         request = self.construct_request(**kwargs)
 
         def response_future(response, **kwargs):
-            # Assume status is OK, an exception would have been raised already
-            if not response.text:
-                return None
+            return handle_response(response, self, **kwargs)
 
-            status_code = str(response.status_code)
-
-            # Handle which repsonse to activate given status_code
-            default_response_spec = \
-                self.op_spec['responses'].get('default', None)
-            response_spec = self.op_spec['responses'].get(
-                status_code, default_response_spec)
-            if response_spec is None:
-                # reponse code doesn't match and no default provided
-                if status_code == '200':
-                    # it was obviously successful
-                    log.warn(
-                        "Op {0} was successful by didn't match any responses"
-                        .format(self.operation_id))
-                else:
-                    raise SwaggerError(
-                        "Response doesn't match any expected responses: {0}"
-                        .format(response))
-
-            response_dict = response.json()
-
-            if response_spec and 'schema' in response_spec:
-                swagger_type_ = \
-                    swagger_type.get_swagger_type(response_spec['schema'])
-            else:
-                swagger_type_ = None
-
-            # TODO: remove debug
-            log.debug('response_dict = %s' % response_dict)
-            log.debug('response_spec = %s' % response_spec)
-            log.debug('swagger_type  = %s' % swagger_type_)
-
-            return post_receive(
-                response_dict,
-                swagger_type_,
-                self.swagger_spec.definitions,
-                **kwargs)
+        #     # Assume status is OK, an exception would have been raised already
+        #     if not response.text:
+        #         return None
+        #
+        #     status_code = str(response.status_code)
+        #
+        #     # Handle which repsonse to activate given status_code
+        #     default_response_spec = \
+        #         self.op_spec['responses'].get('default', None)
+        #
+        #     response_spec = self.op_spec['responses'].get(
+        #         status_code, default_response_spec)
+        #
+        #     if response_spec is None:
+        #         # reponse code doesn't match and no default provided
+        #         if status_code == '200':
+        #             # it was obviously successful
+        #             log.warn(
+        #                 "Op {0} was successful by didn't match any responses"
+        #                 .format(self.operation_id))
+        #         else:
+        #             raise SwaggerError(
+        #                 "Response doesn't match any expected responses: {0}"
+        #                 .format(response))
+        #
+        #     response_dict = response.json()
+        #
+        #     if response_spec and 'schema' in response_spec:
+        #         swagger_type_ = \
+        #             swagger_type.get_swagger_type(response_spec['schema'])
+        #     else:
+        #         swagger_type_ = None
+        #
+        #     # TODO: remove debug
+        #     log.debug('response type = %s', type(response))
+        #     log.debug('response_dict = %s', response_dict)
+        #     log.debug('response_spec = %s', response_spec)
+        #     log.debug('swagger_type  = %s', swagger_type_)
+        #
+        #     return post_receive(
+        #         response_dict,
+        #         swagger_type_,
+        #         self.swagger_spec.definitions,
+        #         **kwargs)
 
         return HTTPFuture(
             self.swagger_spec.http_client, request, response_future)
+
+
+def handle_response(response, op):
+    """Process the response from the given operation invocation's request.
+
+    :type response:
+        - When using the default synchronouse http client
+          :class:`requests.models.Response`
+        - When using the default async http client
+          :class:`bravado.async_http_client.AsyncResponse`
+        - When using Fido :class:`fido.fido.Response` (TODO)
+    :type op: :class:`bravado.mapping.operation.Operation`
+    """
+    # NOTE: Just handle the synchronous http client for now. The async http
+    #       client is getting replaced by Fido. We really need a consistent
+    #       `response` interface regardless of the client in use.
+    # TODO: Fix as part of SRV-1454
+    if not type(response) == requests.models.Response:
+        raise NotImplementedError(
+            'TODO: Handle response of type {0}'.format(type(response)))
+
+    response_spec = get_response_spec(response.status_code, op)
+    return unmarshal_response(op.swagger_spec, response_spec, response)
+
+
+def unmarshal_response(swagger_spec, response_spec, response):
+    """Unmarshal the http response into a data structure based on the
+    response specification.
+
+    :type swagger_spec: :class:`bravado.mapping.spec.Spec`
+    :param response_spec: response specification in dict form
+    :param response: the http response
+    :type response: varies based on the http client used. Expect only
+        :class:`requests.models.Response` for the time being.
+    """
+
+    def has_no_content(response_spec):
+        return 'schema' in response_spec
+
+    if has_no_content(response_spec):
+        return
+
+    content_spec = response_spec['schema']
+
+    result = unmarshal_schema_object()
+    pass
+
+
+def get_response_spec(status_code, op):
+    """Given the http status_code of an operation invocation's response, figure
+    out which response specification it maps to.
+
+    #/paths/
+        {path_name}/
+            {http_method}/
+                responses/
+                    {status_code}/
+                        {response}
+
+    :type status_code: int
+    :type op: :class:`bravado.mapping.operation.Operation`
+    :return: response specification
+    :rtype: dict
+    :raises: SwaggerError when the status_code could not be mapped to a response
+        specification.
+    """
+    # We don't need to worry about checking #/responses/ because jsonref has
+    # already inlined the $refs
+    response_specs = op.op_spec.get('responses')
+    default_response_spec = response_specs.get('default', None)
+    response_spec = response_specs.get(str(status_code), default_response_spec)
+    if response_spec is None:
+        raise SwaggerError(
+            "Response specification matching http status_code {0} not found "
+            "for {1}. Either add a response specifiction for the status_code "
+            "or use a `default` response.".format(op, status_code))
+    return response_spec
+
+
