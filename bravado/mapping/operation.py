@@ -3,7 +3,9 @@ import logging
 import requests.models
 
 from bravado import swagger_type
-from bravado.response import post_receive, HTTPFuture
+from bravado.mapping.unmarshal import unmarshal_schema_object
+from bravado.response import post_receive, HTTPFuture, \
+    RequestsLibResponseAdapter
 from bravado.exception import SwaggerError
 from bravado.mapping.param import Param, marshal_param
 
@@ -201,36 +203,43 @@ def handle_response(response, op):
     # NOTE: Just handle the synchronous http client for now. The async http
     #       client is getting replaced by Fido. We really need a consistent
     #       `response` interface regardless of the client in use.
-    # TODO: Fix as part of SRV-1454
-    if not type(response) == requests.models.Response:
+    #
+    #        Would like to wrap with a plain old dict but don't know at this
+    #        point if I'm going to need to support
+    #        `response_wrapper.some_method_invocation()`
+    #
+    #        TODO: Fix as part of SRV-1454 for fido
+    if isinstance(response, requests.models.Response):
+        wrapped_response = RequestsLibResponseAdapter(response)
+    else:
         raise NotImplementedError(
             'TODO: Handle response of type {0}'.format(type(response)))
 
-    response_spec = get_response_spec(response.status_code, op)
-    return unmarshal_response(op.swagger_spec, response_spec, response)
+    response_spec = get_response_spec(wrapped_response.status_code, op)
+    return unmarshal_response(op.swagger_spec, response_spec, wrapped_response)
 
 
 def unmarshal_response(swagger_spec, response_spec, response):
-    """Unmarshal the http response into a data structure based on the
+    """Unmarshal the http response into a (status_code, value) based on the
     response specification.
 
     :type swagger_spec: :class:`bravado.mapping.spec.Spec`
     :param response_spec: response specification in dict form
-    :param response: the http response
-    :type response: varies based on the http client used. Expect only
-        :class:`requests.models.Response` for the time being.
+    :type response: :class:`ResponseLike`
+    :returns: tuple of (status_code, value) where type(value) matches
+        response_spec['schema']['type'] if it exists, None otherwise.
     """
-
-    def has_no_content(response_spec):
+    def has_content(response_spec):
         return 'schema' in response_spec
 
-    if has_no_content(response_spec):
-        return
+    if not has_content(response_spec):
+        return response.status_code, None
 
+    # TODO: Non-json response contents
     content_spec = response_spec['schema']
-
-    result = unmarshal_schema_object()
-    pass
+    content_value = response.json()
+    return response.status_code,\
+           unmarshal_schema_object(swagger_spec, content_spec, content_value)
 
 
 def get_response_spec(status_code, op):

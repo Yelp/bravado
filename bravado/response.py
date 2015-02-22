@@ -7,6 +7,7 @@
 """Code for checking the response from API. If correct, it proceeds to convert
 it into Python class types
 """
+from bravado.mapping.response import ResponseLike
 import swagger_type
 from swagger_type import SwaggerTypeCheck
 from bravado.exception import CancelledError
@@ -214,3 +215,20 @@ class SwaggerResponseConstruct(object):
             setattr(instance, key, val)
 
         return instance
+
+
+class RequestsLibResponseAdapter(ResponseLike):
+    """Wraps a requests.models.Response object to provider a uniform interface
+    to the response innards.
+
+    :type requests_lib_response: :class:`requests.models.Response`
+    """
+    def __init__(self, requests_lib_response):
+        self._delegate = requests_lib_response
+
+    @property
+    def status_code(self):
+        return self._delegate.status_code
+
+    def json(self, **kwargs):
+        return self._delegate.json(**kwargs)
