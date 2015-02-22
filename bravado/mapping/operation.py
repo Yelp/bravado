@@ -2,10 +2,8 @@ import logging
 
 import requests.models
 
-from bravado import swagger_type
 from bravado.mapping.unmarshal import unmarshal_schema_object
-from bravado.response import post_receive, HTTPFuture, \
-    RequestsLibResponseAdapter
+from bravado.response import HTTPFuture, RequestsLibResponseAdapter
 from bravado.exception import SwaggerError
 from bravado.mapping.param import Param, marshal_param
 
@@ -140,51 +138,6 @@ class Operation(object):
         def response_future(response, **kwargs):
             return handle_response(response, self, **kwargs)
 
-        #     # Assume status is OK, an exception would have been raised already
-        #     if not response.text:
-        #         return None
-        #
-        #     status_code = str(response.status_code)
-        #
-        #     # Handle which repsonse to activate given status_code
-        #     default_response_spec = \
-        #         self.op_spec['responses'].get('default', None)
-        #
-        #     response_spec = self.op_spec['responses'].get(
-        #         status_code, default_response_spec)
-        #
-        #     if response_spec is None:
-        #         # reponse code doesn't match and no default provided
-        #         if status_code == '200':
-        #             # it was obviously successful
-        #             log.warn(
-        #                 "Op {0} was successful by didn't match any responses"
-        #                 .format(self.operation_id))
-        #         else:
-        #             raise SwaggerError(
-        #                 "Response doesn't match any expected responses: {0}"
-        #                 .format(response))
-        #
-        #     response_dict = response.json()
-        #
-        #     if response_spec and 'schema' in response_spec:
-        #         swagger_type_ = \
-        #             swagger_type.get_swagger_type(response_spec['schema'])
-        #     else:
-        #         swagger_type_ = None
-        #
-        #     # TODO: remove debug
-        #     log.debug('response type = %s', type(response))
-        #     log.debug('response_dict = %s', response_dict)
-        #     log.debug('response_spec = %s', response_spec)
-        #     log.debug('swagger_type  = %s', swagger_type_)
-        #
-        #     return post_receive(
-        #         response_dict,
-        #         swagger_type_,
-        #         self.swagger_spec.definitions,
-        #         **kwargs)
-
         return HTTPFuture(
             self.swagger_spec.http_client, request, response_future)
 
@@ -192,26 +145,17 @@ class Operation(object):
 def handle_response(response, op):
     """Process the response from the given operation invocation's request.
 
-    :type response:
-        - When using the default synchronouse http client
-          :class:`requests.models.Response`
-        - When using the default async http client
-          :class:`bravado.async_http_client.AsyncResponse`
-        - When using Fido :class:`fido.fido.Response` (TODO)
+    :type response: 3rd party library http response object
+          :class:`requests.models.Response`  or
+          :class:`fido.fido.Response`
     :type op: :class:`bravado.mapping.operation.Operation`
+    :returns: tuple (status_code, response value) where type(response value)
+        is one of None, python primitive, list, object, or Model.
     """
-    # NOTE: Just handle the synchronous http client for now. The async http
-    #       client is getting replaced by Fido. We really need a consistent
-    #       `response` interface regardless of the client in use.
-    #
-    #        Would like to wrap with a plain old dict but don't know at this
-    #        point if I'm going to need to support
-    #        `response_wrapper.some_method_invocation()`
-    #
-    #        TODO: Fix as part of SRV-1454 for fido
     if isinstance(response, requests.models.Response):
         wrapped_response = RequestsLibResponseAdapter(response)
     else:
+        # TODO: Fix as part of SRV-1454 for fido
         raise NotImplementedError(
             'TODO: Handle response of type {0}'.format(type(response)))
 
@@ -225,7 +169,7 @@ def unmarshal_response(swagger_spec, response_spec, response):
 
     :type swagger_spec: :class:`bravado.mapping.spec.Spec`
     :param response_spec: response specification in dict form
-    :type response: :class:`ResponseLike`
+    :type response: :class:`bravado.mapping.response.ResponseLike`
     :returns: tuple of (status_code, value) where type(value) matches
         response_spec['schema']['type'] if it exists, None otherwise.
     """
@@ -238,8 +182,8 @@ def unmarshal_response(swagger_spec, response_spec, response):
     # TODO: Non-json response contents
     content_spec = response_spec['schema']
     content_value = response.json()
-    return response.status_code,\
-           unmarshal_schema_object(swagger_spec, content_spec, content_value)
+    return response.status_code, unmarshal_schema_object(
+        swagger_spec, content_spec, content_value)
 
 
 def get_response_spec(status_code, op):
@@ -271,5 +215,3 @@ def get_response_spec(status_code, op):
             "for {1}. Either add a response specifiction for the status_code "
             "or use a `default` response.".format(op, status_code))
     return response_spec
-
-

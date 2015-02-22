@@ -31,5 +31,3 @@ def test_json_content(empty_swagger_spec):
         empty_swagger_spec, response_spec, response)
     assert 200 == status_code
     assert 'Monday' == value
-
-

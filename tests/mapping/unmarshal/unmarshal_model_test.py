@@ -40,14 +40,14 @@ def test_pet(petstore_dict):
     assert 'Fido' == pet.name
     assert 'sold' == pet.status
     assert ['wagtail.png', 'bark.png'] == pet.photoUrls
-    assert Category == type(pet.category)
+    assert isinstance(pet.category, Category)
     assert 200 == pet.category.id
     assert 'friendly' == pet.category.name
-    assert list == type(pet.tags)
+    assert isinstance(pet.tags, list)
     assert 2 == len(pet.tags)
-    assert Tag == type(pet.tags[0])
+    assert isinstance(pet.tags[0], Tag)
     assert 99 == pet.tags[0].id
     assert 'mini' == pet.tags[0].name
-    assert Tag == type(pet.tags[1])
+    assert isinstance(pet.tags[1], Tag)
     assert 100 == pet.tags[1].id
     assert 'brown' == pet.tags[1].name

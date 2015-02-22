@@ -1,5 +1,5 @@
 def test_uses_default_of_available(petstore):
-    pets = petstore.pet.findPetsByStatus().result()
+    status_code, pets = petstore.pet.findPetsByStatus().result()
     assert pets
     for pet in pets:
         assert type(pet).__name__ == 'Pet'
@@ -7,7 +7,7 @@ def test_uses_default_of_available(petstore):
 
 
 def test_sold(petstore):
-    pets = petstore.pet.findPetsByStatus(status=['sold']).result()
+    statu_cdoe, pets = petstore.pet.findPetsByStatus(status=['sold']).result()
     assert list == type(pets)
     if pets:
         for pet in pets:
@@ -16,5 +16,5 @@ def test_sold(petstore):
 
 
 def test_invalid_status(petstore):
-    pets = petstore.pet.findPetsByStatus(status=['foo']).result()
+    status_code, pets = petstore.pet.findPetsByStatus(status=['foo']).result()
     assert 0 == len(pets)

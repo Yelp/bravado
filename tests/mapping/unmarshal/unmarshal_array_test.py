@@ -124,9 +124,9 @@ def test_array_of_models(petstore_dict):
 
     pet_dicts = [fido_dict]
     pets = unmarshal_array(petstore_spec, array_of_pets_spec, pet_dicts)
-    assert list == type(pets)
+    assert isinstance(pets, list)
     assert 1 == len(pets)
     fido = pets[0]
-    assert Pet == type(fido)
-    assert Category == type(fido.category)
-    assert Tag == type(fido.tags[0])
+    assert isinstance(fido, Pet)
+    assert isinstance(fido.category, Category)
+    assert isinstance(fido.tags[0], Tag)

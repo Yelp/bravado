@@ -1,7 +1,6 @@
-import mock
+from jsonschema.exceptions import ValidationError
 import pytest
 
-from jsonschema.exceptions import ValidationError
 from bravado.mapping.unmarshal import unmarshal_primitive
 
 
@@ -20,7 +19,6 @@ def test_wrong_type():
     with pytest.raises(ValidationError) as excinfo:
         unmarshal_primitive(integer_spec, 'i am a string')
     assert "is not of type 'integer'" in str(excinfo.value)
-
 
 
 def test_boolean():
