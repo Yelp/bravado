@@ -28,3 +28,6 @@ class ResponseLike(object):
                 'for `{1}`'.format(type(self), name))
         raise AttributeError(
             "'{0}' object has no attribute '{1}'".format(type(self), name))
+
+    def json(self, **kwargs):
+        raise NotImplementedError("Implement json() in {0}".format(type(self)))

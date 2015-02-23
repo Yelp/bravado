@@ -19,9 +19,10 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
 
     :type swagger_spec: :class:`bravado.mapping.spec.Spec`
     :type schema_object_spec: dict
-    :type value: int, float, long, string, unicode, boolean, list, dict
+    :type value: int, float, long, string, unicode, boolean, list, dict, etc
     :return: unmarshaled value
-    :rtype: int, float, long, string, unicode, boolean, list, dict, Model type
+    :rtype: int, float, long, string, unicode, boolean, list, dict, object (in
+        the case of a 'format' conversion', or Model type
     """
     obj_type = schema_object_spec['type']
 
