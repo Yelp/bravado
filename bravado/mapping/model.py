@@ -3,8 +3,8 @@ from functools import partial
 
 from bravado import swagger_type
 from bravado.mapping.docstring import docstring_property
-from bravado.mapping.docstring import create_model_docstring
-from bravado.swagger_type import is_dict_like, is_list_like
+from bravado.swagger_type import is_dict_like, is_list_like, \
+    SWAGGER20_PRIMITIVES
 
 
 # Models in #/definitions are tagged with this key so that they can be
@@ -45,7 +45,7 @@ def create_model_type(model_name, model_spec):
     props = model_spec['properties']
 
     methods = dict(
-        __doc__=docstring_property(partial(create_model_docstring, props)),
+        __doc__=docstring_property(partial(create_model_docstring, model_spec)),
         __eq__=lambda self, other: compare(self, other),
         __init__=lambda self, **kwargs: set_props(self, **kwargs),
         __repr__=lambda self: create_model_repr(self),
@@ -202,3 +202,37 @@ def fix_malformed_model_refs(spec):
 
 def is_model(spec):
     return MODEL_MARKER in spec
+
+
+def create_model_docstring(model_spec):
+    s = "Attributes:\n\n\t"
+    attr_iter = iter(sorted(model_spec['properties'].iteritems()))
+    # TODO: Add more stuff available in the spec - 'required', 'example', etc
+    for attr_name, attr_spec in attr_iter:
+        schema_type = attr_spec['type']
+
+        if schema_type in SWAGGER20_PRIMITIVES:
+            # TODO: update to python types eventually
+            attr_type = schema_type
+
+        elif schema_type == 'array':
+            array_spec = attr_spec['items']
+            if is_model(array_spec):
+                array_type = array_spec[MODEL_MARKER]
+            else:
+                array_type = array_spec['type']
+            attr_type = "list of {0}".format(array_type)
+
+        elif is_model(attr_spec):
+            attr_type = attr_spec[MODEL_MARKER]
+
+        elif schema_type == 'object':
+            attr_type = 'dict'
+
+        s += "{0}: {1}".format(attr_name, attr_type)
+
+        if attr_spec.get('description'):
+            s += " - {0}".format(attr_spec['description'])
+
+        s += '\n\t'
+    return s

@@ -43,7 +43,7 @@ def test_create_model_type_lazy_docstring(mock_create_docstring):
     pet_type = create_model_type('Pet', pet_spec)
     assert not mock_create_docstring.called
     assert pet_type.__doc__ == mock_create_docstring.return_value
-    mock_create_docstring.assert_called_once_with(pet_spec['properties'])
+    mock_create_docstring.assert_called_once_with(pet_spec)
 
 
 # ################################################################

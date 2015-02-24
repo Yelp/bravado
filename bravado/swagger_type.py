@@ -284,122 +284,122 @@ def get_swagger_types(props):
     return swagger_types
 
 
-class SwaggerTypeCheck(object):
-    """Initialization of the class checks for the validity
-    of the value to the type.
-
-    Raises TypeError/AssertionError if validation fails
-    """
-
-    def __init__(self, name, value, type_, models=None, allow_null=False):
-        """Ctor to set params and then check the value
-
-        :param name: name of the field, used for error logging
-        :type name: str
-        :param value: JSON value
-        :type value: dict
-        :param type_: type against which the value is to be validated
-        :type type_: str or unicode
-        :param models: namedtuple which maps complex type string to py type
-        :type models: namedtuple
-        :param allow_null: if True, ignores null values from type check
-        :type allow_null: boolean
-        """
-        self.name = name
-        self.value = value
-        self._type = type_
-        self.models = models
-        self.allow_null = allow_null
-        self._check_value_format()
-
-    def _check_value_format(self):
-        """Check the value as per the type of the value
-        """
-        # TOOD: remove - void not in 2.0 spec
-        if self._type == 'void':
-            # Ignore any check if type is 'void'
-            return
-        elif self.allow_null and self.value is None:
-            return
-        elif is_primitive(self._type):
-            self._check_primitive_type()
-        elif is_array(self._type):
-            self._check_array_type()
-        elif is_object(self._type):
-            self._check_object_type()
-        elif self.models:
-            self._check_complex_type()
-
-    def _check_primitive_type(self):
-        """Validate value is of primitive type
-        Also converts swagger type to py type if needed e.g. datetime
-        """
-        ptype = get_primitive_mapping(self._type)
-        if not isinstance(self.value, ptype):
-            # convert string datetime to python datetime format
-            if ptype == datetime.datetime:
-                self.value = dateutil.parser.parse(self.value)
-            elif ptype == datetime.date:
-                self.value = dateutil.parser.parse(self.value).date()
-            else:
-                # For all the other cases, raise Type mismatch
-                raise TypeError("%s's value: %s should be in types %r" % (
-                    self.name, self.value, ptype))
-
-    def _check_array_type(self):
-        """Validate array type value is actually array type
-        Also recursively converts value array to list of item array types
-        """
-        if self.value is None:
-            raise TypeError("Array found as null")
-        if self.value.__class__ is not list:
-            raise TypeError("%r should be an array instead of %s" %
-                            (self.value, self.value.__class__.__name__))
-        array_item_type = get_array_item_type(self._type)
-        self.value = [SwaggerTypeCheck(
-            "%s's item" % self.name,
-            item, array_item_type, self.models, self.allow_null).value
-            for item in self.value]
-
-    def _check_object_type(self):
-        if not isinstance(self.value, dict):
-            raise TypeError(
-                "Type for {0} is expected to be a dict but is {1) instead"
-                .format(self.value, type(self.value)))
-
-    def _check_complex_type(self):
-        """Checks all the fields in the complex type are of proper type
-
-        All the required fields are present and no extra field is present
-        """
-        klass = self.models.get(self._type)
-
-        if isinstance(self.value, klass):
-            self.value = self.value._flat_dict()
-
-        # The only valid type from this point on is JSON dict
-        if not isinstance(self.value, dict):
-            raise TypeError(
-                "Type for {0} is expected to be object".format(self.value))
-
-        required = list(klass._required) if klass._required else []
-
-        for key in self.value.keys():
-            if key in required:
-                required.remove(key)
-            if key not in klass._swagger_types.keys():
-                # Ignore unrecognized keys
-                continue
-            self.value[key] = SwaggerTypeCheck(
-                key,
-                self.value[key],
-                klass._swagger_types[key],
-                self.models,
-                self.allow_null).value
-
-        if required:
-            raise AssertionError("These required fields not present: %s" %
-                                 required)
+# class SwaggerTypeCheck(object):
+#     """Initialization of the class checks for the validity
+#     of the value to the type.
+#
+#     Raises TypeError/AssertionError if validation fails
+#     """
+#
+#     def __init__(self, name, value, type_, models=None, allow_null=False):
+#         """Ctor to set params and then check the value
+#
+#         :param name: name of the field, used for error logging
+#         :type name: str
+#         :param value: JSON value
+#         :type value: dict
+#         :param type_: type against which the value is to be validated
+#         :type type_: str or unicode
+#         :param models: namedtuple which maps complex type string to py type
+#         :type models: namedtuple
+#         :param allow_null: if True, ignores null values from type check
+#         :type allow_null: boolean
+#         """
+#         self.name = name
+#         self.value = value
+#         self._type = type_
+#         self.models = models
+#         self.allow_null = allow_null
+#         self._check_value_format()
+#
+#     def _check_value_format(self):
+#         """Check the value as per the type of the value
+#         """
+#         # TOOD: remove - void not in 2.0 spec
+#         if self._type == 'void':
+#             # Ignore any check if type is 'void'
+#             return
+#         elif self.allow_null and self.value is None:
+#             return
+#         elif is_primitive(self._type):
+#             self._check_primitive_type()
+#         elif is_array(self._type):
+#             self._check_array_type()
+#         elif is_object(self._type):
+#             self._check_object_type()
+#         elif self.models:
+#             self._check_complex_type()
+#
+#     def _check_primitive_type(self):
+#         """Validate value is of primitive type
+#         Also converts swagger type to py type if needed e.g. datetime
+#         """
+#         ptype = get_primitive_mapping(self._type)
+#         if not isinstance(self.value, ptype):
+#             # convert string datetime to python datetime format
+#             if ptype == datetime.datetime:
+#                 self.value = dateutil.parser.parse(self.value)
+#             elif ptype == datetime.date:
+#                 self.value = dateutil.parser.parse(self.value).date()
+#             else:
+#                 # For all the other cases, raise Type mismatch
+#                 raise TypeError("%s's value: %s should be in types %r" % (
+#                     self.name, self.value, ptype))
+#
+#     def _check_array_type(self):
+#         """Validate array type value is actually array type
+#         Also recursively converts value array to list of item array types
+#         """
+#         if self.value is None:
+#             raise TypeError("Array found as null")
+#         if self.value.__class__ is not list:
+#             raise TypeError("%r should be an array instead of %s" %
+#                             (self.value, self.value.__class__.__name__))
+#         array_item_type = get_array_item_type(self._type)
+#         self.value = [SwaggerTypeCheck(
+#             "%s's item" % self.name,
+#             item, array_item_type, self.models, self.allow_null).value
+#             for item in self.value]
+#
+#     def _check_object_type(self):
+#         if not isinstance(self.value, dict):
+#             raise TypeError(
+#                 "Type for {0} is expected to be a dict but is {1) instead"
+#                 .format(self.value, type(self.value)))
+#
+#     def _check_complex_type(self):
+#         """Checks all the fields in the complex type are of proper type
+#
+#         All the required fields are present and no extra field is present
+#         """
+#         klass = self.models.get(self._type)
+#
+#         if isinstance(self.value, klass):
+#             self.value = self.value._flat_dict()
+#
+#         # The only valid type from this point on is JSON dict
+#         if not isinstance(self.value, dict):
+#             raise TypeError(
+#                 "Type for {0} is expected to be object".format(self.value))
+#
+#         required = list(klass._required) if klass._required else []
+#
+#         for key in self.value.keys():
+#             if key in required:
+#                 required.remove(key)
+#             if key not in klass._swagger_types.keys():
+#                 # Ignore unrecognized keys
+#                 continue
+#             self.value[key] = SwaggerTypeCheck(
+#                 key,
+#                 self.value[key],
+#                 klass._swagger_types[key],
+#                 self.models,
+#                 self.allow_null).value
+#
+#         if required:
+#             raise AssertionError("These required fields not present: %s" %
+#                                  required)
 
 
 def is_dict_like(spec):
