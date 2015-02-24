@@ -47,12 +47,13 @@ def create_model_type(model_name, model_spec):
     methods = dict(
         __doc__=docstring_property(partial(create_model_docstring, model_spec)),
         __eq__=lambda self, other: compare(self, other),
-        __init__=lambda self, **kwargs: set_props(self, **kwargs),
+        #__init__=lambda self, **kwargs: set_props(self, **kwargs),
+        __init__=lambda self, **kwargs: model_constructor(self, model_spec, kwargs),
         __repr__=lambda self: create_model_repr(self),
         __dir__=lambda self: props.keys(),
-        _flat_dict=lambda self: create_flat_dict(self),
-        _swagger_types=swagger_type.get_swagger_types(props),
-        _required=model_spec.get('required'),
+        _flat_dict=lambda self: create_flat_dict(self),        # TODO: remove
+        _swagger_types=swagger_type.get_swagger_types(props),  # TODO: remove
+        _required=model_spec.get('required'),                  # TODO: remove
     )
     return type(str(model_name), (object,), methods)
 
@@ -101,6 +102,35 @@ def set_props(model, **kwargs):
         setattr(model, prop_name, prop_value)
     if arg_keys:
         raise AttributeError(" %s are not defined for %s." % (arg_keys, model))
+
+
+def model_constructor(model, model_spec, constructor_kwargs):
+    """Constructor for the given model. Just assigns kwargs as attrs on the
+    model based on the 'properties' in the model specification.
+
+    :param model: Instance of a model type
+    :type model: type
+    :param model_spec: model specification
+    :type model_spec: dict
+    :param constructor_kwargs: kwargs sent in to the constructor invocation
+    :type constructor_kwargs: dict
+    :raises: AttributeError on constructor_kwargs that don't exist in the
+        model specification's list of properties
+    """
+    arg_names = constructor_kwargs.keys()
+
+    for attr_name, attr_spec in model_spec['properties'].iteritems():
+        if attr_name in arg_names:
+            attr_value = constructor_kwargs[attr_name]
+            arg_names.remove(attr_name)
+        else:
+            attr_value = None
+        setattr(model, attr_name, attr_value)
+
+    if arg_names:
+        raise AttributeError(
+            "Model {0} does not have attributes for: {1}"
+            .format(type(model), arg_names))
 
 
 def create_model_repr(model):
@@ -212,7 +242,7 @@ def create_model_docstring(model_spec):
         schema_type = attr_spec['type']
 
         if schema_type in SWAGGER20_PRIMITIVES:
-            # TODO: update to python types eventually
+            # TODO: update to python types and take 'format' into account
             attr_type = schema_type
 
         elif schema_type == 'array':
