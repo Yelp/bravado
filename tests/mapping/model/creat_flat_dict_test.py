@@ -1,7 +1,7 @@
 from bravado.mapping.model import create_flat_dict, create_model_type
 
 
-def test_simple_model(user_model):
+def test_simple_model(user_type):
     expected = {
         'email': 'darwin@woof.com',
         'firstName': 'Darwin',
@@ -12,7 +12,7 @@ def test_simple_model(user_model):
         'userStatus': 9,
         'username': 'darwin'
     }
-    user = user_model(**expected)
+    user = user_type(**expected)
     assert expected == create_flat_dict(user)
 
 

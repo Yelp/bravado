@@ -47,8 +47,8 @@ def create_model_type(model_name, model_spec):
     methods = dict(
         __doc__=docstring_property(partial(create_model_docstring, model_spec)),
         __eq__=lambda self, other: compare(self, other),
-        #__init__=lambda self, **kwargs: set_props(self, **kwargs),
-        __init__=lambda self, **kwargs: model_constructor(self, model_spec, kwargs),
+        __init__=lambda self, **kwargs: model_constructor(self, model_spec,
+                                                          kwargs),
         __repr__=lambda self: create_model_repr(self),
         __dir__=lambda self: props.keys(),
         _flat_dict=lambda self: create_flat_dict(self),        # TODO: remove
@@ -80,33 +80,9 @@ def compare(first, second):
     return norm_dict(first.__dict__) == norm_dict(second.__dict__)
 
 
-def set_props(model, **kwargs):
-    """Constructor for the generated type - assigns given or default values
-
-    :param model: generated model type
-    :type model: type
-    :param kwargs: attributes to override default values of constructor
-    :type kwargs: dict
-    """
-    types = getattr(model, '_swagger_types')
-    arg_keys = kwargs.keys()
-    for prop_name, prop_swagger_type in types.iteritems():
-        python_type = swagger_type.swagger_to_py_type(prop_swagger_type)
-        # Assign all property values specified in kwargs
-        if prop_name in arg_keys:
-            prop_value = kwargs[prop_name]
-            arg_keys.remove(prop_name)
-        else:
-            # If not in kwargs, provide a default value to the type
-            prop_value = swagger_type.get_instance(python_type)
-        setattr(model, prop_name, prop_value)
-    if arg_keys:
-        raise AttributeError(" %s are not defined for %s." % (arg_keys, model))
-
-
 def model_constructor(model, model_spec, constructor_kwargs):
-    """Constructor for the given model. Just assigns kwargs as attrs on the
-    model based on the 'properties' in the model specification.
+    """Constructor for the given model instance. Just assigns kwargs as attrs
+    on the model based on the 'properties' in the model specification.
 
     :param model: Instance of a model type
     :type model: type

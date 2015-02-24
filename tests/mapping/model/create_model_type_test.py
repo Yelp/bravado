@@ -26,12 +26,18 @@ def test_pet_model(pet_spec):
 
 def test_no_arg_constructor(pet_spec):
     Pet = create_model_type('Pet', pet_spec)
-    pet = Pet()
-    assert isinstance(pet.id, long)
-    assert isinstance(pet.photoUrls, list)
-    assert isinstance(pet.name, str)
-    assert isinstance(pet.tags, list)
-    # pet.category is None so no type to check for
+    attr_names = (
+        #'__doc__',  <-- will trigger docstring generation so skip for now
+        '__eq__',
+        '__init__',
+        '__repr__',
+        '__dir__',
+        '_flat_dict',
+        '_swagger_types',
+        '_required',
+    )
+    for attr_name in attr_names:
+        assert hasattr(Pet, attr_name)
 
 
 @mock.patch('bravado.mapping.model.create_model_docstring', autospec=True)

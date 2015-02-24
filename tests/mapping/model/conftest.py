@@ -105,8 +105,19 @@ def user_spec(definitions_spec):
 
 
 @pytest.fixture
-def user(user_spec):
+def user_type(user_spec):
+    """
+    :rtype: User
+    """
     return create_model_type('User', user_spec)
+
+
+@pytest.fixture
+def user(user_type):
+    """
+    :return: instance of a User
+    """
+    return user_type()
 
 
 @pytest.fixture
