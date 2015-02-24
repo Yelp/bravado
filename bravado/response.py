@@ -7,8 +7,7 @@
 """Code for checking the response from API. If correct, it proceeds to convert
 it into Python class types
 """
-import swagger_type
-from swagger_type import SwaggerTypeCheck
+from bravado.mapping.response import ResponseLike
 from bravado.exception import CancelledError
 
 
@@ -79,138 +78,18 @@ class HTTPFuture(object):
         return self._post_receive(response, **kwargs)
 
 
-def post_receive(response, type_, models, **kwargs):
-    """Convert the response body to swagger models.
+class RequestsLibResponseAdapter(ResponseLike):
+    """Wraps a requests.models.Response object to provider a uniform interface
+    to the response innards.
 
-    Example API Response
-
-    .. code-block:: python
-
-            {
-                "id": 1,
-                "category": {
-                    "name": "chihuahua"
-                },
-                "name": "tommy",
-                "photoUrls": [
-                    ""
-                ],
-                "tags": [
-                    {
-                        "name": "cute"
-                    }
-                ],
-                "status": "available"
-            }
-
-    SwaggerResponse:
-
-    ..code-block:: python
-
-        Pet(category=Category(id=0L, name=u'chihuahua'),
-            status=u'available', name=u'tommy',
-            tags=[Tag(id=0L, name=u'cute')], photoUrls=[u''], id=1)
-
-    :param response: response body
-    :type response: dict
-    :param type_: expected swagger type
-    :type type_: str or unicode
-    :param models: namedtuple which maps complex type string to py type
-    :type models: namedtuple
+    :type requests_lib_response: :class:`requests.models.Response`
     """
-    allow_null = kwargs.pop('allow_null', False)
+    def __init__(self, requests_lib_response):
+        self._delegate = requests_lib_response
 
-    if kwargs.pop('raw_response', False):
-        return response
+    @property
+    def status_code(self):
+        return self._delegate.status_code
 
-    # Response had data, but responses in spec didn't match it so type_ is
-    # not known
-    if type_ is None:
-        return response
-
-    response = SwaggerTypeCheck(
-        "Response",
-        response,
-        type_,
-        models,
-        allow_null).value
-    return SwaggerResponseConstruct(response, type_, models).create_object()
-
-
-class SwaggerResponseConstruct(object):
-
-    def __init__(self, response, type_, models):
-        """Ctor to set the params
-
-        :param _response: JSON response
-        :type _response: dict
-        :param type_: type against which the response is to be validated
-        :type type_: str or unicode
-        :param models: namedtuple which maps complex type string to py type
-        :type models: namedtuple
-        """
-        self._response = response
-        self._type = type_
-        self._models = models
-
-    def create_object(self):
-        """Only public method in the class
-
-        Creates the object assuming the response is checked and valid
-
-        :returns: instance of complex Py object or simple primitive object
-        """
-        if self._response is None:
-            return
-
-        if swagger_type.is_primitive(self._type):
-            return self._response
-
-        if swagger_type.is_array(self._type):
-            return self._create_array_object()
-
-        if swagger_type.is_object(self._type):
-            return self._create_object()
-
-        return self._create_complex_object()
-
-    def _create_array_object(self):
-        """Creates array item objects by recursive call to create_object()
-        Assume the response is validated and correct
-        """
-        array_item_type = swagger_type.get_array_item_type(self._type)
-        return [
-            SwaggerResponseConstruct(
-                item, array_item_type, self._models).create_object()
-            for item in self._response
-        ]
-
-    def _create_object(self):
-        return self._response
-        # need #/paths/{path_name}/{http_method}/responses/{status_code}/schema
-        # to be able to turn the json response into a dict
-
-    def _create_complex_object(self):
-        """Creates empty instance of complex object and then fills it with attrs
-        Assume the response is validated and correct
-        """
-        klass = self._models[self._type]
-        instance = klass()
-        setattr(instance, '_raw', self._response)
-        for key in self._response.keys():
-            type_ = klass._swagger_types.get(key)
-
-            if type_ is None:
-                # Ignore unrecognized keys.  They will still be accessible in
-                # the '_raw' field if needed.
-                continue
-
-            swagger_response = SwaggerResponseConstruct(
-                self._response[key],
-                type_,
-                self._models)
-
-            val = swagger_response.create_object()
-            setattr(instance, key, val)
-
-        return instance
+    def json(self, **kwargs):
+        return self._delegate.json(**kwargs)
