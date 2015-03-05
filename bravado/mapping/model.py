@@ -1,10 +1,8 @@
-from copy import copy
 from functools import partial
 
-from bravado import swagger_type
 from bravado.mapping.docstring import docstring_property
-from bravado.mapping.docstring import create_model_docstring
-from bravado.swagger_type import is_dict_like, is_list_like
+from bravado.swagger_type import is_dict_like, is_list_like, \
+    SWAGGER20_PRIMITIVES
 
 
 # Models in #/definitions are tagged with this key so that they can be
@@ -45,14 +43,12 @@ def create_model_type(model_name, model_spec):
     props = model_spec['properties']
 
     methods = dict(
-        __doc__=docstring_property(partial(create_model_docstring, props)),
+        __doc__=docstring_property(partial(create_model_docstring, model_spec)),
         __eq__=lambda self, other: compare(self, other),
-        __init__=lambda self, **kwargs: set_props(self, **kwargs),
+        __init__=lambda self, **kwargs: model_constructor(self, model_spec,
+                                                          kwargs),
         __repr__=lambda self: create_model_repr(self),
         __dir__=lambda self: props.keys(),
-        _flat_dict=lambda self: create_flat_dict(self),
-        _swagger_types=swagger_type.get_swagger_types(props),
-        _required=model_spec.get('required'),
     )
     return type(str(model_name), (object,), methods)
 
@@ -79,87 +75,57 @@ def compare(first, second):
     return norm_dict(first.__dict__) == norm_dict(second.__dict__)
 
 
-def set_props(model, **kwargs):
-    """Constructor for the generated type - assigns given or default values
+def model_constructor(model, model_spec, constructor_kwargs):
+    """Constructor for the given model instance. Just assigns kwargs as attrs
+    on the model based on the 'properties' in the model specification.
 
-    :param model: generated model type
+    :param model: Instance of a model type
     :type model: type
-    :param kwargs: attributes to override default values of constructor
-    :type kwargs: dict
+    :param model_spec: model specification
+    :type model_spec: dict
+    :param constructor_kwargs: kwargs sent in to the constructor invocation
+    :type constructor_kwargs: dict
+    :raises: AttributeError on constructor_kwargs that don't exist in the
+        model specification's list of properties
     """
-    types = getattr(model, '_swagger_types')
-    arg_keys = kwargs.keys()
-    for prop_name, prop_swagger_type in types.iteritems():
-        python_type = swagger_type.swagger_to_py_type(prop_swagger_type)
-        # Assign all property values specified in kwargs
-        if prop_name in arg_keys:
-            prop_value = kwargs[prop_name]
-            arg_keys.remove(prop_name)
+    arg_names = constructor_kwargs.keys()
+
+    for attr_name, attr_spec in model_spec['properties'].iteritems():
+        if attr_name in arg_names:
+            attr_value = constructor_kwargs[attr_name]
+            arg_names.remove(attr_name)
         else:
-            # If not in kwargs, provide a default value to the type
-            prop_value = swagger_type.get_instance(python_type)
-        setattr(model, prop_name, prop_value)
-    if arg_keys:
-        raise AttributeError(" %s are not defined for %s." % (arg_keys, model))
+            attr_value = None
+        setattr(model, attr_name, attr_value)
+
+    if arg_names:
+        raise AttributeError(
+            "Model {0} does not have attributes for: {1}"
+            .format(type(model), arg_names))
 
 
-def create_model_repr(model):
+def create_model_repr(model, model_spec):
     """Generates the repr string for the model.
 
-    :param model: generated model type
-    :type model: type
+    :param model: Instance of a model
+    :param model_spec: model specification
+    :type model_spec: dict
     :returns: repr string for the model
     """
-    repr = [
-        ("%s=%r" % (prop, getattr(model, prop)))
-        for prop in sorted(getattr(model, '_swagger_types'))
+    s = [
+        "{0}={1}".format(attr_name, getattr(model, attr_name))
+        for attr_name in sorted(model_spec['properties'].keys())
     ]
-    return "%s(%s)" % (model.__class__.__name__, ', '.join(repr))
-
-
-def create_flat_dict(model):
-    """Generates __dict__ of the model traversing recursively
-    each of the list item of an array and calling it again.
-    While __dict__ only converts it on one level.
-
-    :param model: generated model type reference
-    :type model: type
-    :returns: flat dict repr of the model
-
-    Example: ::
-
-        Pet(id=3, name="Name", photoUrls=["7"], tags=[Tag(id=2, name='T')])
-
-    converts to: ::
-
-        {'id': 3,
-         'name': 'Name',
-         'photoUrls': ['7'],
-         'tags': [{'id': 2,
-                   'name': 'T'}
-                 ]
-         }
-    """
-    if not hasattr(model, '__dict__'):
-        return model
-    model_dict = copy(model.__dict__)
-    for k, v in model.__dict__.iteritems():
-        if isinstance(v, list):
-            model_dict[k] = [create_flat_dict(x) for x in v if x is not None]
-        elif v is None:
-            # Remove None values from dict to avoid their type checking
-            if model._required and k in model._required:
-                raise AttributeError("Required field %s can not be None" % k)
-            model_dict.pop(k)
-        else:
-            model_dict[k] = create_flat_dict(v)
-    return model_dict
+    return "{0}({1})".format(model.__class__.__name__, ', '.join(s))
 
 
 def tag_models(spec_dict):
+    """Tag #/definitions as being models with a 'x-model' key so that they can
+    be recognized after jsonref inlines $refs.
+
+    :param spec_dict: swagger spec in dict form
+    """
     # TODO: unit test + docstring
-    # Tag #/definitions as being models with a 'x-model' key so that they can
-    # be recognized after jsonref inlines $refs
     models_dict = spec_dict.get('definitions', {})
     for model_name, model_spec in models_dict.iteritems():
         model_type = model_spec.get('type')
@@ -201,4 +167,47 @@ def fix_malformed_model_refs(spec):
 
 
 def is_model(spec):
+    """
+    :param spec: specification for a swagger object
+    :type spec: dict
+    :return: True if the spec has been "marked" as a model type.
+    """
     return MODEL_MARKER in spec
+
+
+def create_model_docstring(model_spec):
+    """
+    :param model_spec: specification for a model in dict form
+    :rtype: string
+    """
+    s = "Attributes:\n\n\t"
+    attr_iter = iter(sorted(model_spec['properties'].iteritems()))
+    # TODO: Add more stuff available in the spec - 'required', 'example', etc
+    for attr_name, attr_spec in attr_iter:
+        schema_type = attr_spec['type']
+
+        if schema_type in SWAGGER20_PRIMITIVES:
+            # TODO: update to python types and take 'format' into account
+            attr_type = schema_type
+
+        elif schema_type == 'array':
+            array_spec = attr_spec['items']
+            if is_model(array_spec):
+                array_type = array_spec[MODEL_MARKER]
+            else:
+                array_type = array_spec['type']
+            attr_type = "list of {0}".format(array_type)
+
+        elif is_model(attr_spec):
+            attr_type = attr_spec[MODEL_MARKER]
+
+        elif schema_type == 'object':
+            attr_type = 'dict'
+
+        s += "{0}: {1}".format(attr_name, attr_type)
+
+        if attr_spec.get('description'):
+            s += " - {0}".format(attr_spec['description'])
+
+        s += '\n\t'
+    return s

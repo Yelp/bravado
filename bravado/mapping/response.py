@@ -30,4 +30,8 @@ class ResponseLike(object):
             "'{0}' object has no attribute '{1}'".format(type(self), name))
 
     def json(self, **kwargs):
+        """
+        :return: response content in a json-like form
+        :rtype: int, float, double, string, unicode, list, dict
+        """
         raise NotImplementedError("Implement json() in {0}".format(type(self)))

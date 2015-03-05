@@ -39,4 +39,4 @@ def petstore_dict():
 
 @pytest.fixture
 def petstore_spec(petstore_dict):
-    return Spec(petstore_dict)
+    return Spec.from_dict(petstore_dict)
