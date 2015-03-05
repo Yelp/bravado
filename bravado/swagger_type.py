@@ -3,7 +3,6 @@
 """
 
 import datetime
-import dateutil.parser
 import logging
 import jsonref
 

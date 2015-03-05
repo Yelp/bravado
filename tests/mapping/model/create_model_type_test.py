@@ -19,7 +19,7 @@ def test_pet_model(pet_spec):
 def test_no_arg_constructor(pet_spec):
     Pet = create_model_type('Pet', pet_spec)
     attr_names = (
-        #'__doc__',  <-- will trigger docstring generation so skip for now
+        # '__doc__',  <-- will trigger docstring generation so skip for now
         '__eq__',
         '__init__',
         '__repr__',
