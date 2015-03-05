@@ -20,12 +20,12 @@ def register_format(format, to_wire, to_python, description=None):
     _formatters[format] = (to_wire, to_python, description)
 
 
-def to_wire(value, spec):
+def to_wire(spec, value):
     """Converts a python primitive or object to a reasonable wire
     representation given the 'format' in the given spec.
 
-    :type value: int, long, float, boolean, string, unicode, etc
     :param spec: spec for a primitive type as a dict
+    :type value: int, long, float, boolean, string, unicode, etc
     :rtype: int, long, float, boolean, string, unicode, etc
     """
     if value is None or not schema.has_format(spec):
@@ -35,12 +35,12 @@ def to_wire(value, spec):
     return to_wire(value)
 
 
-def to_python(value, spec):
+def to_python(spec, value):
     """Converts a value in wire format to its python representation given
     the 'format' in the given spec.
 
-    :type value: int, long, float, boolean, string, unicode, etc
     :param spec: spec for a primitive type as a dict
+    :type value: int, long, float, boolean, string, unicode, etc
     :rtype: int, long, float, boolean, string, object, etc
     """
     if value is None or not schema.has_format(spec):
