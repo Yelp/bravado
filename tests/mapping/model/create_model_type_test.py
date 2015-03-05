@@ -14,24 +14,19 @@ def test_pet_model(pet_spec):
     assert set(dir(pet)) == expected
     assert pet == Pet(id=1, name='Darwin')
     assert pet != Pet(id=2, name='Fido')
-    assert Pet._swagger_types == {
-        'id': 'integer:int64',
-        'category': '#/definitions/Category',
-        'name': 'string',
-        'photoUrls': 'array:string',
-        'tags': 'array:#/definitions/Tag'
-    }
-    assert Pet._required == ['name', 'photoUrls']
 
 
 def test_no_arg_constructor(pet_spec):
     Pet = create_model_type('Pet', pet_spec)
-    pet = Pet()
-    assert isinstance(pet.id, long)
-    assert isinstance(pet.photoUrls, list)
-    assert isinstance(pet.name, str)
-    assert isinstance(pet.tags, list)
-    # pet.category is None so no type to check for
+    attr_names = (
+        # '__doc__',  <-- will trigger docstring generation so skip for now
+        '__eq__',
+        '__init__',
+        '__repr__',
+        '__dir__',
+    )
+    for attr_name in attr_names:
+        assert hasattr(Pet, attr_name)
 
 
 @mock.patch('bravado.mapping.model.create_model_docstring', autospec=True)
@@ -43,7 +38,7 @@ def test_create_model_type_lazy_docstring(mock_create_docstring):
     pet_type = create_model_type('Pet', pet_spec)
     assert not mock_create_docstring.called
     assert pet_type.__doc__ == mock_create_docstring.return_value
-    mock_create_docstring.assert_called_once_with(pet_spec['properties'])
+    mock_create_docstring.assert_called_once_with(pet_spec)
 
 
 # ################################################################
