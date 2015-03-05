@@ -109,18 +109,19 @@ def model_constructor(model, model_spec, constructor_kwargs):
             .format(type(model), arg_names))
 
 
-def create_model_repr(model):
+def create_model_repr(model, model_spec):
     """Generates the repr string for the model.
 
-    :param model: generated model type
-    :type model: type
+    :param model: Instance of a model
+    :param model_spec: model specification
+    :type model_spec: dict
     :returns: repr string for the model
     """
-    repr = [
-        ("%s=%r" % (prop, getattr(model, prop)))
-        for prop in sorted(getattr(model, '_swagger_types'))
+    s = [
+        "{0}={1}".format(attr_name, getattr(model, attr_name))
+        for attr_name in sorted(model_spec['properties'].keys())
     ]
-    return "%s(%s)" % (model.__class__.__name__, ', '.join(repr))
+    return "{0}({1})".format(model.__class__.__name__, ', '.join(s))
 
 
 def create_flat_dict(model):
