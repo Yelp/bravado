@@ -2,7 +2,7 @@
 Support for the 'format' key in the swagger spec as outlined in
 https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#dataTypeFormat
 """
-import dateutil
+import dateutil.parser
 
 from bravado.mapping import schema
 
