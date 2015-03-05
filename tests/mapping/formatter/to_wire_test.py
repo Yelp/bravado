@@ -3,13 +3,23 @@ from datetime import datetime, date
 from bravado.mapping.formatter import to_wire
 
 
-def test_datetime():
-    result = to_wire(datetime(2015, 3, 22, 13, 19, 54), {'format': 'date-time'})
-    assert '2015-03-22T13:19:54' == result
+def test_none():
+    spec = {'type': 'string', 'format': 'date'}
+    assert to_wire(None, spec) is None
+
+
+def test_no_format_returns_value():
+    spec = {'type': 'string'}
+    assert 'boo' == to_wire('boo', spec)
 
 
 def test_date():
     assert '2015-04-01' == to_wire(date(2015, 4, 1), {'format': 'date'})
+
+
+def test_datetime():
+    result = to_wire(datetime(2015, 3, 22, 13, 19, 54), {'format': 'date-time'})
+    assert '2015-03-22T13:19:54' == result
 
 
 def test_int64_long():

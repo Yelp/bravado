@@ -3,6 +3,16 @@ from datetime import date, datetime
 from bravado.mapping.formatter import to_python
 
 
+def test_none():
+    spec = {'type': 'string', 'format': 'date'}
+    assert to_python(None, spec) is None
+
+
+def test_no_format_returns_value():
+    spec = {'type': 'string'}
+    assert 'boo' == to_python('boo', spec)
+
+
 def test_date():
     spec = {'type': 'string', 'format': 'date'}
     assert date(2015, 4, 1) == to_python('2015-04-01', spec)

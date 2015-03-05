@@ -50,6 +50,7 @@ def to_python(value, spec):
     return to_python(value)
 
 
+# Default registered formats
 _formatters = {
     'date': (
         lambda d: d.isoformat(),
@@ -79,5 +80,4 @@ _formatters = {
         lambda b: b if isinstance(b, str) else str(b),
         lambda b: b if isinstance(b, str) else str(b),
         'Converts string:byte <==> python str'),
-
 }
