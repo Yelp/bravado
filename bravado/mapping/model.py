@@ -1,7 +1,5 @@
-from copy import copy
 from functools import partial
 
-from bravado import swagger_type
 from bravado.mapping.docstring import docstring_property
 from bravado.swagger_type import is_dict_like, is_list_like, \
     SWAGGER20_PRIMITIVES
@@ -51,8 +49,6 @@ def create_model_type(model_name, model_spec):
                                                           kwargs),
         __repr__=lambda self: create_model_repr(self),
         __dir__=lambda self: props.keys(),
-        _flat_dict=lambda self: create_flat_dict(self),        # TODO: remove
-        _required=model_spec.get('required'),                  # TODO: remove
     )
     return type(str(model_name), (object,), methods)
 
@@ -121,46 +117,6 @@ def create_model_repr(model, model_spec):
         for attr_name in sorted(model_spec['properties'].keys())
     ]
     return "{0}({1})".format(model.__class__.__name__, ', '.join(s))
-
-
-# TODO: remove
-def create_flat_dict(model):
-    """Generates __dict__ of the model traversing recursively
-    each of the list item of an array and calling it again.
-    While __dict__ only converts it on one level.
-
-    :param model: generated model type reference
-    :type model: type
-    :returns: flat dict repr of the model
-
-    Example: ::
-
-        Pet(id=3, name="Name", photoUrls=["7"], tags=[Tag(id=2, name='T')])
-
-    converts to: ::
-
-        {'id': 3,
-         'name': 'Name',
-         'photoUrls': ['7'],
-         'tags': [{'id': 2,
-                   'name': 'T'}
-                 ]
-         }
-    """
-    if not hasattr(model, '__dict__'):
-        return model
-    model_dict = copy(model.__dict__)
-    for k, v in model.__dict__.iteritems():
-        if isinstance(v, list):
-            model_dict[k] = [create_flat_dict(x) for x in v if x is not None]
-        elif v is None:
-            # Remove None values from dict to avoid their type checking
-            if model._required and k in model._required:
-                raise AttributeError("Required field %s can not be None" % k)
-            model_dict.pop(k)
-        else:
-            model_dict[k] = create_flat_dict(v)
-    return model_dict
 
 
 def tag_models(spec_dict):

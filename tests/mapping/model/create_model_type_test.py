@@ -14,7 +14,6 @@ def test_pet_model(pet_spec):
     assert set(dir(pet)) == expected
     assert pet == Pet(id=1, name='Darwin')
     assert pet != Pet(id=2, name='Fido')
-    assert Pet._required == ['name', 'photoUrls']
 
 
 def test_no_arg_constructor(pet_spec):
@@ -25,8 +24,6 @@ def test_no_arg_constructor(pet_spec):
         '__init__',
         '__repr__',
         '__dir__',
-        '_flat_dict',
-        '_required',
     )
     for attr_name in attr_names:
         assert hasattr(Pet, attr_name)
