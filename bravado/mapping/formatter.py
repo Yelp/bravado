@@ -68,6 +68,9 @@ _formatters = {
         lambda i: i if isinstance(i, int) else int(i),
         lambda i: i if isinstance(i, int) else int(i),
         'Converts integer:int32 <==> python int'),
+    # Consider using Decimal (https://docs.python.org/2/library/decimal.html)
+    # as the python representation for number:float and number:double given
+    # the number of benefits is brings to the table.
     'float': (
         lambda f: f if isinstance(f, float) else float(f),
         lambda f: f if isinstance(f, float) else float(f),
