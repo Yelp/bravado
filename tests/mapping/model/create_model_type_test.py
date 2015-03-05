@@ -14,13 +14,6 @@ def test_pet_model(pet_spec):
     assert set(dir(pet)) == expected
     assert pet == Pet(id=1, name='Darwin')
     assert pet != Pet(id=2, name='Fido')
-    assert Pet._swagger_types == {
-        'id': 'integer:int64',
-        'category': '#/definitions/Category',
-        'name': 'string',
-        'photoUrls': 'array:string',
-        'tags': 'array:#/definitions/Tag'
-    }
     assert Pet._required == ['name', 'photoUrls']
 
 
@@ -33,7 +26,6 @@ def test_no_arg_constructor(pet_spec):
         '__repr__',
         '__dir__',
         '_flat_dict',
-        '_swagger_types',
         '_required',
     )
     for attr_name in attr_names:

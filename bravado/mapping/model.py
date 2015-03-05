@@ -52,7 +52,6 @@ def create_model_type(model_name, model_spec):
         __repr__=lambda self: create_model_repr(self),
         __dir__=lambda self: props.keys(),
         _flat_dict=lambda self: create_flat_dict(self),        # TODO: remove
-        _swagger_types=swagger_type.get_swagger_types(props),  # TODO: remove
         _required=model_spec.get('required'),                  # TODO: remove
     )
     return type(str(model_name), (object,), methods)
@@ -124,6 +123,7 @@ def create_model_repr(model, model_spec):
     return "{0}({1})".format(model.__class__.__name__, ', '.join(s))
 
 
+# TODO: remove
 def create_flat_dict(model):
     """Generates __dict__ of the model traversing recursively
     each of the list item of an array and calling it again.
@@ -164,9 +164,12 @@ def create_flat_dict(model):
 
 
 def tag_models(spec_dict):
+    """Tag #/definitions as being models with a 'x-model' key so that they can
+    be recognized after jsonref inlines $refs.
+
+    :param spec_dict: swagger spec in dict form
+    """
     # TODO: unit test + docstring
-    # Tag #/definitions as being models with a 'x-model' key so that they can
-    # be recognized after jsonref inlines $refs
     models_dict = spec_dict.get('definitions', {})
     for model_name, model_spec in models_dict.iteritems():
         model_type = model_spec.get('type')
@@ -208,10 +211,19 @@ def fix_malformed_model_refs(spec):
 
 
 def is_model(spec):
+    """
+    :param spec: specification for a swagger object
+    :type spec: dict
+    :return: True if the spec has been "marked" as a model type.
+    """
     return MODEL_MARKER in spec
 
 
 def create_model_docstring(model_spec):
+    """
+    :param model_spec: specification for a model in dict form
+    :rtype: string
+    """
     s = "Attributes:\n\n\t"
     attr_iter = iter(sorted(model_spec['properties'].iteritems()))
     # TODO: Add more stuff available in the spec - 'required', 'example', etc
