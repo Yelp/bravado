@@ -62,7 +62,7 @@ def unmarshal_primitive(spec, value):
         #       breadcrumbs.
         raise TypeError('Spec {0} says this is a required value'.format(spec))
 
-    value = formatter.from_wire(spec, value)
+    value = formatter.to_python(spec, value)
     jsonschema.validate(value, spec)
     return value
 
