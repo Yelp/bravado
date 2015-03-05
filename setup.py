@@ -32,6 +32,6 @@ setup(
         "python-dateutil",
         "requests",
         "twisted",
-        "yelp_uri",
+        "yelp_uri >= 1.0.1",
     ],
 )
