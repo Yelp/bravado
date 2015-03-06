@@ -11,7 +11,7 @@ JSONSCHEMA_PRIMITIVE_VALIDATIONS = {
     'null': (),
 }
 
-SWAGGER20_PRIMITIVES = (
+SWAGGER_PRIMITIVES = (
     'integer',
     'number',
     'string',
@@ -109,7 +109,7 @@ def to_array_schema(array_spec):
             if key == 'items':
                 items_spec = value
                 items_type = items_spec['type']
-                if items_type in SWAGGER20_PRIMITIVES:
+                if items_type in SWAGGER_PRIMITIVES:
                     schema[key] = to_primitive_schema(items_spec)
                 elif items_type == 'array':
                     # nested arrays

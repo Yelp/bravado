@@ -7,7 +7,7 @@ from bravado.mapping.model import is_model, MODEL_MARKER
 from bravado.mapping.schema import (
     is_dict_like,
     is_list_like,
-    SWAGGER20_PRIMITIVES
+    SWAGGER_PRIMITIVES
 )
 
 
@@ -28,7 +28,7 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
     """
     obj_type = schema_object_spec['type']
 
-    if obj_type in SWAGGER20_PRIMITIVES:
+    if obj_type in SWAGGER_PRIMITIVES:
         return marshal_primitive(schema_object_spec, value)
 
     elif obj_type == 'array':

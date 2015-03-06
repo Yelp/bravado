@@ -4,7 +4,7 @@ from bravado.mapping.docstring import docstring_property
 from bravado.mapping.schema import (
     is_dict_like,
     is_list_like,
-    SWAGGER20_PRIMITIVES
+    SWAGGER_PRIMITIVES
 )
 
 
@@ -189,7 +189,7 @@ def create_model_docstring(model_spec):
     for attr_name, attr_spec in attr_iter:
         schema_type = attr_spec['type']
 
-        if schema_type in SWAGGER20_PRIMITIVES:
+        if schema_type in SWAGGER_PRIMITIVES:
             # TODO: update to python types and take 'format' into account
             attr_type = schema_type
 
