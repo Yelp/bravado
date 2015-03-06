@@ -14,6 +14,8 @@ def test_pet_model(pet_spec):
     assert set(dir(pet)) == expected
     assert pet == Pet(id=1, name='Darwin')
     assert pet != Pet(id=2, name='Fido')
+    assert "Pet(category=None, id=1, name=Darwin, photoUrls=None, tags=None)" \
+           == repr(pet)
 
 
 def test_no_arg_constructor(pet_spec):
