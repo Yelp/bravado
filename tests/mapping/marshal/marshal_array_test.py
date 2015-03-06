@@ -1,27 +1,27 @@
 import copy
 
+import pytest
+
 from bravado.mapping.marshal import marshal_array
 from bravado.mapping.spec import Spec
 
 
-def test_primitive_array(empty_swagger_spec):
-    int_array_spec = {
+@pytest.fixture
+def int_array_spec():
+    return {
         'type': 'array',
         'items': {
             'type': 'integer',
         }
     }
+
+
+def test_primitive_array(empty_swagger_spec, int_array_spec):
     result = marshal_array(empty_swagger_spec, int_array_spec, [1, 2, 3])
     assert [1, 2, 3] == result
 
 
-def test_empty_array(empty_swagger_spec):
-    int_array_spec = {
-        'type': 'array',
-        'items': {
-            'type': 'integer',
-        }
-    }
+def test_empty_array(empty_swagger_spec, int_array_spec):
     result = marshal_array(empty_swagger_spec, int_array_spec, [])
     assert [] == result
 

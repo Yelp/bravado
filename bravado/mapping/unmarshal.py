@@ -3,6 +3,7 @@ import jsonschema
 from bravado.exception import SwaggerError
 from bravado.mapping import formatter, schema
 from bravado.mapping.model import is_model, MODEL_MARKER
+from bravado.mapping.validate import validate_array, validate_primitive
 from bravado.swagger_type import SWAGGER20_PRIMITIVES, is_list_like, \
     is_dict_like
 
@@ -62,8 +63,8 @@ def unmarshal_primitive(spec, value):
         #       breadcrumbs.
         raise TypeError('Spec {0} says this is a required value'.format(spec))
 
+    validate_primitive(spec, value)
     value = formatter.to_python(spec, value)
-    jsonschema.validate(value, spec)
     return value
 
 
@@ -80,8 +81,8 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
         raise TypeError('Expected list like type for {0}:{1}'.format(
             type(array_value), array_value))
 
-    # TODO: could also do this in-place instead of allocating a new array. Think
-    #       about implications of this some more...
+    validate_array(array_spec, array_value)
+
     result = []
     for element in array_value:
         result.append(unmarshal_schema_object(
