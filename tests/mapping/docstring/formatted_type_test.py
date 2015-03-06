@@ -1,6 +1,6 @@
 import pytest
 
-from bravado.exception import SwaggerError
+from bravado.mapping.exception import SwaggerError
 from bravado.mapping.docstring import formatted_type
 
 

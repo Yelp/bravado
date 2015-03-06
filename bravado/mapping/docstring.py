@@ -1,6 +1,6 @@
 import logging
 
-from bravado.exception import SwaggerError
+from bravado.mapping.exception import SwaggerError
 
 
 log = logging.getLogger(__name__)

@@ -1,6 +1,6 @@
 import jsonref
 
-from bravado.exception import SwaggerError
+from bravado.mapping.exception import SwaggerError
 
 
 JSONSCHEMA_PRIMITIVE_VALIDATIONS = {

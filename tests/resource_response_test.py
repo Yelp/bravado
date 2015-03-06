@@ -66,7 +66,7 @@ from requests import HTTPError
 
 from bravado.client import SwaggerClient
 from bravado.exception import CancelledError
-from bravado.exception import SwaggerError
+from bravado.mapping.exception import SwaggerError
 from bravado.response import HTTPFuture
 
 

@@ -4,7 +4,7 @@ import requests.models
 
 from bravado.mapping.unmarshal import unmarshal_schema_object
 from bravado.response import HTTPFuture, RequestsLibResponseAdapter
-from bravado.exception import SwaggerError
+from bravado.mapping.exception import SwaggerError
 from bravado.mapping.param import Param, marshal_param
 
 log = logging.getLogger(__name__)
