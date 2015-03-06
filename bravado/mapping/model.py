@@ -47,7 +47,7 @@ def create_model_type(model_name, model_spec):
         __eq__=lambda self, other: compare(self, other),
         __init__=lambda self, **kwargs: model_constructor(self, model_spec,
                                                           kwargs),
-        __repr__=lambda self: create_model_repr(self),
+        __repr__=lambda self: create_model_repr(self, model_spec),
         __dir__=lambda self: props.keys(),
     )
     return type(str(model_name), (object,), methods)
