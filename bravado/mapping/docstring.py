@@ -1,6 +1,6 @@
 import logging
 
-from bravado import swagger_type
+from bravado.exception import SwaggerError
 
 
 log = logging.getLogger(__name__)
@@ -106,7 +106,7 @@ def create_operation_docstring(op):
         schema_spec = response_spec.get('schema')
         if schema_spec:
             s += ':rtype: {0}\n'.format(
-                swagger_type.get_swagger_type(schema_spec))
+                formatted_type(schema_spec))
     return s
 
 
@@ -135,10 +135,55 @@ def create_param_docstring(param_spec):
     s += "\n"
 
     if location == 'body':
-        param_type = swagger_type.get_swagger_type(param_spec.get('schema'))
+        param_type = formatted_type(param_spec.get('schema'))
     else:
         param_type = param_spec.get('type')
     s += ":type {0}: {1}\n".format(name, param_type)
 
     # TODO: Lot more stuff can go in here - see "Parameter Object" in 2.0 Spec.
     return s
+
+
+def formatted_type(spec):
+    """Returns the swagger type from a spec in a colon separated format.
+
+    Example:
+
+    .. code-block:: python
+
+        {
+            ...
+            "type": "array",
+            "items": {
+                 "type": "integer",
+                 "format": "int64"
+                 }
+            ...
+        }
+
+    Returns:
+
+    .. code-block:: python
+
+        "array:integer:int64"
+
+
+    :param spec: object spec in dict form
+    :rtype: str
+    """
+    # TODO: If the type is not specified, isn't it assumed to be 'object'? Find
+    #       docs where this is stated. #/definitions/{def_name}/ don't have
+    #       a 'type' but it always seems to be assumed as 'object'
+    obj_type = spec.get('type')
+    obj_format = spec.get('format')
+    ref = spec.get('$ref')
+    if obj_format and obj_type:
+        return "{0}:{1}".format(obj_type, obj_format)
+    elif obj_type == 'array':
+        return "{0}:{1}".format(obj_type, formatted_type(spec["items"]))
+    elif ref:
+        return ref
+    elif obj_type:
+        return obj_type
+    else:
+        raise SwaggerError("No proper type could be found from %s" % spec)

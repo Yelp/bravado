@@ -1,5 +1,6 @@
+import jsonref
+
 from bravado.exception import SwaggerError
-from bravado import swagger_type
 
 
 JSONSCHEMA_PRIMITIVE_VALIDATIONS = {
@@ -9,6 +10,14 @@ JSONSCHEMA_PRIMITIVE_VALIDATIONS = {
     'boolean': ('enum', 'default'),
     'null': (),
 }
+
+SWAGGER20_PRIMITIVES = (
+    'integer',
+    'number',
+    'string',
+    'boolean',
+    'null'     # TODO: Do we need this?
+)
 
 
 def has_default(schema_object_spec):
@@ -100,7 +109,7 @@ def to_array_schema(array_spec):
             if key == 'items':
                 items_spec = value
                 items_type = items_spec['type']
-                if items_type in swagger_type.SWAGGER20_PRIMITIVES:
+                if items_type in SWAGGER20_PRIMITIVES:
                     schema[key] = to_primitive_schema(items_spec)
                 elif items_type == 'array':
                     # nested arrays
@@ -109,3 +118,33 @@ def to_array_schema(array_spec):
                     raise SwaggerError(
                         'Item type {0} not supported'.format(items_type))
     return schema
+
+
+def is_dict_like(spec):
+    """Since we're using jsonref, identifying dicts while inspecting a swagger
+    spec is no longer limited to the dict type. This takes into account
+    jsonref's proxy objects that dereference to a dict.
+
+    :param spec: swagger object specification in dict form
+    :rtype: boolean
+    """
+    if type(spec) == dict:
+        return True
+    if type(spec) == jsonref.JsonRef and type(spec.__subject__) == dict:
+        return True
+    return False
+
+
+def is_list_like(spec):
+    """Since we're using jsonref, identifying arrays while inspecting a swagger
+    spec is no longer limited to the list type. This takes into account
+    jsonref's proxy objects that dereference to a list.
+
+    :param spec: swagger object specification in dict form
+    :rtype: boolean
+    """
+    if type(spec) == list:
+        return True
+    if type(spec) == jsonref.JsonRef and type(spec.__subject__) == list:
+        return True
+    return False

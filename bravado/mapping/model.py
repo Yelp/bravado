@@ -1,8 +1,11 @@
 from functools import partial
 
 from bravado.mapping.docstring import docstring_property
-from bravado.swagger_type import is_dict_like, is_list_like, \
+from bravado.mapping.schema import (
+    is_dict_like,
+    is_list_like,
     SWAGGER20_PRIMITIVES
+)
 
 
 # Models in #/definitions are tagged with this key so that they can be

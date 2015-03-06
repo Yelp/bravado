@@ -4,8 +4,11 @@ from bravado.exception import SwaggerError
 from bravado.mapping import schema
 from bravado.mapping import formatter
 from bravado.mapping.model import is_model, MODEL_MARKER
-from bravado.swagger_type import SWAGGER20_PRIMITIVES, is_list_like, \
-    is_dict_like
+from bravado.mapping.schema import (
+    is_dict_like,
+    is_list_like,
+    SWAGGER20_PRIMITIVES
+)
 
 
 def marshal_schema_object(swagger_spec, schema_object_spec, value):
