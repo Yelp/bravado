@@ -1,5 +1,3 @@
-import jsonschema
-
 from bravado.exception import SwaggerError
 from bravado.mapping import formatter, schema
 from bravado.mapping.model import is_model, MODEL_MARKER
