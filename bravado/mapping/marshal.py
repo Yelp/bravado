@@ -1,12 +1,10 @@
-import jsonschema
-
 from bravado.exception import SwaggerError
 from bravado.mapping import schema
 from bravado.mapping import formatter
 from bravado.mapping.model import is_model, MODEL_MARKER
 from bravado.swagger_type import SWAGGER20_PRIMITIVES, is_list_like, \
     is_dict_like
-from bravado.mapping.validate import validate_primitive
+from bravado.mapping.validate import validate_primitive, validate_array
 
 
 def marshal_schema_object(swagger_spec, schema_object_spec, value):
@@ -89,7 +87,7 @@ def marshal_array(swagger_spec, array_spec, array_value):
         result.append(marshal_schema_object(
             swagger_spec, array_spec['items'], element))
 
-    jsonschema.validate(result, array_spec)
+    validate_array(array_spec, result)
     return result
 
 

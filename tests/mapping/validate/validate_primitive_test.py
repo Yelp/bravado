@@ -69,3 +69,11 @@ def test_string_failure():
     with pytest.raises(ValidationError) as excinfo:
         validate_primitive(string_spec, 999)
     assert "is not of type 'string'" in str(excinfo.value)
+
+
+def test_doesnt_blow_up_when_spec_has_a_require_key():
+    string_spec = {
+        'type': 'string',
+        'require': True,
+    }
+    validate_primitive(string_spec, 'foo')
