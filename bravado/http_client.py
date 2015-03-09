@@ -197,6 +197,9 @@ class SynchronousEventual(object):
         self.session = session
         self.request = request
 
+    def result(self, *args, **kwargs):
+        return self.wait(*args, **kwargs)
+
     def wait(self, timeout=None):
         """Perform the request.
 

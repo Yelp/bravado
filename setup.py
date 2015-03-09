@@ -28,12 +28,11 @@ setup(
         "Programming Language :: Python",
     ],
     install_requires=[
-        "crochet",
+        "fido",
         "jsonref",
         "python-dateutil",
         "requests",
         "swagger-spec-validator",
-        "twisted",
         "yelp_uri",
     ],
 )

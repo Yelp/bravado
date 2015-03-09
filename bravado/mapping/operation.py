@@ -1,9 +1,11 @@
 import logging
 
+import fido
 import requests.models
 
 from bravado.mapping.unmarshal import unmarshal_schema_object
-from bravado.response import HTTPFuture, RequestsLibResponseAdapter
+from bravado.response import (FidoLibResponseAdapter,
+                              HTTPFuture, RequestsLibResponseAdapter)
 from bravado.exception import SwaggerError
 from bravado.mapping.param import Param, marshal_param
 
@@ -154,8 +156,9 @@ def handle_response(response, op):
     """
     if isinstance(response, requests.models.Response):
         wrapped_response = RequestsLibResponseAdapter(response)
+    elif isinstance(response, fido.fido.Response):
+        wrapped_response = FidoLibResponseAdapter(response)
     else:
-        # TODO: Fix as part of SRV-1454 for fido
         raise NotImplementedError(
             'TODO: Handle response of type {0}'.format(type(response)))
 

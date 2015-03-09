@@ -69,9 +69,10 @@ class HTTPFuture(object):
 
         if self.cancelled():
             raise CancelledError()
-        response = self._request.wait(timeout=timeout)
+        response = self._request.result(timeout=timeout)
         try:
-            response.raise_for_status()
+            if hasattr(response, 'raise_for_status'):
+                response.raise_for_status()
         except Exception as e:
             handle_response_errors(e)
 
@@ -93,3 +94,20 @@ class RequestsLibResponseAdapter(ResponseLike):
 
     def json(self, **kwargs):
         return self._delegate.json(**kwargs)
+
+
+class FidoLibResponseAdapter(ResponseLike):
+    """Wraps a fido.fido.Response object to provider a uniform interface
+    to the response innards.
+
+    :type requests_lib_response: :class:`fido.fido.Response`
+    """
+    def __init__(self, requests_lib_response):
+        self._delegate = requests_lib_response
+
+    @property
+    def status_code(self):
+        return self._delegate.code
+
+    def json(self, **_):
+        return self._delegate.json()
