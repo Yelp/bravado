@@ -4,7 +4,7 @@ import requests.models
 
 from bravado.mapping.unmarshal import unmarshal_schema_object
 from bravado.response import HTTPFuture, RequestsLibResponseAdapter
-from bravado.mapping.exception import SwaggerError
+from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping.param import Param, marshal_param
 
 log = logging.getLogger(__name__)
@@ -201,8 +201,8 @@ def get_response_spec(status_code, op):
     :type op: :class:`bravado.mapping.operation.Operation`
     :return: response specification
     :rtype: dict
-    :raises: SwaggerError when the status_code could not be mapped to a response
-        specification.
+    :raises: SwaggerMappingError when the status_code could not be mapped to
+        a response specification.
     """
     # We don't need to worry about checking #/responses/ because jsonref has
     # already inlined the $refs
@@ -210,7 +210,7 @@ def get_response_spec(status_code, op):
     default_response_spec = response_specs.get('default', None)
     response_spec = response_specs.get(str(status_code), default_response_spec)
     if response_spec is None:
-        raise SwaggerError(
+        raise SwaggerMappingError(
             "Response specification matching http status_code {0} not found "
             "for {1}. Either add a response specifiction for the status_code "
             "or use a `default` response.".format(op, status_code))

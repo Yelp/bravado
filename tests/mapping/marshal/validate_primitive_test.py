@@ -1,7 +1,7 @@
 # import jsonschema
 # import pytest
 #
-# from bravado.exception import SwaggerError
+# from bravado.exception import SwaggerMappingError
 # #from bravado.mapping.marshal import validate_primitive
 # from bravado.mapping.param import Param
 #
@@ -44,6 +44,6 @@
 # def test_fails_required_validation(empty_swagger_spec, param_spec):
 #     param_spec['required'] = True
 #     param = Param(empty_swagger_spec, param_spec)
-#     with pytest.raises(SwaggerError) as excinfo:
+#     with pytest.raises(SwaggerMappingError) as excinfo:
 #         validate_primitive(param, value=None)
 #     assert "petId cannot be null" in str(excinfo.value)

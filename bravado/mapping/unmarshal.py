@@ -1,6 +1,6 @@
 import jsonschema
 
-from bravado.mapping.exception import SwaggerError
+from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping import formatter, schema
 from bravado.mapping.model import is_model, MODEL_MARKER
 from bravado.mapping.schema import (
@@ -45,7 +45,7 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
         return unmarshal_object(swagger_spec, schema_object_spec, value)
 
     # TODO: Support for 'file' type
-    raise SwaggerError(
+    raise SwaggerMappingError(
         "Don't know how to unmarshal value {0} with a value of {1}"
         .format(value, obj_type))
 

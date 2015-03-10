@@ -1,6 +1,6 @@
 import jsonschema
 
-from bravado.mapping.exception import SwaggerError
+from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping import schema
 from bravado.mapping import formatter
 from bravado.mapping.model import is_model, MODEL_MARKER
@@ -44,7 +44,8 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
         return marshal_object(swagger_spec, schema_object_spec, value)
 
     # TODO: Support for 'file' type
-    raise SwaggerError('Unknown type {0} for value {1}'.format(obj_type, value))
+    raise SwaggerMappingError('Unknown type {0} for value {1}'.format(
+        obj_type, value))
 
 
 def marshal_primitive(spec, value):

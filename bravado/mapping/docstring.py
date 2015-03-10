@@ -1,6 +1,6 @@
 import logging
 
-from bravado.mapping.exception import SwaggerError
+from bravado.mapping.exception import SwaggerMappingError
 
 
 log = logging.getLogger(__name__)
@@ -186,4 +186,5 @@ def formatted_type(spec):
     elif obj_type:
         return obj_type
     else:
-        raise SwaggerError("No proper type could be found from %s" % spec)
+        raise SwaggerMappingError(
+            "No proper type could be found from {0}".format(spec))

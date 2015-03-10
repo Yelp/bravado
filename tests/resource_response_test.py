@@ -66,7 +66,7 @@ from requests import HTTPError
 
 from bravado.client import SwaggerClient
 from bravado.exception import CancelledError
-from bravado.mapping.exception import SwaggerError
+from bravado.mapping.exception import SwaggerMappingError
 from bravado.response import HTTPFuture
 
 
@@ -141,7 +141,7 @@ class ResourceResponseTest(unittest.TestCase):
     def test_error_on_wrong_attr_type_in_operation_type(self):
         self.response["apis"][0]["operations"][0]["type"] = "WRONG_TYPE"
         self.register_urls()
-        self.assertRaises(SwaggerError, SwaggerClient.from_url,
+        self.assertRaises(SwaggerMappingError, SwaggerClient.from_url,
                           u'http://localhost/api-docs')
 
     @httpretty.activate

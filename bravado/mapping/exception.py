@@ -1,4 +1,4 @@
-class SwaggerError(Exception):
+class SwaggerMappingError(Exception):
     """Raised when an error is encountered."""
 
     def __init__(self, msg, cause=None):

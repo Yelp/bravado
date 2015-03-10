@@ -1,6 +1,6 @@
 import jsonref
 
-from bravado.mapping.exception import SwaggerError
+from bravado.mapping.exception import SwaggerMappingError
 
 
 JSONSCHEMA_PRIMITIVE_VALIDATIONS = {
@@ -115,7 +115,7 @@ def to_array_schema(array_spec):
                     # nested arrays
                     schema[key] = to_array_schema(items_spec)
                 else:
-                    raise SwaggerError(
+                    raise SwaggerMappingError(
                         'Item type {0} not supported'.format(items_type))
     return schema
 

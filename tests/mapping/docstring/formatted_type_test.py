@@ -1,6 +1,6 @@
 import pytest
 
-from bravado.mapping.exception import SwaggerError
+from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping.docstring import formatted_type
 
 
@@ -37,6 +37,6 @@ def test_ref():
 
 
 def test_missing_type_raises_error():
-    with pytest.raises(SwaggerError) as excinfo:
+    with pytest.raises(SwaggerMappingError) as excinfo:
         formatted_type({'TyP3': 'string'})
     assert 'No proper type' in str(excinfo.value)
