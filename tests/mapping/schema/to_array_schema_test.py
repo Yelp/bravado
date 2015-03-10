@@ -13,7 +13,7 @@ def param_spec():
         'type': 'array',
         'items': {
             'type': 'string',
-         },
+        },
         'collectionFormat': 'multi',
         'default': 'available'
     }
@@ -47,7 +47,7 @@ def test_nested_array_of_string(param_spec):
                 'type': 'string',
                 'maxLength': 10
             },
-         },
+        },
         'collectionFormat': 'multi',
     }
     schema = to_array_schema(words_lists_spec)

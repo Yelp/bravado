@@ -1,8 +1,7 @@
 import urllib
 import simplejson as json
 
-from bravado import swagger_type
-from bravado.exception import SwaggerError
+from bravado.mapping.exception import SwaggerMappingError
 from bravado.http_client import APP_JSON
 from bravado.mapping.marshal import marshal_schema_object
 
@@ -13,20 +12,6 @@ def stringify_body(value):
     if not value or isinstance(value, basestring):
         return value
     return json.dumps(value)
-
-
-def handle_form_param(name, value, type_, request):
-    if swagger_type.is_file(type_):
-        if 'files' not in request:
-            request['files'] = {}
-        request['files'][name] = value
-    elif swagger_type.is_primitive(type_):
-        if 'data' not in request:
-            request['data'] = {}
-        request['data'][name] = value
-    else:
-        raise AssertionError(
-            u"%s neither primitive nor File" % name)
 
 
 class Param(object):
@@ -120,6 +105,6 @@ def marshal_param(param, value, request):
         request['headers']['Content-Type'] = APP_JSON
         request['data'] = json.dumps(value)
     else:
-        raise SwaggerError(
+        raise SwaggerMappingError(
             "Don't know how to marshal_param with location {0}".
             format(location))
