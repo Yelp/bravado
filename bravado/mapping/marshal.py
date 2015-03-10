@@ -31,21 +31,20 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
     if obj_type in SWAGGER_PRIMITIVES:
         return marshal_primitive(schema_object_spec, value)
 
-    elif obj_type == 'array':
+    if obj_type == 'array':
         return marshal_array(swagger_spec, schema_object_spec, value)
 
-    elif is_model(schema_object_spec):
+    if is_model(schema_object_spec):
         # It is important that the 'model' check comes before 'object' check.
         # Model specs also have type 'object' but also have the additional
         # MODEL_MARKER key for identification.
         return marshal_model(swagger_spec, schema_object_spec, value)
 
-    elif obj_type == 'object':
+    if obj_type == 'object':
         return marshal_object(swagger_spec, schema_object_spec, value)
 
-    else:
-        raise SwaggerError('Unknown type {0} for value {1}'.format(
-            obj_type, value))
+    # TODO: Support for 'file' type
+    raise SwaggerError('Unknown type {0} for value {1}'.format(obj_type, value))
 
 
 def marshal_primitive(spec, value):
