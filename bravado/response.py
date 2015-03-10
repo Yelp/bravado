@@ -79,12 +79,14 @@ class HTTPFuture(object):
 
 
 class RequestsLibResponseAdapter(ResponseLike):
-    """Wraps a requests.models.Response object to provider a uniform interface
+    """Wraps a requests.models.Response object to provide a uniform interface
     to the response innards.
-
-    :type requests_lib_response: :class:`requests.models.Response`
     """
+
     def __init__(self, requests_lib_response):
+        """
+        :type requests_lib_response: :class:`requests.models.Response`
+        """
         self._delegate = requests_lib_response
 
     @property

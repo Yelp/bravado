@@ -1,14 +1,13 @@
-import jsonschema
-
-from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping import schema
 from bravado.mapping import formatter
+from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping.model import is_model, MODEL_MARKER
 from bravado.mapping.schema import (
     is_dict_like,
     is_list_like,
     SWAGGER_PRIMITIVES
 )
+from bravado.mapping.validate import validate_primitive, validate_array
 
 
 def marshal_schema_object(swagger_spec, schema_object_spec, value):
@@ -49,7 +48,7 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
 
 
 def marshal_primitive(spec, value):
-    """Marshal a jsonschema primitive type into a python primitive.
+    """Marshal a python primitive type into a jsonschema primitive.
 
     :type spec: dict or jsonref.JsonRef
     :type value: int, long, float, boolean, string, unicode, or an object
@@ -68,16 +67,7 @@ def marshal_primitive(spec, value):
 
     if not default_used:
         value = formatter.to_wire(spec, value)
-
-        # Need to sanitize spec if it has the 'required' key.
-        # jsonschema sees it as {'required' : ['propname1', 'propname2', ...]}
-        # where as a param_spec uses it as {'required': True|False}.
-        if schema.is_required(spec):
-            sanitized_spec = spec.copy()
-            del sanitized_spec['required']
-            jsonschema.validate(value, sanitized_spec)
-        else:
-            jsonschema.validate(value, spec)
+        validate_primitive(spec, value)
 
     return value
 
@@ -99,6 +89,8 @@ def marshal_array(swagger_spec, array_spec, array_value):
     for element in array_value:
         result.append(marshal_schema_object(
             swagger_spec, array_spec['items'], element))
+
+    validate_array(array_spec, result)
     return result
 
 
