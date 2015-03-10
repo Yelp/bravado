@@ -16,7 +16,7 @@ SWAGGER_PRIMITIVES = (
     'number',
     'string',
     'boolean',
-    'null'     # TODO: Do we need this?
+    'null',
 )
 
 
