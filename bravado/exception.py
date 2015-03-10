@@ -25,18 +25,3 @@ class CancelledError():
     """Error raised when result() is called from HTTPFuture
     and call was actually cancelled
     """
-
-
-class SwaggerError(Exception):
-    """Raised when an error is encountered mapping the JSON objects into the
-    model_dict.
-    """
-
-    def __init__(self, msg, context=None, cause=None):
-        """Ctor.
-
-        :param msg: String message for the error.
-        :param context: ParsingContext object
-        :param cause: Optional exception that caused this one.
-        """
-        super(Exception, self).__init__(msg, context, cause)

@@ -1,12 +1,12 @@
 import os
 import json
 
-import pytest
 import jsonref
+import pytest
 from swagger_spec_validator import validator20
 
 from bravado.mapping.model import tag_models, fix_malformed_model_refs
-from bravado.swagger_type import is_dict_like, is_list_like
+from bravado.mapping.schema import is_dict_like, is_list_like
 
 
 @pytest.fixture

@@ -1,9 +1,12 @@
-from bravado.exception import SwaggerError
 from bravado.mapping import schema
 from bravado.mapping import formatter
+from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping.model import is_model, MODEL_MARKER
-from bravado.swagger_type import SWAGGER20_PRIMITIVES, is_list_like, \
-    is_dict_like
+from bravado.mapping.schema import (
+    is_dict_like,
+    is_list_like,
+    SWAGGER_PRIMITIVES
+)
 from bravado.mapping.validate import validate_primitive, validate_array
 
 
@@ -24,24 +27,24 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
     """
     obj_type = schema_object_spec['type']
 
-    if obj_type in SWAGGER20_PRIMITIVES:
+    if obj_type in SWAGGER_PRIMITIVES:
         return marshal_primitive(schema_object_spec, value)
 
-    elif obj_type == 'array':
+    if obj_type == 'array':
         return marshal_array(swagger_spec, schema_object_spec, value)
 
-    elif is_model(schema_object_spec):
+    if is_model(schema_object_spec):
         # It is important that the 'model' check comes before 'object' check.
         # Model specs also have type 'object' but also have the additional
         # MODEL_MARKER key for identification.
         return marshal_model(swagger_spec, schema_object_spec, value)
 
-    elif obj_type == 'object':
+    if obj_type == 'object':
         return marshal_object(swagger_spec, schema_object_spec, value)
 
-    else:
-        raise SwaggerError('Unknown type {0} for value {1}'.format(
-            obj_type, value))
+    # TODO: Support for 'file' type
+    raise SwaggerMappingError('Unknown type {0} for value {1}'.format(
+        obj_type, value))
 
 
 def marshal_primitive(spec, value):
