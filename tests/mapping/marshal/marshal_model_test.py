@@ -20,6 +20,57 @@ def test_pet(petstore_dict):
         ]
     )
     result = marshal_model(petstore_spec, pet_spec, pet)
-    assert dict == type(result)
-    assert 1 == result['id']
-    assert 'Fido' == result['name']
+
+    expected = {
+        'id': 1,
+        'name': 'Fido',
+        'status': 'sold',
+        'photoUrls': [
+            'wagtail.png',
+            'bark.png',
+        ],
+        'category': {
+            'id': 200,
+            'name': 'friendly',
+        },
+        'tags': [
+            {
+                'id': 99,
+                'name': 'mini',
+            },
+            {
+                'id': 100,
+                'name': 'brown',
+            },
+        ]
+
+    }
+    assert expected == result
+
+
+def test_attrs_set_to_None_are_absent_from_result(petstore_dict):
+    # to recap: "required": ["name","photoUrls"]
+    petstore_spec = Spec.from_dict(petstore_dict)
+    Pet = petstore_spec.definitions['Pet']
+    Category = petstore_spec.definitions['Category']
+    Tag = petstore_spec.definitions['Tag']
+    pet_spec = petstore_spec.spec_dict['definitions']['Pet']
+    pet = Pet(
+        id=1,
+        name='Fido',
+        status=None,
+        photoUrls=['wagtail.png', 'bark.png'],
+        category=None,
+        tags=None
+    )
+    result = marshal_model(petstore_spec, pet_spec, pet)
+
+    expected = {
+        'id': 1,
+        'name': 'Fido',
+        'photoUrls': [
+            'wagtail.png',
+            'bark.png',
+        ],
+    }
+    assert expected == result

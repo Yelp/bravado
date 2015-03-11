@@ -1,5 +1,4 @@
-from bravado.mapping import schema
-from bravado.mapping import formatter
+from bravado.mapping import formatter, schema
 from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping.model import is_model, MODEL_MARKER
 from bravado.mapping.schema import (
@@ -94,6 +93,7 @@ def marshal_array(swagger_spec, array_spec, array_value):
         result.append(marshal_schema_object(
             swagger_spec, array_spec['items'], element))
 
+    # TODO: only validate the root of an object hierarchy
     validate_array(array_spec, result)
     return result
 
@@ -105,7 +105,7 @@ def marshal_object(swagger_spec, object_spec, object_value):
     :type object_spec: dict or jsonref.JsonRef
     :type object_value: dict
     :rtype: dict
-    :raises: TypeError
+    :raises: SwaggerMappingError
     """
     if not is_dict_like(object_value):
         raise TypeError('Expected dict like type for {0}:{1}'.format(
@@ -116,9 +116,9 @@ def marshal_object(swagger_spec, object_spec, object_value):
         into account. Return value is None if 'additionalProperties` is a
          bool (really permissive but valid according to the Swagger Spec).
         """
-        prop_spec = object_spec.get('properties', {}).get(prop_name)
-        if prop_spec is not None:
-            return prop_spec
+        spec = object_spec.get('properties', {}).get(prop_name)
+        if spec is not None:
+            return spec
 
         # spec for property not found - see if `additionalProperties`
         # can help us out. defaults to True when not present which is
@@ -138,6 +138,11 @@ def marshal_object(swagger_spec, object_spec, object_value):
 
     result = {}
     for k, v in object_value.iteritems():
+
+        # Values cannot be None - skip them entirely!
+        if v is None:
+            continue
+
         prop_spec = get_spec_for(k)
         if prop_spec:
             result[k] = marshal_schema_object(swagger_spec, prop_spec, v)
@@ -145,6 +150,7 @@ def marshal_object(swagger_spec, object_spec, object_value):
             # Don't marshal when a spec is not available - just pass through
             result[k] = v
 
+    # TODO: only validate the root of an object hierarchy
     validate_object(object_spec, result)
     return result
 
@@ -168,9 +174,11 @@ def marshal_model(swagger_spec, model_spec, model_value):
         raise TypeError('Expected model of type {0} for {1}:{2}'.format(
             model_name, type(model_value), model_value))
 
-    result = {}
-    props_spec = model_spec['properties']
-    for prop_name, prop_spec in props_spec.iteritems():
-        result[prop_name] = marshal_schema_object(
-            swagger_spec, prop_spec, getattr(model_value, prop_name))
-    return result
+    # just convert the model to a dict and feed into `marshal_object` because
+    # models are essentially 'type':'object' when marshaled
+    attr_names = dir(model_value)
+    object_value = dict(
+        (attr_name, getattr(model_value, attr_name))
+        for attr_name in attr_names)
+
+    return marshal_object(swagger_spec, model_spec, object_value)

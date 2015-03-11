@@ -10,7 +10,6 @@ def test_pet_model(pet_spec):
     Pet = create_model_type('Pet', pet_spec)
     expected = set(['id', 'category', 'name', 'photoUrls', 'tags'])
     pet = Pet(id=1, name='Darwin')
-    assert set(vars(pet).keys()) == expected
     assert set(dir(pet)) == expected
     assert pet == Pet(id=1, name='Darwin')
     assert pet != Pet(id=2, name='Fido')
