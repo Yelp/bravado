@@ -36,4 +36,4 @@ def validate_object(spec, value):
     :param spec: spec for an 'object' type in dict form
     :type value: dict
     """
-    pass
+    jsonschema.validate(value, spec)

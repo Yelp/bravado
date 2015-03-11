@@ -1,6 +1,7 @@
 import jsonref
 
-
+# 'object' and 'array' are omitted since this should really be read as
+# "Swagger types that map to python primitives"
 SWAGGER_PRIMITIVES = (
     'integer',
     'number',

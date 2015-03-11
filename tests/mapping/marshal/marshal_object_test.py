@@ -1,3 +1,4 @@
+from jsonschema.exceptions import ValidationError
 import pytest
 
 from bravado.mapping.marshal import marshal_object
@@ -26,17 +27,21 @@ def address_spec():
     }
 
 
-def test_object_with_properties(empty_swagger_spec, address_spec):
-    address = {
+@pytest.fixture
+def address():
+    return {
         'number': 1600,
         'street_name': 'Pennsylvania',
         'street_type': 'Avenue'
     }
+
+
+def test_properties(empty_swagger_spec, address_spec, address):
     result = marshal_object(empty_swagger_spec, address_spec, address)
     assert address == result
 
 
-def test_object_with_array(empty_swagger_spec, address_spec):
+def test_array(empty_swagger_spec, address_spec):
     tags_spec = {
         'type': 'array',
         'items': {
@@ -58,7 +63,7 @@ def test_object_with_array(empty_swagger_spec, address_spec):
     assert result == address
 
 
-def test_object_with_nested_object(empty_swagger_spec, address_spec):
+def test_nested_object(empty_swagger_spec, address_spec):
     location_spec = {
         'type': 'object',
         'properties': {
@@ -84,7 +89,7 @@ def test_object_with_nested_object(empty_swagger_spec, address_spec):
     assert result == address
 
 
-def test_object_with_model(minimal_swagger_dict, address_spec):
+def test_model(minimal_swagger_dict, address_spec):
     location_spec = {
         'type': 'object',
         'properties': {
@@ -120,3 +125,52 @@ def test_object_with_model(minimal_swagger_dict, address_spec):
 
     result = marshal_object(swagger_spec, address_spec, address)
     assert expected_address == result
+
+
+def test_missing_properties_not_marshaled(
+        empty_swagger_spec, address_spec, address):
+    del address['number']
+    result = marshal_object(empty_swagger_spec, address_spec, address)
+    assert address == result
+
+
+def test_additionalProperties_is_schema_success(
+        empty_swagger_spec, address_spec, address):
+    address_spec['additionalProperties'] = {'type': 'string'}
+    address['city'] = 'Swaggerville' # valid additional property
+    result = marshal_object(empty_swagger_spec, address_spec, address)
+    assert address == result
+
+
+def test_additionalProperties_is_schema_failure(
+        empty_swagger_spec, address_spec, address):
+    address_spec['additionalProperties'] = {'type': 'string'}
+    address['city'] = 99  # invalid additional property - int != string
+
+    with pytest.raises(ValidationError) as excinfo:
+        marshal_object(empty_swagger_spec, address_spec, address)
+    assert "99 is not of type 'string'" in str(excinfo.value)
+
+
+def test_additionalProperties_is_bool_success(
+        empty_swagger_spec, address_spec, address):
+    address_spec['additionalProperties'] = True
+    address['city'] = 99 # valid cuz there is no schema or additional props
+    result = marshal_object(empty_swagger_spec, address_spec, address)
+    assert address == result
+
+
+def test_additionalProperties_is_bool_failure(
+        empty_swagger_spec, address_spec, address):
+    address_spec['additionalProperties'] = False
+    address['city'] = 'Swaggerville'
+    with pytest.raises(ValidationError) as excinfo:
+        marshal_object(empty_swagger_spec, address_spec, address)
+    assert 'Additional properties are not allowed' in str(excinfo.value)
+
+
+def test_additionalProperties_not_present_acts_like_true(
+        empty_swagger_spec, address_spec, address):
+    address['city'] = 'Swaggerville'
+    result = marshal_object(empty_swagger_spec, address_spec, address)
+    assert address == result

@@ -7,7 +7,11 @@ from bravado.mapping.schema import (
     is_list_like,
     SWAGGER_PRIMITIVES
 )
-from bravado.mapping.validate import validate_primitive, validate_array
+from bravado.mapping.validate import (
+    validate_primitive,
+    validate_array,
+    validate_object
+)
 
 
 def marshal_schema_object(swagger_spec, schema_object_spec, value):
@@ -107,11 +111,41 @@ def marshal_object(swagger_spec, object_spec, object_value):
         raise TypeError('Expected dict like type for {0}:{1}'.format(
             type(object_value), object_value))
 
+    def get_spec_for(prop_name):
+        """Return the spec for the given property taking 'additionalProperties'
+        into account. Return value is None if 'additionalProperties` is a
+         bool (really permissive but valid according to the Swagger Spec).
+        """
+        prop_spec = object_spec.get('properties', {}).get(prop_name)
+        if prop_spec is not None:
+            return prop_spec
+
+        # spec for property not found - see if `additionalProperties`
+        # can help us out. defaults to True when not present which is
+        # really permissive
+        additional_props = object_spec.get('additionalProperties', True)
+
+        if isinstance(additional_props, bool):
+            return None
+
+        if schema.is_dict_like(additional_props):
+            # schema that all additional props MUST conform to
+            return additional_props
+
+        raise SwaggerMappingError(
+            "Don't know what to do with `additionalProperties` in {0}"
+            "when marshaling {1}".format(object_spec, object_value))
+
     result = {}
-    props_spec = object_spec['properties']
-    for prop_name, prop_spec in props_spec.iteritems():
-        result[prop_name] = marshal_schema_object(
-            swagger_spec, prop_spec, object_value.get(prop_name))
+    for k, v in object_value.iteritems():
+        prop_spec = get_spec_for(k)
+        if prop_spec:
+            result[k] = marshal_schema_object(swagger_spec, prop_spec, v)
+        else:
+            # Don't marshal when a spec is not available - just pass through
+            result[k] = v
+
+    validate_object(object_spec, result)
     return result
 
 
