@@ -31,7 +31,7 @@ setup(
         "crochet",
         "python-dateutil",
         "requests",
-        "twisted",
+        "twisted >= 14.0.0",
         "yelp_uri >= 1.0.1",
     ],
 )
