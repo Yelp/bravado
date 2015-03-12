@@ -28,7 +28,7 @@ setup(
         "Programming Language :: Python",
     ],
     install_requires=[
-        "fido",
+        "fido >= 1.0.1",
         "jsonref",
         "python-dateutil",
         "requests",

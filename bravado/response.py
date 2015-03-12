@@ -79,7 +79,7 @@ class HTTPFuture(object):
         return self._post_receive(response, **kwargs)
 
 
-class RequestsLibResponseAdapter(ResponseLike):
+class RequestsResponseAdapter(ResponseLike):
     """Wraps a requests.models.Response object to provider a uniform interface
     to the response innards.
 
@@ -96,7 +96,7 @@ class RequestsLibResponseAdapter(ResponseLike):
         return self._delegate.json(**kwargs)
 
 
-class FidoLibResponseAdapter(ResponseLike):
+class FidoResponseAdapter(ResponseLike):
     """Wraps a fido.fido.Response object to provider a uniform interface
     to the response innards.
 

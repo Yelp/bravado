@@ -42,23 +42,17 @@ class AsynchronousHttpClient(http_client.HttpClient):
             'headers': request_params.get('headers', {}),
         }
 
-        # crochet only supports bytes for the url
-        if isinstance(url, unicode):
-            url = url.encode('utf-8')
-
         return fido.fetch(url, **request_params)
 
 
 def stringify_body(request_params):
     """Wraps the data using twisted FileBodyProducer
     """
-    data = None
     headers = request_params.get('headers', {})
     if 'files' in request_params:
-        data = create_multipart_content(request_params, headers)
-    elif headers.get('content-type') == http_client.APP_FORM:
-        data = urllib_utf8.urlencode(request_params.get('data', {}))
-    else:
-        # TODO: same method 'stringify_body' exists with different args - fix!
-        data = param_stringify_body(request_params.get('data', ''))
-    return data
+        return create_multipart_content(request_params, headers)
+    if headers.get('content-type') == http_client.APP_FORM:
+        return urllib_utf8.urlencode(request_params.get('data', {}))
+
+    # TODO: same method 'stringify_body' exists with different args - fix!
+    return param_stringify_body(request_params.get('data', ''))
