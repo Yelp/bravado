@@ -20,14 +20,6 @@ bravado Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`swagger_type` Module
---------------------------
-
-.. automodule:: bravado.swagger_type
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`response` Module
 ----------------------
 

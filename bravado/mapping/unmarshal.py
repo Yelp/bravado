@@ -1,10 +1,12 @@
-import jsonschema
-
-from bravado.exception import SwaggerError
 from bravado.mapping import formatter, schema
+from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping.model import is_model, MODEL_MARKER
-from bravado.swagger_type import SWAGGER20_PRIMITIVES, is_list_like, \
-    is_dict_like
+from bravado.mapping.schema import (
+    is_dict_like,
+    is_list_like,
+    SWAGGER_PRIMITIVES
+)
+from bravado.mapping.validate import validate_array, validate_primitive
 
 
 def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
@@ -26,25 +28,25 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     """
     obj_type = schema_object_spec['type']
 
-    if obj_type in SWAGGER20_PRIMITIVES:
+    if obj_type in SWAGGER_PRIMITIVES:
         return unmarshal_primitive(schema_object_spec, value)
 
-    elif obj_type == 'array':
+    if obj_type == 'array':
         return unmarshal_array(swagger_spec, schema_object_spec, value)
 
-    elif is_model(schema_object_spec):
+    if is_model(schema_object_spec):
         # It is important that the 'model' check comes before 'object' check.
         # Model specs also have type 'object' but also have the additional
         # MODEL_MARKER key for identification.
         return unmarshal_model(swagger_spec, schema_object_spec, value)
 
-    elif obj_type == 'object':
+    if obj_type == 'object':
         return unmarshal_object(swagger_spec, schema_object_spec, value)
 
-    else:
-        raise SwaggerError(
-            "Don't know how to unmarshal value {0} with a value of {1}"
-            .format(value, obj_type))
+    # TODO: Support for 'file' type
+    raise SwaggerMappingError(
+        "Don't know how to unmarshal value {0} with a value of {1}"
+        .format(value, obj_type))
 
 
 def unmarshal_primitive(spec, value):
@@ -62,8 +64,8 @@ def unmarshal_primitive(spec, value):
         #       breadcrumbs.
         raise TypeError('Spec {0} says this is a required value'.format(spec))
 
+    validate_primitive(spec, value)
     value = formatter.to_python(spec, value)
-    jsonschema.validate(value, spec)
     return value
 
 
@@ -80,8 +82,8 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
         raise TypeError('Expected list like type for {0}:{1}'.format(
             type(array_value), array_value))
 
-    # TODO: could also do this in-place instead of allocating a new array. Think
-    #       about implications of this some more...
+    validate_array(array_spec, array_value)
+
     result = []
     for element in array_value:
         result.append(unmarshal_schema_object(

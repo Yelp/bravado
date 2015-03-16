@@ -112,7 +112,7 @@ def test_array_of_models(petstore_dict):
         },
         'tags': [
             {
-                'id': '99',
+                'id': 99,
                 'name': 'mini',
             },
             {
