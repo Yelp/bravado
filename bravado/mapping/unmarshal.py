@@ -4,8 +4,8 @@ from bravado.mapping.model import is_model, MODEL_MARKER
 from bravado.mapping.schema import (
     is_dict_like,
     is_list_like,
-    SWAGGER_PRIMITIVES
-)
+    SWAGGER_PRIMITIVES,
+    get_spec_for_prop)
 from bravado.mapping.validate import validate_array, validate_primitive
 
 
@@ -104,13 +104,19 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
         raise TypeError('Expected dict like type for {0}:{1}'.format(
             type(object_value), object_value))
 
-    # TODO: could also do this in-place instead of allocating a new dict. Think
-    #       about implications of this some more...
     result = {}
-    props_spec = object_spec['properties']
-    for prop_name, prop_spec in props_spec.iteritems():
-        result[prop_name] = unmarshal_schema_object(
-            swagger_spec, prop_spec, object_value.get(prop_name))
+    for k, v in object_value.iteritems():
+        prop_spec = get_spec_for_prop(object_spec, object_value, k)
+        if prop_spec:
+            result[k] = unmarshal_schema_object(swagger_spec, prop_spec, v)
+        else:
+            # Don't marshal when a spec is not available - just pass through
+            result[k] = v
+
+    # re-introduce and None'ify any properties that weren't passed
+    for prop_name, prop_spec in object_spec['properties'].iteritems():
+        if not result.has_key(prop_name):
+            result[prop_name] = None
     return result
 
 

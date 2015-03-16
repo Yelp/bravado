@@ -1,5 +1,7 @@
 import jsonref
 
+from bravado.mapping.exception import SwaggerMappingError
+
 # 'object' and 'array' are omitted since this should really be read as
 # "Swagger types that map to python primitives"
 SWAGGER_PRIMITIVES = (
@@ -59,3 +61,35 @@ def is_list_like(spec):
     if type(spec) == jsonref.JsonRef and type(spec.__subject__) == list:
         return True
     return False
+
+
+def get_spec_for_prop(object_spec, object_value, prop_name):
+    """Given a jsonschema object spec and value, retrieve the spec for the
+     given property taking 'additionalProperties' into consideration.
+
+    :param object_spec: spec for a jsonschema 'object' in dict form
+    :param object_value: jsonschema object containing the given property
+    :param prop_name: name of the property to retrieve the spec for
+    :return: spec for the given property or None if no spec found
+    :rtype: dict
+    """
+    # TODO: this is tested indirectly by marshal_object_test.py. Create unit
+    #       test for this method only.
+    spec = object_spec.get('properties', {}).get(prop_name)
+    if spec is not None:
+        return spec
+
+    additional_props = object_spec.get('additionalProperties', True)
+
+    if isinstance(additional_props, bool):
+        # no spec for additional properties to conform to - this is basically
+        # a way to send pretty much anything across the wire as is.
+        return None
+
+    if is_dict_like(additional_props):
+        # spec that all additional props MUST conform to
+        return additional_props
+
+    raise SwaggerMappingError(
+        "Don't know what to do with `additionalProperties` in spec {0}"
+        "when inspecting value {1}".format(object_spec, object_value))

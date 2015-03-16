@@ -4,8 +4,8 @@ from bravado.mapping.model import is_model, MODEL_MARKER
 from bravado.mapping.schema import (
     is_dict_like,
     is_list_like,
-    SWAGGER_PRIMITIVES
-)
+    SWAGGER_PRIMITIVES,
+    get_spec_for_prop)
 from bravado.mapping.validate import (
     validate_primitive,
     validate_array,
@@ -111,31 +111,6 @@ def marshal_object(swagger_spec, object_spec, object_value):
         raise TypeError('Expected dict like type for {0}:{1}'.format(
             type(object_value), object_value))
 
-    def get_spec_for(prop_name):
-        """Return the spec for the given property taking 'additionalProperties'
-        into account. Return value is None if 'additionalProperties` is a
-         bool (really permissive but valid according to the Swagger Spec).
-        """
-        spec = object_spec.get('properties', {}).get(prop_name)
-        if spec is not None:
-            return spec
-
-        # spec for property not found - see if `additionalProperties`
-        # can help us out. defaults to True when not present which is
-        # really permissive
-        additional_props = object_spec.get('additionalProperties', True)
-
-        if isinstance(additional_props, bool):
-            return None
-
-        if schema.is_dict_like(additional_props):
-            # schema that all additional props MUST conform to
-            return additional_props
-
-        raise SwaggerMappingError(
-            "Don't know what to do with `additionalProperties` in {0}"
-            "when marshaling {1}".format(object_spec, object_value))
-
     result = {}
     for k, v in object_value.iteritems():
 
@@ -143,7 +118,7 @@ def marshal_object(swagger_spec, object_spec, object_value):
         if v is None:
             continue
 
-        prop_spec = get_spec_for(k)
+        prop_spec = get_spec_for_prop(object_spec, object_value, k)
         if prop_spec:
             result[k] = marshal_schema_object(swagger_spec, prop_spec, v)
         else:
@@ -151,7 +126,7 @@ def marshal_object(swagger_spec, object_spec, object_value):
             result[k] = v
 
     # TODO: only validate the root of an object hierarchy
-    validate_object(object_spec, result)
+    #validate_object(object_spec, result)
     return result
 
 
@@ -182,3 +157,5 @@ def marshal_model(swagger_spec, model_spec, model_value):
         for attr_name in attr_names)
 
     return marshal_object(swagger_spec, model_spec, object_value)
+
+
