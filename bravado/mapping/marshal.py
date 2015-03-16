@@ -18,7 +18,6 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
     Marshal the value using the given schema object specification.
 
     Marshaling includes:
-    - validate that the value conforms to the schema_object_spec
     - transform the value according to 'format' if available
     - return the value in a form suitable for 'on-the-wire' transmission
 
@@ -70,7 +69,6 @@ def marshal_primitive(spec, value):
 
     if not default_used:
         value = formatter.to_wire(spec, value)
-        validate_primitive(spec, value)
 
     return value
 
@@ -93,8 +91,6 @@ def marshal_array(swagger_spec, array_spec, array_value):
         result.append(marshal_schema_object(
             swagger_spec, array_spec['items'], element))
 
-    # TODO: only validate the root of an object hierarchy
-    validate_array(array_spec, result)
     return result
 
 
@@ -125,8 +121,6 @@ def marshal_object(swagger_spec, object_spec, object_value):
             # Don't marshal when a spec is not available - just pass through
             result[k] = v
 
-    # TODO: only validate the root of an object hierarchy
-    #validate_object(object_spec, result)
     return result
 
 
@@ -157,5 +151,3 @@ def marshal_model(swagger_spec, model_spec, model_value):
         for attr_name in attr_names)
 
     return marshal_object(swagger_spec, model_spec, object_value)
-
-

@@ -1,4 +1,5 @@
 import urllib
+from bravado.mapping.validate import validate_schema_object
 import simplejson as json
 
 from bravado.mapping.exception import SwaggerMappingError
@@ -88,6 +89,7 @@ def marshal_param(param, value, request):
     spec = get_param_type_spec(param)
     location = param.location
     value = marshal_schema_object(param.swagger_spec, spec, value)
+    validate_schema_object(spec, value)
 
     if location == 'path':
         token = u'{%s}' % param.name

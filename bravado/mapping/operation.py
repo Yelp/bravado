@@ -1,4 +1,5 @@
 import logging
+from bravado.mapping.validate import validate_schema_object
 
 import requests.models
 
@@ -182,8 +183,9 @@ def unmarshal_response(swagger_spec, response_spec, response):
     # TODO: Non-json response contents
     content_spec = response_spec['schema']
     content_value = response.json()
-    return response.status_code, unmarshal_schema_object(
-        swagger_spec, content_spec, content_value)
+    validate_schema_object(content_spec, content_value)
+    result = unmarshal_schema_object(swagger_spec, content_spec, content_value)
+    return response.status_code, result
 
 
 def get_response_spec(status_code, op):

@@ -2,11 +2,11 @@ from bravado.mapping import formatter, schema
 from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping.model import is_model, MODEL_MARKER
 from bravado.mapping.schema import (
+    get_spec_for_prop,
     is_dict_like,
     is_list_like,
     SWAGGER_PRIMITIVES,
-    get_spec_for_prop)
-from bravado.mapping.validate import validate_array, validate_primitive
+)
 
 
 def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
@@ -14,7 +14,6 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     Unmarshal the value using the given schema object specification.
 
     Unmarshaling includes:
-    - validate that the value conforms to the schema_object_spec
     - transform the value according to 'format' if available
     - return the value in a form suitable for use. e.g. conversion to a Model
       type.
@@ -64,7 +63,6 @@ def unmarshal_primitive(spec, value):
         #       breadcrumbs.
         raise TypeError('Spec {0} says this is a required value'.format(spec))
 
-    validate_primitive(spec, value)
     value = formatter.to_python(spec, value)
     return value
 
@@ -81,8 +79,6 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
     if not is_list_like(array_value):
         raise TypeError('Expected list like type for {0}:{1}'.format(
             type(array_value), array_value))
-
-    validate_array(array_spec, array_value)
 
     result = []
     for element in array_value:

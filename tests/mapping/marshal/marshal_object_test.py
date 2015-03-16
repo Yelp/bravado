@@ -1,4 +1,3 @@
-from jsonschema.exceptions import ValidationError
 import pytest
 
 from bravado.mapping.marshal import marshal_object
