@@ -8,23 +8,12 @@
 """Asynchronous HTTP client abstractions.
 """
 
-from cStringIO import StringIO
-from bravado.compat import json
 import logging
 
-import crochet
-import twisted.internet.error
-import twisted.web.client
-from twisted.internet import reactor
-from twisted.internet.defer import Deferred
-from twisted.internet.protocol import Protocol
-from twisted.web.client import Agent
-from twisted.web.client import FileBodyProducer
-from twisted.web.http_headers import Headers
+import fido
 from yelp_uri import urllib_utf8
 
 from bravado import http_client
-from bravado.exception import HTTPError
 from bravado.multipart_response import create_multipart_content
 from bravado.mapping.param import stringify_body as param_stringify_body
 
@@ -44,111 +33,16 @@ class AsynchronousHttpClient(http_client.HttpClient):
 
         :return: crochet EventualResult
         """
-        # request_params has mandatory: method, url, params, headers
+        url = '%s?%s' % (request_params['url'], urllib_utf8.urlencode(
+            request_params.get('params', []), True))
+
         request_params = {
             'method': str(request_params.get('method', 'GET')),
-            'bodyProducer': stringify_body(request_params),
-            'headers': listify_headers(request_params.get('headers', {})),
-            'uri': '%s?%s' % (
-                request_params['url'],
-                urllib_utf8.urlencode(request_params.get('params', []), True))
+            'body': stringify_body(request_params),
+            'headers': request_params.get('headers', {}),
         }
 
-        # crochet only supports bytes for the url
-        if isinstance(request_params['uri'], unicode):
-            request_params['uri'] = request_params['uri'].encode('utf-8')
-
-        crochet.setup()
-        return self.fetch_deferred(request_params)
-
-    @crochet.run_in_reactor
-    def fetch_deferred(self, request_params):
-        """The main core to start the reacter and run the API
-        in the background. Also the callbacks are registered here
-
-        :return: crochet EventualResult
-        """
-        finished_resp = Deferred()
-        agent = Agent(reactor)
-        deferred = agent.request(**request_params)
-
-        def response_callback(response):
-            """Callback for response received from server, even 4XX, 5XX possible
-            response param stores the headers and status code.
-            It needs a callback method to be registered to store the response
-            body which is provided using deliverBody
-            """
-            response.deliverBody(_HTTPBodyFetcher(request_params,
-                                                  response, finished_resp))
-        deferred.addCallback(response_callback)
-
-        def response_errback(reason):
-            """Error callback method like server not reachable or conn. refused
-
-            :param reason: The reason why request failed
-            :type reason: str
-            """
-            finished_resp.errback(reason)
-        deferred.addErrback(response_errback)
-
-        return finished_resp
-
-
-class AsyncResponse(object):
-    """
-    Remove the property text and content and make them as overridable attrs
-    """
-
-    def __init__(self, req, resp, data):
-        self.request = req
-        self.status_code = resp.code
-        self.headers = dict(resp.headers.getAllRawHeaders())
-        self.text = data
-
-    def raise_for_status(self):
-        """Raises stored `HTTPError`, if one occured.
-        """
-
-        http_error_msg = ''
-
-        if 400 <= self.status_code < 500:
-            http_error_msg = '%s Client Error' % self.status_code
-
-        elif 500 <= self.status_code < 600:
-            http_error_msg = '%s Server Error' % self.status_code
-
-        if http_error_msg:
-            raise HTTPError(http_error_msg, response=self)
-
-    def json(self, **kwargs):
-        return json.loads(self.text, **kwargs)
-
-
-class _HTTPBodyFetcher(Protocol):
-    """Class to receive callbacks from Twisted whenever
-    response is available.
-
-    Eventually AsyncResponse() is created on receiving complete response
-    """
-
-    def __init__(self, request, response, finished):
-        self.buffer = StringIO()
-        self.request = request
-        self.response = response
-        self.finished = finished
-
-    def dataReceived(self, data):
-        self.buffer.write(data)
-
-    def connectionLost(self, reason):
-        # Accepting PotentialDataLoss for servers with HTTP1.0
-        # and not sending Content-Length in the header
-        if reason.check(twisted.web.client.ResponseDone) or \
-                reason.check(twisted.web.http.PotentialDataLoss):
-            self.finished.callback(AsyncResponse(
-                self.request, self.response, self.buffer.getvalue()))
-        else:
-            self.finished.errback(reason)
+        return fido.fetch(url, **request_params)
 
 
 def stringify_body(request_params):
@@ -156,19 +50,9 @@ def stringify_body(request_params):
     """
     headers = request_params.get('headers', {})
     if 'files' in request_params:
-        data = create_multipart_content(request_params, headers)
-    elif headers.get('content-type') == http_client.APP_FORM:
-        data = urllib_utf8.urlencode(request_params.get('data', {}))
-    else:
-        # TODO: same method 'stringify_body' exists with different args - fix!
-        data = param_stringify_body(request_params.get('data', ''))
-    return FileBodyProducer(StringIO(data)) if data else None
+        return create_multipart_content(request_params, headers)
+    if headers.get('content-type') == http_client.APP_FORM:
+        return urllib_utf8.urlencode(request_params.get('data', {}))
 
-
-def listify_headers(headers):
-    """Twisted agent requires header values as lists
-    """
-    for key, val in headers.iteritems():
-        if not isinstance(val, list):
-            headers[key] = [val]
-    return Headers(headers)
+    # TODO: same method 'stringify_body' exists with different args - fix!
+    return param_stringify_body(request_params.get('data', ''))

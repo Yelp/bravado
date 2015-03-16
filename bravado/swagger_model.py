@@ -40,6 +40,9 @@ class FileEventual(object):
         with contextlib.closing(urllib.urlopen(self.get_path())) as fp:
             return self.FileResponse(json.load(fp))
 
+    def result(self, *args, **kwargs):
+        return self.wait(*args, **kwargs)
+
     def cancel(self):
         pass
 
@@ -85,7 +88,7 @@ class Loader(object):
             self.http_client,
             spec_url,
             self.request_headers,
-        ).wait().json()
+        ).result().json()
         return spec_json
 
 
