@@ -73,8 +73,6 @@ def get_spec_for_prop(object_spec, object_value, prop_name):
     :return: spec for the given property or None if no spec found
     :rtype: dict
     """
-    # TODO: this is tested indirectly by marshal_object_test.py. Create unit
-    #       test for this method only.
     spec = object_spec.get('properties', {}).get(prop_name)
     if spec is not None:
         return spec

@@ -163,4 +163,3 @@ def test_pass_through_additionalProperties_with_no_spec(
     }
     result = unmarshal_object(empty_swagger_spec, address_spec, address)
     assert expected_address == result
-

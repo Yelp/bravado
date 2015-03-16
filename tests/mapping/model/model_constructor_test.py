@@ -5,7 +5,7 @@ from bravado.mapping.model import model_constructor
 
 @pytest.fixture
 def user_kwargs():
-    return  {
+    return {
         'firstName': 'Darwin',
         'userStatus': 9,
         'id': 999L,
@@ -46,7 +46,7 @@ def test_additionalProperties_true(user_spec, user, user_kwargs):
     # verify exra kwargs are attached to the model as attributes when
     # additionalProperties is True
     user_spec['additionalProperties'] = True
-    user_kwargs['foo'] = 'bar' # additional prop
+    user_kwargs['foo'] = 'bar'  # additional prop
     model_constructor(user, user_spec, user_kwargs)
     assert user.foo == 'bar'
     assert 'foo' in dir(user)
@@ -56,9 +56,9 @@ def test_additionalProperties_false(user_spec, user, user_kwargs):
     # verify exra kwargs are caught during model construction when
     # additionalProperties is False
     user_spec['additionalProperties'] = False
-    user_kwargs['foo'] = 'bar' # additional prop
+    user_kwargs['foo'] = 'bar'  # additional prop
     with pytest.raises(AttributeError) as excinfo:
         model_constructor(user, user_spec, user_kwargs)
     assert "does not have attributes for: ['foo']" in str(excinfo.value)
     assert not hasattr(user, 'foo')
-    assert not 'foo' in dir(user)
+    assert 'foo' not in dir(user)

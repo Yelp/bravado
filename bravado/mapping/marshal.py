@@ -6,11 +6,6 @@ from bravado.mapping.schema import (
     is_list_like,
     SWAGGER_PRIMITIVES,
     get_spec_for_prop)
-from bravado.mapping.validate import (
-    validate_primitive,
-    validate_array,
-    validate_object
-)
 
 
 def marshal_schema_object(swagger_spec, schema_object_spec, value):

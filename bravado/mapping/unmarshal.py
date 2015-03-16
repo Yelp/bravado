@@ -111,7 +111,7 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
 
     # re-introduce and None'ify any properties that weren't passed
     for prop_name, prop_spec in object_spec['properties'].iteritems():
-        if not result.has_key(prop_name):
+        if prop_name not in result:
             result[prop_name] = None
     return result
 
@@ -139,10 +139,6 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
             "Was {1} instead."
             .format(model_value, model_type, type(model_value)))
 
-    model_params = {}
-    props_spec = model_spec['properties']
-    for prop_name, prop_spec in props_spec.iteritems():
-        model_params[prop_name] = unmarshal_schema_object(
-            swagger_spec, prop_spec, model_value.get(prop_name, None))
-    model_instance = model_type(**model_params)
+    model_as_dict = unmarshal_object(swagger_spec, model_spec, model_value)
+    model_instance = model_type(**model_as_dict)
     return model_instance

@@ -43,8 +43,6 @@ def create_model_type(model_name, model_spec):
     :returns: dynamic type created with attributes, docstrings attached
     :rtype: type
     """
-    props = model_spec['properties']
-
     methods = dict(
         __doc__=docstring_property(partial(create_model_docstring, model_spec)),
         __eq__=lambda self, other: compare(self, other),

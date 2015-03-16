@@ -11,23 +11,22 @@ import jsonschema
 from bravado.mapping import schema
 
 
-def validate_schema_object(schema_object_spec, value):
-    obj_type = schema_object_spec['type']
+def validate_schema_object(spec, value):
+    obj_type = spec['type']
 
     if obj_type in SWAGGER_PRIMITIVES:
-        validate_primitive(schema_object_spec, value)
+        validate_primitive(spec, value)
 
     elif obj_type == 'array':
-        validate_array(schema_object_spec, value)
+        validate_array(spec, value)
 
     elif obj_type == 'object':
-        validate_object(schema_object_spec, value)
+        validate_object(spec, value)
 
     # TODO: Support for 'file' type
     else:
         raise SwaggerMappingError('Unknown type {0} for value {1}'.format(
             obj_type, value))
-
 
 
 def validate_primitive(spec, value):
