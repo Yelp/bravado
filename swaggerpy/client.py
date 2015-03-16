@@ -492,7 +492,12 @@ def add_param_to_req(param, value, request):
             request['data'] = stringify_body(value)
     elif param_req_type == 'form':
         handle_form_param(pname, value, type_, request)
-    # TODO(#31): accept 'header', in paramType
+    elif param_req_type == 'header':
+        if pname in request['headers']:
+            log.warn(u'Header {0}:{1} has been overridden by {0}:{2}'.format(
+                pname, value, request['headers'][pname]))
+        else:
+            request['headers'][pname] = value
     else:
         raise AssertionError(
             u"Unsupported Parameter type: %s" % param_req_type)
