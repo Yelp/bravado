@@ -1,7 +1,7 @@
-from bravado.mapping.exception import SwaggerMappingError
 from mock import Mock
 import pytest
 
+from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping.operation import Operation
 from bravado.mapping.param import add_file, Param
 
@@ -18,7 +18,7 @@ def test_single_file(empty_swagger_spec):
     param = Param(empty_swagger_spec, op, param_spec)
     add_file(param, file_contents, request)
     expected_request = {
-        'file': [('files', ('photo', 'I am the contents of a file'))]
+        'files': [('file', ('photo', 'I am the contents of a file'))]
     }
     assert expected_request == request
 
@@ -44,9 +44,9 @@ def test_multiple_files(empty_swagger_spec):
     add_file(param1, file1_contents, request)
     add_file(param2, file2_contents, request)
     expected_request = {
-        'file': [
-            ('files', ('photo', 'I am the contents of a file1')),
-            ('files', ('headshot', 'I am the contents of a file2')),
+        'files': [
+            ('file', ('photo', 'I am the contents of a file1')),
+            ('file', ('headshot', 'I am the contents of a file2')),
         ]
     }
     assert expected_request == request

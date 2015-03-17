@@ -121,9 +121,9 @@ def add_file(param, value, request):
     :param value: The raw content of the file to be uploaded
     :type request: dict
     """
-    if request.get('file') is None:
+    if request.get('files') is None:
         # support multiple files by default by setting to an empty array
-        request['file'] = []
+        request['files'] = []
 
         # The http client should take care of setting the content-type header
         # to 'multipart/form-data'. Just verify that the swagger spec is
@@ -139,8 +139,8 @@ def add_file(param, value, request):
                     param.op.consumes
                 ))
 
-    file_tuple = ('files', (param.name, value))
-    request['file'].append(file_tuple)
+    file_tuple = ('file', (param.name, value))
+    request['files'].append(file_tuple)
 
 
 def add_formdata(param, value, request):

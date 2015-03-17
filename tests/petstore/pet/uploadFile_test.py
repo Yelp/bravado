@@ -1,7 +1,10 @@
-import pytest
 
-
-@pytest.xfail.mark(reason="Get in:formData and type:file working")
 def test_success(petstore):
-    result = petstore.pet.uploadFile().result()
+    contents = "this is supposed to be a file"
+    print len(contents)
+    status, result = petstore.pet.uploadFile(
+        petId=1,
+        file=contents,
+        additionalMetadata="testing file upload").result()
+    print status
     print result
