@@ -61,13 +61,15 @@ def get_param_type_spec(param):
 
     :rtype: dict
     :return: the param spec that contains 'type'
+    :raises: SwaggerMappingError when param location is not valid
     """
     location = param.location
     if location in ('path', 'query', 'header', 'formData'):
         return param.param_spec
     if location == 'body':
         return param.param_spec['schema']
-    raise Exception("Don't know how to handle location {0}".format(location))
+    raise SwaggerMappingError(
+        "Don't know how to handle location {0}".format(location))
 
 
 def marshal_param(param, value, request):
