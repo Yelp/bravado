@@ -35,6 +35,18 @@ class Operation(object):
         # (key, value) = (param name, Param)
         self.params = {}
 
+    @property
+    def consumes(self):
+        """
+        :return: List of supported mime types consumed by this operation. e.g.
+            ["application/x-www-form-urlencoded"]
+        :rtype: list of strings, never None
+        """
+        result = self.op_spec.get('consumes')
+        if result is None:
+            result = self.swagger_spec.spec_dict.get('consumes', [])
+        return result
+
     @classmethod
     def from_spec(cls, swagger_spec, path_name, http_method, op_spec):
         """
@@ -63,7 +75,7 @@ class Operation(object):
         param_specs = op_param_specs + path_param_specs
 
         for param_spec in param_specs:
-            param = Param(self.swagger_spec, param_spec)
+            param = Param(self.swagger_spec, self, param_spec)
             self.params[param.name] = param
 
     @property
