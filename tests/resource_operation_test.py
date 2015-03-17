@@ -46,6 +46,7 @@ A sample 'peration' is listed below in 'operations' list.
 """
 
 import datetime
+from mock import patch
 from swaggerpy.compat import json
 import unittest
 import urlparse
@@ -256,6 +257,47 @@ class ResourceOperationTest(unittest.TestCase):
         resource.testHTTP().result()
         self.assertEqual(['testString'],
                          httpretty.last_request().querystring['test_param'])
+
+    @httpretty.activate
+    def test_header_is_passed_to_request(self):
+        header_parameter = {
+            "paramType": "header",
+            "name": "header_name",
+            "type": "string"
+        }
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            header_parameter]
+        self.register_urls()
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/test_http?", body='')
+        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource.testHTTP(header_name='header_value').result()
+        self.assertEqual('header_value',
+                         httpretty.last_request().headers['header_name'])
+
+    @httpretty.activate
+    @patch('swaggerpy.client.log')
+    def test_header_doesnt_override_values_from_request_options(self, mock_log):
+        header_parameter = {
+            "paramType": "header",
+            "name": "header_name",
+            "type": "string"
+        }
+        self.response["apis"][0]["operations"][0]["parameters"] = [
+            header_parameter]
+        self.register_urls()
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/test_http?", body='')
+        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
+        resource.testHTTP(**{'header_name': 'xyz',
+                             '_request_options': {
+                                 'headers': {'header_name': 'abc'}
+                             }}).result()
+        self.assertEqual('abc',
+                         httpretty.last_request().headers['header_name'])
+        print dir(mock_log)
+        mock_log.warn.assert_called_once_with(
+            'Header header_name:xyz has been overridden by header_name:abc')
 
     @httpretty.activate
     def test_success_on_get_with_array_in_path_and_query_params(self):
