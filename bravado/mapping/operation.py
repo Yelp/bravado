@@ -1,10 +1,12 @@
 import logging
 from bravado.mapping.validate import validate_schema_object
 
+import fido
 import requests.models
 
 from bravado.mapping.unmarshal import unmarshal_schema_object
-from bravado.response import HTTPFuture, RequestsLibResponseAdapter
+from bravado.response import (FidoResponseAdapter,
+                              HTTPFuture, RequestsResponseAdapter)
 from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping.param import Param, marshal_param
 
@@ -154,9 +156,10 @@ def handle_response(response, op):
         is one of None, python primitive, list, object, or Model.
     """
     if isinstance(response, requests.models.Response):
-        wrapped_response = RequestsLibResponseAdapter(response)
+        wrapped_response = RequestsResponseAdapter(response)
+    elif isinstance(response, fido.fido.Response):
+        wrapped_response = FidoResponseAdapter(response)
     else:
-        # TODO: Fix as part of SRV-1454 for fido
         raise NotImplementedError(
             'TODO: Handle response of type {0}'.format(type(response)))
 
