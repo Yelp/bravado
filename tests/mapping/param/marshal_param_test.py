@@ -123,5 +123,4 @@ def test_formData_file(empty_swagger_spec, param_spec, request_dict):
         'params': {},
         'file': [('files', ('petId', "i am the contents of a file"))],
     }
-    print request_dict
     assert expected == request_dict

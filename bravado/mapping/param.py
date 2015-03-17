@@ -1,5 +1,4 @@
 import urllib
-from bravado.mapping import schema
 import simplejson as json
 
 from bravado.mapping.exception import SwaggerMappingError
@@ -143,7 +142,12 @@ def add_file(param, value, request):
 
 
 def add_formdata(param, value, request):
-    # form parameter
+    """Add a parameter as formdata to the given request.
+
+    :type param: :class;`bravado.mapping.param.Param`
+    :param value: parameter value
+    :type request: dict
+    """
     if request.get('data') is None:
         request['data'] = {}
     request['data'][param.name] = value
