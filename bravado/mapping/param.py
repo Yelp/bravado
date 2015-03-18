@@ -104,7 +104,7 @@ def marshal_param(param, value, request):
         if spec['type'] == 'file':
             add_file(param, value, request)
         else:
-            add_formdata(param, value, request)
+            request.setdefault('data', {})[param.name] = value
     elif location == 'body':
         request['headers']['Content-Type'] = APP_JSON
         request['data'] = json.dumps(value)
@@ -143,15 +143,3 @@ def add_file(param, value, request):
 
     file_tuple = ('file', (param.name, value))
     request['files'].append(file_tuple)
-
-
-def add_formdata(param, value, request):
-    """Add a parameter as formdata to the given request.
-
-    :type param: :class;`bravado.mapping.param.Param`
-    :param value: parameter value
-    :type request: dict
-    """
-    if request.get('data') is None:
-        request['data'] = {}
-    request['data'][param.name] = value
