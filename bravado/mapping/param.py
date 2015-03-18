@@ -129,6 +129,8 @@ def add_file(param, value, request):
         # to 'multipart/form-data'. Just verify that the swagger spec is
         # conformant
         expected_mime_type = 'multipart/form-data'
+
+        # TODO: Remove after https://github.com/Yelp/swagger_spec_validator/issues/22 is implemented  # noqa
         if expected_mime_type not in param.op.consumes:
             raise SwaggerMappingError((
                 "Mime-type '{0}' not found in list of supported mime-types for "
