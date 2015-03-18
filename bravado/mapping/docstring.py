@@ -25,7 +25,7 @@ def operation_docstring_wrapper(operation):
     to be masquaraded as a function. The docstring will then be attached to the
     function which works quite nicely. Example in REPL:
 
-    >> petstore = client.get_client('http://url_to_petstore/')
+    >> petstore = SwaggerClient.from_url('http://url_to_petstore/')
     >> pet = petstore.pet
     >> help(pet.getPetById)
 

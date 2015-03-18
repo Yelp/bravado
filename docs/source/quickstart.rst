@@ -19,10 +19,10 @@ Here is a simple one to try from REPL (like IPython):
 
 .. code-block:: python
 
-    from bravado import client
-    swagger_client = client.get_client(
+    from bravado.client import SwaggerClient
+    client = SwaggerClient.from_url(
         "http://petstore.swagger.wordnik.com/api/api-docs")
-    client.pet.getPetById(petId=42).result()
+    status, pet = client.pet.getPetById(petId=42).result()
 
 If you were lucky, and pet Id with 42 was present, you will get back a result.
 It will be an instance of ``bravado.swagger_model.Pet`` with attributes ``category``, etc. You can even try ``result.category.id`` or ``result.tags[0]``.
@@ -41,28 +41,28 @@ Here we will demonstrate how ``bravado`` hides all the ``JSON`` handling from th
 
 .. code-block:: python
 
-        Pet = swagger_client.pet.models.Pet
-        Category = swagger_client.pet.models.Category
+        Pet = swagger_client.get_model('Pet')
+        Category = swagger_client.get_model('Category')
         pet = Pet(id=42, name="tommy", category=Category(id=24))
-        swagger_client.pet.addPet(body=pet).result()
+        status, result = swagger_client.pet.addPet(body=pet).result()
 
 It should give a ``200`` response like: ``{u'code': 200, u'message': u'SUCCESS'}``
 
 Time to get Twisted! (Asynchronous client)
 ------------------------------------------
 
-``bravado`` gives an out of the box Asynchronous client to the user, with an optional timeout parameter.
+``bravado`` gives an out of the box asynchronous client to the user, with an optional timeout parameter.
 
-:ref:`hello-pet` above can be rewritten to use Asynchronous client like so:
+:ref:`hello-pet` above can be rewritten to use asynchronous Fido client like so:
 
 .. code-block:: python
 
-        from bravado import client
-        from bravado.async_http_client import AsynchronousHttpClient
-        swagger_client = client.get_client(
+        from bravado.client import SwaggerClient
+        from bravado.async_http_client import FidoHttpClient
+        client = SwaggerClient.from_url(
             "http://petstore.swagger.wordnik.com/api/api-docs",
-            AsynchronousHttpClient())
-        client.pet.getPetById(petId=42).result(timeout=4)
+            FidoHttpClient())
+        status, result = client.pet.getPetById(petId=42).result(timeout=4)
 
 .. note::
 
@@ -71,7 +71,7 @@ Time to get Twisted! (Asynchronous client)
 This is too fancy for me! I want simple dict response!
 ------------------------------------------------------
 
-``bravado`` has taken care of that as well. ``result._flat_dict()`` results in complete dict response.
+``bravado`` has taken care of that as well. ``result.as_dict()`` results in complete dict response.
 
 Hello Pet response would look like::
 
@@ -92,7 +92,7 @@ Advanced options
 Validations
 -----------
 
-``bravado`` validates the schema as per v2.0 swagger spec. Validations are also done on the requests and the responses.
+``bravado`` validates the schema against the Swagger 2.0 Spec. Validations are also done on the requests and the responses.
 
 Validation example:
 
@@ -113,22 +113,6 @@ will result in error like so:
 
        If response validations and type conversions are totally needed to be skipped, you can pass ``raw_response=True`` as a parameter to ``result()`` to get back raw API response.
 
-Caching
--------
-
-``bravado`` exposes a factory method ``get_client`` to give back the swagger client. It caches the ``api-docs`` responses so that they are not made on each API call. The default timeout is 300 seconds, which can be altered by passing``timeout`` to ``get_client``.
-
-.. note::
-
-    Caching can totally be bypassed by using
-    :class:`bravado.client.SwaggerClient()` directly.
-
-    .. code-block:: python
-
-        client = SwaggerClient.from_url(
-            "http://petstore.swagger.wordnik.com/api/api-docs")
-
-
 Adding Request Headers
 ----------------------
 
@@ -136,9 +120,9 @@ Adding Request Headers
 
 .. code-block:: python
 
-        Pet = swagger_client.pet.models.Pet
-        Category = swagger_client.pet.models.Category
-        pet = Pet(id=42, name="tommy", category=Category(id=24))
+        Pet = swagger_client.get_model('Pet')
+        Category = swagger_client.get_model('Category')
+        status, pet = Pet(id=42, name="tommy", category=Category(id=24))
         swagger_client.pet.addPet(
             body=pet,
             _request_options={"headers": {"foo": "bar"}},
@@ -154,7 +138,7 @@ Wrapping HTTP response error with custom class
         class MyAwesomeException(Exception):
             pass
 
-        swagger_client = client.get_client(
+        swagger_client = SwaggerClient.from_url(
             "http://petstore.swagger.wordnik.com/api/api-docs",
             raise_with=MyAwesomeException)
 
@@ -166,7 +150,7 @@ api-docs
 
 .. code-block:: python
 
-        swagger_client = client.get_client(
+        swagger_client = SwaggerClient.from_url(
             "http://petstore.swagger.wordnik.com/api/api-docs",
             api_doc_request_headers={'foo': 'bar'})
 
@@ -226,7 +210,7 @@ Api-docs from file path
 
 .. code-block:: python
 
-        client = client.get_client('file:///path/to/api-docs')
+        client = SwaggerClient.from_url('file:///path/to/api-docs')
 
 .. note::
         This needs a nested level file structure. Resources should be present under ``api-docs/``. File path should not have ``.json`` with the api-docs. It will be added by ``bravado``. This feature is still in beta phase.
@@ -236,7 +220,7 @@ Other alternative way is by using helper method ``load_file``. This doesn't need
 .. code-block:: python
 
         from bravado.swagger_model import load_file
-        client = client.get_client(load_file('/path/to/api-docs'))
+        client = SwaggerClient.from_dict(load_file('/path/to/api-docs'))
 
 .. note::
-        Both of the above methods also take an optional parameter ``api_base_path`` which can define the base path for the API call if basePath in schema is defined as '/'. It can be used like: ``client.get_client('file:///path/to/api-docs', api_base_path='http://foo')``
+        Both of the above methods also take an optional parameter ``api_base_path`` which can define the base path for the API call if basePath in schema is defined as '/'. It can be used like: ``SwaggerClient.from_url('file:///path/to/api-docs', api_base_path='http://foo')``

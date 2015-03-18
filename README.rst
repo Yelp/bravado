@@ -27,9 +27,9 @@ Example Usage
 
 .. code:: Python
 
-    from bravado import client
-    swagger_client = client.get_client("http://petstore.swagger.wordnik.com/api/api-docs")
-    swagger_client.pet.getPetById(petId=42).result()
+    from bravado.client import SwaggerClient
+    swagger_client = SwaggeClient.from_url("http://petstore.swagger.wordnik.com/api/api-docs")
+    status, pet = swagger_client.pet.getPetById(petId=42).result()
 
 Documentation
 -------------
