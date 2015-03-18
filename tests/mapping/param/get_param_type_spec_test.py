@@ -1,5 +1,8 @@
+from bravado.mapping.exception import SwaggerMappingError
+from mock import Mock
 import pytest
 
+from bravado.mapping.operation import Operation
 from bravado.mapping.param import Param, get_param_type_spec
 
 
@@ -13,7 +16,7 @@ def test_location_is_body(empty_swagger_spec):
             'type': 'string'
         }
     }
-    param = Param(empty_swagger_spec, param_spec)
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
     assert param_spec['schema'] == get_param_type_spec(param)
 
 
@@ -26,7 +29,7 @@ def test_location_is_not_body(empty_swagger_spec):
             'required': True,
             'type': 'string',
         }
-        param = Param(empty_swagger_spec, param_spec)
+        param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
         assert param_spec == get_param_type_spec(param)
 
 
@@ -34,8 +37,8 @@ def test_location_unknown(empty_swagger_spec):
     param_spec = {
         'in': 'foo',
     }
-    param = Param(empty_swagger_spec, param_spec)
+    param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
 
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(SwaggerMappingError) as excinfo:
         get_param_type_spec(param)
     assert 'location foo' in str(excinfo)

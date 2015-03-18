@@ -17,12 +17,15 @@ def stringify_body(value):
 
 class Param(object):
     """Thin wrapper around a param_spec dict that provides convenience functions
-    for commonly requested parameter information
-
-    :type swagger_spec: :class:`Spec`
-    :type param_spec: parameter specification in dict form
+    for commonly requested parameter information.
     """
-    def __init__(self, swagger_spec, param_spec):
+    def __init__(self, swagger_spec, op, param_spec):
+        """
+        :type swagger_spec: :class:`bravado.mapping.spec.Spec`
+        :type op: :class:`bravado.mapping.operation.Operation`
+        :type param_spec: parameter specification in dict form
+        """
+        self.op = op
         self.swagger_spec = swagger_spec
         self.param_spec = param_spec
 
@@ -59,15 +62,15 @@ def get_param_type_spec(param):
 
     :rtype: dict
     :return: the param spec that contains 'type'
+    :raises: SwaggerMappingError when param location is not valid
     """
     location = param.location
     if location in ('path', 'query', 'header', 'formData'):
         return param.param_spec
-    elif location == 'body':
+    if location == 'body':
         return param.param_spec['schema']
-    else:
-        raise Exception(
-            "Don't know how to handle location {0}".format(location))
+    raise SwaggerMappingError(
+        "Don't know how to handle location {0}".format(location))
 
 
 def marshal_param(param, value, request):
@@ -80,7 +83,7 @@ def marshal_param(param, value, request):
         - query - can accept primitive and array of primitive types
         - header - can accept primitive and array of primitive types
         - body - can accept any type
-        - formdata - can only accept primitive types
+        - formData - can only accept primitive types
 
     :type param: :class:`Param`
     :param value: The value to assign to the parameter
@@ -100,9 +103,10 @@ def marshal_param(param, value, request):
     elif location == 'header':
         request['headers'][param.name] = value
     elif location == 'formData':
-        if request.get('data') is None:
-            request['data'] = {}
-        request['data'][param.name] = value
+        if spec['type'] == 'file':
+            add_file(param, value, request)
+        else:
+            request.setdefault('data', {})[param.name] = value
     elif location == 'body':
         request['headers']['Content-Type'] = APP_JSON
         request['data'] = json.dumps(value)
@@ -110,3 +114,34 @@ def marshal_param(param, value, request):
         raise SwaggerMappingError(
             "Don't know how to marshal_param with location {0}".
             format(location))
+
+
+def add_file(param, value, request):
+    """Add a parameter of type 'file' to the given request.
+
+    :type param: :class;`bravado.mapping.param.Param`
+    :param value: The raw content of the file to be uploaded
+    :type request: dict
+    """
+    if request.get('files') is None:
+        # support multiple files by default by setting to an empty array
+        request['files'] = []
+
+        # The http client should take care of setting the content-type header
+        # to 'multipart/form-data'. Just verify that the swagger spec is
+        # conformant
+        expected_mime_type = 'multipart/form-data'
+
+        # TODO: Remove after https://github.com/Yelp/swagger_spec_validator/issues/22 is implemented  # noqa
+        if expected_mime_type not in param.op.consumes:
+            raise SwaggerMappingError((
+                "Mime-type '{0}' not found in list of supported mime-types for "
+                "parameter '{1}' on operation '{2}': {3}").format(
+                    expected_mime_type,
+                    param.name,
+                    param.op.operation_id,
+                    param.op.consumes
+                ))
+
+    file_tuple = ('file', (param.name, value))
+    request['files'].append(file_tuple)

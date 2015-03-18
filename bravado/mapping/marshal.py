@@ -39,7 +39,9 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
     if obj_type == 'object':
         return marshal_object(swagger_spec, schema_object_spec, value)
 
-    # TODO: Support for 'file' type
+    if obj_type == 'file':
+        return value
+
     raise SwaggerMappingError('Unknown type {0} for value {1}'.format(
         obj_type, value))
 
