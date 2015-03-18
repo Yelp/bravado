@@ -6,11 +6,11 @@ API response.
 
 Structure Diagram::
 
-        +---------------------+           +---------------------+
-        |                     |           |                     |
-        |    SwaggerClient    <-----------+  SwaggerClientCache |
-        |                     |   caches  |                     |
-        +------+--------------+           +---------------------+
+        +---------------------+
+        |                     |
+        |    SwaggerClient    |
+        |                     |
+        +------+--------------+
                |
                |  has many
                |
@@ -37,138 +37,31 @@ Structure Diagram::
         +---------------------+
 
 
-To get a client with caching
+To get a client
 
 .. code-block:: python
 
-        client = bravado.client.get_client(api_docs_url)
-
-without caching
-
-.. code-block:: python
-
-        client = bravado.client.SwaggerClient.from_url(api_docs_url)
-
+        client = bravado.client.SwaggerClient.from_url(swagger_spec_url)
 """
 
 import logging
-import time
 
 from bravado.http_client import SynchronousHttpClient
-from bravado.swagger_model import (
-    Loader,
-    is_file_scheme_uri,
-)
 from bravado.mapping.spec import Spec
+from bravado.swagger_model import Loader
+
 
 log = logging.getLogger(__name__)
-
-SWAGGER_SPEC_CACHE_TTL = 300
-
-
-class CacheEntry(object):
-    """An entry in the cache. Each item has it's own ttl.
-
-    :param item: the item to cache
-    :param ttl: time-to-live in seconds after which the client expires
-    :type  ttl: int
-    """
-
-    def __init__(self, item, ttl, timestamp=None):
-        self.item = item
-        self.ttl = ttl
-        self.timestamp = timestamp or time.time()
-
-    def is_stale(self, timestamp=None):
-        """Checks if the instance has become stale
-        :return: True if the cache item is stale, False otherwise
-        """
-        current_time = timestamp or time.time()
-        return self.timestamp + self.ttl < current_time
-
-
-class SwaggerClientCache(object):
-    """Cache to store swagger clients and refetch the api-docs if the client
-    becomes stale
-    """
-
-    def __init__(self):
-        self.cache = dict()
-
-    def __contains__(self, key):
-        return key in self.cache and not self.cache[key].is_stale()
-
-    def __call__(self, *args, **kwargs):
-        # timeout is backwards compatible with 0.7
-        ttl = kwargs.pop('ttl', kwargs.pop('timeout', SWAGGER_SPEC_CACHE_TTL))
-        key = repr(args) + repr(sorted(kwargs.iteritems()))
-
-        if key not in self:
-            self.cache[key] = CacheEntry(
-                self.build_client(*args, **kwargs), ttl)
-
-        return self.cache[key].item
-
-    def build_client(self, spec_url_or_dict, *args, **kwargs):
-        if isinstance(spec_url_or_dict, basestring):
-            return SwaggerClient.from_url(spec_url_or_dict, *args, **kwargs)
-        return SwaggerClient.from_spec(spec_url_or_dict, *args, **kwargs)
-
-
-cache = None
-
-
-def get_client(*args, **kwargs):
-    """Factory method to generate SwaggerClient instance.
-
-    .. note::
-
-        This factory method uses a global which maintains the state of swagger
-        client. Use :class:`SwaggerClientCache` if you want more control.
-
-    To change the freshness timeout, simply pass an argument: ttl=<seconds>
-
-    To remove the caching functionality, pass: ttl=0
-
-    .. note::
-
-       It is OKAY to call get_swagger_client(...) again and again.
-       Do not keep a reference to the generated client and make it long
-       lived as it strips out the refetching functionality.
-
-    :param api_docs_url: url for swagger api docs used to build the client
-    :type  api_docs_url: str
-    :param ttl: (optional) Timeout in secs. after which api-docs is stale
-    :return: :class:`SwaggerClient`
-    """
-    global cache
-
-    if cache is None:
-        cache = SwaggerClientCache()
-
-    return cache(*args, **kwargs)
-
-
-def get_resource_url(base_path, url_base, resource_base_path):
-    if base_path:
-        return base_path
-
-    if url_base and resource_base_path.startswith('/'):
-        if is_file_scheme_uri(url_base):
-            raise AssertionError("Can't resolve relative resource urls with a "
-                                 " file:// url, for %s." % resource_base_path)
-        return url_base.rstrip('/') + resource_base_path
-
-    return resource_base_path
 
 
 class SwaggerClient(object):
     """A client for accessing a Swagger-documented RESTful service.
-
-    :param swagger_spec: :class:`bravado.mapping.spec.Spec`
     """
 
     def __init__(self, swagger_spec):
+        """
+        :param swagger_spec: :class:`bravado.mapping.spec.Spec`
+        """
         self.swagger_spec = swagger_spec
 
     @classmethod

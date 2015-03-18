@@ -23,7 +23,9 @@ def validate_schema_object(spec, value):
     elif obj_type == 'object':
         validate_object(spec, value)
 
-    # TODO: Support for 'file' type
+    elif obj_type == 'file':
+        pass
+
     else:
         raise SwaggerMappingError('Unknown type {0} for value {1}'.format(
             obj_type, value))
