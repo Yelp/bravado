@@ -28,8 +28,8 @@ Example Usage
 .. code:: Python
 
     from bravado.client import SwaggerClient
-    swagger_client = SwaggeClient.from_url("http://petstore.swagger.wordnik.com/api/api-docs")
-    status, pet = swagger_client.pet.getPetById(petId=42).result()
+    client = SwaggerClient.from_url("http://petstore.swagger.wordnik.com/api/api-docs")
+    status, pet = client.pet.getPetById(petId=42).result()
 
 Documentation
 -------------
