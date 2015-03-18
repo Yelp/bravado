@@ -1,4 +1,5 @@
 import logging
+from bravado.mapping.validate import validate_schema_object
 
 import fido
 import requests.models
@@ -35,6 +36,18 @@ class Operation(object):
         # (key, value) = (param name, Param)
         self.params = {}
 
+    @property
+    def consumes(self):
+        """
+        :return: List of supported mime types consumed by this operation. e.g.
+            ["application/x-www-form-urlencoded"]
+        :rtype: list of strings, never None
+        """
+        result = self.op_spec.get('consumes')
+        if result is None:
+            result = self.swagger_spec.spec_dict.get('consumes', [])
+        return result
+
     @classmethod
     def from_spec(cls, swagger_spec, path_name, http_method, op_spec):
         """
@@ -63,7 +76,7 @@ class Operation(object):
         param_specs = op_param_specs + path_param_specs
 
         for param_spec in param_specs:
-            param = Param(self.swagger_spec, param_spec)
+            param = Param(self.swagger_spec, self, param_spec)
             self.params[param.name] = param
 
     @property
@@ -185,8 +198,9 @@ def unmarshal_response(swagger_spec, response_spec, response):
     # TODO: Non-json response contents
     content_spec = response_spec['schema']
     content_value = response.json()
-    return response.status_code, unmarshal_schema_object(
-        swagger_spec, content_spec, content_value)
+    validate_schema_object(content_spec, content_value)
+    result = unmarshal_schema_object(swagger_spec, content_spec, content_value)
+    return response.status_code, result
 
 
 def get_response_spec(status_code, op):

@@ -2,11 +2,11 @@ from bravado.mapping import formatter, schema
 from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping.model import is_model, MODEL_MARKER
 from bravado.mapping.schema import (
+    get_spec_for_prop,
     is_dict_like,
     is_list_like,
-    SWAGGER_PRIMITIVES
+    SWAGGER_PRIMITIVES,
 )
-from bravado.mapping.validate import validate_array, validate_primitive
 
 
 def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
@@ -14,7 +14,6 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     Unmarshal the value using the given schema object specification.
 
     Unmarshaling includes:
-    - validate that the value conforms to the schema_object_spec
     - transform the value according to 'format' if available
     - return the value in a form suitable for use. e.g. conversion to a Model
       type.
@@ -64,7 +63,6 @@ def unmarshal_primitive(spec, value):
         #       breadcrumbs.
         raise TypeError('Spec {0} says this is a required value'.format(spec))
 
-    validate_primitive(spec, value)
     value = formatter.to_python(spec, value)
     return value
 
@@ -81,8 +79,6 @@ def unmarshal_array(swagger_spec, array_spec, array_value):
     if not is_list_like(array_value):
         raise TypeError('Expected list like type for {0}:{1}'.format(
             type(array_value), array_value))
-
-    validate_array(array_spec, array_value)
 
     result = []
     for element in array_value:
@@ -104,13 +100,19 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
         raise TypeError('Expected dict like type for {0}:{1}'.format(
             type(object_value), object_value))
 
-    # TODO: could also do this in-place instead of allocating a new dict. Think
-    #       about implications of this some more...
     result = {}
-    props_spec = object_spec['properties']
-    for prop_name, prop_spec in props_spec.iteritems():
-        result[prop_name] = unmarshal_schema_object(
-            swagger_spec, prop_spec, object_value.get(prop_name))
+    for k, v in object_value.iteritems():
+        prop_spec = get_spec_for_prop(object_spec, object_value, k)
+        if prop_spec:
+            result[k] = unmarshal_schema_object(swagger_spec, prop_spec, v)
+        else:
+            # Don't marshal when a spec is not available - just pass through
+            result[k] = v
+
+    # re-introduce and None'ify any properties that weren't passed
+    for prop_name, prop_spec in object_spec['properties'].iteritems():
+        if prop_name not in result:
+            result[prop_name] = None
     return result
 
 
@@ -137,10 +139,6 @@ def unmarshal_model(swagger_spec, model_spec, model_value):
             "Was {1} instead."
             .format(model_value, model_type, type(model_value)))
 
-    model_params = {}
-    props_spec = model_spec['properties']
-    for prop_name, prop_spec in props_spec.iteritems():
-        model_params[prop_name] = unmarshal_schema_object(
-            swagger_spec, prop_spec, model_value.get(prop_name, None))
-    model_instance = model_type(**model_params)
+    model_as_dict = unmarshal_object(swagger_spec, model_spec, model_value)
+    model_instance = model_type(**model_as_dict)
     return model_instance
