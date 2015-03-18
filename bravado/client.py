@@ -45,14 +45,11 @@ To get a client
 """
 
 import logging
-import time
 
 from bravado.http_client import SynchronousHttpClient
-from bravado.swagger_model import (
-    Loader,
-    is_file_scheme_uri,
-)
 from bravado.mapping.spec import Spec
+from bravado.swagger_model import Loader
+
 
 log = logging.getLogger(__name__)
 
