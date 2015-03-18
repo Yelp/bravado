@@ -26,17 +26,21 @@ def address_spec():
     }
 
 
-def test_object_with_properties(empty_swagger_spec, address_spec):
-    address = {
+@pytest.fixture
+def address():
+    return {
         'number': 1600,
         'street_name': 'Pennsylvania',
         'street_type': 'Avenue'
     }
+
+
+def test_properties(empty_swagger_spec, address_spec, address):
     result = marshal_object(empty_swagger_spec, address_spec, address)
     assert address == result
 
 
-def test_object_with_array(empty_swagger_spec, address_spec):
+def test_array(empty_swagger_spec, address_spec):
     tags_spec = {
         'type': 'array',
         'items': {
@@ -58,7 +62,7 @@ def test_object_with_array(empty_swagger_spec, address_spec):
     assert result == address
 
 
-def test_object_with_nested_object(empty_swagger_spec, address_spec):
+def test_nested_object(empty_swagger_spec, address_spec):
     location_spec = {
         'type': 'object',
         'properties': {
@@ -84,7 +88,7 @@ def test_object_with_nested_object(empty_swagger_spec, address_spec):
     assert result == address
 
 
-def test_object_with_model(minimal_swagger_dict, address_spec):
+def test_model(minimal_swagger_dict, address_spec):
     location_spec = {
         'type': 'object',
         'properties': {
@@ -119,4 +123,48 @@ def test_object_with_model(minimal_swagger_dict, address_spec):
     }
 
     result = marshal_object(swagger_spec, address_spec, address)
+    assert expected_address == result
+
+
+def test_object_not_dict_like_raises_TypeError(
+        empty_swagger_spec, address_spec):
+    i_am_not_dict_like = 34
+    with pytest.raises(TypeError) as excinfo:
+        marshal_object(empty_swagger_spec, address_spec, i_am_not_dict_like)
+    assert 'Expected dict' in str(excinfo.value)
+
+
+def test_missing_properties_not_marshaled(
+        empty_swagger_spec, address_spec, address):
+    del address['number']
+    expected_address = {
+        'street_name': 'Pennsylvania',
+        'street_type': 'Avenue'
+    }
+    result = marshal_object(empty_swagger_spec, address_spec, address)
+    assert expected_address == result
+
+
+def test_property_set_to_None_not_marshaled(
+        empty_swagger_spec, address_spec, address):
+    address['number'] = None
+    expected_address = {
+        'street_name': 'Pennsylvania',
+        'street_type': 'Avenue'
+    }
+    result = marshal_object(empty_swagger_spec, address_spec, address)
+    assert expected_address == result
+
+
+def test_pass_through_additionalProperties_with_no_spec(
+        empty_swagger_spec, address_spec, address):
+    address_spec['additionalProperties'] = True
+    address['city'] = 'Swaggerville'
+    expected_address = {
+        'number': 1600,
+        'street_name': 'Pennsylvania',
+        'street_type': 'Avenue',
+        'city': 'Swaggerville',
+    }
+    result = marshal_object(empty_swagger_spec, address_spec, address)
     assert expected_address == result
