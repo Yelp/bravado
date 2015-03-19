@@ -11,7 +11,10 @@ API_DOCS_URL = "http://localhost/api-docs"
 register_get = functools.partial(httpretty.register_uri, httpretty.GET)
 
 
-def register_spec(swagger_dict):
+def register_spec(swagger_dict, response_spec=None):
+    if response_spec is not None:
+        response_specs = swagger_dict['paths']['/test_http']['get']['responses']
+        response_specs['200']['schema'] = response_spec
     register_get(API_DOCS_URL, body=json.dumps(swagger_dict))
 
 
