@@ -1,4 +1,5 @@
 import logging
+import urlparse
 from bravado.mapping.validate import validate_schema_object
 
 import fido
@@ -113,7 +114,7 @@ class Operation(object):
         request_options = kwargs.pop('_request_options', {})
         request = {
             'method': self.http_method,
-            'url': self.swagger_spec.api_url + self.path_name,
+            'url': self.swagger_spec.api_url.rstrip('/') + self.path_name,
             'params': {},
             'headers': request_options.get('headers', {}),
         }
@@ -152,7 +153,7 @@ class Operation(object):
 
         def response_future(response, **kwargs):
             return handle_response(response, self, **kwargs)
-
+        print request
         return HTTPFuture(
             self.swagger_spec.http_client, request, response_future)
 
