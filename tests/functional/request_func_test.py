@@ -83,16 +83,33 @@ def test_parameter_in_path_of_request(httprettified, swagger_dict):
     assert (200, None) == resp
 
 
-# def test_success_on_passing_default_value_if_param_not_passed(self):
-#     self.parameter['defaultValue'] = 'testString'
-#     self.register_urls()
-#     httpretty.register_uri(httpretty.GET,
-#                            "http://localhost/test_http?", body='')
-#     resource = SwaggerClient.from_url(
-#         u'http://localhost/api-docs').api_test
-#     resource.testHTTP().result()
-#     self.assertEqual(['testString'],
-#                      httpretty.last_request().querystring['test_param'])
+def test_default_value_in_request(httprettified, swagger_dict):
+    swagger_dict['paths']['/test_http']['get']['parameters'][0]['default'] = 'X'
+    register_spec(swagger_dict)
+    register_get("http://localhost/test_http?")
+    resource = SwaggerClient.from_url(API_DOCS_URL).api_test
+    resource.testHTTP().result()
+    assert ['X'] == httpretty.last_request().querystring['test_param']
+
+
+def test_array_with_collection_format_in_path_of_request(
+        httprettified, swagger_dict):
+    path_param_spec = {
+        'in': 'path',
+        'name': 'param_ids',
+        'type': 'array',
+        'items': {
+            'type': 'integer'
+        },
+        'collectionFormat': 'csv',
+    }
+    swagger_dict['paths']['/test_http/{param_ids}'] = swagger_dict['paths'].pop('/test_http')
+    swagger_dict['paths']['/test_http/{param_ids}']['get']['parameters'] = [path_param_spec]
+    register_spec(swagger_dict)
+    register_get('http://localhost/test_http/40,41,42')
+    resource = SwaggerClient.from_url(API_DOCS_URL).api_test
+    assert (200, None) == resource.testHTTP(param_ids=[40, 41, 42]).result()
+
 
 class ResourceOperationTest(unittest.TestCase):
     def setUp(self):
@@ -134,45 +151,6 @@ class ResourceOperationTest(unittest.TestCase):
     # ######################################################
     # # Validate paramType of parameters - path, query, body
     # ######################################################
-    #
-    # @httpretty.activate
-    # def test_success_on_passing_default_value_if_param_not_passed(self):
-    #     self.parameter['defaultValue'] = 'testString'
-    #     self.register_urls()
-    #     httpretty.register_uri(httpretty.GET,
-    #                            "http://localhost/test_http?", body='')
-    #     resource = SwaggerClient.from_url(
-    #         u'http://localhost/api-docs').api_test
-    #     resource.testHTTP().result()
-    #     self.assertEqual(['testString'],
-    #                      httpretty.last_request().querystring['test_param'])
-    #
-    # @httpretty.activate
-    # def test_success_on_get_with_array_in_path_and_query_params(self):
-    #     query_parameter = {
-    #         "paramType": "query",
-    #         "name": "test_params",
-    #         "type": "string"}
-    #     path_parameter = {
-    #         "paramType": "path",
-    #         "name": "param_ids",
-    #         "type": "array",
-    #         "items": {
-    #             "type": "integer"}}
-    #     self.response["apis"][0]["path"] = "/params/{param_ids}/test_http"
-    #     self.response["apis"][0]["operations"][0]["parameters"] = [
-    #         query_parameter, path_parameter]
-    #     self.register_urls()
-    #     httpretty.register_uri(
-    #         httpretty.GET,
-    #         "http://localhost/params/40,41,42/test_http?", body='')
-    #     resource = SwaggerClient.from_url(
-    #         u'http://localhost/api-docs').api_test
-    #     resp = resource.testHTTP(test_params=["foo", "bar"],
-    #                              param_ids=[40, 41, 42]).result()
-    #     self.assertEqual(["foo", "bar"],
-    #                      httpretty.last_request().querystring['test_params'])
-    #     self.assertEqual(None, resp)
     #
     # @httpretty.activate
     # def test_error_on_get_with_wrong_type_in_query(self):
