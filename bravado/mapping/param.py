@@ -15,6 +15,7 @@ COLLECTION_FORMATS = {
     'pipes': '|'
 }
 
+
 def stringify_body(value):
     """Json dump the value to string if not already in string
     """

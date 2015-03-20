@@ -1,15 +1,17 @@
 import logging
-import urlparse
-from bravado.mapping.validate import validate_schema_object
 
 import fido
 import requests.models
 
-from bravado.mapping.unmarshal import unmarshal_schema_object
-from bravado.response import (FidoResponseAdapter,
-                              HTTPFuture, RequestsResponseAdapter)
 from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping.param import Param, marshal_param
+from bravado.mapping.unmarshal import unmarshal_schema_object
+from bravado.mapping.validate import validate_schema_object
+from bravado.response import (
+    FidoResponseAdapter,
+    HTTPFuture,
+    RequestsResponseAdapter
+)
 
 log = logging.getLogger(__name__)
 
@@ -153,7 +155,7 @@ class Operation(object):
 
         def response_future(response, **kwargs):
             return handle_response(response, self, **kwargs)
-        print request
+
         return HTTPFuture(
             self.swagger_spec.http_client, request, response_future)
 

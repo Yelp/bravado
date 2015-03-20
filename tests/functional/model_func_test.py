@@ -12,7 +12,7 @@ from tests.functional.conftest import register_spec, register_get, API_DOCS_URL
 
 @pytest.fixture
 def sample_model():
-    return  {
+    return {
         "id": 42,
         "schools": [
             {"name": "School1"},
@@ -104,7 +104,7 @@ def test_model_in_response(httprettified, swagger_dict, sample_model):
         schools=[
             School(name="School1"),
             School(name="School2")
-        ])  == result
+        ]) == result
 
 
 def test_model_missing_required_property_in_response_raises_ValidationError(

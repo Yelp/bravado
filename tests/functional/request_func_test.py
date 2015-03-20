@@ -97,8 +97,10 @@ def test_array_with_collection_format_in_path_of_request(
         },
         'collectionFormat': 'csv',
     }
-    swagger_dict['paths']['/test_http/{param_ids}'] = swagger_dict['paths'].pop('/test_http')
-    swagger_dict['paths']['/test_http/{param_ids}']['get']['parameters'] = [path_param_spec]
+    swagger_dict['paths']['/test_http/{param_ids}'] = \
+        swagger_dict['paths'].pop('/test_http')
+    swagger_dict['paths']['/test_http/{param_ids}']['get']['parameters'] = \
+        [path_param_spec]
     register_spec(swagger_dict)
     register_get('http://localhost/test_http/40,41,42')
     resource = SwaggerClient.from_url(API_DOCS_URL).api_test

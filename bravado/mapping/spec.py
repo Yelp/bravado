@@ -128,5 +128,4 @@ def build_api_serving_url(spec_dict, origin_url, preferred_scheme=None):
     netloc = spec_dict.get('host', origin.netloc)
     path = spec_dict.get('basePath', origin.path)
     scheme = pick_a_scheme(spec_dict.get('schemes'))
-    print urlparse.urlunparse((scheme, netloc, path, None, None, None))
     return urlparse.urlunparse((scheme, netloc, path, None, None, None))

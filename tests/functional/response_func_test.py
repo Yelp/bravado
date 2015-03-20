@@ -66,7 +66,7 @@ def test_invalid_primitive_types_in_response_raises_ValidationError(
 
 
 def test_unstructured_json_in_response(httprettified, swagger_dict):
-    response_spec = {'type': 'object', 'additionalProperties': True }
+    response_spec = {'type': 'object', 'additionalProperties': True}
     register_spec(swagger_dict, response_spec)
     register_test_http(body='{"some_foo": "bar"}')
     assert_status_and_result(200, {'some_foo': 'bar'})
