@@ -67,7 +67,7 @@ class AsyncHttpClientTest(unittest.TestCase):
             'headers': {'foo': 'bar'},
             'params': {'bar': u'酒場'},
         }
-        async_client = bravado.async_http_client.AsynchronousHttpClient()
+        async_client = bravado.async_http_client.FidoHttpClient()
         with patch('fido.fetch') as mock_fido:
             mock_fido.return_value.result.return_value = Response(
                 1, 2, 3, 4, 5, 6)
@@ -80,7 +80,7 @@ class AsyncHttpClientTest(unittest.TestCase):
 
     def test_start_request_with_only_url(self):
         url = 'http://example.com/api-docs'
-        async_client = bravado.async_http_client.AsynchronousHttpClient()
+        async_client = bravado.async_http_client.FidoHttpClient()
         # ugly mock, but this method runs in a twisted reactor which is
         # difficult to mock
         async_client.fetch_deferred = Mock()

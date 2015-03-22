@@ -2,29 +2,26 @@
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (c) 2014, Yelp, Inc.
+# Copyright (c) 2015, Yelp, Inc.
 #
-
-"""Asynchronous HTTP client abstractions.
-"""
 
 import logging
 
-import fido
 from yelp_uri import urllib_utf8
 
-from bravado import http_client
+from bravado.fido_future import FidoFuture
+from bravado.mapping.http_client import APP_FORM, HttpClient
 from bravado.multipart_response import create_multipart_content
 from bravado.mapping.param import stringify_body as param_stringify_body
 
 log = logging.getLogger(__name__)
 
 
-class AsynchronousHttpClient(http_client.HttpClient):
-    """Asynchronous HTTP client implementation.
+class FidoClient(HttpClient):
+    """Fido HTTP client implementation.
     """
 
-    def start_request(self, request_params):
+    def request(self, request_params, op=None):
         """Sets up the request params as per Twisted Agent needs.
         Sets up crochet and triggers the API request in background
 
@@ -42,7 +39,9 @@ class AsynchronousHttpClient(http_client.HttpClient):
             'headers': request_params.get('headers', {}),
         }
 
-        return fido.fetch(url, **request_params)
+        fido_future = FidoFuture(op, url, request_params)
+        fido_future.fetch()
+        return fido_future
 
 
 def stringify_body(request_params):
@@ -51,7 +50,7 @@ def stringify_body(request_params):
     headers = request_params.get('headers', {})
     if 'files' in request_params:
         return create_multipart_content(request_params, headers)
-    if headers.get('content-type') == http_client.APP_FORM:
+    if headers.get('content-type') == APP_FORM:
         return urllib_utf8.urlencode(request_params.get('data', {}))
 
     # TODO: same method 'stringify_body' exists with different args - fix!

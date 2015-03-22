@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import contextlib
 import logging
@@ -6,7 +7,7 @@ import urllib
 import urlparse
 
 from bravado.compat import json
-from bravado.http_client import SynchronousHttpClient
+from bravado.requests_client import RequestsClient
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ class FileEventual(object):
         pass
 
 
-def start_request(http_client, url, headers):
+def request(http_client, url, headers):
     """Download and parse JSON from a URL.
 
     :param http_client: a :class:`bravado.http_client.HttpClient`
@@ -62,7 +63,7 @@ def start_request(http_client, url, headers):
         'url': url,
         'headers': headers,
     }
-    return http_client.start_request(request_params)
+    return http_client.request(request_params)
 
 
 class Loader(object):
@@ -84,7 +85,7 @@ class Loader(object):
         :param base_url: TODO: need this?
         :returns: json spec in dict form
         """
-        spec_json = start_request(
+        spec_json = request(
             self.http_client,
             spec_url,
             self.request_headers,
@@ -92,7 +93,7 @@ class Loader(object):
         return spec_json
 
 
-# TODO: Adding the file scheme here just adds complexity to start_request()
+# TODO: Adding the file scheme here just adds complexity to request()
 # Is there a better way to handle this?
 def load_file(spec_file, http_client=None):
     """Loads a spec file
@@ -122,7 +123,7 @@ def load_url(spec_url, http_client=None, base_url=None):
     :raise: IOError, URLError: On error reading api-docs.
     """
     if http_client is None:
-        http_client = SynchronousHttpClient()
+        http_client = RequestsClient()
 
     loader = Loader(http_client=http_client)
     return loader.load_spec(spec_url, base_url=base_url)

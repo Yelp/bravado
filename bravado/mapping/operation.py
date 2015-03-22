@@ -1,11 +1,12 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+#
+# Copyright (c) 2014, Yelp, Inc.
+#
 import logging
 
-import fido
-import requests.models
-
 from bravado.mapping.unmarshal import unmarshal_schema_object
-from bravado.response import (FidoResponseAdapter,
-                              HTTPFuture, RequestsResponseAdapter)
 from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping.param import Param, marshal_param
 
@@ -137,45 +138,20 @@ class Operation(object):
         log.debug(u"%s(%s)" % (self.operation_id, kwargs))
         request = self.construct_request(**kwargs)
 
-        def response_future(response, **kwargs):
-            return handle_response(response, self, **kwargs)
-
-        return HTTPFuture(
-            self.swagger_spec.http_client, request, response_future)
+        return self.swagger_spec.http_client.request(request, self)
 
 
-def handle_response(response, op):
-    """Process the response from the given operation invocation's request.
-
-    :type response: 3rd party library http response object
-          :class:`requests.models.Response`  or
-          :class:`fido.fido.Response`
-    :type op: :class:`bravado.mapping.operation.Operation`
-    :returns: tuple (status_code, response value) where type(response value)
-        is one of None, python primitive, list, object, or Model.
-    """
-    if isinstance(response, requests.models.Response):
-        wrapped_response = RequestsResponseAdapter(response)
-    elif isinstance(response, fido.fido.Response):
-        wrapped_response = FidoResponseAdapter(response)
-    else:
-        raise NotImplementedError(
-            'TODO: Handle response of type {0}'.format(type(response)))
-
-    response_spec = get_response_spec(wrapped_response.status_code, op)
-    return unmarshal_response(op.swagger_spec, response_spec, wrapped_response)
-
-
-def unmarshal_response(swagger_spec, response_spec, response):
+def unmarshal_response(response, op):
     """Unmarshal the http response into a (status_code, value) based on the
     response specification.
 
-    :type swagger_spec: :class:`bravado.mapping.spec.Spec`
-    :param response_spec: response specification in dict form
     :type response: :class:`bravado.mapping.response.ResponseLike`
+    :type op: :class:`bravado.mapping.operation.Operation`
     :returns: tuple of (status_code, value) where type(value) matches
         response_spec['schema']['type'] if it exists, None otherwise.
     """
+    response_spec = get_response_spec(response.status_code, op)
+
     def has_content(response_spec):
         return 'schema' in response_spec
 
@@ -186,7 +162,7 @@ def unmarshal_response(swagger_spec, response_spec, response):
     content_spec = response_spec['schema']
     content_value = response.json()
     return response.status_code, unmarshal_schema_object(
-        swagger_spec, content_spec, content_value)
+        op.swagger_spec, content_spec, content_value)
 
 
 def get_response_spec(status_code, op):

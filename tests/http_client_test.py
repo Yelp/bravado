@@ -8,12 +8,12 @@ import pytest
 import requests
 
 from bravado.http_client import (
-    SynchronousHttpClient,
+    RequestsHttpClient,
     SynchronousEventual,
 )
 
 
-class SynchronousClientTestCase(unittest.TestCase):
+class RequestsClientTestCase(unittest.TestCase):
 
     def _default_params(self):
         return {
@@ -28,7 +28,7 @@ class SynchronousClientTestCase(unittest.TestCase):
             httpretty.GET, "http://swagger.py/client-test",
             body='expected')
 
-        client = SynchronousHttpClient()
+        client = RequestsHttpClient()
         params = self._default_params()
         params['params'] = {'foo': 'bar'}
 
@@ -45,7 +45,7 @@ class SynchronousClientTestCase(unittest.TestCase):
             httpretty.GET, "http://swagger.py/client-test",
             body='expected')
 
-        client = SynchronousHttpClient()
+        client = RequestsHttpClient()
         params = self._default_params()
         params['params'] = {'foo': u'酒場'}
 
@@ -62,7 +62,7 @@ class SynchronousClientTestCase(unittest.TestCase):
             httpretty.POST, "http://swagger.py/client-test",
             body='expected', content_type='text/json')
 
-        client = SynchronousHttpClient()
+        client = RequestsHttpClient()
         params = self._default_params()
         params['data'] = {'foo': 'bar'}
         params['method'] = 'POST'
@@ -83,7 +83,7 @@ class SynchronousClientTestCase(unittest.TestCase):
             httpretty.GET, "http://swagger.py/client-test",
             body='expected')
 
-        client = SynchronousHttpClient()
+        client = RequestsHttpClient()
         client.set_basic_auth("swagger.py", 'unit', 'peekaboo')
         params = self._default_params()
         params['params'] = {'foo': 'bar'}
@@ -103,7 +103,7 @@ class SynchronousClientTestCase(unittest.TestCase):
             httpretty.GET, "http://swagger.py/client-test",
             body='expected')
 
-        client = SynchronousHttpClient()
+        client = RequestsHttpClient()
         client.set_api_key("swagger.py", 'abc123', param_name='test')
         params = self._default_params()
         params['params'] = {'foo': 'bar'}
@@ -121,7 +121,7 @@ class SynchronousClientTestCase(unittest.TestCase):
             httpretty.GET, "http://hackerz.py",
             body='expected')
 
-        client = SynchronousHttpClient()
+        client = RequestsHttpClient()
         client.set_basic_auth("swagger.py", 'unit', 'peekaboo')
         params = self._default_params()
         params['params'] = {'foo': 'bar'}

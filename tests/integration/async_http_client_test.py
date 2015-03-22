@@ -7,7 +7,7 @@ import unittest
 
 import bottle
 
-from bravado.async_http_client import AsynchronousHttpClient
+from bravado.async_http_client import FidoHttpClient
 
 
 ROUTE_1_RESPONSE = "HEY BUDDY"
@@ -48,7 +48,7 @@ class TestServer(unittest.TestCase):
         port = get_hopefully_free_port()
         launch_threaded_http_server(port)
 
-        client = AsynchronousHttpClient()
+        client = FidoHttpClient()
 
         request_one_params = {
             'method': 'GET',

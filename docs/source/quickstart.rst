@@ -58,10 +58,10 @@ Time to get Twisted! (Asynchronous client)
 .. code-block:: python
 
         from bravado import client
-        from bravado.async_http_client import AsynchronousHttpClient
+        from bravado.fido_http_client import FidoHttpClient
         swagger_client = client.get_client(
             "http://petstore.swagger.wordnik.com/api/api-docs",
-            AsynchronousHttpClient())
+            FidoHttpClient())
         client.pet.getPetById(petId=42).result(timeout=4)
 
 .. note::

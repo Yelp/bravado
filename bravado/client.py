@@ -54,7 +54,7 @@ without caching
 import logging
 import time
 
-from bravado.http_client import SynchronousHttpClient
+from bravado.requests_client import RequestsClient
 from bravado.swagger_model import (
     Loader,
     is_file_scheme_uri,
@@ -187,7 +187,7 @@ class SwaggerClient(object):
         # TODO: better way to customize the request for api calls, so we don't
         #       have to add new kwargs for everything
         log.debug(u"Loading from %s" % spec_url)
-        http_client = http_client or SynchronousHttpClient()
+        http_client = http_client or RequestsClient()
         loader = Loader(http_client, request_headers=request_headers)
         spec_dict = loader.load_spec(spec_url)
         return cls.from_spec(spec_dict, spec_url, http_client)
