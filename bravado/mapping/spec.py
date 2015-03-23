@@ -20,6 +20,7 @@ CONFIG_DEFAULTS = {
     'validate_responses': True,
 }
 
+
 class Spec(object):
     """Represents a Swagger Specification for a service.
     """
@@ -54,7 +55,8 @@ class Spec(object):
         self.responses = None
 
     @classmethod
-    def from_dict(cls, spec_dict, origin_url=None, http_client=None, config=None):
+    def from_dict(cls, spec_dict, origin_url=None, http_client=None,
+                  config=None):
         """
         Build a :class:`Spec` from Swagger API Specificiation
 
