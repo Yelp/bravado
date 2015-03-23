@@ -42,7 +42,9 @@ def unmarshal_schema_object(swagger_spec, schema_object_spec, value):
     if obj_type == 'object':
         return unmarshal_object(swagger_spec, schema_object_spec, value)
 
-    # TODO: Support for 'file' type
+    if obj_type == 'file':
+        return value
+
     raise SwaggerMappingError(
         "Don't know how to unmarshal value {0} with a value of {1}"
         .format(value, obj_type))
@@ -110,7 +112,7 @@ def unmarshal_object(swagger_spec, object_spec, object_value):
             result[k] = v
 
     # re-introduce and None'ify any properties that weren't passed
-    for prop_name, prop_spec in object_spec['properties'].iteritems():
+    for prop_name, prop_spec in object_spec.get('properties', {}).iteritems():
         if prop_name not in result:
             result[prop_name] = None
     return result
