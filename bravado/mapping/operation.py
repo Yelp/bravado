@@ -201,7 +201,8 @@ def unmarshal_response(swagger_spec, response_spec, response):
     # TODO: Non-json response contents
     content_spec = response_spec['schema']
     content_value = response.json()
-    validate_schema_object(content_spec, content_value)
+    if swagger_spec.config['validate_responses']:
+        validate_schema_object(content_spec, content_value)
     result = unmarshal_schema_object(swagger_spec, content_spec, content_value)
     return response.status_code, result
 
