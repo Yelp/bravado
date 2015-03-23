@@ -37,8 +37,7 @@ class Spec(object):
         self.origin_url = origin_url or 'unknown'
         self.http_client = http_client
         self.api_url = None
-        self.config = copy.deepcopy(CONFIG_DEFAULTS)
-        self.config.update(config or {})
+        self.config = dict(CONFIG_DEFAULTS, **(config or {}))
 
         # (key, value) = (simple format def name, Model type)
         # (key, value) = (#/ format def ref, Model type)
