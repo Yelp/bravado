@@ -43,17 +43,27 @@ def create_model_type(model_name, model_spec):
     :returns: dynamic type created with attributes, docstrings attached
     :rtype: type
     """
-    props = model_spec['properties']
-
     methods = dict(
         __doc__=docstring_property(partial(create_model_docstring, model_spec)),
         __eq__=lambda self, other: compare(self, other),
         __init__=lambda self, **kwargs: model_constructor(self, model_spec,
                                                           kwargs),
         __repr__=lambda self: create_model_repr(self, model_spec),
-        __dir__=lambda self: props.keys(),
+        __dir__=lambda self: model_dir(self, model_spec),
     )
     return type(str(model_name), (object,), methods)
+
+
+def model_dir(model, model_spec):
+    """Responsible for returning the names of the valid attributes on this
+    model object.  This includes any properties defined in this model's spec
+    plus additional attibutes that exist as `additionalProperties`.
+
+    :param model: instance of a model
+    :param model_spec: spec the passed in model in dict form
+    :returns: list of str
+    """
+    return model_spec['properties'].keys() + model._additional_props
 
 
 def compare(first, second):
@@ -101,10 +111,17 @@ def model_constructor(model, model_spec, constructor_kwargs):
             attr_value = None
         setattr(model, attr_name, attr_value)
 
-    if arg_names:
+    if arg_names and not model_spec.get('additionalProperties', True):
         raise AttributeError(
             "Model {0} does not have attributes for: {1}"
             .format(type(model), arg_names))
+
+    # we've got additionalProperties to set on the model
+    for arg_name in arg_names:
+        setattr(model, arg_name, constructor_kwargs[arg_name])
+
+    # stash so that dir(model) works
+    model._additional_props = arg_names
 
 
 def create_model_repr(model, model_spec):

@@ -1,8 +1,8 @@
 import pytest
 
-from bravado import client
+from bravado.client import SwaggerClient
 
-
+# TODO: remove
 if False:
     import logging
     logging.basicConfig()
@@ -11,4 +11,4 @@ if False:
 
 @pytest.fixture
 def petstore():
-    return client.get_client('http://petstore.swagger.io/v2/swagger.json')
+    return SwaggerClient.from_url('http://petstore.swagger.io/v2/swagger.json')

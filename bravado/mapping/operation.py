@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 #
 # Copyright (c) 2014, Yelp, Inc.
 #
@@ -9,6 +8,7 @@ import logging
 from bravado.mapping.unmarshal import unmarshal_schema_object
 from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping.param import Param, marshal_param
+from bravado.mapping.validate import validate_schema_object
 
 log = logging.getLogger(__name__)
 
@@ -35,6 +35,18 @@ class Operation(object):
 
         # (key, value) = (param name, Param)
         self.params = {}
+
+    @property
+    def consumes(self):
+        """
+        :return: List of supported mime types consumed by this operation. e.g.
+            ["application/x-www-form-urlencoded"]
+        :rtype: list of strings, never None
+        """
+        result = self.op_spec.get('consumes')
+        if result is None:
+            result = self.swagger_spec.spec_dict.get('consumes', [])
+        return result
 
     @classmethod
     def from_spec(cls, swagger_spec, path_name, http_method, op_spec):
@@ -64,7 +76,7 @@ class Operation(object):
         param_specs = op_param_specs + path_param_specs
 
         for param_spec in param_specs:
-            param = Param(self.swagger_spec, param_spec)
+            param = Param(self.swagger_spec, self, param_spec)
             self.params[param.name] = param
 
     @property
@@ -161,8 +173,10 @@ def unmarshal_response(response, op):
     # TODO: Non-json response contents
     content_spec = response_spec['schema']
     content_value = response.json()
-    return response.status_code, unmarshal_schema_object(
+    validate_schema_object(content_spec, content_value)
+    result = unmarshal_schema_object(
         op.swagger_spec, content_spec, content_value)
+    return response.status_code, result
 
 
 def get_response_spec(status_code, op):

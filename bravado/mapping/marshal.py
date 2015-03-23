@@ -1,13 +1,11 @@
-from bravado.mapping import schema
-from bravado.mapping import formatter
+from bravado.mapping import formatter, schema
 from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping.model import is_model, MODEL_MARKER
 from bravado.mapping.schema import (
     is_dict_like,
     is_list_like,
-    SWAGGER_PRIMITIVES
-)
-from bravado.mapping.validate import validate_primitive, validate_array
+    SWAGGER_PRIMITIVES,
+    get_spec_for_prop)
 
 
 def marshal_schema_object(swagger_spec, schema_object_spec, value):
@@ -15,7 +13,6 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
     Marshal the value using the given schema object specification.
 
     Marshaling includes:
-    - validate that the value conforms to the schema_object_spec
     - transform the value according to 'format' if available
     - return the value in a form suitable for 'on-the-wire' transmission
 
@@ -42,7 +39,9 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
     if obj_type == 'object':
         return marshal_object(swagger_spec, schema_object_spec, value)
 
-    # TODO: Support for 'file' type
+    if obj_type == 'file':
+        return value
+
     raise SwaggerMappingError('Unknown type {0} for value {1}'.format(
         obj_type, value))
 
@@ -67,7 +66,6 @@ def marshal_primitive(spec, value):
 
     if not default_used:
         value = formatter.to_wire(spec, value)
-        validate_primitive(spec, value)
 
     return value
 
@@ -90,7 +88,6 @@ def marshal_array(swagger_spec, array_spec, array_value):
         result.append(marshal_schema_object(
             swagger_spec, array_spec['items'], element))
 
-    validate_array(array_spec, result)
     return result
 
 
@@ -101,17 +98,26 @@ def marshal_object(swagger_spec, object_spec, object_value):
     :type object_spec: dict or jsonref.JsonRef
     :type object_value: dict
     :rtype: dict
-    :raises: TypeError
+    :raises: SwaggerMappingError
     """
     if not is_dict_like(object_value):
         raise TypeError('Expected dict like type for {0}:{1}'.format(
             type(object_value), object_value))
 
     result = {}
-    props_spec = object_spec['properties']
-    for prop_name, prop_spec in props_spec.iteritems():
-        result[prop_name] = marshal_schema_object(
-            swagger_spec, prop_spec, object_value.get(prop_name))
+    for k, v in object_value.iteritems():
+
+        # Values cannot be None - skip them entirely!
+        if v is None:
+            continue
+
+        prop_spec = get_spec_for_prop(object_spec, object_value, k)
+        if prop_spec:
+            result[k] = marshal_schema_object(swagger_spec, prop_spec, v)
+        else:
+            # Don't marshal when a spec is not available - just pass through
+            result[k] = v
+
     return result
 
 
@@ -134,9 +140,11 @@ def marshal_model(swagger_spec, model_spec, model_value):
         raise TypeError('Expected model of type {0} for {1}:{2}'.format(
             model_name, type(model_value), model_value))
 
-    result = {}
-    props_spec = model_spec['properties']
-    for prop_name, prop_spec in props_spec.iteritems():
-        result[prop_name] = marshal_schema_object(
-            swagger_spec, prop_spec, getattr(model_value, prop_name))
-    return result
+    # just convert the model to a dict and feed into `marshal_object` because
+    # models are essentially 'type':'object' when marshaled
+    attr_names = dir(model_value)
+    object_value = dict(
+        (attr_name, getattr(model_value, attr_name))
+        for attr_name in attr_names)
+
+    return marshal_object(swagger_spec, model_spec, object_value)

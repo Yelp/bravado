@@ -60,7 +60,7 @@ class Spec(object):
     def build(self):
         validator20.validate_spec(self.spec_dict)
         self.api_url = build_api_serving_url(self.spec_dict, self.origin_url)
-        self.definitions = build_models(self.spec_dict['definitions'])
+        self.definitions = build_models(self.spec_dict.get('definitions', {}))
         self.responses = self.build_responses()
         self.resources = build_resources(self)
 
