@@ -65,19 +65,19 @@ import pytest
 from requests import HTTPError
 
 from bravado.client import SwaggerClient
-from bravado.exception import CancelledError
 from bravado.mapping.exception import SwaggerMappingError
-from bravado.response import HTTPFuture
+from bravado.mapping.http_future import HttpFuture
 
 
+@pytest.mark.xfail(reason='Removed the `cancel` option from http client')
 class HTTPFutureTest(unittest.TestCase):
     def setUp(self):
         self.http_client = Mock()
-        self.future = HTTPFuture(self.http_client, None, None)
+        self.future = HttpFuture(self.http_client, None, None)
 
     def test_raise_cancelled_error_if_result_is_called_after_cancel(self):
         self.future.cancel()
-        self.assertRaises(CancelledError, self.future.result)
+#        self.assertRaises(CancelledError, self.future.result)
 
     def test_cancelled_returns_true_if_called_after_cancel(self):
         self.future.cancel()
@@ -259,7 +259,7 @@ class ResourceResponseTest(unittest.TestCase):
         self.register_urls()
         future = SwaggerClient.from_url(
             u'http://localhost/api-docs').api_test.testHTTP(test_param="a")
-        self.assertTrue(isinstance(future, HTTPFuture))
+        self.assertTrue(isinstance(future, HttpFuture))
 
 
 if __name__ == '__main__':

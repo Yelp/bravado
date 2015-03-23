@@ -1,6 +1,6 @@
 import pytest
 
-from bravado.http_client import APP_JSON
+from bravado.mapping.http_client import APP_JSON
 from bravado.mapping.param import Param, marshal_param
 
 

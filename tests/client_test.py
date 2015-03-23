@@ -8,7 +8,7 @@ from mock import patch
 import pytest
 
 from bravado import client
-from bravado.async_http_client import FidoHttpClient
+from bravado.fido_client import FidoClient
 from bravado.client import (
     SwaggerClient,
     SwaggerClientCache,
@@ -74,8 +74,8 @@ class SwaggerClientCacheTest(unittest.TestCase):
         url = 'http://example.com/api-docs'
         swagger_client = client.get_client(
             url,
-            http_client=FidoHttpClient())
-        other = client.get_client(url, http_client=FidoHttpClient())
+            http_client=FidoClient())
+        other = client.get_client(url, http_client=FidoClient())
         assert swagger_client is other
 
 

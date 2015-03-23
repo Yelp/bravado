@@ -15,19 +15,19 @@ from collections import namedtuple
 from mock import patch, Mock
 from ordereddict import OrderedDict
 
-import bravado.async_http_client
+import bravado.fido_client
 import bravado.exception
-import bravado.http_client
+from bravado.mapping.http_client import APP_FORM
 
 
 class AsyncHttpClientTest(unittest.TestCase):
 
     def test_stringify_async_body_returns_file_producer(self):
-        def_str = 'bravado.async_http_client.param_stringify_body'
+        def_str = 'bravado.fido_client.param_stringify_body'
         with patch(def_str) as mock_stringify:
             mock_stringify.return_value = '42'
             body = {'data': 42, 'headers': {}}
-            resp = bravado.async_http_client.stringify_body(body)
+            resp = bravado.fido_client.stringify_body(body)
 
             self.assertEqual('42', resp)
 
@@ -40,7 +40,7 @@ class AsyncHttpClientTest(unittest.TestCase):
                    'headers': {'content-type': 'tmp'}}
         with patch('bravado.multipart_response.get_random_boundary',
                    return_value='zz'):
-            resp = bravado.async_http_client.stringify_body(request)
+            resp = bravado.fido_client.stringify_body(request)
 
             expected_contents = (
                 '--zz\r\nContent-Disposition: form-data; name=fake;' +
@@ -51,8 +51,8 @@ class AsyncHttpClientTest(unittest.TestCase):
 
     def test_stringify_files_creates_correct_form_content(self):
         request = {'data': OrderedDict([('id', 42), ('name', 'test')]),
-                   'headers': {'content-type': bravado.http_client.APP_FORM}}
-        resp = bravado.async_http_client.stringify_body(request)
+                   'headers': {'content-type': APP_FORM}}
+        resp = bravado.fido_client.stringify_body(request)
 
         expected_contents = ('id=42&name=test')
         self.assertEqual(expected_contents, resp)
@@ -67,11 +67,11 @@ class AsyncHttpClientTest(unittest.TestCase):
             'headers': {'foo': 'bar'},
             'params': {'bar': u'酒場'},
         }
-        async_client = bravado.async_http_client.FidoHttpClient()
+        async_client = bravado.fido_client.FidoClient()
         with patch('fido.fetch') as mock_fido:
             mock_fido.return_value.result.return_value = Response(
                 1, 2, 3, 4, 5, 6)
-            eventual = async_client.start_request(req)
+            eventual = async_client.request(req)
             resp = eventual.result(timeout=5)
             self.assertEqual(2, resp.code)
         mock_fido.assert_called_once_with('foo?bar=%E9%85%92%E5%A0%B4',
@@ -80,13 +80,13 @@ class AsyncHttpClientTest(unittest.TestCase):
 
     def test_start_request_with_only_url(self):
         url = 'http://example.com/api-docs'
-        async_client = bravado.async_http_client.FidoHttpClient()
+        async_client = bravado.fido_client.FidoClient()
         # ugly mock, but this method runs in a twisted reactor which is
         # difficult to mock
         async_client.fetch_deferred = Mock()
 
         with patch('fido.fetch') as mock_fetch:
-            async_client.start_request(dict(url=url))
+            async_client.request(dict(url=url))
 
         mock_fetch.assert_called_once_with(
             '{0}?'.format(url), body='', headers={}, method='GET')

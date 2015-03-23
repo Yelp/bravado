@@ -2,7 +2,7 @@ import urllib
 import simplejson as json
 
 from bravado.mapping.exception import SwaggerMappingError
-from bravado.http_client import APP_JSON
+from bravado.mapping.http_client import APP_JSON
 from bravado.mapping.marshal import marshal_schema_object
 
 

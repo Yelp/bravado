@@ -7,10 +7,7 @@ import mock
 import pytest
 import requests
 
-from bravado.http_client import (
-    RequestsHttpClient,
-    SynchronousEventual,
-)
+from bravado.requests_client import RequestsClient
 
 
 class RequestsClientTestCase(unittest.TestCase):
@@ -28,11 +25,11 @@ class RequestsClientTestCase(unittest.TestCase):
             httpretty.GET, "http://swagger.py/client-test",
             body='expected')
 
-        client = RequestsHttpClient()
+        client = RequestsClient()
         params = self._default_params()
         params['params'] = {'foo': 'bar'}
 
-        resp = client.start_request(params).wait()
+        resp = client.request(params).result()
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -45,11 +42,11 @@ class RequestsClientTestCase(unittest.TestCase):
             httpretty.GET, "http://swagger.py/client-test",
             body='expected')
 
-        client = RequestsHttpClient()
+        client = RequestsClient()
         params = self._default_params()
         params['params'] = {'foo': u'酒場'}
 
-        resp = client.start_request(params).wait()
+        resp = client.request(params).result()
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -62,12 +59,12 @@ class RequestsClientTestCase(unittest.TestCase):
             httpretty.POST, "http://swagger.py/client-test",
             body='expected', content_type='text/json')
 
-        client = RequestsHttpClient()
+        client = RequestsClient()
         params = self._default_params()
         params['data'] = {'foo': 'bar'}
         params['method'] = 'POST'
 
-        resp = client.start_request(params).wait()
+        resp = client.request(params).result()
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -83,12 +80,12 @@ class RequestsClientTestCase(unittest.TestCase):
             httpretty.GET, "http://swagger.py/client-test",
             body='expected')
 
-        client = RequestsHttpClient()
+        client = RequestsClient()
         client.set_basic_auth("swagger.py", 'unit', 'peekaboo')
         params = self._default_params()
         params['params'] = {'foo': 'bar'}
 
-        resp = client.start_request(params).wait()
+        resp = client.request(params).result()
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -103,12 +100,12 @@ class RequestsClientTestCase(unittest.TestCase):
             httpretty.GET, "http://swagger.py/client-test",
             body='expected')
 
-        client = RequestsHttpClient()
+        client = RequestsClient()
         client.set_api_key("swagger.py", 'abc123', param_name='test')
         params = self._default_params()
         params['params'] = {'foo': 'bar'}
 
-        resp = client.start_request(params).wait()
+        resp = client.request(params).result()
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -121,13 +118,13 @@ class RequestsClientTestCase(unittest.TestCase):
             httpretty.GET, "http://hackerz.py",
             body='expected')
 
-        client = RequestsHttpClient()
+        client = RequestsClient()
         client.set_basic_auth("swagger.py", 'unit', 'peekaboo')
         params = self._default_params()
         params['params'] = {'foo': 'bar'}
         params['url'] = 'http://hackerz.py'
 
-        resp = client.start_request(params).wait()
+        resp = client.request(params).result()
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -151,18 +148,20 @@ def mock_request():
         params={})
 
 
+@pytest.mark.xfail(reason='Removed SynchronousEventual from http client')
 class TestSynchronousEventual(object):
 
-    def test_wait(self, mock_session, mock_request):
+    def test_result(self, mock_session, mock_request):
         timeout = 20
-        sync_eventual = SynchronousEventual(mock_session, mock_request)
-        assert sync_eventual.wait(timeout) == mock_session.send.return_value
+        # sync_eventual = SynchronousEventual(mock_session, mock_request)
+        # assert sync_eventual.result(timeout) == mock_session.send.return_value
 
         mock_session.send.assert_called_once_with(
             mock_session.prepare_request.return_value,
             timeout=timeout)
 
     def test_cancel(self, mock_session, mock_request):
-        sync_eventual = SynchronousEventual(mock_session, mock_request)
+        # sync_eventual = SynchronousEventual(mock_session, mock_request)
         # no-op cancel, test that is supports the interface
-        sync_eventual.cancel()
+        # sync_eventual.cancel()
+        pass
