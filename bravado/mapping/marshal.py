@@ -31,9 +31,14 @@ def marshal_schema_object(swagger_spec, schema_object_spec, value):
         return marshal_array(swagger_spec, schema_object_spec, value)
 
     if is_model(schema_object_spec):
-        # It is important that the 'model' check comes before 'object' check.
-        # Model specs also have type 'object' but also have the additional
-        # MODEL_MARKER key for identification.
+
+        # Allow models to be passed in as dicts for flexibility.
+        if is_dict_like(value):
+            return marshal_object(swagger_spec, schema_object_spec, value)
+
+        # It is important that the 'model' check comes before 'object' check
+        # below. Model specs are of type 'object' but also have a MODEL_MARKER
+        # key for identification.
         return marshal_model(swagger_spec, schema_object_spec, value)
 
     if obj_type == 'object':
@@ -136,7 +141,7 @@ def marshal_model(swagger_spec, model_spec, model_value):
     if model_type is None:
         raise TypeError('Unknown model {0}'.format(model_name))
 
-    if type(model_value) != model_type:
+    if not isinstance(model_value, model_type):
         raise TypeError('Expected model of type {0} for {1}:{2}'.format(
             model_name, type(model_value), model_value))
 
