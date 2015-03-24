@@ -178,7 +178,7 @@ class Operation(object):
         _request_options = kwargs.pop('_request_options', {}) or {}
 
         request = {}
-        request['method'] = self._json[u'method']
+        request['method'] = str(self._json[u'method'])
         request['url'] = self._uri
         request['params'] = {}
         request['headers'] = _request_options.get('headers', {}) or {}

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
+import tempfile
 import unittest
 
 import httpretty
@@ -235,6 +236,20 @@ class ClientTest(unittest.TestCase):
                          httpretty.last_request().querystring)
 
     @httpretty.activate
+    def test_post_binary_data(self):
+        httpretty.register_uri(
+            httpretty.POST, 'http://swagger.py/swagger-test/pet/1234/vaccine',
+            status=requests.codes.no_content)
+
+        temporary_file = tempfile.TemporaryFile()
+        temporary_file.write('\xff\xd8')
+        temporary_file.seek(0)
+
+        resp = self.uut.pet.postVaccine(
+            vaccineFile=temporary_file, petId=1234).result()
+        self.assertEqual(None, resp)
+
+    @httpretty.activate
     def test_delete(self):
         httpretty.register_uri(
             httpretty.DELETE, "http://swagger.py/swagger-test/pet/1234",
@@ -324,6 +339,28 @@ class ClientTest(unittest.TestCase):
                                                 "name": "petId",
                                                 "type": "integer",
                                                 "paramType": "path"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "path": "/pet/{petId}/vaccine",
+                                "operations": [
+                                    {
+                                        "method": u"POST",
+                                        "nickname": "postVaccine",
+                                        "type": "void",
+                                        "parameters": [
+                                            {
+                                                "name": "petId",
+                                                "type": "integer",
+                                                "paramType": "path"
+                                            },
+                                            {
+                                                "name": "vaccineFile",
+                                                "type": "File",
+                                                "paramType": "form"
                                             }
                                         ]
                                     }
