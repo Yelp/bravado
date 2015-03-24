@@ -178,6 +178,8 @@ class Operation(object):
         _request_options = kwargs.pop('_request_options', {}) or {}
 
         request = {}
+        # The requests library expects native strings. Without this, POST
+        # with a binary file upload throws a UnicodeDecodeError.
         request['method'] = str(self._json[u'method'])
         request['url'] = self._uri
         request['params'] = {}

@@ -261,113 +261,113 @@ class ClientTest(unittest.TestCase):
     def setUp(self):
         # Default handlers for all swagger.py access
         self.resource_listing = {
-            "swaggerVersion": "1.2",
-            "basePath": "http://swagger.py/swagger-test",
-            "apis": [
+            u"swaggerVersion": u"1.2",
+            u"basePath": u"http://swagger.py/swagger-test",
+            u"apis": [
                 {
-                    "path": "/api-docs/pet.json",
-                    "description": "Test loader when missing a file",
-                    "api_declaration": {
-                        "swaggerVersion": "1.2",
-                        "basePath": "http://swagger.py/swagger-test",
-                        "resourcePath": "/pet.json",
-                        "apis": [
+                    u"path": u"/api-docs/pet.json",
+                    u"description": u"Test loader when missing a file",
+                    u"api_declaration": {
+                        u"swaggerVersion": u"1.2",
+                        u"basePath": u"http://swagger.py/swagger-test",
+                        u"resourcePath": u"/pet.json",
+                        u"apis": [
                             {
-                                "path": "/pet",
-                                "operations": [
+                                u"path": u"/pet",
+                                u"operations": [
                                     {
-                                        "method": "GET",
-                                        "nickname": "listPets",
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string"
+                                        u"method": u"GET",
+                                        u"nickname": u"listPets",
+                                        u"type": u"array",
+                                        u"items": {
+                                            u"type": u"string"
                                         },
-                                        "parameters": []
+                                        u"parameters": []
                                     },
                                     {
-                                        "method": "POST",
-                                        "nickname": "createPet",
-                                        "type": "string",
-                                        "parameters": [
+                                        u"method": u"POST",
+                                        u"nickname": u"createPet",
+                                        u"type": u"string",
+                                        u"parameters": [
                                             {
-                                                "name": "name",
-                                                "paramType": "query",
-                                                "type": "string",
-                                                "required": True
+                                                u"name": u"name",
+                                                u"paramType": u"query",
+                                                u"type": u"string",
+                                                u"required": True
                                             },
                                             {
-                                                "name": "birthday",
-                                                "paramType": "query",
-                                                "type": "string",
-                                                "format": "date",
-                                                "required": False
+                                                u"name": u"birthday",
+                                                u"paramType": u"query",
+                                                u"type": u"string",
+                                                u"format": u"date",
+                                                u"required": False
                                             }
                                         ]
                                     }
                                 ]
                             },
                             {
-                                "path": "/pet/find",
-                                "operations": [
+                                u"path": u"/pet/find",
+                                u"operations": [
                                     {
-                                        "method": "GET",
-                                        "nickname": "findPets",
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string"
+                                        u"method": u"GET",
+                                        u"nickname": u"findPets",
+                                        u"type": u"array",
+                                        u"items": {
+                                            u"type": u"string"
                                         },
-                                        "parameters": [
+                                        u"parameters": [
                                             {
-                                                "name": "species",
-                                                "paramType": "query",
-                                                "type": "string",
-                                                "allowMultiple": True
+                                                u"name": u"species",
+                                                u"paramType": u"query",
+                                                u"type": u"string",
+                                                u"allowMultiple": True
                                             }
                                         ]
                                     }
                                 ]
                             },
                             {
-                                "path": "/pet/{petId}",
-                                "operations": [
+                                u"path": u"/pet/{petId}",
+                                u"operations": [
                                     {
-                                        "method": "DELETE",
-                                        "nickname": "deletePet",
-                                        "type": "void",
-                                        "parameters": [
+                                        u"method": u"DELETE",
+                                        u"nickname": u"deletePet",
+                                        u"type": u"void",
+                                        u"parameters": [
                                             {
-                                                "name": "petId",
-                                                "type": "integer",
-                                                "paramType": "path"
+                                                u"name": u"petId",
+                                                u"type": u"integer",
+                                                u"paramType": u"path"
                                             }
                                         ]
                                     }
                                 ]
                             },
                             {
-                                "path": "/pet/{petId}/vaccine",
-                                "operations": [
+                                u"path": u"/pet/{petId}/vaccine",
+                                u"operations": [
                                     {
-                                        "method": u"POST",
-                                        "nickname": "postVaccine",
-                                        "type": "void",
-                                        "parameters": [
+                                        u"method": u"POST",
+                                        u"nickname": u"postVaccine",
+                                        u"type": u"void",
+                                        u"parameters": [
                                             {
-                                                "name": "petId",
-                                                "type": "integer",
-                                                "paramType": "path"
+                                                u"name": u"petId",
+                                                u"type": u"integer",
+                                                u"paramType": u"path"
                                             },
                                             {
-                                                "name": "vaccineFile",
-                                                "type": "File",
-                                                "paramType": "form"
+                                                u"name": u"vaccineFile",
+                                                u"type": u"File",
+                                                u"paramType": u"form"
                                             }
                                         ]
                                     }
                                 ]
                             }
                         ],
-                        "models": {}
+                        u"models": {}
                     }
                 }
             ]
