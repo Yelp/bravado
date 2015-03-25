@@ -4,9 +4,9 @@
 #
 import logging
 
-from bravado.mapping.unmarshal import unmarshal_schema_object
 from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping.param import Param, marshal_param
+from bravado.mapping.unmarshal import unmarshal_schema_object
 from bravado.mapping.validate import validate_schema_object
 
 log = logging.getLogger(__name__)
@@ -112,7 +112,7 @@ class Operation(object):
         request_options = kwargs.pop('_request_options', {})
         request = {
             'method': self.http_method,
-            'url': self.swagger_spec.api_url + self.path_name,
+            'url': self.swagger_spec.api_url.rstrip('/') + self.path_name,
             'params': {},
             'headers': request_options.get('headers', {}),
         }
@@ -187,7 +187,8 @@ def unmarshal_response(response, op):
     # TODO: Non-json response contents
     content_spec = response_spec['schema']
     content_value = response.json()
-    validate_schema_object(content_spec, content_value)
+    if op.swagger_spec.config['validate_responses']:
+        validate_schema_object(content_spec, content_value)
     result = unmarshal_schema_object(
         op.swagger_spec, content_spec, content_value)
     return response.status_code, result

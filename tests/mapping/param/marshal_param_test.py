@@ -1,3 +1,4 @@
+import copy
 from mock import Mock
 import pytest
 
@@ -48,7 +49,7 @@ def param_spec():
 
 def test_query_string(empty_swagger_spec, string_param_spec, request_dict):
     param = Param(empty_swagger_spec, Mock(spec=Operation), string_param_spec)
-    expected = request_dict.copy()
+    expected = copy.deepcopy(request_dict)
     expected['params']['username'] = 'darwin'
     marshal_param(param, 'darwin', request_dict)
     assert expected == request_dict
@@ -57,8 +58,8 @@ def test_query_string(empty_swagger_spec, string_param_spec, request_dict):
 def test_query_array(empty_swagger_spec, array_param_spec, request_dict):
     param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
     value = ['cat', 'dog', 'bird']
-    expected = request_dict.copy()
-    expected['params']['animals'] = value
+    expected = copy.deepcopy(request_dict)
+    expected['params']['animals'] = ','.join(value)
     marshal_param(param, value, request_dict)
     assert expected == request_dict
 

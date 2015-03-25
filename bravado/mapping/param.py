@@ -7,6 +7,15 @@ from bravado.mapping.http_client import APP_JSON
 from bravado.mapping.marshal import marshal_schema_object
 
 
+# 'multi' left out intentionally - http client lib should handle it
+COLLECTION_FORMATS = {
+    'csv': ',',
+    'ssv': ' ',
+    'tsv': '\t',
+    'pipes': '|'
+}
+
+
 def stringify_body(value):
     """Json dump the value to string if not already in string
     """
@@ -79,13 +88,13 @@ def marshal_param(param, value, request):
     in the proper request destination.
 
     Destination is one of:
-        - path - can only accept primitive types
+        - path - can accept primitive and array of primitive types
         - query - can accept primitive and array of primitive types
         - header - can accept primitive and array of primitive types
         - body - can accept any type
-        - formData - can only accept primitive types
+        - formData - can accept primitive and array of primitive types
 
-    :type param: :class:`Param`
+    :type param: :class:`bravado.mapping.param.Param`
     :param value: The value to assign to the parameter
     :type request: dict
     """
@@ -93,6 +102,9 @@ def marshal_param(param, value, request):
     location = param.location
     value = marshal_schema_object(param.swagger_spec, spec, value)
     validate_schema_object(spec, value)
+
+    if spec['type'] == 'array' and location != 'body':
+        value = apply_collection_format(spec, value)
 
     if location == 'path':
         token = u'{%s}' % param.name
@@ -145,3 +157,21 @@ def add_file(param, value, request):
 
     file_tuple = ('file', (param.name, value))
     request['files'].append(file_tuple)
+
+
+def apply_collection_format(spec, value):
+    """
+    For an array, apply the collection format and return the result.
+
+    :param spec: spec of the parameter with 'type': 'array'
+    :param value: array value of the parmaeter
+    :return: transformed value as a string
+    """
+    collection_format = spec.get('collectionFormat', 'csv')
+
+    if collection_format == 'multi':
+        # http client lib should handle this
+        return value
+
+    sep = COLLECTION_FORMATS[collection_format]
+    return sep.join(str(element) for element in value)

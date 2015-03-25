@@ -65,7 +65,8 @@ class SwaggerClient(object):
         self.swagger_spec = swagger_spec
 
     @classmethod
-    def from_url(cls, spec_url, http_client=None, request_headers=None):
+    def from_url(cls, spec_url, http_client=None, request_headers=None,
+                 config=None):
         """
         Build a :class:`SwaggerClient` from a url to the Swagger
         specification for a RESTful API.
@@ -76,6 +77,7 @@ class SwaggerClient(object):
         :type  http_client: :class:`bravado.http_client.HttpClient`
         :param request_headers: Headers to pass with http requests
         :type  request_headers: dict
+        :param config: Configuration dict - see spec.CONFIG_DEFAULTS
         """
         # TODO: better way to customize the request for api calls, so we don't
         #       have to add new kwargs for everything
@@ -83,18 +85,21 @@ class SwaggerClient(object):
         http_client = http_client or RequestsClient()
         loader = Loader(http_client, request_headers=request_headers)
         spec_dict = loader.load_spec(spec_url)
-        return cls.from_spec(spec_dict, spec_url, http_client)
+        return cls.from_spec(spec_dict, spec_url, http_client, config)
 
     @classmethod
-    def from_spec(cls, spec_dict, origin_url=None, http_client=None):
+    def from_spec(cls, spec_dict, origin_url=None, http_client=None,
+                  config=None):
         """
         Build a :class:`SwaggerClient` from swagger api docs
 
         :param spec_dict: a dict with a Swagger spec in json-like form
         :param origin_url: the url used to retrieve the spec_dict
         :type  origin_url: str
+        :param config: Configuration dict - see spec.CONFIG_DEFAULTS
         """
-        swagger_spec = Spec.from_dict(spec_dict, origin_url, http_client)
+        swagger_spec = Spec.from_dict(
+            spec_dict, origin_url, http_client, config)
         return cls(swagger_spec)
 
     def get_model(self, model_name):

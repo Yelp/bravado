@@ -5,27 +5,38 @@ import jsonref
 from swagger_spec_validator import validator20
 
 from bravado.mapping.model import build_models
-from bravado.mapping.resource import build_resources
 from bravado.mapping.model import tag_models
 from bravado.mapping.model import fix_malformed_model_refs
+from bravado.mapping.resource import build_resources
 
 
 log = logging.getLogger(__name__)
 
 
-class Spec(object):
-    """A Swagger API Specification.
+CONFIG_DEFAULTS = {
+    # On the client side, validate incoming responses
+    # On the server side, validate outgoing responses
+    'validate_responses': True,
+}
 
-    :param spec_dict: Swagger API specification in json-like dict form
-    :param origin_url: URL from which the spec was retrieved.
-    :param http_client: :class:`bravado.http_client.HTTPClient`
+
+class Spec(object):
+    """Represents a Swagger Specification for a service.
     """
 
-    def __init__(self, spec_dict, origin_url=None, http_client=None):
+    def __init__(self, spec_dict, origin_url=None, http_client=None,
+                 config=None):
+        """
+        :param spec_dict: Swagger API specification in json-like dict form
+        :param origin_url: URL from which the spec was retrieved.
+        :param http_client: :class:`bravado.http_client.HTTPClient`
+        :param config: Configuration dict. See CONFIG_DEFAULTS.
+        """
         self.spec_dict = spec_dict
         self.origin_url = origin_url or 'unknown'
         self.http_client = http_client
         self.api_url = None
+        self.config = dict(CONFIG_DEFAULTS, **(config or {}))
 
         # (key, value) = (simple format def name, Model type)
         # (key, value) = (#/ format def ref, Model type)
@@ -42,18 +53,20 @@ class Spec(object):
         self.responses = None
 
     @classmethod
-    def from_dict(cls, spec_dict, origin_url=None, http_client=None):
+    def from_dict(cls, spec_dict, origin_url=None, http_client=None,
+                  config=None):
         """
         Build a :class:`Spec` from Swagger API Specificiation
 
         :param spec_dict: swagger spec in json-like dict form.
         :param origin_url: the url used to retrieve the spec, if any
         :type  origin_url: str
+        :param config: Configuration dict. See CONFIG_DEFAULTS.
         """
         tag_models(spec_dict)
         fix_malformed_model_refs(spec_dict)
         spec_dict = jsonref.JsonRef.replace_refs(spec_dict)
-        spec = cls(spec_dict, origin_url, http_client)
+        spec = cls(spec_dict, origin_url, http_client, config)
         spec.build()
         return spec
 
