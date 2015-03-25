@@ -5,7 +5,7 @@
 # Copyright (c) 2014, Yelp, Inc.
 #
 
-"""Unit tests for async http client related methods
+"""Unit tests for fido http client related methods
 Not Tested:
 1) Callbacks triggered by twisted and crochet
 2) Timeouts by crochet's wait()
@@ -20,9 +20,9 @@ import bravado.exception
 from bravado.mapping.http_client import APP_FORM
 
 
-class AsyncHttpClientTest(unittest.TestCase):
+class FidoHttpClientTest(unittest.TestCase):
 
-    def test_stringify_async_body_returns_file_producer(self):
+    def test_stringify_fido_body_returns_file_producer(self):
         def_str = 'bravado.fido_client.param_stringify_body'
         with patch(def_str) as mock_stringify:
             mock_stringify.return_value = '42'
@@ -57,7 +57,7 @@ class AsyncHttpClientTest(unittest.TestCase):
         expected_contents = ('id=42&name=test')
         self.assertEqual(expected_contents, resp)
 
-    def test_url_encode_AsyncHTTP_response(self):
+    def test_url_encode_FidoHTTP_response(self):
         Response = namedtuple("MyResponse",
                               "version code phrase headers length deliverBody")
         req = {
@@ -67,11 +67,11 @@ class AsyncHttpClientTest(unittest.TestCase):
             'headers': {'foo': 'bar'},
             'params': {'bar': u'酒場'},
         }
-        async_client = bravado.fido_client.FidoClient()
+        fido_client = bravado.fido_client.FidoClient()
         with patch('fido.fetch') as mock_fido:
             mock_fido.return_value.result.return_value = Response(
                 1, 2, 3, 4, 5, 6)
-            eventual = async_client.request(req)
+            eventual = fido_client.request(req)
             resp = eventual.result(timeout=5)
             self.assertEqual(2, resp.code)
         mock_fido.assert_called_once_with('foo?bar=%E9%85%92%E5%A0%B4',
@@ -80,13 +80,13 @@ class AsyncHttpClientTest(unittest.TestCase):
 
     def test_start_request_with_only_url(self):
         url = 'http://example.com/api-docs'
-        async_client = bravado.fido_client.FidoClient()
+        fido_client = bravado.fido_client.FidoClient()
         # ugly mock, but this method runs in a twisted reactor which is
         # difficult to mock
-        async_client.fetch_deferred = Mock()
+        fido_client.fetch_deferred = Mock()
 
         with patch('fido.fetch') as mock_fetch:
-            async_client.request(dict(url=url))
+            fido_client.request(dict(url=url))
 
         mock_fetch.assert_called_once_with(
             '{0}?'.format(url), body='', headers={}, method='GET')

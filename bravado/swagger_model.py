@@ -1,5 +1,8 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+#
+# Copyright (c) 2015, Yelp, Inc.
+#
 import contextlib
 import logging
 import os
@@ -63,6 +66,7 @@ def request(http_client, url, headers):
         'url': url,
         'headers': headers,
     }
+
     return http_client.request(request_params)
 
 

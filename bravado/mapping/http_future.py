@@ -12,8 +12,29 @@ DEFAULT_TIMEOUT_S = 5.0
 class HttpFuture(object):
     """A future which inputs HTTP params"""
 
-    def result(self, **kwargs):
-        """Blocking call to wait for API response
+    def __init__(self, request_adapter, response_adapter, callback):
+        """Kicks API call for Fido client
+
+        :param request_adapter: Adapter which exposes result() method
+        of the http client
+        :param response_adapter: Adapter which exposes json(), status_code()
+        :type response_adapter: :class: `bravado.mapping.response.ResponseLike`
+        :param callback: Function to be called on the response
         """
-        raise NotImplementedError(
-            u"%s: Method not implemented", self.__class__.__name__)
+        self.request_adapter = request_adapter
+        self.response_adapter = response_adapter
+        self.response_callback = callback
+
+    def result(self, timeout=DEFAULT_TIMEOUT_S):
+        """Blocking call to wait for API response
+
+        :param timeout: Timeout in seconds for which client will get blocked
+        to receive the response
+        :return: Adapter response post callback
+        """
+        response = self.response_adapter(
+            self.request_adapter.result(timeout=timeout))
+
+        if self.response_callback:
+            return self.response_callback(response)
+        return response

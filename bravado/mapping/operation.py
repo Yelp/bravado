@@ -1,7 +1,6 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2014, Yelp, Inc.
+# Copyright (c) 2015, Yelp, Inc.
 #
 import logging
 
@@ -150,7 +149,22 @@ class Operation(object):
         log.debug(u"%s(%s)" % (self.operation_id, kwargs))
         request = self.construct_request(**kwargs)
 
-        return self.swagger_spec.http_client.request(request, self)
+        def response_callback(response_adapter):
+            return handle_response(response_adapter, self)
+
+        return self.swagger_spec.http_client.request(request, response_callback)
+
+
+def handle_response(response, op):
+    """Process the response from the given operation invocation's request.
+    :type response: 3rd party library http response object
+    :class:`requests.models.Response` or
+    :class:`fido.fido.Response`
+    :type op: :class:`bravado.mapping.operation.Operation`
+    :returns: tuple (status_code, response value) where type(response value)
+    is one of None, python primitive, list, object, or Model.
+    """
+    return unmarshal_response(response, op)
 
 
 def unmarshal_response(response, op):

@@ -44,7 +44,7 @@ def launch_threaded_http_server(port):
 
 class TestServer(unittest.TestCase):
 
-    def test_multiple_requests_against_async_client(self):
+    def test_multiple_requests_against_fido_client(self):
         port = get_hopefully_free_port()
         launch_threaded_http_server(port)
 
