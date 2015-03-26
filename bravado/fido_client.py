@@ -31,6 +31,10 @@ class FidoResponseAdapter(ResponseLike):
     def status_code(self):
         return self._delegate.code
 
+    @property
+    def text(self):
+        return self._delegate.body
+
     def json(self, **_):
         return self._delegate.json()
 

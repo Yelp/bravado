@@ -150,21 +150,9 @@ class Operation(object):
         request = self.construct_request(**kwargs)
 
         def response_callback(response_adapter):
-            return handle_response(response_adapter, self)
+            return unmarshal_response(response_adapter, self)
 
         return self.swagger_spec.http_client.request(request, response_callback)
-
-
-def handle_response(response, op):
-    """Process the response from the given operation invocation's request.
-    :type response: 3rd party library http response object
-    :class:`requests.models.Response` or
-    :class:`fido.fido.Response`
-    :type op: :class:`bravado.mapping.operation.Operation`
-    :returns: tuple (status_code, response value) where type(response value)
-    is one of None, python primitive, list, object, or Model.
-    """
-    return unmarshal_response(response, op)
 
 
 def unmarshal_response(response, op):

@@ -12,16 +12,16 @@ DEFAULT_TIMEOUT_S = 5.0
 class HttpFuture(object):
     """A future which inputs HTTP params"""
 
-    def __init__(self, request_adapter, response_adapter, callback):
+    def __init__(self, future, response_adapter, callback):
         """Kicks API call for Fido client
 
-        :param request_adapter: Adapter which exposes result() method
-        of the http client
+        :param future: future object
+        :type future: :class: `concurrent.futures.Future`
         :param response_adapter: Adapter which exposes json(), status_code()
         :type response_adapter: :class: `bravado.mapping.response.ResponseLike`
         :param callback: Function to be called on the response
         """
-        self.request_adapter = request_adapter
+        self.future = future
         self.response_adapter = response_adapter
         self.response_callback = callback
 
@@ -33,7 +33,7 @@ class HttpFuture(object):
         :return: Adapter response post callback
         """
         response = self.response_adapter(
-            self.request_adapter.result(timeout=timeout))
+            self.future.result(timeout=timeout))
 
         if self.response_callback:
             return self.response_callback(response)

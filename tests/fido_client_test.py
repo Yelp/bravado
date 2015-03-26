@@ -73,7 +73,7 @@ class FidoHttpClientTest(unittest.TestCase):
                 1, 2, 3, 4, 5, 6)
             eventual = fido_client.request(req)
             resp = eventual.result(timeout=5)
-            self.assertEqual(2, resp.code)
+            self.assertEqual(2, resp.status_code)
         mock_fido.assert_called_once_with('foo?bar=%E9%85%92%E5%A0%B4',
                                           body=None, headers={'foo': 'bar'},
                                           method='GET')

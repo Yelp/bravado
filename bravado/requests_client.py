@@ -157,6 +157,10 @@ class RequestsResponseAdapter(ResponseLike):
     def status_code(self):
         return self._delegate.status_code
 
+    @property
+    def text(self):
+        return self._delegate.text
+
     def json(self, **kwargs):
         return self._delegate.json(**kwargs)
 
@@ -188,7 +192,6 @@ class RequestsFutureAdapter(object):
         :rtype: dict
         """
         request = self.request
-        log.debug(u"%s %s(%r)", request.method, request.url, request.params)
         response = self.session.send(
             self.session.prepare_request(request),
             timeout=timeout)

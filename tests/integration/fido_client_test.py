@@ -69,5 +69,5 @@ class TestServer(unittest.TestCase):
         resp_one = eventual_one.result(timeout=1)
         resp_two = eventual_two.result(timeout=1)
 
-        self.assertEqual(resp_one.body, ROUTE_1_RESPONSE)
-        self.assertEqual(resp_two.body, ROUTE_2_RESPONSE)
+        self.assertEqual(resp_one.text, ROUTE_1_RESPONSE)
+        self.assertEqual(resp_two.text, ROUTE_2_RESPONSE)
