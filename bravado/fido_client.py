@@ -22,7 +22,7 @@ class FidoResponseAdapter(ResponseLike):
     """Wraps a fido.fido.Response object to provider a uniform interface
     to the response innards.
 
-    :type requests_lib_response: :class:`fido.fido.Response`
+    :type fido_response: :class:`fido.fido.Response`
     """
     def __init__(self, fido_response):
         self._delegate = fido_response
