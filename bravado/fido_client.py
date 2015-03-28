@@ -24,8 +24,8 @@ class FidoResponseAdapter(ResponseLike):
 
     :type requests_lib_response: :class:`fido.fido.Response`
     """
-    def __init__(self, requests_lib_response):
-        self._delegate = requests_lib_response
+    def __init__(self, fido_response):
+        self._delegate = fido_response
 
     @property
     def status_code(self):
@@ -36,11 +36,12 @@ class FidoResponseAdapter(ResponseLike):
         return self._delegate.body
 
     def json(self, **_):
+        # TODO: pass the kwargs downstream
         return self._delegate.json()
 
 
 class FidoClient(HttpClient):
-    """Fido HTTP client implementation.
+    """Fido (Asynchronous) HTTP client implementation.
     """
 
     def request(self, request_params, response_callback=None):
@@ -53,7 +54,7 @@ class FidoClient(HttpClient):
         receiving the response
         :type response_callback: method
 
-        :return: :class: `bravado.mapping.http_future.HttpFuture`
+        :rtype: :class: `bravado.mapping.http_future.HttpFuture`
         """
         url = '%s?%s' % (request_params['url'], urllib_utf8.urlencode(
             request_params.get('params', []), True))

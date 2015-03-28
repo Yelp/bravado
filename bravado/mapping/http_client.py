@@ -1,9 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (c) 2013, Digium, Inc.
-# Copyright (c) 2014, Yelp, Inc.
+# Copyright (c) 2015, Yelp, Inc.
 #
 
 """HTTP client abstractions.

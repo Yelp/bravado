@@ -35,3 +35,10 @@ class ResponseLike(object):
         :rtype: int, float, double, string, unicode, list, dict
         """
         raise NotImplementedError("Implement json() in {0}".format(type(self)))
+
+    def text(self, **kwargs):
+        """
+        :return: raw response from the server
+        :rtype: str
+        """
+        raise NotImplementedError("Implement text() in {0}".format(type(self)))
