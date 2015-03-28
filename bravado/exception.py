@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (c) 2014, Yelp, Inc.
+# Copyright (c) 2015, Yelp, Inc.
 #
 
 
@@ -19,9 +18,3 @@ class HTTPError(IOError):
                 hasattr(response, 'request')):
             self.request = self.response.request
         super(HTTPError, self).__init__(*args, **kwargs)
-
-
-class CancelledError():
-    """Error raised when result() is called from HTTPFuture
-    and call was actually cancelled
-    """

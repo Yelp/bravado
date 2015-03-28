@@ -7,7 +7,7 @@ import unittest
 
 import bottle
 
-from bravado.async_http_client import AsynchronousHttpClient
+from bravado.fido_client import FidoClient
 
 
 ROUTE_1_RESPONSE = "HEY BUDDY"
@@ -44,11 +44,11 @@ def launch_threaded_http_server(port):
 
 class TestServer(unittest.TestCase):
 
-    def test_multiple_requests_against_async_client(self):
+    def test_multiple_requests_against_fido_client(self):
         port = get_hopefully_free_port()
         launch_threaded_http_server(port)
 
-        client = AsynchronousHttpClient()
+        client = FidoClient()
 
         request_one_params = {
             'method': 'GET',
@@ -64,10 +64,10 @@ class TestServer(unittest.TestCase):
             'params': {},
         }
 
-        eventual_one = client.start_request(request_one_params)
-        eventual_two = client.start_request(request_two_params)
+        eventual_one = client.request(request_one_params)
+        eventual_two = client.request(request_two_params)
         resp_one = eventual_one.result(timeout=1)
         resp_two = eventual_two.result(timeout=1)
 
-        self.assertEqual(resp_one.body, ROUTE_1_RESPONSE)
-        self.assertEqual(resp_two.body, ROUTE_2_RESPONSE)
+        self.assertEqual(resp_one.text, ROUTE_1_RESPONSE)
+        self.assertEqual(resp_two.text, ROUTE_2_RESPONSE)

@@ -2,7 +2,7 @@ import copy
 from mock import Mock
 import pytest
 
-from bravado.http_client import APP_JSON
+from bravado.mapping.http_client import APP_JSON
 from bravado.mapping.param import Param, marshal_param
 from bravado.mapping.operation import Operation
 

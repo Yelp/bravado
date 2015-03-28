@@ -7,6 +7,7 @@ class ResponseLike(object):
     """
     __required_attrs__ = [
         'status_code',  # int
+        'text',  # str
     ]
 
     def __getattr__(self, name):
