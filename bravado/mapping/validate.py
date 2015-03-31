@@ -5,7 +5,7 @@ customize the behavior.
 """
 from bravado.mapping.exception import SwaggerMappingError
 from bravado.mapping.schema import SWAGGER_PRIMITIVES
-from bravado.mapping.swagger20_validator import Swagger20RequestValidator
+from bravado.mapping.swagger20_validator import Swagger20Validator
 
 
 def validate_schema_object(spec, value):
@@ -33,7 +33,7 @@ def validate_primitive(spec, value):
     :param spec: spec for a swagger primitive type in dict form
     :type value: int, string, float, long, etc
     """
-    Swagger20RequestValidator(spec).validate(value)
+    Swagger20Validator(spec).validate(value)
 
 
 def validate_array(spec, value):
@@ -41,7 +41,7 @@ def validate_array(spec, value):
     :param spec: spec for an 'array' type in dict form
     :type value: list
     """
-    Swagger20RequestValidator(spec).validate(value)
+    Swagger20Validator(spec).validate(value)
 
 
 def validate_object(spec, value):
@@ -49,4 +49,4 @@ def validate_object(spec, value):
     :param spec: spec for an 'object' type in dict form
     :type value: dict
     """
-    Swagger20RequestValidator(spec).validate(value)
+    Swagger20Validator(spec).validate(value)

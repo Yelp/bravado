@@ -33,6 +33,11 @@ def get_format(schema_object_spec):
     return schema_object_spec.get('format', None)
 
 
+def is_param_spec(schema_object_spec):
+    # TODO: Find a better way to identify if it is a Parameter schema
+    return 'in' in schema_object_spec
+
+
 def is_dict_like(spec):
     """Since we're using jsonref, identifying dicts while inspecting a swagger
     spec is no longer limited to the dict type. This takes into account
