@@ -135,13 +135,16 @@ def add_response_detail_to_errors(e):
     """Specific to requests errors. Error detail is not
     directly visible in `raise_for_status` trace, instead it is
     located under `e.response.text`
+
+    :param e: Exception object
+    :type e: :class: `requests.HTTPError`
+    :raises HTTPError: :class: `bravado.exception.HTTPError`
     """
     if hasattr(e, 'response') and hasattr(e.response, 'text'):
         # e.args is a tuple, change to list for modifications
         args = list(e.args)
         args[0] += (' : ' + e.response.text)
-        e.args = tuple(args)
-    raise HTTPError(*e.args), None, sys.exc_info()[2]
+    raise HTTPError(*args), None, sys.exc_info()[2]
 
 
 class RequestsResponseAdapter(ResponseLike):
