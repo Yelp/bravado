@@ -140,9 +140,8 @@ def add_response_detail_to_errors(e):
     :type e: :class: `requests.HTTPError`
     :raises HTTPError: :class: `bravado.exception.HTTPError`
     """
+    args = list(e.args)
     if hasattr(e, 'response') and hasattr(e.response, 'text'):
-        # e.args is a tuple, change to list for modifications
-        args = list(e.args)
         args[0] += (' : ' + e.response.text)
     raise HTTPError(*args), None, sys.exc_info()[2]
 

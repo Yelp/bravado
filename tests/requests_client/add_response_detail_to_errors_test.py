@@ -14,3 +14,11 @@ def test_response_message_gets_appended():
     with pytest.raises(HTTPError) as excinfo:
         add_response_detail_to_errors(e)
     assert 'asdf : bla' == str(excinfo.value)
+
+
+def test_no_response_message_gets_appended():
+    e = requests.HTTPError('asdf')
+
+    with pytest.raises(HTTPError) as excinfo:
+        add_response_detail_to_errors(e)
+    assert 'asdf' == str(excinfo.value)
