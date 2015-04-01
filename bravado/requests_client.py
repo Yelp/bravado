@@ -6,10 +6,12 @@
 
 import logging
 import urlparse
+import sys
 
 import requests
 import requests.auth
 
+from bravado.exception import HTTPError
 from bravado.mapping.http_client import HttpClient
 from bravado.mapping.http_future import HttpFuture
 from bravado.mapping.response import ResponseLike
@@ -139,7 +141,7 @@ def add_response_detail_to_errors(e):
         args = list(e.args)
         args[0] += (' : ' + e.response.text)
         e.args = tuple(args)
-    raise e
+    raise HTTPError(*e.args), None, sys.exc_info()[2]
 
 
 class RequestsResponseAdapter(ResponseLike):
