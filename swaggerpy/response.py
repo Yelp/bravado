@@ -7,9 +7,11 @@
 """Code for checking the response from API. If correct, it proceeds to convert
 it into Python class types
 """
+import sys
+
 import swagger_type
 from swagger_type import SwaggerTypeCheck
-from swaggerpy.exception import CancelledError
+from swaggerpy.exception import CancelledError, HTTPError
 
 
 DEFAULT_TIMEOUT_S = 5.0
@@ -23,7 +25,7 @@ def handle_response_errors(e):
         args = list(e.args)
         args[0] += (' : ' + e.response.text)
         e.args = tuple(args)
-    raise e
+    raise HTTPError(*e.args), None, sys.exc_info()[2]
 
 
 class HTTPFuture(object):
