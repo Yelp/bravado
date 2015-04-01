@@ -6,10 +6,12 @@
 
 import logging
 import urlparse
+import sys
 
 import requests
 import requests.auth
 
+from bravado.exception import HTTPError
 from bravado.mapping.http_client import HttpClient
 from bravado.mapping.http_future import HttpFuture
 from bravado.mapping.response import ResponseLike
@@ -133,13 +135,15 @@ def add_response_detail_to_errors(e):
     """Specific to requests errors. Error detail is not
     directly visible in `raise_for_status` trace, instead it is
     located under `e.response.text`
+
+    :param e: Exception object
+    :type e: :class: `requests.HTTPError`
+    :raises HTTPError: :class: `bravado.exception.HTTPError`
     """
+    args = list(e.args)
     if hasattr(e, 'response') and hasattr(e.response, 'text'):
-        # e.args is a tuple, change to list for modifications
-        args = list(e.args)
         args[0] += (' : ' + e.response.text)
-        e.args = tuple(args)
-    raise e
+    raise HTTPError(*args), None, sys.exc_info()[2]
 
 
 class RequestsResponseAdapter(ResponseLike):

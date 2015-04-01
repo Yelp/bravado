@@ -6,10 +6,10 @@ import functools
 
 from jsonschema.exceptions import ValidationError
 import pytest
-from requests import HTTPError
 
 from bravado.client import SwaggerClient
 from bravado.compat import json
+from bravado.exception import HTTPError
 from tests.functional.conftest import register_spec, register_get, API_DOCS_URL
 
 
