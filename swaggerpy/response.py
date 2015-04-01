@@ -7,9 +7,11 @@
 """Code for checking the response from API. If correct, it proceeds to convert
 it into Python class types
 """
+import sys
+
 import swagger_type
 from swagger_type import SwaggerTypeCheck
-from swaggerpy.exception import CancelledError
+from swaggerpy.exception import CancelledError, HTTPError
 
 
 DEFAULT_TIMEOUT_S = 5.0
@@ -18,12 +20,15 @@ DEFAULT_TIMEOUT_S = 5.0
 # TODO: why is this messing with exceptions? It's not going to work with all
 # http clients
 def handle_response_errors(e):
+    """
+    :param e: Exception object
+    :type e: :class: `requests.HTTPError`
+    :raises HTTPError: :class: `swaggerpy.exception.HTTPError`
+    """
+    args = list(e.args)
     if hasattr(e, 'response') and hasattr(e.response, 'text'):
-        # e.args is a tuple, change to list for modifications
-        args = list(e.args)
         args[0] += (' : ' + e.response.text)
-        e.args = tuple(args)
-    raise e
+    raise HTTPError(*args), None, sys.exc_info()[2]
 
 
 class HTTPFuture(object):
