@@ -157,7 +157,7 @@ class ResourceTest(unittest.TestCase):
             u'http://localhost/api-docs').api_test
         User = resource.testHTTP._models['User']
         self.assertEqual(
-            {"schools": [], "id": 0L, "date": None, "datetime": None},
+            {"schools": None, "id": None, "date": None, "datetime": None},
             User().__dict__
         )
 
@@ -214,8 +214,8 @@ class ResourceTest(unittest.TestCase):
         resource = SwaggerClient.from_url(
             u'http://localhost/api-docs').api_test
         models = resource.testHTTP._models
-        user = models['User']()
-        school = models['School']()
+        school = models['School'](name='foo')
+        user = models['User'](id=1l, schools=[school])
         self.assertTrue(isinstance(user.id, long))
         self.assertTrue(isinstance(user.schools, list))
         self.assertTrue(isinstance(school.name, str))
@@ -421,7 +421,7 @@ class ResourceTest(unittest.TestCase):
         models = resource.testHTTP._models
         User = models['User']
         School = models['School']
-        user = User(schools=[School(name='a'), None])
+        user = User(id=1, schools=[School(name='a'), None])
         self.assertEqual(None, user.schools[1])
         self.assertEqual([{'name': 'a'}], user._flat_dict()['schools'])
 
@@ -468,11 +468,9 @@ class ResourceTest(unittest.TestCase):
             u'http://localhost/api-docs').api_test
         user = resource.testHTTP._models['User'](id=42)
         future = resource.testHTTPPost(body=user)
-        # Removed the 'school': None - key, value pair from dict
+        # Removed the 'schools': None - key, value pair from dict
         self.assertEqual(
-            json.dumps({'id': 42, 'schools': []}),
-            future._request.request.data,
-        )
+            json.dumps({'id': 42}), future._request.request.data)
 
     @httpretty.activate
     def test_error_on_finding_required_attributes_none(self):

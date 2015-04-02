@@ -58,7 +58,7 @@ class TestCreateModelType(object):
     def test_create_model_type(self):
         model_type = swagger_model.create_model_type(self.model)
         expected = set(['id', 'category', 'name', 'status'])
-        instance = model_type(status='ok')
+        instance = model_type(status='ok', id=0, name='')
         assert set(vars(instance).keys()) == expected
         assert set(dir(instance)) == expected
         assert instance == model_type(id=0, name='', status='ok')

@@ -47,28 +47,6 @@ ARRAY = 'array'
 
 COLON = ':'
 
-DATETIME_TYPES = set([datetime.datetime, datetime.date])
-
-
-def get_instance(py_type):
-    """Factory method to get default constructor invoked for the type
-
-    .. note::
-
-        get_instance() is meant to be called to get an instance of
-        primitive Python type. datetime() and date() are primitives in Swagger
-        but not Python, so return None for these.
-
-    Complex models are already set to None in swagger_to_py_type(), hence
-    this should be called only for values from SWAGGER_TO_PY_TYPE_MAPPING
-    """
-    if py_type is None:
-        return None
-    # datetime and date are not Python primitive types, return None for them.
-    if py_type in DATETIME_TYPES:
-        return None
-    return py_type()
-
 
 def primitive_formats():
     """returns Swagger primitive formats allowed after internal conversion.
