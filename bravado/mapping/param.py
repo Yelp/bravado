@@ -173,8 +173,8 @@ def unmarshal_param(param, request):
 
 CAST_TYPE_TO_FUNC = {
     'integer': int,
-    'float': float,
-    'boolean': bool,
+    'number': float,
+    'boolean': bool
 }
 
 
