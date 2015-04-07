@@ -11,7 +11,7 @@ class RequestLike(object):
     """
     __required_attrs__ = [
         'path',     # dict of URL path parameters
-        'query',    # dict of query parameters
+        'params',   # dict of parameters from the query string and request body.
         'headers',  # dict of request headers
     ]
 

@@ -1,3 +1,4 @@
+from functools import partial
 import logging
 import urllib
 import simplejson as json
@@ -132,10 +133,10 @@ def marshal_param(param, value, request):
 
 
 def unmarshal_param(param, request):
-    """Unmarshal the given parameter from the passed in request.
+    """Unmarshal the given parameter from the passed in request like object.
 
-    :type op: :class:`bravado.mapping.param.Param`
-    :type request: :class: `bravado.mapping.request.RequestLike`.
+    :type param: :class:`bravado.mapping.param.Param`
+    :type request: :class:`bravado.mapping.request.RequestLike`
     """
     param_spec = get_param_type_spec(param)
     location = param.location
@@ -144,35 +145,27 @@ def unmarshal_param(param, request):
     #if spec['type'] == 'array' and location != 'body':
     #    value = apply_collection_format(spec, value)
 
+    cast_param = partial(cast_request_param, param_spec['type'], param.name)
+
     if location == 'path':
-        raw_value = request.path.get(param.name, None)
-        if raw_value is not None:
-            # pyramid provides the value as strings only so need to attempt
-            # converting to expected type in spec before attempting to unmarshal
-            raw_value = cast_request_param(
-                param_spec['type'],
-                param.name,
-                raw_value)
+        raw_value = cast_param(request.path.get(param.name, None))
     elif location == 'query':
-        raw_value = request.query.get(param.name, None)
+        raw_value = cast_param(request.params.get(param.name, None))
     elif location == 'header':
-        raw_value = request.headers.get(param.name, None)
+        raw_value = cast_param(request.headers.get(param.name, None))
     elif location == 'formData':
         if param_spec['type'] == 'file':
-            # TODO: add 'file' support
-            raw_value = None
-            raise NotImplementedError('TODO: Add file support')
-        else:
             raw_value = request.params.get(param.name, None)
+        else:
+            raw_value = cast_param(request.params.get(param.name, None))
     elif location == 'body':
-        # TODO: check content-type header
+        # TODO: verify content-type header
         raw_value = request.json()
     else:
         raise SwaggerMappingError(
             "Don't know how to unmarshal_param with location {0}".
             format(location))
 
-    # TODO: conditional validation
     validate_schema_object(param_spec, raw_value)
     value = unmarshal_schema_object(param.swagger_spec, param_spec, raw_value)
     return value
@@ -196,6 +189,9 @@ def cast_request_param(param_type, param_name, param_value):
     :param param_value: param value
     :type  param_value: string
     """
+    if param_value is None:
+        return None
+
     try:
         return CAST_TYPE_TO_FUNC.get(param_type, lambda x: x)(param_value)
     except ValueError:
