@@ -1,3 +1,7 @@
+from bravado.mapping.operation import log
+from bravado.mapping.param import unmarshal_param
+
+
 class RequestLike(object):
     """
     Define a common interface for bravado to interface with server side
@@ -37,3 +41,20 @@ class RequestLike(object):
         :rtype: int, float, double, string, unicode, list, dict
         """
         raise NotImplementedError("Implement json() in {0}".format(type(self)))
+
+
+def unmarshal_request(request, op):
+    """Unmarshal Swagger request parameters from the passed in request like
+    object.
+
+    :type request: :class: `bravado.mapping.request.RequestLike`.
+    :type op: :class:`bravado.mapping.operation.Operation`
+    :returns: dict where (key, value) = (param_name, param_value)
+    """
+    request_data = {}
+    for param_name, param in op.params.iteritems():
+        param_value = unmarshal_param(param, request)
+        request_data[param_name] = param_value
+
+    log.debug("Swagger request_data: {0}".format(request_data))
+    return request_data

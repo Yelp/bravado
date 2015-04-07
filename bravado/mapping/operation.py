@@ -4,10 +4,8 @@
 #
 import logging
 
-from bravado.mapping.exception import SwaggerMappingError
-from bravado.mapping.param import Param, marshal_param, unmarshal_param
-from bravado.mapping.unmarshal import unmarshal_schema_object
-from bravado.mapping.validate import validate_schema_object
+from bravado.mapping.param import Param, marshal_param
+from bravado.mapping.response import unmarshal_response
 
 log = logging.getLogger(__name__)
 
@@ -155,80 +153,7 @@ class Operation(object):
         return self.swagger_spec.http_client.request(request, response_callback)
 
 
-def unmarshal_response(response, op):
-    """Unmarshal the http response into a (status_code, value) based on the
-    response specification.
-
-    :type response: :class:`bravado.mapping.response.ResponseLike`
-    :type op: :class:`bravado.mapping.operation.Operation`
-    :returns: tuple of (status_code, value) where type(value) matches
-        response_spec['schema']['type'] if it exists, None otherwise.
-    """
-    response_spec = get_response_spec(response.status_code, op)
-
-    def has_content(response_spec):
-        return 'schema' in response_spec
-
-    if not has_content(response_spec):
-        return response.status_code, None
-
-    # TODO: Non-json response contents
-    content_spec = response_spec['schema']
-    content_value = response.json()
-    if op.swagger_spec.config['validate_responses']:
-        validate_schema_object(content_spec, content_value)
-    result = unmarshal_schema_object(
-        op.swagger_spec, content_spec, content_value)
-    return response.status_code, result
 
 
-def get_response_spec(status_code, op):
-    """Given the http status_code of an operation invocation's response, figure
-    out which response specification it maps to.
-
-    #/paths/
-        {path_name}/
-            {http_method}/
-                responses/
-                    {status_code}/
-                        {response}
-
-    :type status_code: int
-    :type op: :class:`bravado.mapping.operation.Operation`
-    :return: response specification
-    :rtype: dict
-    :raises: SwaggerMappingError when the status_code could not be mapped to
-        a response specification.
-    """
-    # We don't need to worry about checking #/responses/ because jsonref has
-    # already inlined the $refs
-    response_specs = op.op_spec.get('responses')
-    default_response_spec = response_specs.get('default', None)
-    response_spec = response_specs.get(str(status_code), default_response_spec)
-    if response_spec is None:
-        raise SwaggerMappingError(
-            "Response specification matching http status_code {0} not found "
-            "for {1}. Either add a response specifiction for the status_code "
-            "or use a `default` response.".format(op, status_code))
-    return response_spec
 
 
-def unmarshal_request(request, op):
-    """Unmarshal parameters from the passed in request like object based on the
-    given operation.
-
-    :type request: :class: `bravado.mapping.request.RequestLike`.
-    :type op: :class:`bravado.mapping.operation.Operation`
-    :returns: dict where (key, value) = (param_name, param_value)
-    """
-    # for each param in the op, validate the param
-    for param_name, param in op.params.iteritems():
-        print '\t\t\tExpected param:', param.name, param.param_spec
-
-    request_data = {}
-    for param_name, param in op.params.iteritems():
-        param_value = unmarshal_param(param, request)
-        request_data[param_name] = param_value
-
-    print "Swagger request_data: %s" % request_data
-    return request_data

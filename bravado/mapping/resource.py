@@ -66,27 +66,36 @@ def build_resources(swagger_spec):
 
 
 class Resource(object):
-    """Swagger resource, described in an API declaration.
     """
-
+    A Swagger resource is associated with multiple operations.
+    """
     def __init__(self, name, operations):
+        """
+        :param name: resource name
+        :type name: str
+        :param operations: operations associated with this resource (by tag)
+        :type operations: dict where (key, value) = (op_name, Operation)
+        """
         log.debug(u"Building resource '%s'" % name)
-        self._name = name
-        self._operations = operations
+        self.name = name
+        self.operations = operations
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self._name)
+        return u"%s(%s)" % (self.__class__.__name__, self.name)
 
     def __getattr__(self, item):
         """
-        :param item: name of the :class:`Operation` to return
-        :return: an :class:`Operation`
+        :param item: name of the operation to return
+        :rtype: :class:`bravado.mapping.operation.Operation`
         """
-        op = self._operations.get(item)
+        op = self.operations.get(item)
         if not op:
             raise AttributeError(u"Resource '%s' has no operation '%s'" %
-                                 (self._name, item))
+                                 (self.name, item))
         return operation_docstring_wrapper(op)
 
     def __dir__(self):
-        return self._operations.keys()
+        """
+        :return: list of operation names
+        """
+        return self.operations.keys()
