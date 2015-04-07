@@ -5,7 +5,7 @@
 import logging
 
 from bravado.mapping.exception import SwaggerMappingError
-from bravado.mapping.param import Param, marshal_param
+from bravado.mapping.param import Param, marshal_param, unmarshal_param
 from bravado.mapping.unmarshal import unmarshal_schema_object
 from bravado.mapping.validate import validate_schema_object
 
@@ -211,3 +211,24 @@ def get_response_spec(status_code, op):
             "for {1}. Either add a response specifiction for the status_code "
             "or use a `default` response.".format(op, status_code))
     return response_spec
+
+
+def unmarshal_request(request, op):
+    """Unmarshal parameters from the passed in request like object based on the
+    given operation.
+
+    :type request: :class: `bravado.mapping.request.RequestLike`.
+    :type op: :class:`bravado.mapping.operation.Operation`
+    :returns: dict where (key, value) = (param_name, param_value)
+    """
+    # for each param in the op, validate the param
+    for param_name, param in op.params.iteritems():
+        print '\t\t\tExpected param:', param.name, param.param_spec
+
+    request_data = {}
+    for param_name, param in op.params.iteritems():
+        param_value = unmarshal_param(param, request)
+        request_data[param_name] = param_value
+
+    print "Swagger request_data: %s" % request_data
+    return request_data
