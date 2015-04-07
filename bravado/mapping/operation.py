@@ -151,9 +151,3 @@ class Operation(object):
             return unmarshal_response(response_adapter, self)
 
         return self.swagger_spec.http_client.request(request, response_callback)
-
-
-
-
-
-

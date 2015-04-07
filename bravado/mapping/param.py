@@ -142,9 +142,6 @@ def unmarshal_param(param, request):
     location = param.location
 
     # TODO: handle collectionFormat
-    #if spec['type'] == 'array' and location != 'body':
-    #    value = apply_collection_format(spec, value)
-
     cast_param = partial(cast_request_param, param_spec['type'], param.name)
 
     if location == 'path':

@@ -61,7 +61,9 @@ def test_query_string(empty_swagger_spec, string_param_spec):
 
 def test_query_array(empty_swagger_spec, array_param_spec):
     param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
-    request = Mock(spec=RequestLike, params={'animals': ['cat', 'dog', 'mouse']})
+    request = Mock(
+        spec=RequestLike,
+        params={'animals': ['cat', 'dog', 'mouse']})
     assert ['cat', 'dog', 'mouse'] == unmarshal_param(param, request)
 
 

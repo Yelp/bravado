@@ -1,4 +1,4 @@
-from mock import Mock, patch
+from mock import Mock
 
 from bravado.mapping.request import RequestLike, unmarshal_request
 
