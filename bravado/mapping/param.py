@@ -108,7 +108,7 @@ def marshal_param(param, value, request):
     validate_schema_object(spec, value)
 
     if spec['type'] == 'array' and location != 'body':
-        value = apply_collection_format(spec, value)
+        value = marshal_collection_format(spec, value)
 
     if location == 'path':
         token = u'{%s}' % param.name
@@ -140,8 +140,6 @@ def unmarshal_param(param, request):
     """
     param_spec = get_param_type_spec(param)
     location = param.location
-
-    # TODO: handle collectionFormat
     cast_param = partial(cast_request_param, param_spec['type'], param.name)
 
     if location == 'path':
@@ -162,6 +160,9 @@ def unmarshal_param(param, request):
         raise SwaggerMappingError(
             "Don't know how to unmarshal_param with location {0}".
             format(location))
+
+    if param_spec['type'] == 'array' and location != 'body':
+        raw_value = unmarshal_collection_format(param_spec, raw_value)
 
     validate_schema_object(param_spec, raw_value)
     value = unmarshal_schema_object(param.swagger_spec, param_spec, raw_value)
@@ -229,7 +230,7 @@ def add_file(param, value, request):
     request['files'].append(file_tuple)
 
 
-def apply_collection_format(spec, value):
+def marshal_collection_format(spec, value):
     """
     For an array, apply the collection format and return the result.
 
@@ -245,3 +246,42 @@ def apply_collection_format(spec, value):
 
     sep = COLLECTION_FORMATS[collection_format]
     return sep.join(str(element) for element in value)
+
+
+def unmarshal_collection_format(spec, value):
+    """
+    For a non-body parameter of type array, unmarshal the value into an array
+    of elements.
+
+    Input:
+        spec = {
+            'name': 'status'
+            'in': 'query',
+            'collectionFormat': 'psv', # pipe separated value
+            'type': 'array',
+            'items': {
+                'type': 'string',
+            }
+        }
+        value="pending|completed|started"
+
+    Output:
+        ['pending', 'completed', 'started']
+
+    :param spec: spec of the parameter with 'type': 'array'
+    :type spec: dict
+    :param value: parameter value
+    :type value: string
+    :rtype: list
+    """
+    collection_format = spec.get('collectionFormat', 'csv')
+
+    if collection_format == 'multi':
+        # http client lib should have already unmarshaled to an array
+        return value
+
+    sep = COLLECTION_FORMATS[collection_format]
+    return [
+        cast_request_param(spec['items']['type'], spec['name'], item)
+        for item in value.split(sep)
+    ]
