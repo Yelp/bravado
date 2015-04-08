@@ -4,8 +4,7 @@ from bravado.mapping.param import unmarshal_param
 
 class RequestLike(object):
     """
-    Define a common interface for bravado to interface with server side
-    request objects.
+    Common interface for server side request objects.
 
     Subclasses are responsible for providing attrs for __required_attrs__.
     """
