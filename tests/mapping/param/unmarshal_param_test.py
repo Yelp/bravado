@@ -32,7 +32,8 @@ def array_param_spec():
         'type': 'array',
         'items': {
             'type': 'string'
-        }
+        },
+        'collectionFormat': 'multi',
     }
 
 
@@ -55,7 +56,7 @@ def test_path_string(empty_swagger_spec, param_spec):
 
 def test_query_string(empty_swagger_spec, string_param_spec):
     param = Param(empty_swagger_spec, Mock(spec=Operation), string_param_spec)
-    request = Mock(spec=RequestLike, params={'username': 'darwin'})
+    request = Mock(spec=RequestLike, query={'username': 'darwin'})
     assert 'darwin' == unmarshal_param(param, request)
 
 
@@ -63,7 +64,7 @@ def test_query_array(empty_swagger_spec, array_param_spec):
     param = Param(empty_swagger_spec, Mock(spec=Operation), array_param_spec)
     request = Mock(
         spec=RequestLike,
-        params={'animals': ['cat', 'dog', 'mouse']})
+        query={'animals': ['cat', 'dog', 'mouse']})
     assert ['cat', 'dog', 'mouse'] == unmarshal_param(param, request)
 
 
@@ -80,7 +81,7 @@ def test_header_string(empty_swagger_spec, param_spec):
 def test_formData_integer(empty_swagger_spec, param_spec):
     param_spec['in'] = 'formData'
     param = Param(empty_swagger_spec, Mock(spec=Operation), param_spec)
-    request = Mock(spec=RequestLike, params={'petId': '34'})
+    request = Mock(spec=RequestLike, form={'petId': '34'})
     assert 34 == unmarshal_param(param, request)
 
 
@@ -92,7 +93,7 @@ def test_formData_file(empty_swagger_spec, param_spec):
         empty_swagger_spec,
         Mock(spec=Operation, consumes=['multipart/form-data']),
         param_spec)
-    request = Mock(spec=RequestLike, params={'selfie': '<imagine binary data>'})
+    request = Mock(spec=RequestLike, files={'selfie': '<imagine binary data>'})
     assert '<imagine binary data>' == unmarshal_param(param, request)
 
 

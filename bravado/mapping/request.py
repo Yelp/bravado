@@ -10,8 +10,11 @@ class RequestLike(object):
     """
     __required_attrs__ = [
         'path',     # dict of URL path parameters
-        'params',   # dict of parameters from the query string and request body.
+        'query',    # dict of parameters from the query string
+        'form',     # dict of form parameters from a POST
         'headers',  # dict of request headers
+        # TODO: may need to make this more flexible based on actual usage and/or need for a file like object # noqa
+        'files',    # dict of filename to content
     ]
 
     def __getattr__(self, name):
