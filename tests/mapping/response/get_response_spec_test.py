@@ -1,7 +1,8 @@
 import pytest
 
 from bravado.mapping.exception import SwaggerMappingError
-from bravado.mapping.operation import get_response_spec, Operation
+from bravado.mapping.operation import Operation
+from bravado.mapping.response import get_response_spec
 
 
 @pytest.fixture

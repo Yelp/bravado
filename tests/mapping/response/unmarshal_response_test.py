@@ -2,8 +2,7 @@ from mock import Mock, patch
 
 import pytest
 
-from bravado.mapping.operation import unmarshal_response
-from bravado.mapping.response import ResponseLike
+from bravado.mapping.response import ResponseLike, unmarshal_response
 
 
 @pytest.fixture
@@ -22,7 +21,7 @@ def test_no_content(empty_swagger_spec):
     }
     response = Mock(spec=ResponseLike, status_code=200)
 
-    with patch('bravado.mapping.operation.get_response_spec') as m:
+    with patch('bravado.mapping.response.get_response_spec') as m:
         m.return_value = response_spec
         op = Mock(swagger_spec=empty_swagger_spec)
         result = unmarshal_response(response, op)
@@ -35,7 +34,7 @@ def test_json_content(empty_swagger_spec, response_spec):
         status_code=200,
         json=Mock(return_value='Monday'))
 
-    with patch('bravado.mapping.operation.get_response_spec') as m:
+    with patch('bravado.mapping.response.get_response_spec') as m:
         m.return_value = response_spec
         op = Mock(swagger_spec=empty_swagger_spec)
         assert (200, 'Monday') == unmarshal_response(response, op)
@@ -48,8 +47,8 @@ def test_skips_validation(empty_swagger_spec, response_spec):
         status_code=200,
         json=Mock(return_value='Monday'))
 
-    with patch('bravado.mapping.operation.validate_schema_object') as val_schem:
-        with patch('bravado.mapping.operation.get_response_spec') as get_resp:
+    with patch('bravado.mapping.response.validate_schema_object') as val_schem:
+        with patch('bravado.mapping.response.get_response_spec') as get_resp:
             get_resp.return_value = response_spec
             op = Mock(swagger_spec=empty_swagger_spec)
             unmarshal_response(response, op)
@@ -63,8 +62,8 @@ def test_performs_validation(empty_swagger_spec, response_spec):
         status_code=200,
         json=Mock(return_value='Monday'))
 
-    with patch('bravado.mapping.operation.validate_schema_object') as val_schem:
-        with patch('bravado.mapping.operation.get_response_spec') as get_resp:
+    with patch('bravado.mapping.response.validate_schema_object') as val_schem:
+        with patch('bravado.mapping.response.get_response_spec') as get_resp:
             get_resp.return_value = response_spec
             op = Mock(swagger_spec=empty_swagger_spec)
             unmarshal_response(response, op)
