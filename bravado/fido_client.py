@@ -9,10 +9,10 @@ import logging
 import fido
 from yelp_uri import urllib_utf8
 
-from bravado.mapping.http_client import APP_FORM, HttpClient
-from bravado.mapping.http_future import HttpFuture
-from bravado.mapping.param import stringify_body as param_stringify_body
-from bravado.mapping.response import ResponseLike
+from bravado_core.http_client import APP_FORM, HttpClient
+from bravado_core.http_future import HttpFuture
+from bravado_core.param import stringify_body as param_stringify_body
+from bravado_core.response import ResponseLike
 from bravado.multipart_response import create_multipart_content
 
 log = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ class FidoClient(HttpClient):
         receiving the response
         :type response_callback: method
 
-        :rtype: :class: `bravado.mapping.http_future.HttpFuture`
+        :rtype: :class: `bravado_core.http_future.HttpFuture`
         """
         url = '%s?%s' % (request_params['url'], urllib_utf8.urlencode(
             request_params.get('params', []), True))

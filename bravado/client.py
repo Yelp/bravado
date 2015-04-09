@@ -47,7 +47,7 @@ To get a client
 import logging
 
 from bravado.requests_client import RequestsClient
-from bravado.mapping.spec import Spec
+from bravado_core.spec import Spec
 from bravado.swagger_model import Loader
 
 
@@ -60,7 +60,7 @@ class SwaggerClient(object):
 
     def __init__(self, swagger_spec):
         """
-        :param swagger_spec: :class:`bravado.mapping.spec.Spec`
+        :param swagger_spec: :class:`bravado_core.spec.Spec`
         """
         self.swagger_spec = swagger_spec
 

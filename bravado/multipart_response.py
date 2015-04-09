@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from uuid import uuid4
-from bravado.mapping.http_client import MULT_FORM
+from bravado_core.http_client import MULT_FORM
 
 
 def add_lines(name, content, is_file, boundary, lines):

@@ -6,7 +6,7 @@ import pytest
 from swagger_spec_validator.common import SwaggerValidationError
 
 from bravado.client import SwaggerClient
-from bravado.mapping.resource import Resource
+from bravado_core.resource import Resource
 from tests.functional.conftest import register_get, register_spec, API_DOCS_URL
 
 
