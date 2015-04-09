@@ -17,7 +17,7 @@ from ordereddict import OrderedDict
 
 import bravado.fido_client
 import bravado.exception
-from bravado.mapping.http_client import APP_FORM
+from bravado_core.http_client import APP_FORM
 
 
 class FidoHttpClientTest(unittest.TestCase):

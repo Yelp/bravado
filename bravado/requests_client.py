@@ -12,9 +12,9 @@ import requests
 import requests.auth
 
 from bravado.exception import HTTPError
-from bravado.mapping.http_client import HttpClient
-from bravado.mapping.http_future import HttpFuture
-from bravado.mapping.response import ResponseLike
+from bravado_core.http_client import HttpClient
+from bravado_core.http_future import HttpFuture
+from bravado_core.response import ResponseLike
 
 log = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ class RequestsClient(HttpClient):
         :type request_params: dict
         :param response_callback: Function to be called on the response
         :returns: HTTP Future object
-        :rtype: :class: `bravado.mapping.http_future.HttpFuture`
+        :rtype: :class: `bravado_core.http_future.HttpFuture`
         """
         requests_future = RequestsFutureAdapter(
             self.session, self.authenticated_request(request_params))
