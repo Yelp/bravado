@@ -28,7 +28,7 @@ setup(
         "Programming Language :: Python",
     ],
     install_requires=[
-        "crochet",
+        "crochet >= 1.4.0",
         "python-dateutil",
         "requests",
         "twisted >= 14.0.0",
