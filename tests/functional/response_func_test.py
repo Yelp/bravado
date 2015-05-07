@@ -18,11 +18,9 @@ register_test_http = functools.partial(
     'http://localhost/test_http?test_param=foo')
 
 
-def assert_status_and_result(http_status, result):
+def assert_result(expected_result):
     resource = SwaggerClient.from_url(API_DOCS_URL).api_test
-    status, result = resource.testHTTP(test_param='foo').result()
-    assert status == http_status
-    assert result == result
+    assert expected_result == resource.testHTTP(test_param='foo').result()
 
 
 def assert_raises_and_matches(exc_type, match_str):
@@ -48,7 +46,7 @@ def test_primitive_types_returned_in_response(httprettified, swagger_dict):
     for rtype, rvalue in rtypes.iteritems():
         register_spec(swagger_dict, {'type': rtype})
         register_test_http(body=json.dumps(rvalue))
-        assert_status_and_result(200, rvalue)
+        assert_result(rvalue)
 
 
 def test_invalid_primitive_types_in_response_raises_ValidationError(
@@ -69,14 +67,14 @@ def test_unstructured_json_in_response(httprettified, swagger_dict):
     response_spec = {'type': 'object', 'additionalProperties': True}
     register_spec(swagger_dict, response_spec)
     register_test_http(body='{"some_foo": "bar"}')
-    assert_status_and_result(200, {'some_foo': 'bar'})
+    assert_result({'some_foo': 'bar'})
 
 
 def test_date_format_in_reponse(httprettified, swagger_dict):
     response_spec = {'type': 'string', 'format': 'date'}
     register_spec(swagger_dict, response_spec)
     register_test_http(body=json.dumps("2014-06-10"))
-    assert_status_and_result(200, datetime.date(2014, 6, 10))
+    assert_result(datetime.date(2014, 6, 10))
 
 
 def test_array_in_response(httprettified, swagger_dict):
@@ -89,4 +87,4 @@ def test_array_in_response(httprettified, swagger_dict):
     register_spec(swagger_dict, response_spec)
     expected_array = ['inky', 'dinky', 'doo']
     register_test_http(body=json.dumps(expected_array))
-    assert_status_and_result(200, expected_array)
+    assert_result(expected_array)
