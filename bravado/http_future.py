@@ -33,8 +33,9 @@ class HttpFuture(object):
 
         if self.response_callback:
             swagger_return_value = self.response_callback(http_response)
-            return raise_http_error_based_on_status(
+            raise_http_error_based_on_status(
                 http_response, swagger_return_value)
+            return swagger_return_value
 
         return http_response
 
@@ -48,7 +49,6 @@ def raise_http_error_based_on_status(http_response, swagger_return_value):
     :param http_response: :class:`ResponseLike`
     :param swagger_return_value: The return value of a swagger response if it
         has one, None otherwise.
-    :return: swagger_return_value
     :raises: HTTPError on 4XX and 5XX http errors
     """
     http_error_msg = None
@@ -63,5 +63,3 @@ def raise_http_error_based_on_status(http_response, swagger_return_value):
 
     if http_error_msg:
         raise HTTPError(http_error_msg, http_response, swagger_return_value)
-
-    return swagger_return_value

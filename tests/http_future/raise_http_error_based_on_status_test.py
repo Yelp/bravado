@@ -7,8 +7,8 @@ from bravado.http_future import raise_http_error_based_on_status, HTTPError
 
 def test_200():
     http_response = Mock(spec=ResponseLike, status_code=200)
-    value = raise_http_error_based_on_status(http_response, 'hello world')
-    assert 'hello world' == value
+    # no error raised == success
+    raise_http_error_based_on_status(http_response, 'hello world')
 
 
 def test_http_error_raised_on_4XX_client_error():
