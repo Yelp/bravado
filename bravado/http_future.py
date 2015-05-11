@@ -4,7 +4,6 @@ from bravado.exception import HTTPError
 DEFAULT_TIMEOUT_S = 5.0
 
 
-# TODO: move to bravado
 class HttpFuture(object):
     """A future which inputs HTTP params"""
 

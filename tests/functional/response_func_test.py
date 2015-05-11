@@ -10,6 +10,7 @@ import pytest
 from bravado.client import SwaggerClient
 from bravado.compat import json
 from bravado.exception import HTTPError
+from bravado.fido_client import FidoClient
 from tests.functional.conftest import register_spec, register_get, API_DOCS_URL
 
 
