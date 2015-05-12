@@ -73,8 +73,7 @@ def test_parameter_in_path_of_request(httprettified, swagger_dict):
     register_spec(swagger_dict)
     register_get('http://localhost/test_http/42?test_param=foo')
     resource = SwaggerClient.from_url(API_DOCS_URL).api_test
-    resp = resource.testHTTP(test_param="foo", param_id="42").result()
-    assert (200, None) == resp
+    assert resource.testHTTP(test_param="foo", param_id="42").result() is None
 
 
 def test_default_value_in_request(httprettified, swagger_dict):
@@ -104,4 +103,4 @@ def test_array_with_collection_format_in_path_of_request(
     register_spec(swagger_dict)
     register_get('http://localhost/test_http/40,41,42')
     resource = SwaggerClient.from_url(API_DOCS_URL).api_test
-    assert (200, None) == resource.testHTTP(param_ids=[40, 41, 42]).result()
+    assert resource.testHTTP(param_ids=[40, 41, 42]).result() is None

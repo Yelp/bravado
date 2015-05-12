@@ -23,7 +23,7 @@ def test_correct_route_with_basePath_as_slash(httprettified, swagger_dict):
     register_spec(swagger_dict)
     register_get("http://localhost/test_http?test_param=foo")
     resource = SwaggerClient.from_url(API_DOCS_URL).api_test
-    assert (200, None) == resource.testHTTP(test_param="foo").result()
+    assert resource.testHTTP(test_param="foo").result() is None
 
 
 def test_basePath_works(httprettified, swagger_dict):
@@ -63,4 +63,4 @@ def test_correct_route_with_basePath_no_slash(httprettified, swagger_dict):
     swagger_dict["basePath"] = "/lame/test"
     register_spec(swagger_dict)
     resource = SwaggerClient.from_url(API_DOCS_URL).api_test
-    assert (200, None) == resource.testHTTP(test_param="foo").result()
+    assert resource.testHTTP(test_param="foo").result() is None

@@ -93,7 +93,7 @@ def test_model_in_response(httprettified, swagger_dict, sample_model):
     register_spec(swagger_dict)
     register_get("http://localhost/test_http", body=json.dumps(sample_model))
     client = SwaggerClient.from_url(API_DOCS_URL)
-    status, result = client.api_test.testHTTP().result()
+    result = client.api_test.testHTTP().result()
     User = client.get_model('User')
     School = client.get_model('School')
     assert isinstance(result, User)
@@ -123,7 +123,7 @@ def test_additionalProperty_in_model_in_response(
     sample_model["extra"] = 42
     register_get("http://localhost/test_http", body=json.dumps(sample_model))
     resource = SwaggerClient.from_url(API_DOCS_URL).api_test
-    status, result = resource.testHTTP().result()
+    result = resource.testHTTP().result()
     assert result.extra == 42
 
 

@@ -1,18 +1,13 @@
 # -*- coding: utf-8 -*-
-
-#
-# Copyright (c) 2015, Yelp, Inc.
-#
-
 import logging
 
+from bravado_core.http_client import APP_FORM, HttpClient
+from bravado_core.param import stringify_body as param_stringify_body
+from bravado_core.response import ResponseLike
 import fido
 from yelp_uri import urllib_utf8
 
-from bravado_core.http_client import APP_FORM, HttpClient
-from bravado_core.http_future import HttpFuture
-from bravado_core.param import stringify_body as param_stringify_body
-from bravado_core.response import ResponseLike
+from bravado.http_future import HttpFuture
 from bravado.multipart_response import create_multipart_content
 
 log = logging.getLogger(__name__)
