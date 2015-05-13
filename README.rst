@@ -29,7 +29,7 @@ Example Usage
 
     from bravado.client import SwaggerClient
     client = SwaggerClient.from_url("http://petstore.swagger.wordnik.com/api/api-docs")
-    status, pet = client.pet.getPetById(petId=42).result()
+    pet = client.pet.getPetById(petId=42).result()
 
 Documentation
 -------------

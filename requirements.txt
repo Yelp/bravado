@@ -1,3 +1,0 @@
--e git://github.com/Yelp/swagger_spec_validator.git@#egg=swagger-spec-validator
--e git://github.com/Yelp/bravado-core.git@#egg=bravado-core
-jsonref
