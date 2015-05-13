@@ -1,12 +1,22 @@
-Configuring swagger-py
+Configuring bravado
 ======================
 
-There are some configurations which can be handy.
+You can configure certain behaviours when creating a ``SwaggerClient``.
 
-.. code-block:: ini
+.. code-block:: python
 
-        # Default time in seconds api-docs is cached
-        swaggerpy.client.SWAGGER_SPEC_TIMEOUT_S = 300
+    config = {
+        #  validate incoming responses
+        'validate_responses': True,
 
-        # Default timeout in seconds for client to get complete response
-        swaggerpy.response.DEFAULT_TIMEOUT_S = 5.0
+        # validate outgoing requests
+        'validate_requests': True,
+
+        # validate the swagger spec
+        'validate_swagger_spec': True
+
+        # Use models (Python classes) instead of dicts for #/definitions/{models}
+        'use_models': True
+    }
+
+    client = SwaggerClient.from_url(..., config=config)

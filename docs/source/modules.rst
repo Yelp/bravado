@@ -1,7 +1,7 @@
-swaggerpy
+bravado
 =========
 
 .. toctree::
    :maxdepth: 4
 
-   swaggerpy
+   bravado
