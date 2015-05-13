@@ -4,26 +4,34 @@ bravado Package
 :mod:`bravado` Package
 ------------------------
 
-:mod:`http_client` Module
+:mod:`client` Module
+--------------------
+
+.. automodule:: bravado.client
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`requests_client` Module
 -------------------------
 
-.. automodule:: bravado.http_client
+.. automodule:: bravado.requests_client
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`async_http_client` Module
+:mod:`fido_client` Module
 -------------------------------
 
-.. automodule:: bravado.async_http_client
+.. automodule:: bravado.fido_client
     :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`response` Module
+:mod:`http_future` Module
 ----------------------
 
-.. automodule:: bravado.response
+.. automodule:: bravado.http_future
     :members:
     :undoc-members:
     :show-inheritance:
@@ -35,28 +43,3 @@ bravado Package
     :members:
     :undoc-members:
     :show-inheritance:
-
-:mod:`processors` Module
-------------------------
-
-.. automodule:: bravado.processors
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`swagger_model` Module
----------------------------
-
-.. automodule:: bravado.swagger_model
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`client` Module
---------------------
-
-.. automodule:: bravado.client
-    :members:
-    :undoc-members:
-    :show-inheritance:
-

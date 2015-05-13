@@ -77,7 +77,8 @@ class SwaggerClient(object):
         :type  http_client: :class:`bravado.http_client.HttpClient`
         :param request_headers: Headers to pass with http requests
         :type  request_headers: dict
-        :param config: Configuration dict - see spec.CONFIG_DEFAULTS
+        :param config: bravado_core config dict. See
+            bravado_core.spec.CONFIG_DEFAULTS
         """
         # TODO: better way to customize the request for api calls, so we don't
         #       have to add new kwargs for everything

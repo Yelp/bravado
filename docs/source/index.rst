@@ -1,20 +1,20 @@
 bravado documentation
 ========================
 
-This project acts as a generic client library for services which follow *Swagger* schema.
+Bravado is a python client library for Swagger 2.0 services.
 
 More information on Swagger can be found `on the Swagger website
-<https://developers.helloreverb.com/swagger/>`_
+<http://swagger.io/>`_
 
 It aims to be a complete replacement to `swagger codegen <https://github.com/wordnik/swagger-codegen>`__.
 
 Features include:
 
-* Synchronous and Asynchronous clients out of the box.
- 
-* Caching of api-docs with regular staleness check.
+* Dynamically generated client - no code generation needed!
 
-* Strict validations to check swagger spec is `v2.0 <https://github.com/wordnik/swagger-spec/blob/master/versions/2.0.md/>`_ compatible.
+* Synchronous and Asynchronous http clients out of the box.
+ 
+* Strict validations to verify that your Swagger Schema is  `v2.0 <https://github.com/wordnik/swagger-spec/blob/master/versions/2.0.md/>`_ compatible.
 
 * Validations on the parameter and response types.
 
@@ -22,7 +22,7 @@ Features include:
 
 * Doc strings are provided for Operations and Models to give more information about the API.
 
-* Local file path to api-docs is also acceptable.
+* Local file path to swagger.json is also acceptable.
 
 Contents:
 
