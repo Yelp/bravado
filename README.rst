@@ -1,8 +1,8 @@
-.. image:: https://travis-ci.org/Yelp/swagger-py.png?branch=master
-  :target: https://travis-ci.org/Yelp/swagger-py?branch=master
+.. image:: https://travis-ci.org/Yelp/bravado.png?branch=master
+  :target: https://travis-ci.org/Yelp/bravado?branch=master
 
 
-Swagger-py
+Bravado
 ==========
 
 About
@@ -15,11 +15,11 @@ From Swagger's home page:
     services.
 
 Client libraries can automatically be generated from the `Swagger
-specification <https://github.com/wordnik/swagger-core/wiki>`__, however Swagger-py
+specification <https://github.com/wordnik/swagger-core/wiki>`__, however Bravado
 aims to be a compleate replacement for code generation (`swagger-codegen
 <https://github.com/wordnik/swagger-codegen>`__).
 
-Swagger.py is a forked from `digium/swagger-py <https://github.com/digium/swagger-py/>`__
+Bravado is a forked from `digium/swagger-py <https://github.com/digium/swagger-py/>`__
 for using `Swagger <https://developers.helloreverb.com/swagger/>`__ defined API's.
 
 Example Usage
@@ -27,21 +27,21 @@ Example Usage
 
 .. code:: Python
 
-    from swaggerpy import client
-    swagger_client = client.get_client("http://petstore.swagger.wordnik.com/api/api-docs")
-    swagger_client.pet.getPetById(petId=42).result()
+    from bravado.client import SwaggerClient
+    client = SwaggerClient.from_url("http://petstore.swagger.wordnik.com/api/api-docs")
+    status, pet = client.pet.getPetById(petId=42).result()
 
 Documentation
 -------------
 
-More documentation is available at http://swagger-py.readthedocs.org
+More documentation is available at http://bravado.readthedocs.org
 
 Installation
 ------------
 
 ::
 
-    $ pip install --upgrade git+git://github.com/Yelp/swagger-py
+    $ pip install --upgrade git+git://github.com/Yelp/bravado
 
 Development
 ===========
@@ -66,7 +66,7 @@ License
 -------
 
 Copyright (c) 2013, Digium, Inc. All rights reserved.
-Copyright (c) 2014, Yelp, Inc. All rights reserved.
+Copyright (c) 2014-2015, Yelp, Inc. All rights reserved.
 
-Swagger.py is licensed with a `BSD 3-Clause
+Bravado is licensed with a `BSD 3-Clause
 License <http://opensource.org/licenses/BSD-3-Clause>`__.
