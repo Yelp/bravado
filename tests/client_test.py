@@ -3,11 +3,15 @@ import datetime
 import tempfile
 import unittest
 
+from bravado_core.spec import Spec
+from bravado_core.http_client import HttpClient
 import httpretty
 import requests
+import mock
 import pytest
 
 from bravado.client import SwaggerClient
+from bravado.http_future import HttpFuture
 
 
 @pytest.mark.xfail
@@ -254,5 +258,60 @@ class SwaggerClientTest(unittest.TestCase):
         self.uut = SwaggerClient.from_resource_listing(self.resource_listing)
 
 
-if __name__ == '__main__':
-    unittest.main()
+class MockHttpClient(object):
+
+    def __init__(self, server_response):
+        self.response = server_response
+
+    def request(self, request, response_callback):
+        return HttpFuture(
+            mock.Mock(),
+            mock.Mock(return_value=mock.Mock(
+                json=mock.Mock(return_value=self.response),
+                status_code=200)),
+            response_callback)
+
+
+@pytest.fixture
+def swagger_client():
+    spec_dict = {
+        "swagger": "2.0",
+        "info": {
+            "version": "1.0.0",
+            "title": "Simple"
+        },
+        "paths": {
+            "/pet": {
+                "get": {
+                    "operationId": "getPet",
+                    "responses": {
+                        "200": {
+                            "description": "Get a pet",
+                            "schema": {
+                                "$ref": "#/definitions/Pet",
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "definitions": {
+            "Pet": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                    }
+                }
+            }
+        }
+    }
+    return SwaggerClient(Spec.from_dict(spec_dict, 'http://example.com/'))
+
+
+def test_client_ignores_unexpecte_response_fields(swagger_client):
+    swagger_client.swagger_spec.http_client = MockHttpClient({
+        "id": 12345,
+        "alias": "thing",
+    })
+    response = swagger_client.pet.getPet()
+    assert response.result() == dict(id=12345)
