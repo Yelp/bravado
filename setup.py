@@ -28,7 +28,7 @@ setup(
         "Programming Language :: Python",
     ],
     install_requires=[
-        "bravado-core",
+        "bravado-core >= 1.0.0-rc1",
         "crochet >= 1.4.0",
         "fido >= 1.0.1",
         "python-dateutil",
