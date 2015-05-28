@@ -13,7 +13,7 @@ class HttpFuture(object):
         :param future: future object
         :type future: :class: `concurrent.futures.Future`
         :param response_adapter: Adapter which exposes json(), status_code()
-        :type response_adapter: :class: `bravado_core.response.ResponseLike`
+        :type response_adapter: :class: `bravado_core.response.IncomingResponse`
         :param callback: Function to be called on the response
         """
         self.future = future
@@ -46,7 +46,7 @@ def raise_http_error_based_on_status(http_response, swagger_return_value):
     compatibility. Raise an HTTPError when the http status indicates a client
     or server side error.
 
-    :param http_response: :class:`ResponseLike`
+    :param http_response: :class:`IncomingResponse`
     :param swagger_return_value: The return value of a swagger response if it
         has one, None otherwise.
     :raises: HTTPError on 4XX and 5XX http errors

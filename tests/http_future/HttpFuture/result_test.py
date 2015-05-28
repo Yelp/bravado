@@ -1,6 +1,6 @@
 from concurrent.futures import Future
 
-from bravado_core.response import ResponseLike
+from bravado_core.response import IncomingResponse
 from mock import Mock, patch
 import pytest
 
@@ -10,7 +10,7 @@ from bravado.http_future import HTTPError, HttpFuture
 def test_no_response_callback():
     # This use case is for http requests that are made outside of the
     # swagger spec e.g. retrieving the swagger schema
-    response_adapter_instance = Mock(spec=ResponseLike)
+    response_adapter_instance = Mock(spec=IncomingResponse)
     response_adapter_type = Mock(return_value=response_adapter_instance)
     http_future = HttpFuture(
         future=Mock(spec=Future),
@@ -22,7 +22,7 @@ def test_no_response_callback():
 
 def test_200_success():
     response_callback = Mock(return_value='hello world')
-    response_adapter_instance = Mock(spec=ResponseLike, status_code=200)
+    response_adapter_instance = Mock(spec=IncomingResponse, status_code=200)
     response_adapter_type = Mock(return_value=response_adapter_instance)
 
     http_future = HttpFuture(
@@ -37,7 +37,7 @@ def test_200_success():
        side_effect=HTTPError)
 def test_4XX_5XX_failure(_):
     response_callback = Mock(return_value='hello world')
-    response_adapter_instance = Mock(spec=ResponseLike, status_code=400)
+    response_adapter_instance = Mock(spec=IncomingResponse, status_code=400)
     response_adapter_type = Mock(return_value=response_adapter_instance)
 
     http_future = HttpFuture(

@@ -4,7 +4,7 @@ import sys
 import urlparse
 
 from bravado_core.http_client import HttpClient
-from bravado_core.response import ResponseLike
+from bravado_core.response import IncomingResponse
 import requests
 import requests.auth
 
@@ -142,7 +142,7 @@ def add_response_detail_to_errors(e):
     raise HTTPError(*args), None, sys.exc_info()[2]
 
 
-class RequestsResponseAdapter(ResponseLike):
+class RequestsResponseAdapter(IncomingResponse):
     """Wraps a requests.models.Response object to provide a uniform interface
     to the response innards.
     """
