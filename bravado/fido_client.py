@@ -3,7 +3,7 @@ import logging
 
 from bravado_core.http_client import APP_FORM, HttpClient
 from bravado_core.param import stringify_body as param_stringify_body
-from bravado_core.response import ResponseLike
+from bravado_core.response import IncomingResponse
 import fido
 from yelp_uri import urllib_utf8
 
@@ -13,7 +13,7 @@ from bravado.multipart_response import create_multipart_content
 log = logging.getLogger(__name__)
 
 
-class FidoResponseAdapter(ResponseLike):
+class FidoResponseAdapter(IncomingResponse):
     """Wraps a fido.fido.Response object to provider a uniform interface
     to the response innards.
 
