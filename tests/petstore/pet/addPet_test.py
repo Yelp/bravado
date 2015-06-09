@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 
 def test_success(petstore):
     Pet = petstore.get_model('Pet')
@@ -11,4 +13,4 @@ def test_success(petstore):
         photoUrls=['http://fido.jpg'],
         tags=[Tag(id=102, name='friendly')])
     result = petstore.pet.addPet(body=fido).result()
-    print result
+    print(result)

@@ -13,13 +13,23 @@ Not Tested:
 import unittest
 from collections import namedtuple
 from mock import patch, Mock
-from ordereddict import OrderedDict
 
-import bravado.fido_client
+import pytest
+import six
+
+try:
+    import bravado.fido_client
+except ImportError:
+    pass  # Tests will be skipped in py3
+
 import bravado.exception
 from bravado_core.http_client import APP_FORM
 
 
+@pytest.mark.skipif(
+    six.PY3,
+    reason="Fido client is not usable in py3 until twisted supports it",
+)
 class FidoHttpClientTest(unittest.TestCase):
 
     def test_stringify_fido_body_returns_file_producer(self):
@@ -50,12 +60,14 @@ class FidoHttpClientTest(unittest.TestCase):
             self.assertEqual(expected_contents, resp)
 
     def test_stringify_files_creates_correct_form_content(self):
-        request = {'data': OrderedDict([('id', 42), ('name', 'test')]),
+        request = {'data': {'id': 42, 'name': 'test'},
                    'headers': {'content-type': APP_FORM}}
         resp = bravado.fido_client.stringify_body(request)
 
-        expected_contents = ('id=42&name=test')
-        self.assertEqual(expected_contents, resp)
+        self.assertEqual(
+            six.moves.urllib.parse.parse_qs('id=42&name=test'),
+            six.moves.urllib.parse.parse_qs(resp),
+        )
 
     def test_url_encode_FidoHTTP_response(self):
         Response = namedtuple("MyResponse",

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from pprint import pprint
 import pytest
 
@@ -6,7 +7,7 @@ def test_200_success(petstore):
     pet_api = petstore.pet
     future = pet_api.getPetById(petId=1)
     pet = future.result()
-    print type(pet)
+    print(type(pet))
     pprint(pet)
     assert type(pet).__name__ == 'Pet'
     assert pet.name

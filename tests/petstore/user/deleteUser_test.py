@@ -1,3 +1,4 @@
+from __future__ import print_function
 import pytest
 
 
@@ -9,10 +10,10 @@ def test_200_success(petstore):
 @pytest.mark.xfail(reason="Can't get this to 404")
 def test_404_user_not_found(petstore):
     result = petstore.user.deleteUser(username='zzz').result()
-    print result
+    print(result)
 
 
 @pytest.mark.xfail(reason="Can't get this to 400")
 def test_400_invalid_username(petstore):
     result = petstore.user.deleteUser(username='aaa').result()
-    print result
+    print(result)

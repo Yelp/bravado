@@ -1,10 +1,10 @@
 """
 Request related functional tests
 """
-import StringIO
-import urlparse
+from six.moves import cStringIO
 
 import httpretty
+from six.moves.urllib import parse as urlparse
 
 from bravado.client import SwaggerClient
 from tests.functional.conftest import register_spec, API_DOCS_URL, register_get
@@ -31,7 +31,7 @@ def test_form_params_in_request(httprettified, swagger_dict):
     content_type = httpretty.last_request().headers['content-type']
     assert 'application/x-www-form-urlencoded' == content_type
     body = urlparse.parse_qs(httpretty.last_request().body)
-    assert {'param_name': ['foo'], 'param_id': ['42']} == body
+    assert {b'param_name': [b'foo'], b'param_id': [b'42']} == body
 
 
 def test_file_upload_in_request(httprettified, swagger_dict):
@@ -52,12 +52,12 @@ def test_file_upload_in_request(httprettified, swagger_dict):
     register_spec(swagger_dict)
     httpretty.register_uri(httpretty.POST, "http://localhost/test_http?")
     resource = SwaggerClient.from_url(API_DOCS_URL).api_test
-    resource.testHTTP(param_id=42, file_name=StringIO.StringIO('boo')).result()
+    resource.testHTTP(param_id=42, file_name=cStringIO('boo')).result()
     content_type = httpretty.last_request().headers['content-type']
 
     assert content_type.startswith('multipart/form-data')
-    assert "42" in httpretty.last_request().body
-    assert "boo" in httpretty.last_request().body
+    assert b"42" in httpretty.last_request().body
+    assert b"boo" in httpretty.last_request().body
 
 
 def test_parameter_in_path_of_request(httprettified, swagger_dict):

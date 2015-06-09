@@ -1,3 +1,4 @@
+from __future__ import print_function
 import pytest
 
 
@@ -32,7 +33,7 @@ def test_404_user_not_found(petstore):
     )
     result = petstore.user.updateUser(
         username='i_dont_exist', body=user).result()
-    print result
+    print(result)
 
 
 @pytest.mark.xfail(reason='Broken on server side - blindly succeeds')

@@ -6,8 +6,9 @@
 import contextlib
 import logging
 import os
-import urllib
-import urlparse
+
+from six.moves import urllib
+from six.moves.urllib import parse as urlparse
 
 from bravado.compat import json
 from bravado.requests_client import RequestsClient
@@ -41,7 +42,7 @@ class FileEventual(object):
         return self.path
 
     def wait(self, timeout=None):
-        with contextlib.closing(urllib.urlopen(self.get_path())) as fp:
+        with contextlib.closing(urllib.request.urlopen(self.get_path())) as fp:
             return self.FileResponse(json.load(fp))
 
     def result(self, *args, **kwargs):
@@ -108,10 +109,10 @@ def load_file(spec_file, http_client=None):
     :raise: IOError: On error reading swagger.json.
     """
     file_path = os.path.abspath(spec_file)
-    url = urlparse.urljoin(u'file:', urllib.pathname2url(file_path))
+    url = urlparse.urljoin(u'file:', urllib.request.pathname2url(file_path))
     # When loading from files, everything is relative to the spec file
     dir_path = os.path.dirname(file_path)
-    base_url = urlparse.urljoin(u'file:', urllib.pathname2url(dir_path))
+    base_url = urlparse.urljoin(u'file:', urllib.request.pathname2url(dir_path))
     return load_url(url, http_client=http_client, base_url=base_url)
 
 

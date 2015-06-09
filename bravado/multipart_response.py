@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-
 from uuid import uuid4
+
+import six
+
 from bravado_core.http_client import MULT_FORM
 
 
@@ -33,11 +35,11 @@ def create_multipart_content(request_params, headers):
     lines = []
 
     # Add all form fields
-    for k, v in request_params.get('data', {}).items():
+    for k, v in six.iteritems(request_params.get('data', {})):
         add_lines(k, v, False, boundary, lines)
 
     # Add all form files
-    for file_name, f in request_params['files'].items():
+    for file_name, f in six.iteritems(request_params['files']):
         add_lines(file_name, f.read(), True, boundary, lines)
 
     lines.extend(["--" + boundary + "--", ""])
