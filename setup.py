@@ -20,7 +20,7 @@ setup(
     url="https://github.com/Yelp/bravado",
     packages=["bravado"],
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "License :: OSI Approved :: BSD License",
@@ -29,7 +29,7 @@ setup(
         "Programming Language :: Python :: 2.7",
     ],
     install_requires=[
-        "bravado-core >= 1.0.0-rc2",
+        "bravado-core >= 1.1.0",
         "crochet >= 1.4.0",
         "fido >= 1.0.1",
         "python-dateutil",
