@@ -1,3 +1,7 @@
+1.1.0 (2015-07-06)
+---------------------
+- Made bravado compatible with Py34
+
 1.0.0 (2015-06-26)
 ----------------------
 - Fixed petstore demo link
