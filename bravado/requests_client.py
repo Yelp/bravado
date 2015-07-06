@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
 import sys
-import urlparse
 
-from bravado_core.http_client import HttpClient
-from bravado_core.response import IncomingResponse
 import requests
 import requests.auth
+import six
+from bravado_core.http_client import HttpClient
+from bravado_core.response import IncomingResponse
+from six.moves.urllib import parse as urlparse
 
 from bravado.exception import HTTPError
 from bravado.http_future import HttpFuture
@@ -107,7 +108,7 @@ class RequestsClient(HttpClient):
             requests_future,
             RequestsResponseAdapter,
             response_callback,
-            )
+        )
 
     def set_basic_auth(self, host, username, password):
         self.authenticator = BasicAuthenticator(
@@ -139,7 +140,8 @@ def add_response_detail_to_errors(e):
     args = list(e.args)
     if hasattr(e, 'response') and hasattr(e.response, 'text'):
         args[0] += (' : ' + e.response.text)
-    raise HTTPError(*args), None, sys.exc_info()[2]
+
+    raise six.reraise(HTTPError, HTTPError(*args), sys.exc_info()[2])
 
 
 class RequestsResponseAdapter(IncomingResponse):

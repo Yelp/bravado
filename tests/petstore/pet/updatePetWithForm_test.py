@@ -1,3 +1,4 @@
+from __future__ import print_function
 import pytest
 
 
@@ -6,7 +7,7 @@ def test_success(petstore):
         petId='1',
         name='darwin',
         status='available').result()
-    print result
+    print(result)
     assert result
 
 

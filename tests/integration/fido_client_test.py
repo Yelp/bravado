@@ -6,9 +6,13 @@ import time
 import unittest
 
 import bottle
+import pytest
+import six
 
-from bravado.fido_client import FidoClient
-
+try:
+    from bravado.fido_client import FidoClient
+except ImportError:
+    pass  # Tests will be skipped in py3
 
 ROUTE_1_RESPONSE = "HEY BUDDY"
 ROUTE_2_RESPONSE = "BYE BUDDY"
@@ -42,6 +46,7 @@ def launch_threaded_http_server(port):
     return thread
 
 
+@pytest.mark.skipif(six.PY3, reason="twisted doesnt support py3 yet")
 class TestServer(unittest.TestCase):
 
     def test_multiple_requests_against_fido_client(self):

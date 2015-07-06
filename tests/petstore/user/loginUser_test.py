@@ -1,3 +1,4 @@
+from __future__ import print_function
 import pytest
 
 
@@ -5,7 +6,7 @@ import pytest
 def test_200_success(petstore):
     result = petstore.user.loginUser(
         username='bozo', password='letmein').result()
-    print result
+    print(result)
 
     # operation says that is produces:
     #

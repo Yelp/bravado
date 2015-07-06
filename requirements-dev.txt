@@ -1,8 +1,7 @@
 # Unit test dependencies
 bottle
-httpretty
+httpretty==0.8.6
 mock
-ordereddict
 pre-commit
 pytest
 pytest-mock

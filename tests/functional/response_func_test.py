@@ -43,7 +43,7 @@ def test_primitive_types_returned_in_response(httprettified, swagger_dict):
         'number': 3.4,
         'boolean': True
     }
-    for rtype, rvalue in rtypes.iteritems():
+    for rtype, rvalue in rtypes.items():
         register_spec(swagger_dict, {'type': rtype})
         register_test_http(body=json.dumps(rvalue))
         assert_result(rvalue)
@@ -57,7 +57,7 @@ def test_invalid_primitive_types_in_response_raises_ValidationError(
         'number': 'foo',
         'boolean': '"NOT_BOOL"'
     }
-    for rtype, rvalue in rtypes.iteritems():
+    for rtype, rvalue in rtypes.items():
         register_spec(swagger_dict, {'type': rtype})
         register_test_http(body=json.dumps(rvalue))
         assert_raises_and_matches(ValidationError, 'is not of type')

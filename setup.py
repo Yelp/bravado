@@ -34,7 +34,8 @@ setup(
         "fido >= 1.0.1",
         "python-dateutil",
         "requests",
+        "six",
         "twisted >= 14.0.0",
-        "yelp_uri >= 1.0.1",
+        "yelp_uri >= 1.1.0",
     ],
 )
