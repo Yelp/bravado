@@ -1,3 +1,7 @@
+0.7.10 (2015-07-07)
+------------------
+- Make request and response available as attrs on HTTPError
+
 0.7.5 (2015-01-21)
 ------------------
 - Handle request path parameters with spaces correctly
