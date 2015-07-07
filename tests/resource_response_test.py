@@ -55,16 +55,17 @@ is validated against its type 'Pet' which is defined like so:
 """
 
 import datetime
-from swaggerpy.compat import json
 import unittest
-from mock import Mock
+from swaggerpy.compat import json
 
 import httpretty
 from dateutil.tz import tzutc
+from mock import Mock
 
 from swaggerpy.client import SwaggerClient
 from swaggerpy.exception import CancelledError, HTTPError
 from swaggerpy.processors import SwaggerError
+from swaggerpy.response import handle_response_errors
 from swaggerpy.response import HTTPFuture
 
 
@@ -85,6 +86,23 @@ class HTTPFutureTest(unittest.TestCase):
 
     def test_cancelled_returns_false_if_called_before_cancel(self):
         self.assertFalse(self.future.cancelled())
+
+
+class HandleResponseErrorsTest(unittest.TestCase):
+
+    def test_pass_response_and_request(self):
+        request = Mock()
+        response = Mock(text='{"foo": "bar"}')
+        response.json.return_value = {'foo': 'bar'}
+        error = Mock(
+            args=('400 Bad Request',), response=response, request=request
+        )
+        try:
+            handle_response_errors(error)
+        except HTTPError as e:
+            self.assertEqual(e.response.json(), {'foo': 'bar'})
+            self.assertEqual(e.response, response)
+            self.assertEqual(e.request, request)
 
 
 class ResourceResponseTest(unittest.TestCase):
