@@ -26,9 +26,17 @@ def handle_response_errors(e):
     :raises HTTPError: :class: `swaggerpy.exception.HTTPError`
     """
     args = list(e.args)
-    if hasattr(e, 'response') and hasattr(e.response, 'text'):
-        args[0] += (' : ' + e.response.text)
-    raise HTTPError(*args), None, sys.exc_info()[2]
+    kwargs = {}
+
+    if hasattr(e, 'response'):
+        kwargs['response'] = e.response
+        if hasattr(e.response, 'text'):
+            args[0] += (' : ' + e.response.text)
+
+    if hasattr(e, 'request'):
+        kwargs['request'] = e.request
+
+    raise HTTPError(*args, **kwargs), None, sys.exc_info()[2]
 
 
 class HTTPFuture(object):
