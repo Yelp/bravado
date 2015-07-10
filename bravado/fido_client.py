@@ -7,11 +7,11 @@ if six.PY3:
     raise ImportError("The fido client is not yet supported in py3")
 
 import fido
-from bravado_core.http_client import APP_FORM, HttpClient
 from bravado_core.param import stringify_body as param_stringify_body
 from bravado_core.response import IncomingResponse
 from yelp_uri import urllib_utf8
 
+from bravado.http_client import APP_FORM, HttpClient
 from bravado.http_future import HttpFuture
 from bravado.multipart_response import create_multipart_content
 

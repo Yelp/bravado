@@ -5,11 +5,11 @@ import sys
 import requests
 import requests.auth
 import six
-from bravado_core.http_client import HttpClient
 from bravado_core.response import IncomingResponse
 from six.moves.urllib import parse as urlparse
 
 from bravado.exception import HTTPError
+from bravado.http_client import HttpClient
 from bravado.http_future import HttpFuture
 
 

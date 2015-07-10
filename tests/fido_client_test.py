@@ -22,8 +22,8 @@ try:
 except ImportError:
     pass  # Tests will be skipped in py3
 
+from bravado.http_client import APP_FORM
 import bravado.exception
-from bravado_core.http_client import APP_FORM
 
 
 @pytest.mark.skipif(
