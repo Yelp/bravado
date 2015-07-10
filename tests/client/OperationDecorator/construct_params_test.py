@@ -1,9 +1,9 @@
 from mock import patch
 import pytest
+
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
 from bravado_core.spec import Spec
-
 
 from bravado.client import OperationDecorator
 

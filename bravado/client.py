@@ -132,8 +132,8 @@ class SwaggerClient(object):
 
 class ResourceDecorator(object):
     """
-    Wraps :class:`bravado_core.resource.Resource` so that the returned Operation
-    can be made callable. See :class:`OperationDecorator`.
+    Wraps :class:`bravado_core.resource.Resource` so that accesess to contained
+    operations can be instrumented.
     """
 
     def __init__(self, resource):
@@ -144,6 +144,10 @@ class ResourceDecorator(object):
 
     def __getattr__(self, name):
         """
+        This actually returns a function because of the unusual way we've
+        implemented dynamically generated operation docstrings. See
+        operation_docstring_wrapper for the deets.
+
         :rtype: :class:`OperationDecorator`
         """
         return operation_docstring_wrapper(
@@ -152,7 +156,7 @@ class ResourceDecorator(object):
 
 class OperationDecorator(object):
     """
-    Wraps :class:`bravado_core.operation.Operation` and makes it callable.
+    Enables http_client invocations when the operation is called.
     """
 
     def __init__(self, operation):
