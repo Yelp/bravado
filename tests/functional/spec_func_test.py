@@ -5,7 +5,7 @@ import httpretty
 import pytest
 from swagger_spec_validator.common import SwaggerValidationError
 
-from bravado.client import SwaggerClient
+from bravado.client import SwaggerClient, ResourceDecorator
 from bravado_core.resource import Resource
 from tests.functional.conftest import register_get, register_spec, API_DOCS_URL
 
@@ -38,7 +38,7 @@ def test_basePath_works(httprettified, swagger_dict):
 def test_resources_are_attrs_on_client(httprettified, swagger_dict):
     register_spec(swagger_dict)
     client = SwaggerClient.from_url(API_DOCS_URL)
-    assert isinstance(client.api_test, Resource)
+    assert isinstance(client.api_test, ResourceDecorator)
 
 
 def test_headers_sendable_with_api_doc_request(httprettified, swagger_dict):
