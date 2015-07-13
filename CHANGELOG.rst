@@ -1,3 +1,7 @@
+2.0.0 (2015-07-13)
+---------------------
+- Assume responsibility for http invocation (used to be in bravado-core)
+
 1.1.0 (2015-07-06)
 ---------------------
 - Made bravado compatible with Py34

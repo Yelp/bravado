@@ -27,9 +27,10 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.4",
     ],
     install_requires=[
-        "bravado-core >= 1.1.0",
+        "bravado-core >= 2.0.0",
         "crochet >= 1.4.0",
         "fido >= 1.0.1",
         "python-dateutil",
