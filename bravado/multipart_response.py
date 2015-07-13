@@ -3,7 +3,7 @@ from uuid import uuid4
 
 import six
 
-from bravado_core.http_client import MULT_FORM
+from bravado.http_client import MULT_FORM
 
 
 def add_lines(name, content, is_file, boundary, lines):

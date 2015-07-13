@@ -1,0 +1,24 @@
+# -*- coding: utf-8 -*-
+APP_FORM = 'application/x-www-form-urlencoded'
+MULT_FORM = 'multipart/form-data'
+
+
+class HttpClient(object):
+    """Interface for a minimal HTTP client.
+    """
+
+    def request(self, request_params, response_callback=None):
+        """
+        :param request_params: complete request data.
+        :type request_params: dict
+        :param response_callback: Function to be called on response
+        :type response_callback: method
+
+        :returns: HTTP Future object
+        :rtype: :class: `bravado_core.http_future.HttpFuture`
+        """
+        raise NotImplementedError(
+            u"%s: Method not implemented", self.__class__.__name__)
+
+    def __repr__(self):
+        return "{0}()".format(type(self))

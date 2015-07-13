@@ -1,7 +1,7 @@
 # Unit test dependencies
 bottle
 httpretty==0.8.6
-mock
+mock<1.1.0
 pre-commit
 pytest
 pytest-mock
