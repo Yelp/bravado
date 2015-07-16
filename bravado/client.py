@@ -215,6 +215,16 @@ class OperationDecorator(object):
             if not remaining_param.required and remaining_param.has_default():
                 marshal_param(remaining_param, None, request)
 
+    def log_warning_for_deprecated_op(self):
+        # TODO: Move this logic to bravado_decorators
+        if self.operation.op_spec.get('deprecated'):
+            params = {'op': self.operation.operation_id,
+                      'dep': self.operation.op_spec.get('x-deprecated-date'),
+                      'rem': self.operation.op_spec.get('x-removal-date'),
+                      }
+            log.warn(("[DEPRECATED] {op} has now been deprecated. Deprecation"
+                     " date: {dep}, Removal date: {rem}").format(**params))
+
     def __call__(self, **op_kwargs):
         """
         Invoke the actual HTTP request and return a future that encapsulates
@@ -223,6 +233,7 @@ class OperationDecorator(object):
         :rtype: :class:`bravado.http_future.HTTPFuture`
         """
         log.debug(u"%s(%s)" % (self.operation.operation_id, op_kwargs))
+        self.log_warning_for_deprecated_op()
         request = self.construct_request(**op_kwargs)
 
         def response_callback(response_adapter):
