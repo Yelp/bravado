@@ -44,6 +44,7 @@ To get a client
         client = bravado.client.SwaggerClient.from_url(swagger_spec_url)
 """
 import logging
+import warnings
 from bravado_core.docstring import operation_docstring_wrapper
 
 from bravado_core.exception import SwaggerMappingError
@@ -216,14 +217,14 @@ class OperationDecorator(object):
                 marshal_param(remaining_param, None, request)
 
     def log_warning_for_deprecated_op(self):
-        # TODO: Move this logic to bravado_decorators
-        if self.operation.op_spec.get('deprecated'):
+        if self.operation.op_spec.get('deprecated', False):
             params = {'op': self.operation.operation_id,
                       'dep': self.operation.op_spec.get('x-deprecated-date'),
                       'rem': self.operation.op_spec.get('x-removal-date'),
                       }
-            log.warn(("[DEPRECATED] {op} has now been deprecated. Deprecation"
-                     " date: {dep}, Removal date: {rem}").format(**params))
+            warnings.warn((
+                "[DEPRECATED] {op} has now been deprecated. Deprecation date: "
+                "{dep}, Removal date: {rem}").format(**params), Warning)
 
     def __call__(self, **op_kwargs):
         """
