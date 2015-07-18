@@ -44,7 +44,6 @@ To get a client
         client = bravado.client.SwaggerClient.from_url(swagger_spec_url)
 """
 import logging
-import warnings
 from bravado_core.docstring import operation_docstring_wrapper
 
 from bravado_core.exception import SwaggerMappingError
@@ -55,6 +54,7 @@ from six import iteritems, itervalues
 
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
+from bravado.warning import warn_for_deprecated_op
 
 log = logging.getLogger(__name__)
 
@@ -216,16 +216,6 @@ class OperationDecorator(object):
             if not remaining_param.required and remaining_param.has_default():
                 marshal_param(remaining_param, None, request)
 
-    def log_warning_for_deprecated_op(self):
-        if self.operation.op_spec.get('deprecated', False):
-            params = {'op': self.operation.operation_id,
-                      'dep': self.operation.op_spec.get('x-deprecated-date'),
-                      'rem': self.operation.op_spec.get('x-removal-date'),
-                      }
-            warnings.warn((
-                "[DEPRECATED] {op} has now been deprecated. Deprecation date: "
-                "{dep}, Removal date: {rem}").format(**params), Warning)
-
     def __call__(self, **op_kwargs):
         """
         Invoke the actual HTTP request and return a future that encapsulates
@@ -234,7 +224,7 @@ class OperationDecorator(object):
         :rtype: :class:`bravado.http_future.HTTPFuture`
         """
         log.debug(u"%s(%s)" % (self.operation.operation_id, op_kwargs))
-        self.log_warning_for_deprecated_op()
+        warn_for_deprecated_op(self.operation)
         request = self.construct_request(**op_kwargs)
 
         def response_callback(response_adapter):
