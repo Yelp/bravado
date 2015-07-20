@@ -1,3 +1,7 @@
+2.1.0 (2015-07-20)
+---------------------
+- Add warning for deprecated operations
+
 2.0.0 (2015-07-13)
 ---------------------
 - Assume responsibility for http invocation (used to be in bravado-core)
