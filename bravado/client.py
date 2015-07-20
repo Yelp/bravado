@@ -54,6 +54,7 @@ from six import iteritems, itervalues
 
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
+from bravado.warning import warn_for_deprecated_op
 
 log = logging.getLogger(__name__)
 
@@ -223,6 +224,7 @@ class OperationDecorator(object):
         :rtype: :class:`bravado.http_future.HTTPFuture`
         """
         log.debug(u"%s(%s)" % (self.operation.operation_id, op_kwargs))
+        warn_for_deprecated_op(self.operation)
         request = self.construct_request(**op_kwargs)
 
         def response_callback(response_adapter):
