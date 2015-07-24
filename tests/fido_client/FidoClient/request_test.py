@@ -3,6 +3,15 @@ from bravado.fido_client import FidoClient
 
 
 @patch('bravado.fido_client.fido.fetch')
+def test_no_timeouts_passed_to_fido(fetch):
+    fido_client = FidoClient()
+    request_params = dict(url='http://foo.com/')
+    fido_client.request(request_params, response_callback=None)
+    assert fetch.call_args == call(
+        'http://foo.com/?', body='', headers={}, method='GET')
+
+
+@patch('bravado.fido_client.fido.fetch')
 def test_timeout_passed_to_fido(fetch):
     fido_client = FidoClient()
     request_params = dict(url='http://foo.com/', timeout=1)

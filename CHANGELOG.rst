@@ -1,3 +1,7 @@
+2.2.0 (2015-XX-XX)
+---------------------
+- Support passing in connect_timeout and timeout via _request_options to the Fido and Requests clients
+
 2.1.0 (2015-07-20)
 ---------------------
 - Add warning for deprecated operations
