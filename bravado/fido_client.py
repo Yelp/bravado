@@ -67,7 +67,7 @@ class FidoClient(HttpClient):
 
         for fetch_kwarg in ('connect_timeout', 'timeout'):
             if fetch_kwarg in request_params:
-                fetch_kwargs[fetch_kwargs] = request_params[fetch_kwarg]
+                fetch_kwargs[fetch_kwarg] = request_params[fetch_kwarg]
 
         concurrent_future = fido.fetch(url, **fetch_kwargs)
 
