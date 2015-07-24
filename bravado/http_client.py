@@ -9,7 +9,8 @@ class HttpClient(object):
 
     def request(self, request_params, response_callback=None):
         """
-        :param request_params: complete request data.
+        :param request_params: complete request data. e.g. url, method,
+            headers, body, params, connect_timeout, timeout, etc.
         :type request_params: dict
         :param response_callback: Function to be called on response
         :type response_callback: method

@@ -93,6 +93,31 @@ class RequestsClient(HttpClient):
         self.session = requests.Session()
         self.authenticator = None
 
+    @staticmethod
+    def separate_params(request_params):
+        """Splits the passed in dict of request_params into two buckets.
+
+        - sanitized_params are valid kwargs for constructing a
+          requests.Request(..)
+        - misc_options are things like timeouts which can't be communicated
+          to the Requests library via the requests.Request(...) constructor.
+
+        :param request_params: kitchen sink of request params. Treated as a
+            read-only dict.
+        :returns: tuple(sanitized_params, misc_options)
+        """
+        sanitized_params = request_params.copy()
+        request_options = {}
+
+        if 'connect_timeout' in sanitized_params:
+            request_options['connect_timeout'] = \
+                sanitized_params.pop('connect_timeout')
+
+        if 'timeout' in sanitized_params:
+            request_options['timeout'] = sanitized_params.pop('timeout')
+
+        return sanitized_params, request_options
+
     def request(self, request_params, response_callback=None):
         """
         :param request_params: complete request data.
@@ -101,8 +126,12 @@ class RequestsClient(HttpClient):
         :returns: HTTP Future object
         :rtype: :class: `bravado_core.http_future.HttpFuture`
         """
+        sanitized_params, misc_options = self.separate_params(request_params)
+
         requests_future = RequestsFutureAdapter(
-            self.session, self.authenticated_request(request_params))
+            self.session,
+            self.authenticated_request(sanitized_params),
+            misc_options)
 
         return HttpFuture(
             requests_future,
@@ -170,14 +199,18 @@ class RequestsResponseAdapter(IncomingResponse):
 class RequestsFutureAdapter(object):
     """A future which inputs HTTP params"""
 
-    def __init__(self, session, request):
+    def __init__(self, session, request, misc_options):
         """Kicks API call for Requests client
 
         :param session: session object to use for making the request
         :param request: dict containing API request parameters
+        :param misc_options: misc options to apply when sending a HTTP request.
+            e.g. timeout, connect_timeout, etc
+        :type misc_options: dict
         """
         self.session = session
         self.request = request
+        self.misc_options = misc_options
 
     def check_for_exceptions(self, response):
         try:
@@ -193,6 +226,7 @@ class RequestsFutureAdapter(object):
         :return: raw response from the server
         :rtype: dict
         """
+        # TODO: left off here - passing timeout tuple to self.session.send(...)
         request = self.request
         response = self.session.send(
             self.session.prepare_request(request),
