@@ -218,19 +218,55 @@ class RequestsFutureAdapter(object):
         except Exception as e:
             add_response_detail_to_errors(e)
 
+    def build_timeout(self, result_timeout):
+        """
+        Build the appropriate timeout object to pass to `session.send(...)`.
+
+        :param result_timeout: timeout that was passed into `result(..)`.
+        :return: timeout
+        :rtype: float or tuple(connect_timeout, timeout)
+        """
+        timeout = None
+        has_service_timeout = 'timeout' in self.misc_options
+        has_result_timeout = result_timeout is not None
+
+        service_timeout = self.misc_options.get('timeout')
+        if has_service_timeout and has_result_timeout:
+            # The API provides two ways to pass a timeout :( We're stuck
+            # dealing with it until we're ready to make a non-backwards
+            # compatible change.
+            timeout = service_timeout
+            if service_timeout != result_timeout:
+                timeout = max(service_timeout, result_timeout)
+                log.warn("Two different timeouts have been passed: "
+                         "_request_options['timeout'] = %s and "
+                         "future.result(timeout=%s). Using the highest "
+                         "timeout of %s."
+                         .format(service_timeout, result_timeout, timeout))
+        elif has_service_timeout:
+            timeout = service_timeout
+        elif has_result_timeout:
+            timeout = result_timeout
+
+        if 'connect_timeout' in self.misc_options:
+            # Requests is weird in that if you want to specify a
+            # connect_timeout and idle timeout, then a tuple of the two is
+            # required.
+            return self.misc_options['connect_timeout'], timeout
+        return timeout
+
     def result(self, timeout):
         """Blocking call to wait for API response
 
         :param timeout: timeout in seconds to wait for response
-        :type timeout: integer
+        :type timeout: float
         :return: raw response from the server
         :rtype: dict
         """
-        # TODO: left off here - passing timeout tuple to self.session.send(...)
         request = self.request
         response = self.session.send(
             self.session.prepare_request(request),
-            timeout=timeout)
+            timeout=self.build_timeout(timeout))
 
         self.check_for_exceptions(response)
 
