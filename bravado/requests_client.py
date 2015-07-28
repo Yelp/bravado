@@ -107,16 +107,16 @@ class RequestsClient(HttpClient):
         :returns: tuple(sanitized_params, misc_options)
         """
         sanitized_params = request_params.copy()
-        request_options = {}
+        misc_options = {}
 
         if 'connect_timeout' in sanitized_params:
-            request_options['connect_timeout'] = \
+            misc_options['connect_timeout'] = \
                 sanitized_params.pop('connect_timeout')
 
         if 'timeout' in sanitized_params:
-            request_options['timeout'] = sanitized_params.pop('timeout')
+            misc_options['timeout'] = sanitized_params.pop('timeout')
 
-        return sanitized_params, request_options
+        return sanitized_params, misc_options
 
     def request(self, request_params, response_callback=None):
         """
