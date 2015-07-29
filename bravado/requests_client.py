@@ -197,7 +197,9 @@ class RequestsResponseAdapter(IncomingResponse):
 
 
 class RequestsFutureAdapter(object):
-    """A future which inputs HTTP params"""
+    """Mimics a :class:`concurrent.futures.Future` for the purposes of making
+    HTTP calls with the Requests library in a future-y sort of way.
+    """
 
     def __init__(self, session, request, misc_options):
         """Kicks API call for Requests client
@@ -220,52 +222,60 @@ class RequestsFutureAdapter(object):
 
     def build_timeout(self, result_timeout):
         """
-        Build the appropriate timeout object to pass to `session.send(...)`.
+        Build the appropriate timeout object to pass to `session.send(...)`
+        based on connect_timeout, the timeout passed to the service call, and
+        the timeout passed to the result call.
 
-        :param result_timeout: timeout that was passed into `result(..)`.
+        :param result_timeout: timeout that was passed into `future.result(..)`
         :return: timeout
         :rtype: float or tuple(connect_timeout, timeout)
         """
+        # The API provides two ways to pass a timeout :( We're stuck
+        # dealing with it until we're ready to make a non-backwards
+        # compatible change.
+        #
+        #  - If both timeouts are the same, no problem
+        #  - If either has a non-None value, use the non-None value
+        #  - If both have a non-None value, use the greater of the two
         timeout = None
         has_service_timeout = 'timeout' in self.misc_options
-        has_result_timeout = result_timeout is not None
-
         service_timeout = self.misc_options.get('timeout')
-        if has_service_timeout and has_result_timeout:
-            # The API provides two ways to pass a timeout :( We're stuck
-            # dealing with it until we're ready to make a non-backwards
-            # compatible change.
-            timeout = service_timeout
-            if service_timeout != result_timeout:
-                timeout = max(service_timeout, result_timeout)
-                log.warn("Two different timeouts have been passed: "
-                         "_request_options['timeout'] = %s and "
-                         "future.result(timeout=%s). Using the highest "
-                         "timeout of %s."
-                         .format(service_timeout, result_timeout, timeout))
-        elif has_service_timeout:
-            timeout = service_timeout
-        elif has_result_timeout:
-            timeout = result_timeout
 
+        if not has_service_timeout:
+            timeout = result_timeout
+        elif service_timeout == result_timeout:
+            timeout = service_timeout
+        else:
+            if service_timeout is None:
+                timeout = result_timeout
+            elif result_timeout is None:
+                timeout = service_timeout
+            else:
+                timeout = max(service_timeout, result_timeout)
+            log.warn("Two different timeouts have been passed: "
+                     "_request_options['timeout'] = {0} and "
+                     "future.result(timeout={1}). Using timeout of {2}."
+                     .format(service_timeout, result_timeout, timeout))
+
+        # Requests is weird in that if you want to specify a connect_timeout
+        # and idle timeout, then the timeout is passed as a tuple
         if 'connect_timeout' in self.misc_options:
-            # Requests is weird in that if you want to specify a
-            # connect_timeout and idle timeout, then a tuple of the two is
-            # required.
-            return self.misc_options['connect_timeout'], timeout
+            timeout = self.misc_options['connect_timeout'], timeout
         return timeout
 
-    def result(self, timeout):
+    def result(self, timeout=None):
         """Blocking call to wait for API response
 
-        :param timeout: timeout in seconds to wait for response
+        :param timeout: timeout in seconds to wait for response. Defaults to
+            None to wait indefinitely.
         :type timeout: float
         :return: raw response from the server
         :rtype: dict
         """
         request = self.request
+        prepared_request = self.session.prepare_request(request)
         response = self.session.send(
-            self.session.prepare_request(request),
+            prepared_request,
             timeout=self.build_timeout(timeout))
 
         self.check_for_exceptions(response)
