@@ -1,4 +1,4 @@
-3.0.0 (2015-XX-XX)
+3.0.0 (2015-08-03)
 ---------------------
 - Support passing in connect_timeout and timeout via _request_options to the Fido and Requests clients
 - Timeout in HTTPFuture now defaults to None (wait indefinitely) instead of 5s. You should make sure
