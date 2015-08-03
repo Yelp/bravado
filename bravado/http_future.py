@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from bravado.exception import HTTPError
 
-DEFAULT_TIMEOUT_S = 5.0
-
 
 class HttpFuture(object):
     """A future which inputs HTTP params"""
@@ -20,11 +18,12 @@ class HttpFuture(object):
         self.response_adapter = response_adapter
         self.response_callback = callback
 
-    def result(self, timeout=DEFAULT_TIMEOUT_S):
+    def result(self, timeout=None):
         """Blocking call to wait for API response
 
-        :param timeout: Timeout in seconds for which client will get blocked
-        to receive the response
+        :param timeout: Number of seconds to wait for a response. Defaults to
+            None which means wait indefinitely.
+        :type timeout: float
         :return: swagger response return value when given a callback or the
             http_response otherwise.
         """

@@ -174,8 +174,8 @@ class OperationDecorator(object):
 
     def construct_request(self, **op_kwargs):
         """
-        :param op_kwargs: parameter name/value pairs to pass to the invocation
-            of the operation.
+        :param op_kwargs: parameter name/value pairs to passed to the
+            invocation of the operation.
         :return: request in dict form
         """
         request_options = op_kwargs.pop('_request_options', {})
@@ -183,16 +183,22 @@ class OperationDecorator(object):
         request = {
             'method': self.operation.http_method.upper(),
             'url': url,
-            'params': {},
+            'params': {},  # filled in downstream
             'headers': request_options.get('headers', {}),
         }
+
+        # Copy over optional request options
+        for request_option in ('connect_timeout', 'timeout'):
+            if request_option in request_options:
+                request[request_option] = request_options[request_option]
+
         self.construct_params(request, op_kwargs)
         return request
 
     def construct_params(self, request, op_kwargs):
         """
         Given the parameters passed to the operation invocation, validates and
-        marshals the parmameters into the provided request dict.
+        marshals the parameters into the provided request dict.
 
         :type request: dict
         :param op_kwargs: the kwargs passed to the operation invocation
@@ -225,10 +231,10 @@ class OperationDecorator(object):
         """
         log.debug(u"%s(%s)" % (self.operation.operation_id, op_kwargs))
         warn_for_deprecated_op(self.operation)
-        request = self.construct_request(**op_kwargs)
+        request_params = self.construct_request(**op_kwargs)
 
         def response_callback(response_adapter):
             return unmarshal_response(response_adapter, self)
 
         return self.operation.swagger_spec.http_client.request(
-            request, response_callback)
+            request_params, response_callback)

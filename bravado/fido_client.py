@@ -59,13 +59,19 @@ class FidoClient(HttpClient):
         url = '%s?%s' % (request_params['url'], urllib_utf8.urlencode(
             request_params.get('params', []), True))
 
-        request_params = {
+        fetch_kwargs = {
             'method': str(request_params.get('method', 'GET')),
             'body': stringify_body(request_params),
             'headers': request_params.get('headers', {}),
         }
 
-        return HttpFuture(fido.fetch(url, **request_params),
+        for fetch_kwarg in ('connect_timeout', 'timeout'):
+            if fetch_kwarg in request_params:
+                fetch_kwargs[fetch_kwarg] = request_params[fetch_kwarg]
+
+        concurrent_future = fido.fetch(url, **fetch_kwargs)
+
+        return HttpFuture(concurrent_future,
                           FidoResponseAdapter,
                           response_callback)
 
