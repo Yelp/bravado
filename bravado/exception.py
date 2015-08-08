@@ -1,20 +1,28 @@
 # -*- coding: utf-8 -*-
 
-#
-# Copyright (c) 2015, Yelp, Inc.
-#
-
 
 class HTTPError(IOError):
-    """Initialize HTTPError with 'response' and 'request' object
+    """Unified HTTPError used across all http_client implementations.
     """
 
-    def __init__(self, *args, **kwargs):
-        response = kwargs.pop('response', None)
+    def __init__(self, response, message=None, swagger_result=None):
+        """
+        :type response: :class:`bravado_core.response.IncomingResponse`
+        :param message: Optional string message
+        :param swagger_result: If the response for this HTTPError is
+            documented in the swagger spec, then this should be the result
+            value of the response.
+        """
         self.response = response
-        # populate request either from args or from response
-        self.request = kwargs.pop('request', None)
-        if(response is not None and not self.request and
-                hasattr(response, 'request')):
-            self.request = self.response.request
-        super(HTTPError, self).__init__(*args, **kwargs)
+        self.message = message
+        self.swagger_result = swagger_result
+
+    def __str__(self):
+        # Try to surface the most useful/relevant information available
+        # since this is the first thing a developer sees when bad things
+        # happen.
+        status_and_reason = str(self.response)
+        message = ': ' + self.message if self.message else ''
+        result = ': {0}'.format(self.swagger_result) \
+            if self.swagger_result is not None else ''
+        return '{0}{1}{2}'.format(status_and_reason, message, result)

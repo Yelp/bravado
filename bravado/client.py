@@ -46,11 +46,12 @@ To get a client
 import logging
 from bravado_core.docstring import operation_docstring_wrapper
 
-from bravado_core.exception import SwaggerMappingError
+from bravado_core.exception import SwaggerMappingError, MatchingResponseNotFound
 from bravado_core.param import marshal_param
-from bravado_core.response import unmarshal_response
+from bravado_core.response import unmarshal_response, get_response_spec
 from bravado_core.spec import Spec
 from six import iteritems, itervalues
+from bravado.exception import HTTPError
 
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
@@ -233,8 +234,47 @@ class OperationDecorator(object):
         warn_for_deprecated_op(self.operation)
         request_params = self.construct_request(**op_kwargs)
 
-        def response_callback(response_adapter):
-            return unmarshal_response(response_adapter, self)
+        def response_callback(incoming_response):
+            """
+            :type incoming_response:
+                :class:`bravado_core.response.IncomingResponse`
+            :return: Response spec's return value.
+            """
+            raise_on_unexpected(incoming_response)
+
+            try:
+                return unmarshal_response(incoming_response, self)
+            except MatchingResponseNotFound as e:
+                raise HTTPError(response=incoming_response, message=str(e))
+
+            raise_on_expected(incoming_response, swagger_return_value)
 
         return self.operation.swagger_spec.http_client.request(
             request_params, response_callback)
+
+
+def raise_on_unexpected(http_response):
+    """
+    Raise an HTTPError if the response is 5XX.
+
+    :param http_response: :class:`bravado_core.response.IncomingResponse`
+    :raises: HTTPError
+    """
+    if 500 <= http_response.status_code <= 599:
+        raise HTTPError(response=http_response)
+
+
+def raise_on_expected(http_response, swagger_return_value):
+    """
+    Raise an HTTPError if the response is non-2XX and matches a response in the
+    swagger spec.
+
+    :param http_response: :class:`bravado_core.response.IncomingResponse`
+    :param swagger_return_value: The return value of a swagger response if it
+        has one, None otherwise.
+    :raises: HTTPError
+    """
+    if not 200 <= http_response.status_code < 300:
+        raise HTTPError(
+            response=http_response,
+            swagger_result=swagger_return_value)

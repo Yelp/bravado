@@ -35,6 +35,10 @@ class FidoResponseAdapter(IncomingResponse):
     def text(self):
         return self._delegate.body
 
+    @property
+    def reason(self):
+        return self._delegate.reason
+
     def json(self, **_):
         # TODO: pass the kwargs downstream
         return self._delegate.json()

@@ -192,6 +192,10 @@ class RequestsResponseAdapter(IncomingResponse):
     def text(self):
         return self._delegate.text
 
+    @property
+    def reason(self):
+        return self._delegate.reason
+
     def json(self, **kwargs):
         return self._delegate.json(**kwargs)
 
@@ -278,6 +282,6 @@ class RequestsFutureAdapter(object):
             prepared_request,
             timeout=self.build_timeout(timeout))
 
-        self.check_for_exceptions(response)
+        #self.check_for_exceptions(response)
 
         return response
