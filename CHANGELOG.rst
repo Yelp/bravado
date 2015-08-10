@@ -1,4 +1,4 @@
-4.0.0 (2015-XX-XX)
+4.0.0 (2015-08-10)
 ---------------------
 - Consistent bravado.exception.HTTPError now thrown from both Fido and Requests http clients.
 - HTTPError refactored to contain an optional detailed message and Swagger response result.
