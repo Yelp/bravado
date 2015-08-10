@@ -27,38 +27,14 @@ class HttpFuture(object):
         :return: swagger response return value when given a callback or the
             http_response otherwise.
         """
-        http_response = self.response_adapter(
-            self.future.result(timeout=timeout))
+        inner_response = self.future.result(timeout=timeout)
+        incoming_response = self.response_adapter(inner_response)
 
         if self.response_callback:
-            swagger_return_value = self.response_callback(http_response)
-            raise_http_error_based_on_status(
-                http_response, swagger_return_value)
+            swagger_return_value = self.response_callback(incoming_response)
             return swagger_return_value
 
-        return http_response
+        if 200 <= incoming_response.status_code < 300:
+            return incoming_response
 
-
-def raise_http_error_based_on_status(http_response, swagger_return_value):
-    """
-    Mimic behavior of the swaggerpy 1.2 implementation for backwards
-    compatibility. Raise an HTTPError when the http status indicates a client
-    or server side error.
-
-    :param http_response: :class:`IncomingResponse`
-    :param swagger_return_value: The return value of a swagger response if it
-        has one, None otherwise.
-    :raises: HTTPError on 4XX and 5XX http errors
-    """
-    http_error_msg = None
-
-    if 400 <= http_response.status_code < 500:
-        http_error_msg = '{0} Client Error: {1}'.format(
-            http_response.status_code, swagger_return_value)
-
-    elif 500 <= http_response.status_code < 600:
-        http_error_msg = '{0} Server Error: {1}'.format(
-            http_response.status_code, swagger_return_value)
-
-    if http_error_msg:
-        raise HTTPError(http_error_msg, http_response, swagger_return_value)
+        raise HTTPError(response=incoming_response)

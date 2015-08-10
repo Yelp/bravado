@@ -1,3 +1,8 @@
+4.0.0 (2015-XX-XX)
+---------------------
+- Consistent bravado.exception.HTTPError now thrown from both Fido and Requests http clients.
+- HTTPError refactored to contain an optional detailed message and Swagger response result.
+
 3.0.0 (2015-08-03)
 ---------------------
 - Support passing in connect_timeout and timeout via _request_options to the Fido and Requests clients

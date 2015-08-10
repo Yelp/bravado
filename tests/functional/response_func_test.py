@@ -33,7 +33,7 @@ def assert_raises_and_matches(exc_type, match_str):
 def test_500_error_raises_HTTPError(httprettified, swagger_dict):
     register_spec(swagger_dict)
     register_get('http://localhost/test_http?test_param=foo', status=500)
-    assert_raises_and_matches(HTTPError, '500 Server Error')
+    assert_raises_and_matches(HTTPError, '500 Internal Server Error')
 
 
 def test_primitive_types_returned_in_response(httprettified, swagger_dict):

@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 import logging
-import sys
 
+from bravado_core.response import IncomingResponse
 import requests
 import requests.auth
-import six
-from bravado_core.response import IncomingResponse
 from six.moves.urllib import parse as urlparse
 
-from bravado.exception import HTTPError
 from bravado.http_client import HttpClient
 from bravado.http_future import HttpFuture
 
@@ -157,22 +154,6 @@ class RequestsClient(HttpClient):
         return request
 
 
-def add_response_detail_to_errors(e):
-    """Specific to requests errors. Error detail is not
-    directly visible in `raise_for_status` trace, instead it is
-    located under `e.response.text`
-
-    :param e: Exception object
-    :type e: :class: `requests.HTTPError`
-    :raises HTTPError: :class: `bravado.exception.HTTPError`
-    """
-    args = list(e.args)
-    if hasattr(e, 'response') and hasattr(e.response, 'text'):
-        args[0] += (' : ' + e.response.text)
-
-    raise six.reraise(HTTPError, HTTPError(*args), sys.exc_info()[2])
-
-
 class RequestsResponseAdapter(IncomingResponse):
     """Wraps a requests.models.Response object to provide a uniform interface
     to the response innards.
@@ -191,6 +172,10 @@ class RequestsResponseAdapter(IncomingResponse):
     @property
     def text(self):
         return self._delegate.text
+
+    @property
+    def reason(self):
+        return self._delegate.reason
 
     def json(self, **kwargs):
         return self._delegate.json(**kwargs)
@@ -213,12 +198,6 @@ class RequestsFutureAdapter(object):
         self.session = session
         self.request = request
         self.misc_options = misc_options
-
-    def check_for_exceptions(self, response):
-        try:
-            response.raise_for_status()
-        except Exception as e:
-            add_response_detail_to_errors(e)
 
     def build_timeout(self, result_timeout):
         """
@@ -277,7 +256,4 @@ class RequestsFutureAdapter(object):
         response = self.session.send(
             prepared_request,
             timeout=self.build_timeout(timeout))
-
-        self.check_for_exceptions(response)
-
         return response
