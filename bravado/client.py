@@ -45,6 +45,7 @@ To get a client
 """
 import functools
 import logging
+import sys
 
 from bravado_core.docstring import operation_docstring_wrapper
 from bravado_core.exception import MatchingResponseNotFound
@@ -52,6 +53,7 @@ from bravado_core.exception import SwaggerMappingError
 from bravado_core.param import marshal_param
 from bravado_core.response import unmarshal_response
 from bravado_core.spec import Spec
+import six
 from six import iteritems, itervalues
 
 from bravado.exception import HTTPError
@@ -261,7 +263,10 @@ def response_callback(incoming_response, operation):
     try:
         swagger_return_value = unmarshal_response(incoming_response, operation)
     except MatchingResponseNotFound as e:
-        raise HTTPError(response=incoming_response, message=str(e))
+        six.reraise(
+            HTTPError,
+            HTTPError(response=incoming_response, message=str(e)),
+            sys.exc_info()[2])
 
     raise_on_expected(incoming_response, swagger_return_value)
     return swagger_return_value
