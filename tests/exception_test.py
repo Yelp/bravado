@@ -31,7 +31,7 @@ def test_response_and_swagger_result(response_500):
     assert actual == "500 Server Error: {'msg': 'Kaboom'}"
 
 
-def test_response_and_swagger_result(response_500):
+def test_response_and_message_and_swagger_result(response_500):
     incoming_response = RequestsResponseAdapter(response_500)
     actual = str(HTTPError(
         incoming_response,

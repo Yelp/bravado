@@ -43,17 +43,18 @@ To get a client
 
         client = bravado.client.SwaggerClient.from_url(swagger_spec_url)
 """
-import logging
 import functools
-from bravado_core.docstring import operation_docstring_wrapper
+import logging
 
-from bravado_core.exception import SwaggerMappingError, MatchingResponseNotFound
+from bravado_core.docstring import operation_docstring_wrapper
+from bravado_core.exception import MatchingResponseNotFound
+from bravado_core.exception import SwaggerMappingError
 from bravado_core.param import marshal_param
-from bravado_core.response import unmarshal_response, get_response_spec
+from bravado_core.response import unmarshal_response
 from bravado_core.spec import Spec
 from six import iteritems, itervalues
-from bravado.exception import HTTPError
 
+from bravado.exception import HTTPError
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
 from bravado.warning import warn_for_deprecated_op
@@ -241,9 +242,19 @@ class OperationDecorator(object):
 
 def response_callback(incoming_response, operation):
     """
+    So the http_client is finished with its part of processing the response.
+    This hands the response over to bravado_core for validation and
+    unmarshalling.
+
     :type incoming_response: :class:`bravado_core.response.IncomingResponse`
-    :type op: :class:`bravado_core.response.IncomingResponse`
+    :type operation: :class:`bravado_core.operation.Operation`
     :return: Response spec's return value.
+    :raises: HTTPError
+        - On 5XX status code, the HTTPError has minimal information.
+        - On non-2XX status code with no matching response, the HTTPError
+            contains a detailed error message.
+        - On non-2XX status code with a matching response, the HTTPError
+            contains the return value.
     """
     raise_on_unexpected(incoming_response)
 

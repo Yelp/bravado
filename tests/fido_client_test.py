@@ -5,7 +5,6 @@ Not Tested:
 2) Timeouts by crochet's wait()
 """
 import unittest
-from collections import namedtuple
 from mock import patch, Mock
 
 import pytest
