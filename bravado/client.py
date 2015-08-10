@@ -44,6 +44,7 @@ To get a client
         client = bravado.client.SwaggerClient.from_url(swagger_spec_url)
 """
 import logging
+import functools
 from bravado_core.docstring import operation_docstring_wrapper
 
 from bravado_core.exception import SwaggerMappingError, MatchingResponseNotFound
@@ -233,24 +234,26 @@ class OperationDecorator(object):
         log.debug(u"%s(%s)" % (self.operation.operation_id, op_kwargs))
         warn_for_deprecated_op(self.operation)
         request_params = self.construct_request(**op_kwargs)
+        callback = functools.partial(response_callback, operation=self)
+        return self.operation.swagger_spec.http_client.request(request_params,
+                                                               callback)
 
-        def response_callback(incoming_response):
-            """
-            :type incoming_response:
-                :class:`bravado_core.response.IncomingResponse`
-            :return: Response spec's return value.
-            """
-            raise_on_unexpected(incoming_response)
 
-            try:
-                return unmarshal_response(incoming_response, self)
-            except MatchingResponseNotFound as e:
-                raise HTTPError(response=incoming_response, message=str(e))
+def response_callback(incoming_response, operation):
+    """
+    :type incoming_response: :class:`bravado_core.response.IncomingResponse`
+    :type op: :class:`bravado_core.response.IncomingResponse`
+    :return: Response spec's return value.
+    """
+    raise_on_unexpected(incoming_response)
 
-            raise_on_expected(incoming_response, swagger_return_value)
+    try:
+        swagger_return_value = unmarshal_response(incoming_response, operation)
+    except MatchingResponseNotFound as e:
+        raise HTTPError(response=incoming_response, message=str(e))
 
-        return self.operation.swagger_spec.http_client.request(
-            request_params, response_callback)
+    raise_on_expected(incoming_response, swagger_return_value)
+    return swagger_return_value
 
 
 def raise_on_unexpected(http_response):

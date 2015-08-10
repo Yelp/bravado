@@ -27,14 +27,14 @@ class HttpFuture(object):
         :return: swagger response return value when given a callback or the
             http_response otherwise.
         """
-        http_response = self.response_adapter(
-            self.future.result(timeout=timeout))
+        inner_response = self.future.result(timeout=timeout)
+        incoming_response = self.response_adapter(inner_response)
 
         if self.response_callback:
-            swagger_return_value = self.response_callback(http_response)
+            swagger_return_value = self.response_callback(incoming_response)
             return swagger_return_value
 
-        if 200 <= http_response.status_code < 300:
-            return http_response
+        if 200 <= incoming_response.status_code < 300:
+            return incoming_response
 
-        raise HTTPError(response=http_response)
+        raise HTTPError(response=incoming_response)
