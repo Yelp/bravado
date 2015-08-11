@@ -109,6 +109,7 @@ class SwaggerClient(object):
         :type  origin_url: str
         :param config: Configuration dict - see spec.CONFIG_DEFAULTS
         """
+        http_client = http_client or RequestsClient()
         swagger_spec = Spec.from_dict(
             spec_dict, origin_url, http_client, config)
         return cls(swagger_spec)
