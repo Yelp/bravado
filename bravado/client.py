@@ -47,7 +47,6 @@ import functools
 import logging
 import sys
 
-from bravado_core.docstring import operation_docstring_wrapper
 from bravado_core.exception import MatchingResponseNotFound
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.param import marshal_param
@@ -154,17 +153,16 @@ class ResourceDecorator(object):
         implemented dynamically generated operation docstrings. See
         operation_docstring_wrapper for the deets.
 
-        :rtype: :class:`OperationDecorator`
+        :rtype: :class:`CallableOperation`
         """
-        return operation_docstring_wrapper(
-            OperationDecorator(getattr(self.resource, name)))
+        return CallableOperation(getattr(self.resource, name))
 
 
-class OperationDecorator(object):
+class CallableOperation(object):
     """
-    Enables http_client invocations when the operation is called.
+    Wraps an operation to make it callable. Calling the operation uses the
+    configured http_client.
     """
-
     def __init__(self, operation):
         """
         :type operation: :class:`bravado_core.operation.Operation`

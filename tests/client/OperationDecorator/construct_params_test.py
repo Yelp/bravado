@@ -5,7 +5,7 @@ from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
 from bravado_core.spec import Spec
 
-from bravado.client import OperationDecorator
+from bravado.client import CallableOperation
 
 
 @pytest.fixture
@@ -35,7 +35,7 @@ def test_simple(minimal_swagger_spec, getPetById_spec, request_dict):
     @patch('bravado.client.marshal_param')
     def test_with_mocks(mock_marshal_param):
         request_dict['url'] = '/pet/{petId}'
-        op = OperationDecorator(Operation.from_spec(
+        op = CallableOperation(Operation.from_spec(
             minimal_swagger_spec, '/pet/{petId}', 'get', getPetById_spec))
         op.construct_params(request_dict, op_kwargs={'petId': 34})
         assert 1 == mock_marshal_param.call_count
@@ -49,7 +49,7 @@ def test_no_params(minimal_swagger_spec, request_dict):
     def test_with_mocks(mock_marshal_param):
         get_op = minimal_swagger_spec.spec_dict['paths']['/pet/{petId}']['get']
         del get_op['parameters'][0]
-        op = OperationDecorator(Operation.from_spec(
+        op = CallableOperation(Operation.from_spec(
             minimal_swagger_spec, '/pet/{petId}', 'get', {}))
         op.construct_params(request_dict, op_kwargs={})
         assert 0 == mock_marshal_param.call_count
@@ -59,7 +59,7 @@ def test_no_params(minimal_swagger_spec, request_dict):
 
 
 def test_extra_parameter_error(minimal_swagger_spec, request_dict):
-    op = OperationDecorator(Operation.from_spec(
+    op = CallableOperation(Operation.from_spec(
         minimal_swagger_spec, '/pet/{petId}', 'get', {}))
     with pytest.raises(SwaggerMappingError) as excinfo:
         op.construct_params(request_dict, op_kwargs={'extra_param': 'bar'})
@@ -69,7 +69,7 @@ def test_extra_parameter_error(minimal_swagger_spec, request_dict):
 def test_required_parameter_missing(
         minimal_swagger_spec, getPetById_spec, request_dict):
     request_dict['url'] = '/pet/{petId}'
-    op = OperationDecorator(Operation.from_spec(
+    op = CallableOperation(Operation.from_spec(
         minimal_swagger_spec, '/pet/{petId}', 'get', getPetById_spec))
     with pytest.raises(SwaggerMappingError) as excinfo:
         op.construct_params(request_dict, op_kwargs={})
@@ -84,7 +84,7 @@ def test_non_required_parameter_with_default_used(
         del getPetById_spec['parameters'][0]['required']
         getPetById_spec['parameters'][0]['default'] = 99
         request_dict['url'] = '/pet/{petId}'
-        op = OperationDecorator(Operation.from_spec(
+        op = CallableOperation(Operation.from_spec(
             minimal_swagger_spec, '/pet/{petId}', 'get', getPetById_spec))
         op.construct_params(request_dict, op_kwargs={})
         assert 1 == mock_marshal_param.call_count
