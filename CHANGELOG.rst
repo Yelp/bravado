@@ -1,7 +1,7 @@
 5.0.0 (2015-XX-XX)
 ---------------------
 - Remove pythonic docstring generation for operations so that they can be further decorated.
-  Instead of `help(petstore.pet.getPetById)` do `print petstore.pet.getPetById.docstring` instead.
+  Instead of `help(petstore.pet.getPetById)` do `print petstore.pet.getPetById.docstring`.
 
 4.0.0 (2015-08-10)
 ---------------------
