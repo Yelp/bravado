@@ -136,39 +136,39 @@ Adding Request Headers
 Docstrings
 ----------
 
-``bravado`` provides docstrings to operations and models to quickly get the parameter and response types. A sample operation ``getPetById`` docstring looks like:
+``bravado`` provides docstrings to operations and models to quickly get the parameter and response types.
+Due to an implementation limitation, an operation's docstring is not available via the built-in `help()` method.
+The `docstring` attribute on the operation is used instead:
 
 .. code-block:: console
 
-        Docstring:
+        >> print petstore.pet.getPetById.docstring
+
         [GET] Find pet by ID
-        Returns a pet based on ID
-        Args:
-                petId (int64) : ID of pet that needs to be fetched
-        Returns:
-                Pet
-        Raises:
-                400: Invalid ID supplied
-                404: Pet not found
-        Class Docstring:Operation object.
-        Call def:   c.pet.getPetById(self, kwargs)
 
+        Returns a single pet
 
-Even the ``Pet`` model description can be found in the docstring:
+        :param petId: ID of pet to return
+        :type petId: integer
+        :returns: 200: successful operation
+        :rtype: object
+        :returns: 400: Invalid ID supplied
+        :returns: 404: Pet not found
 
+Docstrings for models can be retrieved as expected:
 
 .. code-block:: console
+        >> help(petstore.getModel('Pet'))
 
-        Docstring:
-        Attributes:
-        category (Category)
-        status (str) : pet status in the store
-        name (str)
-        tags (list(Tag))
-        photoUrls (list(str))
-        id (long) : unique identifier for the pet
-        Constructor information:
-          Definition:Pet(self, kwargs)
+        class Pet(__builtin__.object)
+         |  Attributes:
+         |
+         |  category: Category
+         |  id: integer
+         |  name: string
+         |  photoUrls: list of string
+         |  status: string - pet status in the store
+         |  tags: list of Tag
 
 
 Default Values

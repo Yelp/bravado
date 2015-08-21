@@ -47,6 +47,7 @@ import functools
 import logging
 import sys
 
+from bravado_core.docstring import create_operation_docstring
 from bravado_core.exception import MatchingResponseNotFound
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.param import marshal_param
@@ -137,7 +138,7 @@ class SwaggerClient(object):
 
 class ResourceDecorator(object):
     """
-    Wraps :class:`bravado_core.resource.Resource` so that accesess to contained
+    Wraps :class:`bravado_core.resource.Resource` so that accesses to contained
     operations can be instrumented.
     """
 
@@ -149,13 +150,15 @@ class ResourceDecorator(object):
 
     def __getattr__(self, name):
         """
-        This actually returns a function because of the unusual way we've
-        implemented dynamically generated operation docstrings. See
-        operation_docstring_wrapper for the deets.
-
         :rtype: :class:`CallableOperation`
         """
         return CallableOperation(getattr(self.resource, name))
+
+    def __dir__(self):
+        """
+        Exposes correct attrs on resource when tab completing in a REPL
+        """
+        return self.resource.__dir__()
 
 
 class CallableOperation(object):
@@ -174,6 +177,26 @@ class CallableOperation(object):
         Forward requests for attrs not found on this decorator to the delegate.
         """
         return getattr(self.operation, name)
+
+    @property
+    def docstring(self):
+        """
+        Docstrings for an operation don't fit cleanly into the existing python
+        docstring system. The docstring for an operation should look like a
+        function docstring since it is "called" but the implementation is
+        encapsulated in a class.
+
+        Previously we returned a function wrapper around the operation to
+        achieve this bit of trickery. However, that breaks the interface of
+        the return type from class to function and prevents downstream clients
+        from further decorating the behavior of an Operation.
+
+        Since help(petstore.pet.getPetById) is not practical, the following
+        compromise has been made:
+
+        print petstore.pet.getPetById.docstring
+        """
+        return create_operation_docstring(self.operation)
 
     def construct_request(self, **op_kwargs):
         """

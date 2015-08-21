@@ -1,3 +1,8 @@
+5.0.0 (2015-XX-XX)
+---------------------
+- Remove pythonic docstring generation for operations so that they can be further decorated.
+  Instead of `help(petstore.pet.getPetById)` do `print petstore.pet.getPetById.docstring` instead.
+
 4.0.0 (2015-08-10)
 ---------------------
 - Consistent bravado.exception.HTTPError now thrown from both Fido and Requests http clients.
