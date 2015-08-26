@@ -46,7 +46,6 @@ To get a client
 import functools
 import logging
 import sys
-from bravado.docstring_property import docstring_property
 
 from bravado_core.docstring import create_operation_docstring
 from bravado_core.exception import MatchingResponseNotFound
@@ -57,6 +56,7 @@ from bravado_core.spec import Spec
 import six
 from six import iteritems, itervalues
 
+from bravado.docstring_property import docstring_property
 from bravado.exception import HTTPError
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
