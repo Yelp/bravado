@@ -46,6 +46,7 @@ To get a client
 import functools
 import logging
 import sys
+from bravado.docstring_property import docstring_property
 
 from bravado_core.docstring import create_operation_docstring
 from bravado_core.exception import MatchingResponseNotFound
@@ -172,7 +173,7 @@ class CallableOperation(object):
         """
         self.operation = operation
 
-    @property
+    @docstring_property(__doc__)
     def __doc__(self):
         return create_operation_docstring(self.operation)
 
