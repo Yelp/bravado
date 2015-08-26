@@ -22,4 +22,6 @@ def minimal_swagger_spec(getPetById_spec):
             }
         }
     }
-    return Spec(spec_dict)
+    spec = Spec(spec_dict)
+    spec.api_url = 'http://localhost/swagger.json'
+    return spec

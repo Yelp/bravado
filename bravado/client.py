@@ -127,7 +127,9 @@ class SwaggerClient(object):
         """
         resource = self.swagger_spec.resources.get(item)
         if not resource:
-            raise AttributeError(u"API has no resource '%s'" % item)
+            raise AttributeError(
+                'Resource {0} not found. Available resources: {1}'
+                .format(item, ', '.join(dir(self))))
 
         # Wrap bravado-core's Resource and Operation objects in order to
         # execute a service call via the http_client.
