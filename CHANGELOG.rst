@@ -1,7 +1,8 @@
 5.0.0 (2015-XX-XX)
 ---------------------
-- Remove pythonic docstring generation for operations so that they can be further decorated.
-  Instead of `help(petstore.pet.getPetById)` do `print petstore.pet.getPetById.docstring`.
+- Update ResourceDecorator to return an operation as a CallableOperation
+  instead of a function wrapper (for the docstring). This allows further
+  decoration of the ResourceDecorator.
 
 4.0.0 (2015-08-10)
 ---------------------

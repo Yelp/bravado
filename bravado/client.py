@@ -163,8 +163,8 @@ class ResourceDecorator(object):
 
 class CallableOperation(object):
     """
-    Wraps an operation to make it callable. Calling the operation uses the
-    configured http_client.
+    Wraps an operation to make it callable and provide a docstring. Calling
+    the operation uses the configured http_client.
     """
     def __init__(self, operation):
         """
@@ -172,31 +172,15 @@ class CallableOperation(object):
         """
         self.operation = operation
 
+    @property
+    def __doc__(self):
+        return create_operation_docstring(self.operation)
+
     def __getattr__(self, name):
         """
         Forward requests for attrs not found on this decorator to the delegate.
         """
         return getattr(self.operation, name)
-
-    @property
-    def docstring(self):
-        """
-        Docstrings for an operation don't fit cleanly into the existing python
-        docstring system. The docstring for an operation should look like a
-        function docstring since it is "called" but the implementation is
-        encapsulated in a class.
-
-        Previously we returned a function wrapper around the operation to
-        achieve this bit of trickery. However, that breaks the interface of
-        the return type from class to function and prevents downstream clients
-        from further decorating the behavior of an Operation.
-
-        Since help(petstore.pet.getPetById) is not practical, the following
-        compromise has been made:
-
-        print petstore.pet.getPetById.docstring
-        """
-        return create_operation_docstring(self.operation)
 
     def construct_request(self, **op_kwargs):
         """
