@@ -1,3 +1,9 @@
+5.0.0 (2015-XX-XX)
+---------------------
+- Update ResourceDecorator to return an operation as a CallableOperation
+  instead of a function wrapper (for the docstring). This allows further
+  decoration of the ResourceDecorator.
+
 4.0.0 (2015-08-10)
 ---------------------
 - Consistent bravado.exception.HTTPError now thrown from both Fido and Requests http clients.

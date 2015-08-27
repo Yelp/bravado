@@ -47,7 +47,7 @@ import functools
 import logging
 import sys
 
-from bravado_core.docstring import operation_docstring_wrapper
+from bravado_core.docstring import create_operation_docstring
 from bravado_core.exception import MatchingResponseNotFound
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.param import marshal_param
@@ -56,6 +56,7 @@ from bravado_core.spec import Spec
 import six
 from six import iteritems, itervalues
 
+from bravado.docstring_property import docstring_property
 from bravado.exception import HTTPError
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
@@ -127,7 +128,9 @@ class SwaggerClient(object):
         """
         resource = self.swagger_spec.resources.get(item)
         if not resource:
-            raise AttributeError(u"API has no resource '%s'" % item)
+            raise AttributeError(
+                'Resource {0} not found. Available resources: {1}'
+                .format(item, ', '.join(dir(self))))
 
         # Wrap bravado-core's Resource and Operation objects in order to
         # execute a service call via the http_client.
@@ -139,7 +142,7 @@ class SwaggerClient(object):
 
 class ResourceDecorator(object):
     """
-    Wraps :class:`bravado_core.resource.Resource` so that accesess to contained
+    Wraps :class:`bravado_core.resource.Resource` so that accesses to contained
     operations can be instrumented.
     """
 
@@ -151,26 +154,31 @@ class ResourceDecorator(object):
 
     def __getattr__(self, name):
         """
-        This actually returns a function because of the unusual way we've
-        implemented dynamically generated operation docstrings. See
-        operation_docstring_wrapper for the deets.
-
-        :rtype: :class:`OperationDecorator`
+        :rtype: :class:`CallableOperation`
         """
-        return operation_docstring_wrapper(
-            OperationDecorator(getattr(self.resource, name)))
+        return CallableOperation(getattr(self.resource, name))
+
+    def __dir__(self):
+        """
+        Exposes correct attrs on resource when tab completing in a REPL
+        """
+        return self.resource.__dir__()
 
 
-class OperationDecorator(object):
+class CallableOperation(object):
     """
-    Enables http_client invocations when the operation is called.
+    Wraps an operation to make it callable and provide a docstring. Calling
+    the operation uses the configured http_client.
     """
-
     def __init__(self, operation):
         """
         :type operation: :class:`bravado_core.operation.Operation`
         """
         self.operation = operation
+
+    @docstring_property(__doc__)
+    def __doc__(self):
+        return create_operation_docstring(self.operation)
 
     def __getattr__(self, name):
         """

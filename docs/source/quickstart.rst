@@ -136,40 +136,62 @@ Adding Request Headers
 Docstrings
 ----------
 
-``bravado`` provides docstrings to operations and models to quickly get the parameter and response types. A sample operation ``getPetById`` docstring looks like:
+``bravado`` provides docstrings to operations and models to quickly get the parameter and response types.
+Due to an implementation limitation, an operation's docstring looks like a class docstring instead of a
+function docstring. However, the most useful information about parameters and return type is present
+in the ``Docstring`` section.
+
+.. note::
+
+        The ``help`` built-in does not work as expected for docstrings. Use the ``?`` method instead.
 
 .. code-block:: console
 
+        >> petstore.pet.getPetById?
+
+        Type:       CallableOperation
+        String Form:<bravado.client.CallableOperation object at 0x241b5d0>
+        File:       /some/dir/bravado/bravado/client.py
+        Definition: c.pet.getPetById(self, **op_kwargs)
         Docstring:
         [GET] Find pet by ID
-        Returns a pet based on ID
-        Args:
-                petId (int64) : ID of pet that needs to be fetched
-        Returns:
-                Pet
-        Raises:
-                400: Invalid ID supplied
-                404: Pet not found
-        Class Docstring:Operation object.
-        Call def:   c.pet.getPetById(self, kwargs)
 
+        Returns a single pet
 
-Even the ``Pet`` model description can be found in the docstring:
+        :param petId: ID of pet to return
+        :type petId: integer
+        :returns: 200: successful operation
+        :rtype: object
+        :returns: 400: Invalid ID supplied
+        :returns: 404: Pet not found
+        Constructor Docstring::type operation: :class:`bravado_core.operation.Operation`
+        Call def:   c.pet.getPetById(self, **op_kwargs)
+        Call docstring:
+        Invoke the actual HTTP request and return a future that encapsulates
+        the HTTP response.
 
+        :rtype: :class:`bravado.http_future.HTTPFuture`
+
+Docstrings for models can be retrieved as expected:
 
 .. code-block:: console
+        >> pet_model = petstore.get_model('Pet')
+        >> pet_model?
 
+        Type:       type
+        String Form:<class 'bravado_core.model.Pet'>
+        File:       /some/dir/bravado_core/model.py
         Docstring:
         Attributes:
-        category (Category)
-        status (str) : pet status in the store
-        name (str)
-        tags (list(Tag))
-        photoUrls (list(str))
-        id (long) : unique identifier for the pet
-        Constructor information:
-          Definition:Pet(self, kwargs)
 
+        category: Category
+        id: integer
+        name: string
+        photoUrls: list of string
+        status: string - pet status in the store
+        tags: list of Tag
+        Constructor information:
+         Definition:pet_type(self, **kwargs)
 
 Default Values
 --------------
