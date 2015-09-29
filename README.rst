@@ -51,7 +51,7 @@ Installation
 
 ::
 
-    $ pip install --upgrade git+git://github.com/Yelp/bravado
+    $ pip install bravado
 
 Development
 ===========
