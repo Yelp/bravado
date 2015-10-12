@@ -1,7 +1,7 @@
 Changelog
 =========
 
-6.0.0 (2015-XX-XX)
+6.0.0 (2015-10-12)
 ------------------
 - User-defined formats are no longer global. The registration mechanism has
   changed and is now done via configuration. See `configuration <http://bravado.readthedocs.org/en/latest/configuration.html>`_.
