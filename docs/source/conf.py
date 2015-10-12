@@ -1,7 +1,5 @@
 import sphinx_rtd_theme
 
-from bravado import version
-
 # -- General configuration -----------------------------------------------
 
 extensions = [
@@ -9,8 +7,6 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
 ]
-
-release = version
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
