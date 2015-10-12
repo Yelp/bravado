@@ -1,4 +1,4 @@
-.PHONY: all install test tests clean
+.PHONY: all install test tests clean docs
 
 all: test
 
@@ -7,6 +7,9 @@ build:
 
 dev: clean
 	./setup.py develop
+
+docs:
+	tox -e docs
 
 install:
 	pip install .

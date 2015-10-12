@@ -1,4 +1,5 @@
-from mock import patch, call, Mock
+import mock
+from mock import patch, Mock
 import pytest
 import six
 
@@ -15,7 +16,7 @@ def test_no_timeouts_passed_to_fido():
         fido_client = FidoClient()
         request_params = dict(url='http://foo.com/')
         fido_client.request(request_params, response_callback=None)
-        assert fetch.call_args == call(
+        assert fetch.call_args == mock.call(
             'http://foo.com/?', body='', headers={}, method='GET')
 
 
@@ -25,7 +26,7 @@ def test_timeout_passed_to_fido():
         fido_client = FidoClient()
         request_params = dict(url='http://foo.com/', timeout=1)
         fido_client.request(request_params, response_callback=None)
-        assert fetch.call_args == call(
+        assert fetch.call_args == mock.call(
             'http://foo.com/?', body='', headers={}, method='GET', timeout=1)
 
 
@@ -35,7 +36,7 @@ def test_connect_timeout_passed_to_fido():
         fido_client = FidoClient()
         request_params = dict(url='http://foo.com/', connect_timeout=1)
         fido_client.request(request_params, response_callback=None)
-        assert fetch.call_args == call(
+        assert fetch.call_args == mock.call(
             'http://foo.com/?', body='', headers={}, method='GET',
             connect_timeout=1)
 
@@ -47,6 +48,6 @@ def test_connect_timeout_and_timeout_passed_to_fido():
         request_params = dict(url='http://foo.com/', connect_timeout=1,
                               timeout=2)
         fido_client.request(request_params, response_callback=None)
-        assert fetch.call_args == call(
+        assert fetch.call_args == mock.call(
             'http://foo.com/?', body='', headers={}, method='GET',
             connect_timeout=1, timeout=2)

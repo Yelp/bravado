@@ -1,8 +1,8 @@
 bravado Package
-=================
+===============
 
 :mod:`bravado` Package
-------------------------
+----------------------
 
 :mod:`client` Module
 --------------------
@@ -13,7 +13,7 @@ bravado Package
     :show-inheritance:
 
 :mod:`requests_client` Module
--------------------------
+-----------------------------
 
 .. automodule:: bravado.requests_client
     :members:
@@ -21,7 +21,7 @@ bravado Package
     :show-inheritance:
 
 :mod:`fido_client` Module
--------------------------------
+-------------------------
 
 .. automodule:: bravado.fido_client
     :members:
@@ -29,7 +29,7 @@ bravado Package
     :show-inheritance:
 
 :mod:`http_future` Module
-----------------------
+-------------------------
 
 .. automodule:: bravado.http_future
     :members:

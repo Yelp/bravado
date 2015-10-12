@@ -41,7 +41,7 @@ To get a client
 
 .. code-block:: python
 
-        client = bravado.client.SwaggerClient.from_url(swagger_spec_url)
+    client = bravado.client.SwaggerClient.from_url(swagger_spec_url)
 """
 import functools
 import logging
@@ -50,6 +50,7 @@ import sys
 from bravado_core.docstring import create_operation_docstring
 from bravado_core.exception import MatchingResponseNotFound
 from bravado_core.exception import SwaggerMappingError
+from bravado_core.formatter import SwaggerFormat  # noqa
 from bravado_core.param import marshal_param
 from bravado_core.response import unmarshal_response
 from bravado_core.spec import Spec
