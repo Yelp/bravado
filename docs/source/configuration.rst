@@ -7,8 +7,7 @@ The full documentation for each config key is in `bravado-core <http://bravado-c
 
 .. code-block:: python
 
-    from bravado_core.formatter import SwaggerFormat
-    from bravado.client import SwaggerClient
+    from bravado.client import SwaggerClient, SwaggerFormat
 
     my_super_duper_format = SwaggerFormat(...)
 
