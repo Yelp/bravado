@@ -4,7 +4,7 @@ Changelog
 6.0.0 (2015-XX-XX)
 ------------------
 - User-defined formats are no longer global. The registration mechanism has
-  changed and is now done via configuration. See `TODO <>`_
+  changed and is now done via configuration. See `configuration <http://bravado.readthedocs.org/en/latest/configuration.html>`_.
 
 5.0.0 (2015-08-27)
 ------------------

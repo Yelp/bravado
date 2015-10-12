@@ -12,17 +12,17 @@ Features include:
 
 * Dynamically generated client - no code generation needed!
 
-* Synchronous and Asynchronous http clients out of the box.
+* `Synchronous <http://docs.python-requests.org/en/latest/>`_ and `Asynchronous <https://github.com/Yelp/fido>`_ http clients out of the box.
  
 * Strict validations to verify that your Swagger Schema is  `v2.0 <https://github.com/wordnik/swagger-spec/blob/master/versions/2.0.md/>`_ compatible.
 
-* Validations on the parameter and response types.
+* HTTP request and response validation against your Swagger Schema.
 
-* Request and Response values are handled with Python types (no need to deal with JSON).
+* Swagger models as Python types (no need to deal with JSON).
 
-* Doc strings are provided for Operations and Models to give more information about the API.
+* REPL friendly navigation of your Swagger schema with docstrings for Resources, Operations and Models.
 
-* Local file path to swagger.json is also acceptable.
+* Ingestion of your Swagger schema via http or a local file path.
 
 Contents:
 
@@ -30,9 +30,9 @@ Contents:
    :maxdepth: 1
 
    quickstart
-   changelog
    configuration
-   bravado
+   advanced
+   changelog
 
 Indices and tables
 ==================
