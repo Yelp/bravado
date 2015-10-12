@@ -41,7 +41,7 @@ To get a client
 
 .. code-block:: python
 
-        client = bravado.client.SwaggerClient.from_url(swagger_spec_url)
+    client = bravado.client.SwaggerClient.from_url(swagger_spec_url)
 """
 import functools
 import logging
