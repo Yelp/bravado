@@ -34,8 +34,14 @@ def test_non_2XX_no_response_callback():
 
 
 def test_200_with_response_callback():
-    response_callback = Mock(return_value='hello world')
-    response_adapter_instance = Mock(spec=IncomingResponse, status_code=200)
+
+    def response_callback(incoming_response):
+        incoming_response.swagger_result = 'hello world'
+
+    response_adapter_instance = Mock(
+        spec=IncomingResponse,
+        status_code=200)
+
     response_adapter_type = Mock(return_value=response_adapter_instance)
 
     http_future = HttpFuture(
@@ -59,3 +65,24 @@ def test_non_2XX_with_response_callback():
     with pytest.raises(HTTPError) as excinfo:
         http_future.result()
     assert excinfo.value.response.status_code == 400
+
+
+def test_return_swagger_result_false():
+    # Verify HTTPFuture(..., return_swagger_result=False).result()
+    # returns the http response and not the swagger_result
+    def response_callback(incoming_response):
+        incoming_response.swagger_result = 'hello world'
+
+    response_adapter_instance = Mock(spec=IncomingResponse, status_code=200)
+    response_adapter_type = Mock(return_value=response_adapter_instance)
+
+    http_future = HttpFuture(
+        future=Mock(spec=Future),
+        response_adapter=response_adapter_type,
+        callback=response_callback,
+        return_swagger_result=False)
+
+    http_response = http_future.result()
+
+    assert http_response == response_adapter_instance
+    assert http_response.swagger_result == 'hello world'
