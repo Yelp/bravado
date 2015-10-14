@@ -66,16 +66,21 @@ from bravado.warning import warn_for_deprecated_op
 log = logging.getLogger(__name__)
 
 
+CONFIG_DEFAULTS = {
+    # See the constructor of :class:`bravado.http_future.HttpFuture` for an
+    # in depth explanation of what this means.
+    'also_return_response': False
+}
+
+
 class SwaggerClient(object):
     """A client for accessing a Swagger-documented RESTful service.
-    """
 
+    :param swagger_spec: :class:`bravado_core.spec.Spec`
+    :param resource_decorator: The ResourceDecorator class to use
+    :type  resource_decorator: ResourceDecorator
+    """
     def __init__(self, swagger_spec, resource_decorator=None):
-        """
-        :param swagger_spec: :class:`bravado_core.spec.Spec`
-        :param resource_decorator: The ResourceDecorator class to use
-        :type  resource_decorator: ResourceDecorator
-        """
         self.swagger_spec = swagger_spec
         self.resource_decorator = resource_decorator or ResourceDecorator
 
@@ -92,13 +97,12 @@ class SwaggerClient(object):
         :type  http_client: :class:`bravado.http_client.HttpClient`
         :param request_headers: Headers to pass with http requests
         :type  request_headers: dict
-        :param config: bravado_core config dict. See
-            bravado_core.spec.CONFIG_DEFAULTS
+        :param config: Config dict for bravado and bravado_core.
+            See CONFIG_DEFAULTS in :module:`bravado_core.spec`.
+            See CONFIG_DEFAULTS in :module:`bravado.client`.
         :param resource_decorator: The ResourceDecorator class to use
         :type  resource_decorator: ResourceDecorator
         """
-        # TODO: better way to customize the request for api calls, so we don't
-        #       have to add new kwargs for everything
         log.debug(u"Loading from %s" % spec_url)
         http_client = http_client or RequestsClient()
         loader = Loader(http_client, request_headers=request_headers)
@@ -110,7 +114,7 @@ class SwaggerClient(object):
     def from_spec(cls, spec_dict, origin_url=None, http_client=None,
                   config=None, resource_decorator=None):
         """
-        Build a :class:`SwaggerClient` from swagger api docs
+        Build a :class:`SwaggerClient` from a Swagger spec in dict form.
 
         :param spec_dict: a dict with a Swagger spec in json-like form
         :param origin_url: the url used to retrieve the spec_dict
@@ -120,6 +124,10 @@ class SwaggerClient(object):
         :type  resource_decorator: ResourceDecorator
         """
         http_client = http_client or RequestsClient()
+
+        # Apply bravado config defaults
+        config = dict(CONFIG_DEFAULTS, **(config or {}))
+
         swagger_spec = Spec.from_dict(
             spec_dict, origin_url, http_client, config)
         return cls(swagger_spec, resource_decorator)
@@ -256,19 +264,23 @@ class CallableOperation(object):
         warn_for_deprecated_op(self.operation)
         request_params = self.construct_request(**op_kwargs)
         callback = functools.partial(response_callback, operation=self)
-        return self.operation.swagger_spec.http_client.request(request_params,
-                                                               callback)
+        also_return_response = \
+            self.operation.swagger_spec.config['also_return_response']
+        return self.operation.swagger_spec.http_client.request(
+            request_params,
+            callback,
+            also_return_response)
 
 
 def response_callback(incoming_response, operation):
     """
     So the http_client is finished with its part of processing the response.
     This hands the response over to bravado_core for validation and
-    unmarshalling.
+    unmarshalling. On success, the swagger_result is available as
+    `incoming_response.swagger_result`.
 
     :type incoming_response: :class:`bravado_core.response.IncomingResponse`
     :type operation: :class:`bravado_core.operation.Operation`
-    :return: Response spec's return value.
     :raises: HTTPError
         - On 5XX status code, the HTTPError has minimal information.
         - On non-2XX status code with no matching response, the HTTPError
@@ -279,15 +291,16 @@ def response_callback(incoming_response, operation):
     raise_on_unexpected(incoming_response)
 
     try:
-        swagger_return_value = unmarshal_response(incoming_response, operation)
+        incoming_response.swagger_result = unmarshal_response(
+            incoming_response,
+            operation)
     except MatchingResponseNotFound as e:
         six.reraise(
             HTTPError,
             HTTPError(response=incoming_response, message=str(e)),
             sys.exc_info()[2])
 
-    raise_on_expected(incoming_response, swagger_return_value)
-    return swagger_return_value
+    raise_on_expected(incoming_response)
 
 
 def raise_on_unexpected(http_response):
@@ -301,17 +314,16 @@ def raise_on_unexpected(http_response):
         raise HTTPError(response=http_response)
 
 
-def raise_on_expected(http_response, swagger_return_value):
+def raise_on_expected(http_response):
     """
     Raise an HTTPError if the response is non-2XX and matches a response in the
     swagger spec.
 
     :param http_response: :class:`bravado_core.response.IncomingResponse`
-    :param swagger_return_value: The return value of a swagger response if it
-        has one, None otherwise.
     :raises: HTTPError
     """
     if not 200 <= http_response.status_code < 300:
         raise HTTPError(
             response=http_response,
-            swagger_result=swagger_return_value)
+            swagger_result=http_response.swagger_result)
+
