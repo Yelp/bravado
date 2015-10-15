@@ -69,7 +69,7 @@ log = logging.getLogger(__name__)
 CONFIG_DEFAULTS = {
     # See the constructor of :class:`bravado.http_future.HttpFuture` for an
     # in depth explanation of what this means.
-    'return_swagger_result': True
+    'also_return_response': False
 }
 
 
@@ -255,12 +255,12 @@ class CallableOperation(object):
         warn_for_deprecated_op(self.operation)
         request_params = self.construct_request(**op_kwargs)
         callback = functools.partial(response_callback, operation=self)
-        return_swagger_result = \
-            self.operation.swagger_spec.config['return_swagger_result']
+        also_return_response = \
+            self.operation.swagger_spec.config['also_return_response']
         return self.operation.swagger_spec.http_client.request(
             request_params,
             callback,
-            return_swagger_result=return_swagger_result)
+            also_return_response)
 
 
 def response_callback(incoming_response, operation):
