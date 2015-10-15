@@ -7,14 +7,14 @@ class HttpClient(object):
     """Interface for a minimal HTTP client.
     """
     def request(self, request_params, response_callback=None,
-                return_swagger_result=True):
+                also_return_response=False):
         """
         :param request_params: complete request data. e.g. url, method,
             headers, body, params, connect_timeout, timeout, etc.
         :type request_params: dict
         :param response_callback: Function to be called on response
         :type response_callback: method
-        :param return_swagger_result: Consult the constructor documentation for
+        :param also_return_response: Consult the constructor documentation for
             :class:`bravado.http_future.HttpFuture`.
 
         :returns: HTTP Future object

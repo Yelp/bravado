@@ -67,9 +67,9 @@ def test_non_2XX_with_response_callback():
     assert excinfo.value.response.status_code == 400
 
 
-def test_return_swagger_result_false():
-    # Verify HTTPFuture(..., return_swagger_result=False).result()
-    # returns the http response and not the swagger_result
+def test_return_response_true():
+    # Verify HTTPFuture(..., also_return_response=True).result()
+    # returns the (swagger_result, http_response) and not just swagger_result
     def response_callback(incoming_response):
         incoming_response.swagger_result = 'hello world'
 
@@ -80,9 +80,9 @@ def test_return_swagger_result_false():
         future=Mock(spec=Future),
         response_adapter=response_adapter_type,
         callback=response_callback,
-        return_swagger_result=False)
+        also_return_response=True)
 
-    http_response = http_future.result()
+    swagger_result, http_response = http_future.result()
 
     assert http_response == response_adapter_instance
-    assert http_response.swagger_result == 'hello world'
+    assert swagger_result == 'hello world'

@@ -14,19 +14,22 @@ class HttpFuture(object):
         :class:`bravado_core.response.IncomingResponse`.
     :param callback: Function to be called on the response (usually for
         bravado-core post-processing).
-    :param return_swagger_result: returns the Swagger result
-        when True or the HTTP response object when False. This is useful
-        if you want access to additional data from the HTTP response other than
-        just the Swagger result. e.g. http headers, http response code, etc.
-        Defaults to true mostly for backwards compatibility and simplicity at
-        the Swagger client's call site.
+    :param also_return_response: Determines if the incoming http response is
+        included as part of the return value from calling
+        `HttpFuture.result()`.
+        When False, only the swagger result is returned.
+        When True, the tuple(swagger result, http response) is returned.
+        This is useful if you want access to additional data that is not
+        accessible from the swagger result. e.g. http headers,
+        http response code, etc.
+        Defaults to False for backwards compatibility.
     """
     def __init__(self, future, response_adapter, callback,
-                 return_swagger_result=True):
+                 also_return_response=False):
         self.future = future
         self.response_adapter = response_adapter
         self.response_callback = callback
-        self.return_swagger_result = return_swagger_result
+        self.also_return_response = also_return_response
 
     def result(self, timeout=None):
         """Blocking call to wait for the HTTP response.
@@ -34,7 +37,7 @@ class HttpFuture(object):
         :param timeout: Number of seconds to wait for a response. Defaults to
             None which means wait indefinitely.
         :type timeout: float
-        :return: Depends on the value of return_swagger_result sent in
+        :return: Depends on the value of also_return_response sent in
             to the constructor.
         """
         inner_response = self.future.result(timeout=timeout)
@@ -42,9 +45,10 @@ class HttpFuture(object):
 
         if self.response_callback:
             self.response_callback(incoming_response)
-            if self.return_swagger_result:
-                return incoming_response.swagger_result
-            return incoming_response
+            swagger_result = incoming_response.swagger_result
+            if self.also_return_response:
+                return swagger_result, incoming_response
+            return swagger_result
 
         if 200 <= incoming_response.status_code < 300:
             return incoming_response

@@ -49,7 +49,7 @@ class FidoClient(HttpClient):
     """
 
     def request(self, request_params, response_callback=None,
-                return_swagger_result=True):
+                also_return_response=False):
         """Sets up the request params as per Twisted Agent needs.
         Sets up crochet and triggers the API request in background
 
@@ -58,7 +58,7 @@ class FidoClient(HttpClient):
         :param response_callback: Function to be called after
         receiving the response
         :type response_callback: method
-        :param return_swagger_result: Consult the constructor documentation for
+        :param also_return_response: Consult the constructor documentation for
             :class:`bravado.http_future.HttpFuture`.
 
         :rtype: :class: `bravado_core.http_future.HttpFuture`
@@ -81,7 +81,7 @@ class FidoClient(HttpClient):
         return HttpFuture(concurrent_future,
                           FidoResponseAdapter,
                           response_callback,
-                          return_swagger_result)
+                          also_return_response)
 
 
 def stringify_body(request_params):
