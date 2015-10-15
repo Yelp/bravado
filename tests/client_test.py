@@ -205,7 +205,7 @@ class ClientTest(unittest.TestCase):
         try:
             self.uut.pet.listPets().result()
         except IOError as e:
-            self.assertEqual(msg + ' : {"success": false}', e.args[0])
+            self.assertTrue(msg in e.args[0])
 
     @httpretty.activate
     def test_multiple(self):
