@@ -67,7 +67,7 @@ def test_non_2XX_with_response_callback():
     assert excinfo.value.response.status_code == 400
 
 
-def test_return_response_true():
+def test_also_return_response_true():
     # Verify HTTPFuture(..., also_return_response=True).result()
     # returns the (swagger_result, http_response) and not just swagger_result
     def response_callback(incoming_response):
