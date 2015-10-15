@@ -4,7 +4,7 @@ Changelog
 6.1.0 (2015-XX-XX)
 ------------------
 - Clients can now access the HTTP response from a service call to access things
-  like headers and status code. See `Advanced Usage <http://http://bravado.readthedocs.org/en/latest/advanced.html#getting-access-to-the-http-response>`_
+  like headers and status code. See `Advanced Usage <http://bravado.readthedocs.org/en/latest/advanced.html#getting-access-to-the-http-response>`_
 
 6.0.0 (2015-10-12)
 ------------------
