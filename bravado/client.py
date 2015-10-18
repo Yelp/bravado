@@ -70,15 +70,18 @@ class SwaggerClient(object):
     """A client for accessing a Swagger-documented RESTful service.
     """
 
-    def __init__(self, swagger_spec):
+    def __init__(self, swagger_spec, resource_decorator=None):
         """
         :param swagger_spec: :class:`bravado_core.spec.Spec`
+        :param resource_decorator: The ResourceDecorator class to use
+        :type  resource_decorator: ResourceDecorator
         """
         self.swagger_spec = swagger_spec
+        self.resource_decorator = resource_decorator or ResourceDecorator
 
     @classmethod
     def from_url(cls, spec_url, http_client=None, request_headers=None,
-                 config=None):
+                 config=None, resource_decorator=None):
         """
         Build a :class:`SwaggerClient` from a url to the Swagger
         specification for a RESTful API.
@@ -91,6 +94,8 @@ class SwaggerClient(object):
         :type  request_headers: dict
         :param config: bravado_core config dict. See
             bravado_core.spec.CONFIG_DEFAULTS
+        :param resource_decorator: The ResourceDecorator class to use
+        :type  resource_decorator: ResourceDecorator
         """
         # TODO: better way to customize the request for api calls, so we don't
         #       have to add new kwargs for everything
@@ -98,11 +103,12 @@ class SwaggerClient(object):
         http_client = http_client or RequestsClient()
         loader = Loader(http_client, request_headers=request_headers)
         spec_dict = loader.load_spec(spec_url)
-        return cls.from_spec(spec_dict, spec_url, http_client, config)
+        return cls.from_spec(spec_dict, spec_url, http_client, config, 
+                resource_decorator)
 
     @classmethod
     def from_spec(cls, spec_dict, origin_url=None, http_client=None,
-                  config=None):
+                  config=None, resource_decorator=None):
         """
         Build a :class:`SwaggerClient` from swagger api docs
 
@@ -110,11 +116,13 @@ class SwaggerClient(object):
         :param origin_url: the url used to retrieve the spec_dict
         :type  origin_url: str
         :param config: Configuration dict - see spec.CONFIG_DEFAULTS
+        :param resource_decorator: The ResourceDecorator class to use
+        :type  resource_decorator: ResourceDecorator
         """
         http_client = http_client or RequestsClient()
         swagger_spec = Spec.from_dict(
             spec_dict, origin_url, http_client, config)
-        return cls(swagger_spec)
+        return cls(swagger_spec, resource_decorator)
 
     def get_model(self, model_name):
         return self.swagger_spec.definitions[model_name]
