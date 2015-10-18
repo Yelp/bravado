@@ -103,8 +103,8 @@ class SwaggerClient(object):
         http_client = http_client or RequestsClient()
         loader = Loader(http_client, request_headers=request_headers)
         spec_dict = loader.load_spec(spec_url)
-        return cls.from_spec(spec_dict, spec_url, http_client, config, 
-                resource_decorator)
+        return cls.from_spec(spec_dict, spec_url, http_client, config,
+                             resource_decorator)
 
     @classmethod
     def from_spec(cls, spec_dict, origin_url=None, http_client=None,
