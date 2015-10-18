@@ -143,7 +143,7 @@ class SwaggerClient(object):
 
         # Wrap bravado-core's Resource and Operation objects in order to
         # execute a service call via the http_client.
-        return ResourceDecorator(resource)
+        return self.resource_decorator(resource)
 
     def __dir__(self):
         return self.swagger_spec.resources.keys()
