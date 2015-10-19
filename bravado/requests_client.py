@@ -115,11 +115,15 @@ class RequestsClient(HttpClient):
 
         return sanitized_params, misc_options
 
-    def request(self, request_params, response_callback=None):
+    def request(self, request_params, response_callback=None,
+                also_return_response=False):
         """
         :param request_params: complete request data.
         :type request_params: dict
         :param response_callback: Function to be called on the response
+        :param also_return_response: Consult the constructor documentation for
+            :class:`bravado.http_future.HttpFuture`.
+
         :returns: HTTP Future object
         :rtype: :class: `bravado_core.http_future.HttpFuture`
         """
@@ -134,6 +138,7 @@ class RequestsClient(HttpClient):
             requests_future,
             RequestsResponseAdapter,
             response_callback,
+            also_return_response
         )
 
     def set_basic_auth(self, host, username, password):

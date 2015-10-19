@@ -21,8 +21,8 @@ def test_2XX(_1):
     incoming_response = Mock(spec=IncomingResponse)
     incoming_response.status_code = 200
     operation = Mock(spec=Operation)
-    swagger_result = response_callback(incoming_response, operation)
-    assert swagger_result == 99
+    response_callback(incoming_response, operation)
+    assert incoming_response.swagger_result == 99
 
 
 @patch('bravado.client.unmarshal_response',
