@@ -1,7 +1,7 @@
 Changelog
 =========
 
-6.1.1 (2015-XX-XX)
+6.1.1 (2015-10-19)
 ------------------
 - Fix ``IncomingResponse`` subclasses to provide access to the http headers.
 - Requires bravado-core >= 3.1.0
