@@ -63,93 +63,14 @@ from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
 from bravado.warning import warn_for_deprecated_op
 
+from bravado.client import *
+
+import bitjws
+
 log = logging.getLogger(__name__)
 
 
-class SwaggerClient(object):
-    """A client for accessing a Swagger-documented RESTful service.
-    """
-
-    def __init__(self, swagger_spec, resource_decorator=None):
-        """
-        :param swagger_spec: :class:`bravado_core.spec.Spec`
-        :param resource_decorator: The ResourceDecorator class to use
-        :type  resource_decorator: ResourceDecorator
-        """
-        self.swagger_spec = swagger_spec
-        self.resource_decorator = resource_decorator or ResourceDecorator
-
-    @classmethod
-    def from_url(cls, spec_url, http_client=None, request_headers=None,
-                 config=None, resource_decorator=None):
-        """
-        Build a :class:`SwaggerClient` from a url to the Swagger
-        specification for a RESTful API.
-
-        :param spec_url: url pointing at the swagger API specification
-        :type spec_url: str
-        :param http_client: an HTTP client used to perform requests
-        :type  http_client: :class:`bravado.http_client.HttpClient`
-        :param request_headers: Headers to pass with http requests
-        :type  request_headers: dict
-        :param config: bravado_core config dict. See
-            bravado_core.spec.CONFIG_DEFAULTS
-        :param resource_decorator: The ResourceDecorator class to use
-        :type  resource_decorator: ResourceDecorator
-        """
-        # TODO: better way to customize the request for api calls, so we don't
-        #       have to add new kwargs for everything
-        log.debug(u"Loading from %s" % spec_url)
-        http_client = http_client or RequestsClient()
-        loader = Loader(http_client, request_headers=request_headers)
-        spec_dict = loader.load_spec(spec_url)
-        return cls.from_spec(spec_dict, spec_url, http_client, config,
-                             resource_decorator)
-
-    @classmethod
-    def from_spec(cls, spec_dict, origin_url=None, http_client=None,
-                  config=None, resource_decorator=None):
-        """
-        Build a :class:`SwaggerClient` from swagger api docs
-
-        :param spec_dict: a dict with a Swagger spec in json-like form
-        :param origin_url: the url used to retrieve the spec_dict
-        :type  origin_url: str
-        :param config: Configuration dict - see spec.CONFIG_DEFAULTS
-        :param resource_decorator: The ResourceDecorator class to use
-        :type  resource_decorator: ResourceDecorator
-        """
-        http_client = http_client or RequestsClient()
-        swagger_spec = Spec.from_dict(
-            spec_dict, origin_url, http_client, config)
-        return cls(swagger_spec, resource_decorator)
-
-    def get_model(self, model_name):
-        return self.swagger_spec.definitions[model_name]
-
-    def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self.swagger_spec.api_url)
-
-    def __getattr__(self, item):
-        """
-        :param item: name of the resource to return
-        :return: :class:`Resource`
-        """
-        resource = self.swagger_spec.resources.get(item)
-        if not resource:
-            raise AttributeError(
-                'Resource {0} not found. Available resources: {1}'
-                .format(item, ', '.join(dir(self))))
-
-        # Wrap bravado-core's Resource and Operation objects in order to
-        # execute a service call via the http_client.
-        return self.resource_decorator(resource)
-
-    def __dir__(self):
-        return self.swagger_spec.resources.keys()
-
-
-class ResourceDecorator(object):
+class BitJWSResourceDecorator(object):
     """
     Wraps :class:`bravado_core.resource.Resource` so that accesses to contained
     operations can be instrumented.
@@ -165,7 +86,7 @@ class ResourceDecorator(object):
         """
         :rtype: :class:`CallableOperation`
         """
-        return CallableOperation(getattr(self.resource, name))
+        return BitJWSCallableOperation(getattr(self.resource, name))
 
     def __dir__(self):
         """
@@ -174,7 +95,7 @@ class ResourceDecorator(object):
         return self.resource.__dir__()
 
 
-class CallableOperation(object):
+class BitJWSCallableOperation(object):
     """
     Wraps an operation to make it callable and provide a docstring. Calling
     the operation uses the configured http_client.
@@ -255,12 +176,12 @@ class CallableOperation(object):
         log.debug(u"%s(%s)" % (self.operation.operation_id, op_kwargs))
         warn_for_deprecated_op(self.operation)
         request_params = self.construct_request(**op_kwargs)
-        callback = functools.partial(response_callback, operation=self)
+        callback = functools.partial(bitjws_response_callback, operation=self)
         return self.operation.swagger_spec.http_client.request(request_params,
                                                                callback)
 
 
-def response_callback(incoming_response, operation):
+def bitjws_response_callback(incoming_response, operation):
     """
     So the http_client is finished with its part of processing the response.
     This hands the response over to bravado_core for validation and
@@ -278,6 +199,8 @@ def response_callback(incoming_response, operation):
     """
     raise_on_unexpected(incoming_response)
 
+    print incoming_response.text
+    print incoming_response._delegate.content.decode('utf8')
     try:
         swagger_return_value = unmarshal_response(incoming_response, operation)
     except MatchingResponseNotFound as e:
@@ -289,29 +212,3 @@ def response_callback(incoming_response, operation):
     raise_on_expected(incoming_response, swagger_return_value)
     return swagger_return_value
 
-
-def raise_on_unexpected(http_response):
-    """
-    Raise an HTTPError if the response is 5XX.
-
-    :param http_response: :class:`bravado_core.response.IncomingResponse`
-    :raises: HTTPError
-    """
-    if 500 <= http_response.status_code <= 599:
-        raise HTTPError(response=http_response)
-
-
-def raise_on_expected(http_response, swagger_return_value):
-    """
-    Raise an HTTPError if the response is non-2XX and matches a response in the
-    swagger spec.
-
-    :param http_response: :class:`bravado_core.response.IncomingResponse`
-    :param swagger_return_value: The return value of a swagger response if it
-        has one, None otherwise.
-    :raises: HTTPError
-    """
-    if not 200 <= http_response.status_code < 300:
-        raise HTTPError(
-            response=http_response,
-            swagger_result=swagger_return_value)
