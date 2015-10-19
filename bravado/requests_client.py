@@ -182,6 +182,10 @@ class RequestsResponseAdapter(IncomingResponse):
     def reason(self):
         return self._delegate.reason
 
+    @property
+    def headers(self):
+        return self._delegate.headers
+
     def json(self, **kwargs):
         return self._delegate.json(**kwargs)
 

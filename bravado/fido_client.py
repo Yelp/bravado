@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 
 
 class FidoResponseAdapter(IncomingResponse):
-    """Wraps a fido.fido.Response object to provider a uniform interface
+    """Wraps a fido.fido.Response object to provide a uniform interface
     to the response innards.
 
     :type fido_response: :class:`fido.fido.Response`
@@ -38,6 +38,10 @@ class FidoResponseAdapter(IncomingResponse):
     @property
     def reason(self):
         return self._delegate.reason
+
+    @property
+    def headers(self):
+        return self._delegate.headers
 
     def json(self, **_):
         # TODO: pass the kwargs downstream
