@@ -13,7 +13,7 @@ def test_200_no_response_callback():
     response_adapter_instance = Mock(spec=IncomingResponse, status_code=200)
     response_adapter_type = Mock(return_value=response_adapter_instance)
     http_future = HttpFuture(
-        future=Mock(spec=Future),
+        concurrent_future=Mock(spec=Future),
         response_adapter=response_adapter_type,
         callback=None)
 
@@ -26,7 +26,7 @@ def test_non_2XX_no_response_callback():
 
     with pytest.raises(HTTPError) as excinfo:
         HttpFuture(
-            future=Mock(spec=Future),
+            concurrent_future=Mock(spec=Future),
             response_adapter=response_adapter_type,
             callback=None).result()
 
@@ -45,7 +45,7 @@ def test_200_with_response_callback():
     response_adapter_type = Mock(return_value=response_adapter_instance)
 
     http_future = HttpFuture(
-        future=Mock(spec=Future),
+        concurrent_future=Mock(spec=Future),
         response_adapter=response_adapter_type,
         callback=response_callback)
 
@@ -58,7 +58,7 @@ def test_non_2XX_with_response_callback():
     response_adapter_type = Mock(return_value=response_adapter_instance)
 
     http_future = HttpFuture(
-        future=Mock(spec=Future),
+        concurrent_future=Mock(spec=Future),
         response_adapter=response_adapter_type,
         callback=response_callback)
 
@@ -77,7 +77,7 @@ def test_also_return_response_true():
     response_adapter_type = Mock(return_value=response_adapter_instance)
 
     http_future = HttpFuture(
-        future=Mock(spec=Future),
+        concurrent_future=Mock(spec=Future),
         response_adapter=response_adapter_type,
         callback=response_callback,
         also_return_response=True)

@@ -68,7 +68,7 @@ def request(http_client, url, headers):
         'headers': headers,
     }
 
-    return http_client.request(request_params)
+    return http_client.request(request_params, operation=None)
 
 
 class Loader(object):

@@ -115,12 +115,17 @@ class RequestsClient(HttpClient):
 
         return sanitized_params, misc_options
 
-    def request(self, request_params, response_callback=None,
+    def request(self, request_params, operation=None, response_callbacks=None,
                 also_return_response=False):
         """
         :param request_params: complete request data.
         :type request_params: dict
-        :param response_callback: Function to be called on the response
+        :param operation: operation that this http request is for. Defaults
+            to None - in which case, we're obviously just retrieving a Swagger
+            Spec.
+        :type operation: :class:`bravado_core.operation.Operation`
+        :param response_callbacks: List of callables to post-process the
+            incoming response. Expects args incoming_response and operation.
         :param also_return_response: Consult the constructor documentation for
             :class:`bravado.http_future.HttpFuture`.
 
@@ -137,9 +142,9 @@ class RequestsClient(HttpClient):
         return HttpFuture(
             requests_future,
             RequestsResponseAdapter,
-            response_callback,
-            also_return_response
-        )
+            operation,
+            response_callbacks,
+            also_return_response)
 
     def set_basic_auth(self, host, username, password):
         self.authenticator = BasicAuthenticator(
@@ -162,12 +167,10 @@ class RequestsClient(HttpClient):
 class RequestsResponseAdapter(IncomingResponse):
     """Wraps a requests.models.Response object to provide a uniform interface
     to the response innards.
-    """
 
+    :type requests_lib_response: :class:`requests.models.Response`
+    """
     def __init__(self, requests_lib_response):
-        """
-        :type requests_lib_response: :class:`requests.models.Response`
-        """
         self._delegate = requests_lib_response
 
     @property
@@ -192,7 +195,7 @@ class RequestsResponseAdapter(IncomingResponse):
 
 class RequestsFutureAdapter(object):
     """Mimics a :class:`concurrent.futures.Future` for the purposes of making
-    HTTP calls with the Requests library in a future-y sort of way.
+    HTTP calls with the Requests library in a concurrent_future-y sort of way.
     """
 
     def __init__(self, session, request, misc_options):
@@ -214,7 +217,7 @@ class RequestsFutureAdapter(object):
         based on connect_timeout, the timeout passed to the service call, and
         the timeout passed to the result call.
 
-        :param result_timeout: timeout that was passed into `future.result(..)`
+        :param result_timeout: timeout that was passed into `concurrent_future.result(..)`
         :return: timeout
         :rtype: float or tuple(connect_timeout, timeout)
         """
@@ -242,7 +245,7 @@ class RequestsFutureAdapter(object):
                 timeout = max(service_timeout, result_timeout)
             log.warn("Two different timeouts have been passed: "
                      "_request_options['timeout'] = {0} and "
-                     "future.result(timeout={1}). Using timeout of {2}."
+                     "concurrent_future.result(timeout={1}). Using timeout of {2}."
                      .format(service_timeout, result_timeout, timeout))
 
         # Requests is weird in that if you want to specify a connect_timeout

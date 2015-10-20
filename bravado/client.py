@@ -43,22 +43,16 @@ To get a client
 
     client = bravado.client.SwaggerClient.from_url(swagger_spec_url)
 """
-import functools
 import logging
-import sys
 
 from bravado_core.docstring import create_operation_docstring
-from bravado_core.exception import MatchingResponseNotFound
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.formatter import SwaggerFormat  # noqa
 from bravado_core.param import marshal_param
-from bravado_core.response import unmarshal_response
 from bravado_core.spec import Spec
-import six
 from six import iteritems, itervalues
 
 from bravado.docstring_property import docstring_property
-from bravado.exception import HTTPError
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
 from bravado.warning import warn_for_deprecated_op
@@ -69,7 +63,17 @@ log = logging.getLogger(__name__)
 CONFIG_DEFAULTS = {
     # See the constructor of :class:`bravado.http_future.HttpFuture` for an
     # in depth explanation of what this means.
-    'also_return_response': False
+    'also_return_response': False,
+
+    # List of callbacks that are executed after the incoming response has been
+    # validated and the swagger_result has been unmarshalled.
+    #
+    # The callback should expect two arguments:
+    #   param : incoming_response
+    #   type  : subclass of class:`bravado_core.response.IncomingResponse`
+    #   param : operation
+    #   type  : class:`bravado_core.operation.Operation`
+    'response_callbacks': [],
 }
 
 
@@ -177,11 +181,10 @@ class CallableOperation(object):
     """
     Wraps an operation to make it callable and provide a docstring. Calling
     the operation uses the configured http_client.
+
+    :type operation: :class:`bravado_core.operation.Operation`
     """
     def __init__(self, operation):
-        """
-        :type operation: :class:`bravado_core.operation.Operation`
-        """
         self.operation = operation
 
     @docstring_property(__doc__)
@@ -200,19 +203,18 @@ class CallableOperation(object):
             invocation of the operation.
         :return: request in dict form
         """
-        request_options = op_kwargs.pop('_request_options', {})
         url = self.operation.swagger_spec.api_url.rstrip('/') + self.path_name
         request = {
             'method': self.operation.http_method.upper(),
             'url': url,
             'params': {},  # filled in downstream
-            'headers': request_options.get('headers', {}),
+            'headers': self.request_options.get('headers', {}),
         }
 
         # Copy over optional request options
         for request_option in ('connect_timeout', 'timeout'):
-            if request_option in request_options:
-                request[request_option] = request_options[request_option]
+            if request_option in self.request_options:
+                request[request_option] = self.request_options[request_option]
 
         self.construct_params(request, op_kwargs)
         return request
@@ -244,76 +246,34 @@ class CallableOperation(object):
             if not remaining_param.required and remaining_param.has_default():
                 marshal_param(remaining_param, None, request)
 
+    def construct_response_callbacks(self):
+        """
+        :return: List of combined client wide response callbacks and per
+            request callbacks.
+        """
+        client_wide_callbacks = \
+            self.operation.swagger_spec.config['response_callbacks']
+
+        per_request_callbacks = \
+            self.request_options.get('response_callbacks', [])
+
+        return client_wide_callbacks + per_request_callbacks
+
     def __call__(self, **op_kwargs):
         """
-        Invoke the actual HTTP request and return a future that encapsulates
-        the HTTP response.
+        Invoke the actual HTTP request and return a future.
 
         :rtype: :class:`bravado.http_future.HTTPFuture`
         """
         log.debug(u"%s(%s)" % (self.operation.operation_id, op_kwargs))
         warn_for_deprecated_op(self.operation)
+        self.request_options = op_kwargs.pop('_request_options', {})
         request_params = self.construct_request(**op_kwargs)
-        callback = functools.partial(response_callback, operation=self)
-        also_return_response = \
-            self.operation.swagger_spec.config['also_return_response']
-        return self.operation.swagger_spec.http_client.request(
+        config = self.operation.swagger_spec.config
+        http_client = self.operation.swagger_spec.http_client
+
+        return http_client.request(
             request_params,
-            callback,
-            also_return_response)
-
-
-def response_callback(incoming_response, operation):
-    """
-    So the http_client is finished with its part of processing the response.
-    This hands the response over to bravado_core for validation and
-    unmarshalling. On success, the swagger_result is available as
-    `incoming_response.swagger_result`.
-
-    :type incoming_response: :class:`bravado_core.response.IncomingResponse`
-    :type operation: :class:`bravado_core.operation.Operation`
-    :raises: HTTPError
-        - On 5XX status code, the HTTPError has minimal information.
-        - On non-2XX status code with no matching response, the HTTPError
-            contains a detailed error message.
-        - On non-2XX status code with a matching response, the HTTPError
-            contains the return value.
-    """
-    raise_on_unexpected(incoming_response)
-
-    try:
-        incoming_response.swagger_result = unmarshal_response(
-            incoming_response,
-            operation)
-    except MatchingResponseNotFound as e:
-        six.reraise(
-            HTTPError,
-            HTTPError(response=incoming_response, message=str(e)),
-            sys.exc_info()[2])
-
-    raise_on_expected(incoming_response)
-
-
-def raise_on_unexpected(http_response):
-    """
-    Raise an HTTPError if the response is 5XX.
-
-    :param http_response: :class:`bravado_core.response.IncomingResponse`
-    :raises: HTTPError
-    """
-    if 500 <= http_response.status_code <= 599:
-        raise HTTPError(response=http_response)
-
-
-def raise_on_expected(http_response):
-    """
-    Raise an HTTPError if the response is non-2XX and matches a response in the
-    swagger spec.
-
-    :param http_response: :class:`bravado_core.response.IncomingResponse`
-    :raises: HTTPError
-    """
-    if not 200 <= http_response.status_code < 300:
-        raise HTTPError(
-            response=http_response,
-            swagger_result=http_response.swagger_result)
+            self.operation,
+            response_callbacks=self.construct_response_callbacks(),
+            also_return_response=config['also_return_response'])
