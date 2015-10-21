@@ -64,7 +64,9 @@ CONFIG_DEFAULTS = {
     # See the constructor of :class:`bravado.http_future.HttpFuture` for an
     # in depth explanation of what this means.
     'also_return_response': False,
+}
 
+REQUEST_OPTIONS_DEFAULTS = {
     # List of callbacks that are executed after the incoming response has been
     # validated and the swagger_result has been unmarshalled.
     #
@@ -178,8 +180,7 @@ class ResourceDecorator(object):
 
 
 class CallableOperation(object):
-    """
-    Wraps an operation to make it callable and provide a docstring. Calling
+    """Wraps an operation to make it callable and provides a docstring. Calling
     the operation uses the configured http_client.
 
     :type operation: :class:`bravado_core.operation.Operation`
@@ -192,88 +193,94 @@ class CallableOperation(object):
         return create_operation_docstring(self.operation)
 
     def __getattr__(self, name):
-        """
-        Forward requests for attrs not found on this decorator to the delegate.
+        """Forward requests for attrs not found on this decorator to the
+        delegate.
         """
         return getattr(self.operation, name)
 
-    def construct_request(self, **op_kwargs):
-        """
-        :param op_kwargs: parameter name/value pairs to passed to the
-            invocation of the operation.
-        :return: request in dict form
-        """
-        url = self.operation.swagger_spec.api_url.rstrip('/') + self.path_name
-        request = {
-            'method': self.operation.http_method.upper(),
-            'url': url,
-            'params': {},  # filled in downstream
-            'headers': self.request_options.get('headers', {}),
-        }
-
-        # Copy over optional request options
-        for request_option in ('connect_timeout', 'timeout'):
-            if request_option in self.request_options:
-                request[request_option] = self.request_options[request_option]
-
-        self.construct_params(request, op_kwargs)
-        return request
-
-    def construct_params(self, request, op_kwargs):
-        """
-        Given the parameters passed to the operation invocation, validates and
-        marshals the parameters into the provided request dict.
-
-        :type request: dict
-        :param op_kwargs: the kwargs passed to the operation invocation
-        :raises: SwaggerMappingError on extra parameters or when a required
-            parameter is not supplied.
-        """
-        current_params = self.operation.params.copy()
-        for param_name, param_value in iteritems(op_kwargs):
-            param = current_params.pop(param_name, None)
-            if param is None:
-                raise SwaggerMappingError(
-                    "{0} does not have parameter {1}"
-                    .format(self.operation.operation_id, param_name))
-            marshal_param(param, param_value, request)
-
-        # Check required params and non-required params with a 'default' value
-        for remaining_param in itervalues(current_params):
-            if remaining_param.required:
-                raise SwaggerMappingError(
-                    '{0} is a required parameter'.format(remaining_param.name))
-            if not remaining_param.required and remaining_param.has_default():
-                marshal_param(remaining_param, None, request)
-
-    def construct_response_callbacks(self):
-        """
-        :return: List of combined client wide response callbacks and per
-            request callbacks.
-        """
-        client_wide_callbacks = \
-            self.operation.swagger_spec.config['response_callbacks']
-
-        per_request_callbacks = \
-            self.request_options.get('response_callbacks', [])
-
-        return client_wide_callbacks + per_request_callbacks
-
     def __call__(self, **op_kwargs):
-        """
-        Invoke the actual HTTP request and return a future.
+        """Invoke the actual HTTP request and return a future.
 
         :rtype: :class:`bravado.http_future.HTTPFuture`
         """
         log.debug(u"%s(%s)" % (self.operation.operation_id, op_kwargs))
         warn_for_deprecated_op(self.operation)
-        self.request_options = op_kwargs.pop('_request_options', {})
-        request_params = self.construct_request(**op_kwargs)
+
+        # Apply request_options defaults
+        request_options = dict(
+            REQUEST_OPTIONS_DEFAULTS,
+            **(op_kwargs.pop('_request_options', {})))
+
+        request_params = construct_request(
+            self.operation, request_options, **op_kwargs)
+
         config = self.operation.swagger_spec.config
         http_client = self.operation.swagger_spec.http_client
+
+        # Per-request config overrides client wide config
+        also_return_response = request_options.get(
+            'also_return_response',
+            config['also_return_response'])
 
         return http_client.request(
             request_params,
             self.operation,
-            response_callbacks=self.construct_response_callbacks(),
-            also_return_response=config['also_return_response'])
+            response_callbacks=request_options['response_callbacks'],
+            also_return_response=also_return_response)
+
+
+def construct_request(operation, request_options, **op_kwargs):
+    """Construct the outgoing request dict.
+
+    :type operation: :class:`bravado_core.operation.Operation`
+    :param request_options: _request_options passed into the operation
+        invocation.
+    :param op_kwargs: parameter name/value pairs to passed to the
+        invocation of the operation.
+
+    :return: request in dict form
+    """
+    url = operation.swagger_spec.api_url.rstrip('/') + operation.path_name
+    request = {
+        'method': operation.http_method.upper(),
+        'url': url,
+        'params': {},  # filled in downstream
+        'headers': request_options.get('headers', {}),
+    }
+
+    # Copy over optional request options
+    for request_option in ('connect_timeout', 'timeout'):
+        if request_option in request_options:
+            request[request_option] = request_options[request_option]
+
+    construct_params(operation, request, op_kwargs)
+    return request
+
+
+def construct_params(operation, request, op_kwargs):
+    """Given the parameters passed to the operation invocation, validates and
+    marshals the parameters into the provided request dict.
+
+    :type operation: :class:`bravado_core.operation.Operation`
+    :type request: dict
+    :param op_kwargs: the kwargs passed to the operation invocation
+
+    :raises: SwaggerMappingError on extra parameters or when a required
+        parameter is not supplied.
+    """
+    current_params = operation.params.copy()
+    for param_name, param_value in iteritems(op_kwargs):
+        param = current_params.pop(param_name, None)
+        if param is None:
+            raise SwaggerMappingError(
+                "{0} does not have parameter {1}"
+                .format(operation.operation_id, param_name))
+        marshal_param(param, param_value, request)
+
+    # Check required params and non-required params with a 'default' value
+    for remaining_param in itervalues(current_params):
+        if remaining_param.required:
+            raise SwaggerMappingError(
+                '{0} is a required parameter'.format(remaining_param.name))
+        if not remaining_param.required and remaining_param.has_default():
+            marshal_param(remaining_param, None, request)

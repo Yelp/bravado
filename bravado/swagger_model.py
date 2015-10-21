@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-
-#
-# Copyright (c) 2015, Yelp, Inc.
-#
 import contextlib
 import logging
 import os
@@ -68,7 +64,7 @@ def request(http_client, url, headers):
         'headers': headers,
     }
 
-    return http_client.request(request_params, operation=None)
+    return http_client.request(request_params)
 
 
 class Loader(object):

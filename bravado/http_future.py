@@ -18,8 +18,7 @@ class HttpFuture(object):
         response in a non-http client specific way.
     :type response_adapter: type that is a subclass of
         :class:`bravado_core.response.IncomingResponse`.
-    :param response_callbacks: Function to be called on the response (usually for
-        bravado-core post-processing).
+    :param response_callbacks: See bravado_core.client.REQUEST_OPTIONS_DEFAULTS
     :param also_return_response: Determines if the incoming http response is
         included as part of the return value from calling
         `HttpFuture.result()`.
@@ -30,7 +29,7 @@ class HttpFuture(object):
         http response code, etc.
         Defaults to False for backwards compatibility.
     """
-    def __init__(self, concurrent_future, response_adapter, operation,
+    def __init__(self, concurrent_future, response_adapter, operation=None,
                  response_callbacks=None, also_return_response=False):
         self.concurrent_future = concurrent_future
         self.response_adapter = response_adapter
@@ -67,15 +66,17 @@ class HttpFuture(object):
         raise HTTPError(response=incoming_response)
 
 
-def unmarshal_response(incoming_response, operation, response_callbacks):
-    """
-    So the http_client is finished with its part of processing the response.
+def unmarshal_response(incoming_response, operation, response_callbacks=None):
+    """So the http_client is finished with its part of processing the response.
     This hands the response over to bravado_core for validation and
-    unmarshalling. On success, the swagger_result is available as
-    `incoming_response.swagger_result`.
+    unmarshalling and then runs any response callbacks. On success, the
+    swagger_result is available as ``incoming_response.swagger_result``.
 
     :type incoming_response: :class:`bravado_core.response.IncomingResponse`
     :type operation: :class:`bravado_core.operation.Operation`
+    :type response_callbacks: list of callable. See
+        bravado_core.client.REQUEST_OPTIONS_DEFAULTS.
+
     :raises: HTTPError
         - On 5XX status code, the HTTPError has minimal information.
         - On non-2XX status code with no matching response, the HTTPError
@@ -83,9 +84,10 @@ def unmarshal_response(incoming_response, operation, response_callbacks):
         - On non-2XX status code with a matching response, the HTTPError
             contains the return value.
     """
-    raise_on_unexpected(incoming_response)
+    response_callbacks = response_callbacks or []
 
     try:
+        raise_on_unexpected(incoming_response)
         incoming_response.swagger_result = \
             bravado_core.response.unmarshal_response(
                 incoming_response,
@@ -96,8 +98,7 @@ def unmarshal_response(incoming_response, operation, response_callbacks):
             HTTPError(response=incoming_response, message=str(e)),
             sys.exc_info()[2])
     finally:
-        # Always run the callbacks in both 200 and *expected* non-200
-        # scenarios.
+        # Always run the callbacks regardless of success/failure
         for response_callback in response_callbacks:
             response_callback(incoming_response, operation)
 
@@ -105,8 +106,7 @@ def unmarshal_response(incoming_response, operation, response_callbacks):
 
 
 def raise_on_unexpected(http_response):
-    """
-    Raise an HTTPError if the response is 5XX.
+    """Raise an HTTPError if the response is 5XX.
 
     :param http_response: :class:`bravado_core.response.IncomingResponse`
     :raises: HTTPError
@@ -116,9 +116,8 @@ def raise_on_unexpected(http_response):
 
 
 def raise_on_expected(http_response):
-    """
-    Raise an HTTPError if the response is non-2XX and matches a response in the
-    swagger spec.
+    """Raise an HTTPError if the response is non-2XX and matches a response
+    in the swagger spec.
 
     :param http_response: :class:`bravado_core.response.IncomingResponse`
     :raises: HTTPError

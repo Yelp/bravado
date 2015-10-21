@@ -217,7 +217,7 @@ class RequestsFutureAdapter(object):
         based on connect_timeout, the timeout passed to the service call, and
         the timeout passed to the result call.
 
-        :param result_timeout: timeout that was passed into `concurrent_future.result(..)`
+        :param result_timeout: timeout that was passed into `future.result(..)`
         :return: timeout
         :rtype: float or tuple(connect_timeout, timeout)
         """
@@ -245,7 +245,7 @@ class RequestsFutureAdapter(object):
                 timeout = max(service_timeout, result_timeout)
             log.warn("Two different timeouts have been passed: "
                      "_request_options['timeout'] = {0} and "
-                     "concurrent_future.result(timeout={1}). Using timeout of {2}."
+                     "future.result(timeout={1}). Using timeout of {2}."
                      .format(service_timeout, result_timeout, timeout))
 
         # Requests is weird in that if you want to specify a connect_timeout
