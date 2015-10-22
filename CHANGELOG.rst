@@ -1,6 +1,14 @@
 Changelog
 =========
 
+7.0.0 (2015-XX-XX)
+------------------
+- Support per-request `response_callbacks <http://bravado.readthedocs.org/en/latest/configuration.html#per-request-configuration>`_
+  to enable ``SwaggerClient`` decorators to instrument an ``IncomingResponse``
+  post-receive. This is a non-backwards compatible change iff you have
+  implemented a custom ``HttpClient``. Consult the changes in signature to
+  ``HttpClient.request()`` and ``HttpFuture``'s constructor.
+
 6.1.1 (2015-10-19)
 ------------------
 - Fix ``IncomingResponse`` subclasses to provide access to the http headers.

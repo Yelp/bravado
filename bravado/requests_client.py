@@ -195,7 +195,7 @@ class RequestsResponseAdapter(IncomingResponse):
 
 class RequestsFutureAdapter(object):
     """Mimics a :class:`concurrent.futures.Future` for the purposes of making
-    HTTP calls with the Requests library in a concurrent_future-y sort of way.
+    HTTP calls with the Requests library in a future-y sort of way.
     """
 
     def __init__(self, session, request, misc_options):
