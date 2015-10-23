@@ -1,7 +1,7 @@
 Changelog
 =========
 
-7.0.0 (2015-XX-XX)
+7.0.0 (2015-10-23)
 ------------------
 - Support per-request response_callbacks_ to enable ``SwaggerClient``
   decorators to instrument an ``IncomingResponse`` post-receive. This is a
