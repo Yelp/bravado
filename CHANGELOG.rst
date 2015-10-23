@@ -1,6 +1,17 @@
 Changelog
 =========
 
+7.0.0 (2015-XX-XX)
+------------------
+- Support per-request response_callbacks_ to enable ``SwaggerClient``
+  decorators to instrument an ``IncomingResponse`` post-receive. This is a
+  non-backwards compatible change iff you have implemented a custom
+  ``HttpClient``. Consult the changes in signature to ``HttpClient.request()``
+  and ``HttpFuture``'s constructor.
+- Config option ``also_return_response`` is supported on a per-request basis.
+
+.. _response_callbacks: configuration.html#per-request-configuration
+
 6.1.1 (2015-10-19)
 ------------------
 - Fix ``IncomingResponse`` subclasses to provide access to the http headers.
@@ -9,12 +20,16 @@ Changelog
 6.1.0 (2015-10-19)
 ------------------
 - Clients can now access the HTTP response from a service call to access things
-  like headers and status code. See `Advanced Usage <http://bravado.readthedocs.org/en/latest/advanced.html#getting-access-to-the-http-response>`_
+  like headers and status code. See `Advanced Usage`_
+
+.. _`Advanced Usage`: advanced.html#getting-access-to-the-http-response
 
 6.0.0 (2015-10-12)
 ------------------
 - User-defined formats are no longer global. The registration mechanism has
-  changed and is now done via configuration. See `configuration <http://bravado.readthedocs.org/en/latest/configuration.html>`_.
+  changed and is now done via configuration. See Configuration_
+
+.. _Configuration: configuration.html
 
 5.0.0 (2015-08-27)
 ------------------
