@@ -29,7 +29,7 @@ def test_500_get_swagger_spec():
     assert excinfo.value.response.status_code == 500
 
 
-@patch('bravado.http_future.unmarshal_response')
+@patch('bravado.http_future.unmarshal_response', autospec=True)
 def test_200_service_call(_):
     response_adapter_instance = Mock(
         spec=IncomingResponse,
@@ -46,7 +46,7 @@ def test_200_service_call(_):
     assert 'hello world' == http_future.result()
 
 
-@patch('bravado.http_future.unmarshal_response')
+@patch('bravado.http_future.unmarshal_response', autospec=True)
 def test_400_service_call(mock_unmarshal_response):
     response_adapter_instance = Mock(
         spec=IncomingResponse,
@@ -65,7 +65,7 @@ def test_400_service_call(mock_unmarshal_response):
     assert excinfo.value.response.status_code == 400
 
 
-@patch('bravado.http_future.unmarshal_response')
+@patch('bravado.http_future.unmarshal_response', autospec=True)
 def test_also_return_response_true(_):
     # Verify HTTPFuture(..., also_return_response=True).result()
     # returns the (swagger_result, http_response) and not just swagger_result
