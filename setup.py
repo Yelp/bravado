@@ -38,6 +38,14 @@ setup(
         "six",
         "twisted >= 14.0.0",
         "yelp_uri >= 1.1.0",
-	"pyasn1 >= 0.1.9"
+    	"pyasn1 >= 0.1.9"
     ],
+    tests_require=[
+        "bottle",
+        "httpretty==0.8.6",
+        "mock<1.1.0",
+        "pre-commit",
+        "pytest",
+        "pytest-mock"
+    ]
 )
