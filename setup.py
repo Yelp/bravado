@@ -38,5 +38,6 @@ setup(
         "six",
         "twisted >= 14.0.0",
         "yelp_uri >= 1.1.0",
+	"pyasn1 >= 0.1.9"
     ],
 )
