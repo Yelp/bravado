@@ -82,7 +82,7 @@ REQUEST_OPTIONS_DEFAULTS = {
 class SwaggerClient(object):
     """A client for accessing a Swagger-documented RESTful service.
 
-    :param swagger_spec: :class:`bravado_core.spec.Spec`
+    :type swagger_spec: :class:`bravado_core.spec.Spec`
     """
     def __init__(self, swagger_spec):
         self.swagger_spec = swagger_spec
@@ -102,11 +102,20 @@ class SwaggerClient(object):
         :param config: Config dict for bravado and bravado_core.
             See CONFIG_DEFAULTS in :module:`bravado_core.spec`.
             See CONFIG_DEFAULTS in :module:`bravado.client`.
+
+        :rtype: :class:`bravado_core.spec.Spec`
         """
         log.debug(u"Loading from %s" % spec_url)
         http_client = http_client or RequestsClient()
         loader = Loader(http_client, request_headers=request_headers)
         spec_dict = loader.load_spec(spec_url)
+
+        # RefResolver may have to download additional json files via http.
+        # Wrap http_client so that request headers are passed along with
+        # the request transparently.
+        if request_headers is not None:
+            http_client.request = bind_headers(http_client.request,
+                                               request_headers)
         return cls.from_spec(spec_dict, spec_url, http_client, config)
 
     @classmethod
@@ -119,6 +128,8 @@ class SwaggerClient(object):
         :param origin_url: the url used to retrieve the spec_dict
         :type  origin_url: str
         :param config: Configuration dict - see spec.CONFIG_DEFAULTS
+
+        :rtype: :class:`bravado_core.spec.Spec`
         """
         http_client = http_client or RequestsClient()
 
@@ -152,6 +163,16 @@ class SwaggerClient(object):
 
     def __dir__(self):
         return self.swagger_spec.resources.keys()
+
+
+def bind_headers(request_callable, request_headers):
+
+    def request_wrapper(*args, **kwargs):
+        request_params = args[0]
+        request_params['headers'] = request_headers
+        return request_callable(*args, **kwargs)
+
+    return request_wrapper
 
 
 class ResourceDecorator(object):
