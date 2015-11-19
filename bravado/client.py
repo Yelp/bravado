@@ -53,6 +53,7 @@ from bravado_core.spec import Spec
 from six import iteritems, itervalues
 
 from bravado.docstring_property import docstring_property
+from bravado.http_client import HttpClient
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
 from bravado.warning import warn_for_deprecated_op
@@ -110,12 +111,15 @@ class SwaggerClient(object):
         loader = Loader(http_client, request_headers=request_headers)
         spec_dict = loader.load_spec(spec_url)
 
-        # RefResolver may have to download additional json files via http.
-        # Wrap http_client so that request headers are passed along with
-        # the request transparently.
+        # RefResolver may have to download additional json files (remote refs)
+        # via http. Wrap http_client's request() so that request headers are
+        # passed along with the request transparently. Yeah, this is not ideal,
+        # but since RefResolver has new found responsibilities, it is
+        # functional.
         if request_headers is not None:
-            http_client.request = bind_headers(http_client.request,
-                                               request_headers)
+            http_client.request = inject_headers_for_remote_refs(
+                http_client.request, request_headers)
+
         return cls.from_spec(spec_dict, spec_url, http_client, config)
 
     @classmethod
@@ -165,11 +169,22 @@ class SwaggerClient(object):
         return self.swagger_spec.resources.keys()
 
 
-def bind_headers(request_callable, request_headers):
+def inject_headers_for_remote_refs(request_callable, request_headers):
+    """Inject request_headers only when the request is to retrieve the
+    remote refs in the swagger spec (vs being a request for a service call).
 
+    :param request_callable: method on http_client to make a http request
+    :param request_headers: headers to inject when retrieving remote refs
+    """
     def request_wrapper(*args, **kwargs):
-        request_params = args[0]
-        request_params['headers'] = request_headers
+
+        def is_remote_ref_request(request_kwargs):
+            # operation is only present for service calls
+            return request_kwargs.get('operation') is None
+
+        if is_remote_ref_request(kwargs):
+            request_params = args[0]
+            request_params['headers'] = request_headers
         return request_callable(*args, **kwargs)
 
     return request_wrapper
@@ -245,7 +260,7 @@ class CallableOperation(object):
 
         return http_client.request(
             request_params,
-            self.operation,
+            operation=self.operation,
             response_callbacks=request_options['response_callbacks'],
             also_return_response=also_return_response)
 
