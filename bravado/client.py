@@ -53,7 +53,6 @@ from bravado_core.spec import Spec
 from six import iteritems, itervalues
 
 from bravado.docstring_property import docstring_property
-from bravado.http_client import HttpClient
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
 from bravado.warning import warn_for_deprecated_op
