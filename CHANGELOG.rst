@@ -1,7 +1,7 @@
 Changelog
 =========
 
-8.0.0 (2015-XX-XX)
+8.0.0 (2015-11-25)
 ------------------
 - Support for recursive $refs
 - Support for remote $refs e.g. Swagger 2.0 specs that span multiple json files
