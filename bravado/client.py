@@ -82,7 +82,7 @@ REQUEST_OPTIONS_DEFAULTS = {
 class SwaggerClient(object):
     """A client for accessing a Swagger-documented RESTful service.
 
-    :param swagger_spec: :class:`bravado_core.spec.Spec`
+    :type swagger_spec: :class:`bravado_core.spec.Spec`
     """
     def __init__(self, swagger_spec):
         self.swagger_spec = swagger_spec
@@ -102,11 +102,23 @@ class SwaggerClient(object):
         :param config: Config dict for bravado and bravado_core.
             See CONFIG_DEFAULTS in :module:`bravado_core.spec`.
             See CONFIG_DEFAULTS in :module:`bravado.client`.
+
+        :rtype: :class:`bravado_core.spec.Spec`
         """
         log.debug(u"Loading from %s" % spec_url)
         http_client = http_client or RequestsClient()
         loader = Loader(http_client, request_headers=request_headers)
         spec_dict = loader.load_spec(spec_url)
+
+        # RefResolver may have to download additional json files (remote refs)
+        # via http. Wrap http_client's request() so that request headers are
+        # passed along with the request transparently. Yeah, this is not ideal,
+        # but since RefResolver has new found responsibilities, it is
+        # functional.
+        if request_headers is not None:
+            http_client.request = inject_headers_for_remote_refs(
+                http_client.request, request_headers)
+
         return cls.from_spec(spec_dict, spec_url, http_client, config)
 
     @classmethod
@@ -119,6 +131,8 @@ class SwaggerClient(object):
         :param origin_url: the url used to retrieve the spec_dict
         :type  origin_url: str
         :param config: Configuration dict - see spec.CONFIG_DEFAULTS
+
+        :rtype: :class:`bravado_core.spec.Spec`
         """
         http_client = http_client or RequestsClient()
 
@@ -152,6 +166,27 @@ class SwaggerClient(object):
 
     def __dir__(self):
         return self.swagger_spec.resources.keys()
+
+
+def inject_headers_for_remote_refs(request_callable, request_headers):
+    """Inject request_headers only when the request is to retrieve the
+    remote refs in the swagger spec (vs being a request for a service call).
+
+    :param request_callable: method on http_client to make a http request
+    :param request_headers: headers to inject when retrieving remote refs
+    """
+    def request_wrapper(request_params, *args, **kwargs):
+
+        def is_remote_ref_request(request_kwargs):
+            # operation is only present for service calls
+            return request_kwargs.get('operation') is None
+
+        if is_remote_ref_request(kwargs):
+            request_params['headers'] = request_headers
+
+        return request_callable(request_params, *args, **kwargs)
+
+    return request_wrapper
 
 
 class ResourceDecorator(object):
@@ -224,7 +259,7 @@ class CallableOperation(object):
 
         return http_client.request(
             request_params,
-            self.operation,
+            operation=self.operation,
             response_callbacks=request_options['response_callbacks'],
             also_return_response=also_return_response)
 

@@ -1,6 +1,13 @@
 Changelog
 =========
 
+8.0.0 (2015-XX-XX)
+------------------
+- Support for recursive $refs
+- Support for remote $refs e.g. Swagger 2.0 specs that span multiple json files
+- Requires bravado-core 4.0.0 which is not backwards compatible (See its `CHANGELOG <http://bravado-core.readthedocs.org/en/latest/changelog.html>`_)
+- Transitively requires swagger-spec-validator 2.0.2 which is not backwards compatible (See its `CHANGELOG <http://swagger-spec-validator.readthedocs.org/en/latest/changelog.html>`_)
+
 7.0.0 (2015-10-23)
 ------------------
 - Support per-request response_callbacks_ to enable ``SwaggerClient``
