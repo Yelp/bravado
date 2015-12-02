@@ -1,7 +1,7 @@
 Changelog
 =========
 
-8.0.1 (2015-XX-XX)
+8.0.1 (2015-12-02)
 ------------------
 - Require twisted < 15.5.0 since Python 2.6 support was dropped
 
