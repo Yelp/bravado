@@ -1,3 +1,7 @@
+0.7.11 (2015-XX-XX)
+------------------
+- Require twisted < 15.5.0 since Python 2.6 support was dropped.
+
 0.7.10 (2015-07-07)
 ------------------
 - Make request and response available as attrs on HTTPError
