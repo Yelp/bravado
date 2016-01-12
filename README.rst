@@ -26,7 +26,7 @@ From Swagger's home page:
 
 Client libraries can automatically be generated from the `Swagger
 specification <https://github.com/wordnik/swagger-core/wiki>`__, however Bravado
-aims to be a compleate replacement for code generation (`swagger-codegen
+aims to be a complete replacement for code generation (`swagger-codegen
 <https://github.com/wordnik/swagger-codegen>`__).
 
 Bravado is a forked from `digium/swagger-py <https://github.com/digium/swagger-py/>`__
