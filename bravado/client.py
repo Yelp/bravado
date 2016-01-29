@@ -195,23 +195,40 @@ class ResourceDecorator(object):
     operations can be instrumented.
     """
 
-    def __init__(self, resource):
+    def __init__(self, resource, base_name=''):
         """
         :type resource: :class:`bravado_core.resource.Resource`
         """
+        self.base_name = base_name  # Base name in case there is a dot in the operationId
         self.resource = resource
 
     def __getattr__(self, name):
         """
         :rtype: :class:`CallableOperation`
         """
-        return CallableOperation(getattr(self.resource, name))
+        try:
+            return CallableOperation(getattr(self.resource, '{0}{1}'.format(self.base_name, name)))
+        except AttributeError:  # Error in the attribute
+            if any(i.startswith(u'{0}.'.format(name)) for i in dir(self.resource)):
+                # There is an operation id that start with "name."
+                return ResourceDecorator(self.resource, '{0}{1}.'.format(self.base_name, name))
+            raise
 
     def __dir__(self):
         """
         Exposes correct attrs on resource when tab completing in a REPL
         """
-        return self.resource.__dir__()
+        dir_list = []
+
+        if not self.base_name == '':
+            # If there is a base_name, get all the element starting by base_name
+            for value in self.resource.__dir__():
+                if value.startswith(self.base_name):
+                    dir_list.append(value.replace(self.base_name, ''))
+        else:
+            return self.resource.__dir__()
+
+        return dir_list
 
 
 class CallableOperation(object):

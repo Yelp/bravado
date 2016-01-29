@@ -88,7 +88,7 @@
         ],
         "summary": "Update an existing pet",
         "description": "",
-        "operationId": "updatePet",
+        "operationId": "test.updatePet",
         "consumes": [
           "application/json",
           "application/xml"
