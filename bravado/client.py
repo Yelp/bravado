@@ -218,17 +218,11 @@ class ResourceDecorator(object):
         """
         Exposes correct attrs on resource when tab completing in a REPL
         """
-        dir_list = []
-
         if not self.base_name == '':
             # If there is a base_name, get all the element starting by base_name
-            for value in self.resource.__dir__():
-                if value.startswith(self.base_name):
-                    dir_list.append(value.replace(self.base_name, ''))
+            return [i for i in self.resource.__dir__() if i.startswith(self.base_name)]
         else:
             return self.resource.__dir__()
-
-        return dir_list
 
 
 class CallableOperation(object):
