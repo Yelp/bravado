@@ -4,7 +4,6 @@ Not Tested:
 1) Callbacks triggered by twisted and crochet
 2) Timeouts by crochet's wait()
 """
-import unittest
 from mock import patch, Mock
 
 import pytest
@@ -23,54 +22,65 @@ import bravado.exception
     six.PY3,
     reason="Fido client is not usable in py3 until twisted supports it",
 )
-class FidoHttpClientTest(unittest.TestCase):
+def test_stringify_fido_body_returns_file_producer():
+    def_str = 'bravado.fido_client.param_stringify_body'
+    with patch(def_str) as mock_stringify:
+        mock_stringify.return_value = '42'
+        body = {'data': 42, 'headers': {}}
+        resp = bravado.fido_client.stringify_body(body)
 
-    def test_stringify_fido_body_returns_file_producer(self):
-        def_str = 'bravado.fido_client.param_stringify_body'
-        with patch(def_str) as mock_stringify:
-            mock_stringify.return_value = '42'
-            body = {'data': 42, 'headers': {}}
-            resp = bravado.fido_client.stringify_body(body)
+        assert '42' == resp
 
-            self.assertEqual('42', resp)
+        mock_stringify.assert_called_once_with(body['data'])
 
-            mock_stringify.assert_called_once_with(body['data'])
 
-    def test_stringify_files_creates_correct_body_content(self):
-        fake_file = Mock()
-        fake_file.read.return_value = "contents"
-        request = {'files': {'fake': fake_file},
-                   'headers': {'content-type': 'tmp'}}
-        with patch('bravado.multipart_response.get_random_boundary',
-                   return_value='zz'):
-            resp = bravado.fido_client.stringify_body(request)
-
-            expected_contents = (
-                '--zz\r\nContent-Disposition: form-data; name=fake;' +
-                ' filename=fake\r\n\r\ncontents\r\n--zz--\r\n')
-            self.assertEqual('multipart/form-data; boundary=zz',
-                             request['headers']['content-type'])
-            self.assertEqual(expected_contents, resp)
-
-    def test_stringify_files_creates_correct_form_content(self):
-        request = {'data': {'id': 42, 'name': 'test'},
-                   'headers': {'content-type': APP_FORM}}
+@pytest.mark.skipif(
+    six.PY3,
+    reason="Fido client is not usable in py3 until twisted supports it",
+)
+def test_stringify_files_creates_correct_body_content():
+    fake_file = Mock()
+    fake_file.read.return_value = "contents"
+    request = {'files': {'fake': fake_file},
+               'headers': {'content-type': 'tmp'}}
+    with patch('bravado.multipart_response.get_random_boundary',
+               return_value='zz'):
         resp = bravado.fido_client.stringify_body(request)
 
-        self.assertEqual(
-            six.moves.urllib.parse.parse_qs('id=42&name=test'),
-            six.moves.urllib.parse.parse_qs(resp),
-        )
+        expected_contents = (
+            '--zz\r\nContent-Disposition: form-data; name=fake;' +
+            ' filename=fake\r\n\r\ncontents\r\n--zz--\r\n')
+        assert 'multipart/form-data; boundary=zz' == \
+               request['headers']['content-type']
+        assert expected_contents == resp
 
-    def test_start_request_with_only_url(self):
-        url = 'http://example.com/api-docs'
-        fido_client = bravado.fido_client.FidoClient()
-        # ugly mock, but this method runs in a twisted reactor which is
-        # difficult to mock
-        fido_client.fetch_deferred = Mock()
 
-        with patch('fido.fetch') as mock_fetch:
-            fido_client.request(dict(url=url))
+@pytest.mark.skipif(
+    six.PY3,
+    reason="Fido client is not usable in py3 until twisted supports it",
+)
+def test_stringify_files_creates_correct_form_content():
+    request = {'data': {'id': 42, 'name': 'test'},
+               'headers': {'content-type': APP_FORM}}
+    resp = bravado.fido_client.stringify_body(request)
 
-        mock_fetch.assert_called_once_with(
-            '{0}?'.format(url), body='', headers={}, method='GET')
+    assert six.moves.urllib.parse.parse_qs('id=42&name=test') == \
+        six.moves.urllib.parse.parse_qs(resp)
+
+
+@pytest.mark.skipif(
+    six.PY3,
+    reason="Fido client is not usable in py3 until twisted supports it",
+)
+def test_start_request_with_only_url():
+    url = 'http://example.com/api-docs'
+    fido_client = bravado.fido_client.FidoClient()
+    # ugly mock, but this method runs in a twisted reactor which is
+    # difficult to mock
+    fido_client.fetch_deferred = Mock()
+
+    with patch('fido.fetch') as mock_fetch:
+        fido_client.request(dict(url=url))
+
+    mock_fetch.assert_called_once_with(
+        '{0}?'.format(url), body='', headers={}, method='GET')
