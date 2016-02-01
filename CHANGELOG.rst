@@ -1,6 +1,10 @@
 Changelog
 =========
 
+8.0.2 (2016-XX-XX)
+------------------
+- Remove pytest-mock dependency from requirements-dev.txt. No longer used and it was breaking the build.
+
 8.0.1 (2015-12-02)
 ------------------
 - Require twisted < 15.5.0 since Python 2.6 support was dropped
