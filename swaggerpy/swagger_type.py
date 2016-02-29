@@ -230,7 +230,8 @@ class SwaggerTypeCheck(object):
     Raises TypeError/AssertionError if validation fails
     """
 
-    def __init__(self, name, value, type_, models=None, allow_null=False):
+    def __init__(self, name, value, type_, models=None, allow_null=False,
+                 to_wire=False):
         """Ctor to set params and then check the value
 
         :param name: name of the field, used for error logging
@@ -249,6 +250,7 @@ class SwaggerTypeCheck(object):
         self._type = type_
         self.models = models
         self.allow_null = allow_null
+        self.to_wire = to_wire
         self._check_value_format()
 
     def _check_value_format(self):
@@ -283,6 +285,9 @@ class SwaggerTypeCheck(object):
                 # For all the other cases, raise Type mismatch
                 raise TypeError("%s's value: %s should be in types %r" % (
                     self.name, self.value, ptype))
+        if self.to_wire:
+            if ptype in [datetime.date, datetime.datetime]:
+                self.value = str(self.value)
 
     def _check_array_type(self):
         """Validate array type value is actually array type
@@ -296,7 +301,8 @@ class SwaggerTypeCheck(object):
         array_item_type = get_array_item_type(self._type)
         self.value = [SwaggerTypeCheck(
             "%s's item" % self.name,
-            item, array_item_type, self.models, self.allow_null).value
+            item, array_item_type, self.models, self.allow_null,
+            self.to_wire).value
             for item in self.value]
 
     def _check_complex_type(self):
@@ -321,7 +327,8 @@ class SwaggerTypeCheck(object):
                                                self.value[key],
                                                klass._swagger_types[key],
                                                self.models,
-                                               self.allow_null).value
+                                               self.allow_null,
+                                               self.to_wire).value
         if required:
             raise AssertionError("These required fields not present: %s" %
                                  required)
