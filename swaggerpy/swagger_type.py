@@ -244,6 +244,9 @@ class SwaggerTypeCheck(object):
         :type models: namedtuple
         :param allow_null: if True, ignores null values from type check
         :type allow_null: boolean
+        :param to_wire: This is to determine the flow: to_wire or to_py
+                        Defaults to False.
+        :type to_wire: boolean
         """
         self.name = name
         self.value = value

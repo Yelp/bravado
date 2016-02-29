@@ -1,3 +1,7 @@
+0.7.12 (2016-02-29)
+------------------
+- Fix JSON serializable error when datetime is passed in body
+
 0.7.11 (2015-XX-XX)
 ------------------
 - Require twisted < 15.5.0 since Python 2.6 support was dropped.

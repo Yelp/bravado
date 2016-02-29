@@ -42,7 +42,7 @@ Here we will demonstrate how ``swagger-py`` hides all the ``JSON`` handling from
 .. code-block:: python
 
         Pet = swagger_client.pet.models.Pet
-        Category = swagger_client.pet.models.Category
+        Category = swagger_client.pet.addPet['_models']['Category']
         pet = Pet(id=42, name="tommy", category=Category(id=24))
         swagger_client.pet.addPet(body=pet).result()
 
