@@ -541,7 +541,7 @@ def validate_and_add_params_to_request(param, value, request, models):
 
     # Check the parameter value against its type
     # And store the refined value back
-    value = SwaggerTypeCheck(pname, value, type_, models).value
+    value = SwaggerTypeCheck(pname, value, type_, models, to_wire=True).value
 
     # If list in path, Turn list items into comma separated values
     if isinstance(value, list) and param_req_type == 'path':

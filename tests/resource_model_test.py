@@ -49,9 +49,11 @@ A sample 'model' is listed below in models list.
 """
 
 from swaggerpy.compat import json
+import datetime
 import unittest
 
 import httpretty
+from dateutil.tz import tzutc
 
 from swaggerpy.client import SwaggerClient
 from swaggerpy.processors import SwaggerError
@@ -493,6 +495,62 @@ class ResourceTest(unittest.TestCase):
     #################################################
     # Model JSON sent in request body
     ################################################
+
+    @httpretty.activate
+    def test_success_on_passing_date_in_body(self):
+        query_parameter = {
+            "paramType": "body",
+            "name": "body",
+            "type": "School",
+        }
+        self.response["apis"][1]["operations"][0]["parameters"] = [
+            query_parameter]
+        self.response["models"]["School"]["properties"]["created"] = (
+            {
+                "type": "string",
+                "format": "date",
+            })
+        school = {"name": "foo", "created": datetime.date(2014, 6, 10)}
+        httpretty.register_uri(
+            httpretty.POST, "http://localhost/test_http",
+            body=json.dumps({"created": str(school)}))
+        self.register_urls()
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
+        resource.testHTTPPost(body=school).result()
+        self.assertEqual({"created": "2014-06-10", "name": "foo"},
+                         json.loads(httpretty.last_request().body))
+
+    @httpretty.activate
+    def test_success_on_passing_datetime_in_body(self):
+        query_parameter = {
+            "paramType": "body",
+            "name": "body",
+            "type": "School",
+        }
+        self.response["apis"][1]["operations"][0]["parameters"] = [
+            query_parameter]
+        self.response["models"]["School"]["properties"]["created"] = (
+            {
+                "type": "string",
+                "format": "date-time",
+            })
+        some_datetime = datetime.datetime(
+            2014, 6, 10, 23, 49, 54, 728000, tzinfo=tzutc())
+        school = {"name": "foo", "created": some_datetime}
+        httpretty.register_uri(
+            httpretty.POST, "http://localhost/test_http",
+            body=json.dumps({"created": str(school)}))
+        self.register_urls()
+        resource = SwaggerClient.from_url(
+            u'http://localhost/api-docs').api_test
+        resource.testHTTPPost(body=school).result()
+        self.assertEqual(
+            {
+                "created": "2014-06-10 23:49:54.728000+00:00",
+                "name": "foo"
+            },
+            json.loads(httpretty.last_request().body))
 
     @httpretty.activate
     def test_content_type_as_json_if_complex_type_in_body(self):
