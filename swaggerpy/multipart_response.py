@@ -18,7 +18,7 @@ def add_lines(name, content, is_file, boundary, lines):
     header = "Content-Disposition: form-data; name={0}".format(name)
     if is_file:
         header += "; filename={0}".format(name)
-    lines.extend(["--" + boundary, header, "", content])
+    lines.extend(["--" + boundary, header, "", str(content)])
     return lines
 
 
