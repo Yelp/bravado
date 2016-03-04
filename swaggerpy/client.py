@@ -59,8 +59,6 @@ import time
 import urllib
 from urlparse import urlparse
 
-from yelp_uri import urllib_utf8
-
 import swagger_type
 from swaggerpy.http_client import APP_JSON, SynchronousHttpClient
 from swaggerpy.response import HTTPFuture, post_receive
@@ -197,7 +195,7 @@ class Operation(object):
     def __call__(self, **kwargs):
         log.debug(u"%s?%r" % (
             self._json[u'nickname'],
-            urllib_utf8.urlencode(kwargs)))
+            _utf8_urlencode(kwargs)))
         request = self._construct_request(**kwargs)
 
         def response_future(response, **kwargs):
@@ -561,3 +559,37 @@ def stringify_body(value):
     if not value or isinstance(value, basestring):
         return value
     return json.dumps(value)
+
+
+def _to_bytes(x, encoding):
+    """
+    Encode values to utf-8 bytestrings (str).
+    str-type values are returned as-is, with the fervent hope that they're
+    already utf8.
+
+    This function always returns utf8-encoded bytes.
+    """
+    if isinstance(x, str):
+        # In this case we have to assume it's already utf8.
+        return x
+    else:
+        return unicode(x).encode(encoding)
+
+
+def _to_utf8(x):
+    """Encode unicode text to utf8 bytes (str)."""
+    return _to_bytes(x, 'utf-8')
+
+
+def _pairs(x):
+    """If x is a dict, call x.iteritems(), else just return x"""
+    return x.iteritems() if isinstance(x, dict) else x
+
+
+def _utf8_urlencode(query, *args, **kwargs):
+    """A wrapper for urllib.urlencode() that UTF-8 encodes query if
+    query is unicode. Always returns a str."""
+    return urllib.urlencode(
+        [(_to_utf8(k), _to_utf8(v)) for (k, v) in _pairs(query)],
+        *args, **kwargs
+    )

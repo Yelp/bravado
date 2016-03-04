@@ -9,3 +9,4 @@ build
 *.swp
 *.tox
 .idea
+.cache/

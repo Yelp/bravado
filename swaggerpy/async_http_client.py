@@ -61,7 +61,7 @@ class AsynchronousHttpClient(http_client.HttpClient):
             'uri': prepared_request.url,
         }
 
-        # content-length was computer by 'requests' based on
+        # content-length was computed by 'requests' based on
         # prepared_request.body and it does not work for the twisted
         # FileBodyProducer object.
         request_for_crochet['headers'].removeHeader('content-length')
