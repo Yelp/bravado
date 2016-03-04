@@ -11,11 +11,9 @@ Not Tested:
 2) Timeouts by crochet's wait()
 """
 
-from swaggerpy.compat import json
 import unittest
 from collections import namedtuple
 from mock import patch, Mock
-from ordereddict import OrderedDict
 
 from crochet._eventloop import EventualResult
 from twisted.internet.defer import Deferred
@@ -27,74 +25,6 @@ import swaggerpy.http_client
 
 
 class AsyncHttpClientTest(unittest.TestCase):
-
-    def test_stringify_body_converts_dict_to_str(self):
-        data = {'foo': 'bar', 'bar': 42}
-        data = swaggerpy.client.stringify_body(data)
-        self.assertEqual({"foo": "bar", "bar": 42},
-                         json.loads(data))
-
-    def test_stringify_body_encode_params_to_utf8(self):
-        data = {'foo': 'bar', 'bar': 42}
-        data = swaggerpy.client.stringify_body(data)
-        self.assertEqual({"foo": "bar", "bar": 42},
-                         json.loads(data))
-
-    def test_stringify_body_ignores_data_if_already_str(self):
-        data = 'foo'
-        swaggerpy.client.stringify_body(data)
-        self.assertEqual('foo', data)
-
-    def test_stringify_async_body_returns_file_producer(self):
-        def_str = 'swaggerpy.client.stringify_body'
-        with patch(def_str) as mock_stringify:
-            mock_stringify.return_value = '42'
-            with patch('swaggerpy.async_http_client.StringIO',
-                       return_value='foo') as mock_stringIO:
-                with patch('swaggerpy.async_http_client.FileBodyProducer',
-                           return_value='mock_fbp') as mock_fbp:
-                    body = {'data': 42, 'headers': {}}
-                    resp = swaggerpy.async_http_client.stringify_body(body)
-
-                    self.assertEqual('mock_fbp', resp)
-
-                    mock_stringify.assert_called_once_with(body['data'])
-                    mock_stringIO.assert_called_once_with('42')
-                    mock_fbp.assert_called_once_with('foo')
-
-    def test_stringify_files_creates_correct_body_content(self):
-        fake_file = Mock()
-        fake_file.read.return_value = "contents"
-        request = {'files': {'fake': fake_file},
-                   'headers': {'content-type': 'tmp'}}
-        with patch('swaggerpy.async_http_client.StringIO',
-                   return_value='foo') as mock_stringIO:
-            with patch('swaggerpy.async_http_client.FileBodyProducer'
-                       ) as mock_fbp:
-                with patch('swaggerpy.multipart_response.get_random_boundary',
-                           return_value='zz'):
-                    swaggerpy.async_http_client.stringify_body(request)
-
-                    expected_contents = (
-                        '--zz\r\nContent-Disposition: form-data; name=fake;' +
-                        ' filename=fake\r\n\r\ncontents\r\n--zz--\r\n')
-                    self.assertEqual('multipart/form-data; boundary=zz',
-                                     request['headers']['content-type'])
-                    mock_stringIO.assert_called_once_with(expected_contents)
-                    mock_fbp.assert_called_once_with('foo')
-
-    def test_stringify_files_creates_correct_form_content(self):
-        request = {'data': OrderedDict([('id', 42), ('name', 'test')]),
-                   'headers': {'content-type': swaggerpy.http_client.APP_FORM}}
-        with patch('swaggerpy.async_http_client.StringIO',
-                   return_value='foo') as mock_stringIO:
-            with patch('swaggerpy.async_http_client.FileBodyProducer',
-                       ) as mock_fbp:
-                swaggerpy.async_http_client.stringify_body(request)
-
-                expected_contents = ('id=42&name=test')
-                mock_stringIO.assert_called_once_with(expected_contents)
-                mock_fbp.assert_called_once_with('foo')
 
     def test_listify_headers(self):
         headers = {'a': 'foo', 'b': ['bar', 42]}
@@ -115,7 +45,7 @@ class AsyncHttpClientTest(unittest.TestCase):
         ) as mock_Async:
             req = {
                 'method': 'GET',
-                'url': 'foo',
+                'url': 'http://foo',
                 'data': None,
                 'headers': {'foo': 'bar'},
                 'params': ''
@@ -140,7 +70,7 @@ class AsyncHttpClientTest(unittest.TestCase):
         ) as mock_fetch_deferred:
             req = {
                 'method': 'GET',
-                'url': 'foo',
+                'url': 'http://foo',
                 'data': None,
                 'headers': {'foo': 'bar'},
                 'params': {'bar': u'酒場'},
@@ -156,7 +86,7 @@ class AsyncHttpClientTest(unittest.TestCase):
                     'headers': Headers({'foo': ['bar']}),
                     'method': 'GET',
                     'bodyProducer': None,
-                    'uri': 'foo?bar=%E9%85%92%E5%A0%B4'
+                    'uri': 'http://foo/?bar=%E9%85%92%E5%A0%B4'
                 }
             )
 
@@ -173,7 +103,7 @@ class AsyncHttpClientTest(unittest.TestCase):
             'headers': Headers({}),
             'method': 'GET',
             'bodyProducer': None,
-            'uri': url + '?',
+            'uri': url,
         })
 
 
