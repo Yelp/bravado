@@ -30,10 +30,11 @@ setup(
         "Programming Language :: Python :: 3.4",
     ],
     install_requires=[
-        "bravado-core >= 4.0.0",
+        "bravado-core >= 4.1.0",
         "crochet >= 1.4.0",
         "fido >= 2.1.0",
         "python-dateutil",
+        "pyyaml",
         "requests",
         "six",
         "twisted >= 14.0.0, < 15.5.0", # Python 2.6 support was dropped in 15.5.0

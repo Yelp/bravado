@@ -2,7 +2,10 @@
 import contextlib
 import logging
 import os
+import os.path
+import yaml
 
+from bravado_core.spec import is_yaml
 from six.moves import urllib
 from six.moves.urllib import parse as urlparse
 
@@ -24,22 +27,25 @@ class FileEventual(object):
     class FileResponse(object):
 
         def __init__(self, data):
-            self.data = data
+            self.text = data
+            self.headers = {}
 
         def json(self):
-            return self.data
+            return self.text
 
     def __init__(self, path):
         self.path = path
+        self.is_yaml = is_yaml(path)
 
     def get_path(self):
-        if not self.path.endswith('.json'):
+        if not self.path.endswith('.json') and not self.is_yaml:
             return self.path + '.json'
         return self.path
 
     def wait(self, timeout=None):
         with contextlib.closing(urllib.request.urlopen(self.get_path())) as fp:
-            return self.FileResponse(json.load(fp))
+            content = fp.read() if self.is_yaml else json.load(fp)
+            return self.FileResponse(content)
 
     def result(self, *args, **kwargs):
         return self.wait(*args, **kwargs)
@@ -86,12 +92,37 @@ class Loader(object):
         :param base_url: TODO: need this?
         :returns: json spec in dict form
         """
-        spec_json = request(
+        response = request(
             self.http_client,
             spec_url,
             self.request_headers,
-        ).result().json()
-        return spec_json
+        ).result()
+
+        content_type = response.headers.get('content-type', '').lower()
+        if is_yaml(spec_url, content_type):
+            return self.load_yaml(response.text)
+        else:
+            return response.json()
+
+    def load_yaml(self, text):
+        """Load a YAML Swagger spec from the given string, transforming
+        integer response status codes to strings. This is to keep
+        compatibility with the existing YAML spec examples in
+        https://github.com/OAI/OpenAPI-Specification/tree/master/examples/v2.0/yaml
+        :param text: String from which to parse the YAML.
+        :type  text: basestring
+        :return: Python dictionary representing the spec.
+        :raise: yaml.parser.ParserError: If the text is not valid YAML.
+        """
+        data = yaml.load(text)
+        for path, methods in iter(data.get('paths', {}).items()):
+            for method, operation in iter(methods.items()):
+                if 'responses' in operation:
+                    operation['responses'] = dict(
+                        (str(code), response) for code, response in iter(operation['responses'].items())
+                    )
+
+        return data
 
 
 # TODO: Adding the file scheme here just adds complexity to request()

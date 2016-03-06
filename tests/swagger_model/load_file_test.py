@@ -8,7 +8,26 @@ def test_success():
     assert '2.0' == spec_json['swagger']
 
 
-def test_non_existant_file():
+@pytest.mark.parametrize(
+    'filename',
+    (
+        ('test-data/2.0/simple/swagger.yaml'),
+        ('test-data/2.0/petstore/swagger.yaml'),
+    ),
+)
+def test_success_yaml(filename):
+    spec_yaml = load_file(filename)
+    assert '2.0' == spec_yaml['swagger']
+
+
+def test_spec_internal_representation_identical():
+    spec_json = load_file('test-data/2.0/petstore/swagger.json')
+    spec_yaml = load_file('test-data/2.0/petstore/swagger.json')
+
+    assert spec_yaml == spec_json
+
+
+def test_non_existent_file():
     with pytest.raises(IOError) as excinfo:
         load_file('test-data/2.0/i_dont_exist.json')
     assert 'No such file or directory' in str(excinfo.value)
