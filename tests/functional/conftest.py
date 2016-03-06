@@ -24,7 +24,11 @@ def register_spec(swagger_dict, response_spec=None, spec_type='json'):
         serialize_function = json.dumps
         content_type = 'application/json'
     headers = 'Content-Type: {0}'.format(content_type)
-    register_get(API_DOCS_URL, body=serialize_function(swagger_dict), headers=headers)
+    register_get(
+        API_DOCS_URL,
+        body=serialize_function(swagger_dict),
+        headers=headers,
+    )
 
 
 @pytest.fixture

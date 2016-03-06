@@ -119,7 +119,10 @@ class Loader(object):
             for method, operation in iter(methods.items()):
                 if 'responses' in operation:
                     operation['responses'] = dict(
-                        (str(code), response) for code, response in iter(operation['responses'].items())
+                        (str(code), response)
+                        for code, response in iter(
+                            operation['responses'].items()
+                        )
                     )
 
         return data
