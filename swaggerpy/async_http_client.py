@@ -11,6 +11,7 @@
 from cStringIO import StringIO
 from swaggerpy.compat import json
 import logging
+import requests
 
 import crochet
 import twisted.internet.error
@@ -21,12 +22,9 @@ from twisted.internet.protocol import Protocol
 from twisted.web.client import Agent
 from twisted.web.client import FileBodyProducer
 from twisted.web.http_headers import Headers
-from yelp_uri import urllib_utf8
 
-from swaggerpy import client
 from swaggerpy import http_client
 from swaggerpy.exception import HTTPError
-from swaggerpy.multipart_response import create_multipart_content
 
 log = logging.getLogger(__name__)
 
@@ -44,22 +42,37 @@ class AsynchronousHttpClient(http_client.HttpClient):
 
         :return: crochet EventualResult
         """
-        # request_params has mandatory: method, url, params, headers
-        request_params = {
-            'method': str(request_params.get('method', 'GET')),
-            'bodyProducer': stringify_body(request_params),
-            'headers': listify_headers(request_params.get('headers', {})),
-            'uri': '%s?%s' % (
-                request_params['url'],
-                urllib_utf8.urlencode(request_params.get('params', []), True))
+
+        prepared_request = requests.PreparedRequest()
+        prepared_request.prepare(
+            headers=request_params.get('headers'),
+            data=request_params.get('data'),
+            params=request_params.get('params'),
+            files=request_params.get('files'),
+            url=request_params.get('url'),
+            method=request_params.get('method')
+        )
+
+        request_for_crochet = {
+            'method': prepared_request.method or 'GET',
+            'bodyProducer': FileBodyProducer(StringIO(prepared_request.body))
+            if prepared_request.body else None,
+            'headers': listify_headers(prepared_request.headers),
+            'uri': prepared_request.url,
         }
 
+        # content-length was computed by 'requests' based on
+        # prepared_request.body and it does not work for the twisted
+        # FileBodyProducer object.
+        request_for_crochet['headers'].removeHeader('content-length')
+
         # crochet only supports bytes for the url
-        if isinstance(request_params['uri'], unicode):
-            request_params['uri'] = request_params['uri'].encode('utf-8')
+        if isinstance(request_for_crochet['uri'], unicode):
+            request_for_crochet['uri'] = \
+                request_for_crochet['uri'].encode('utf-8')
 
         crochet.setup()
-        return self.fetch_deferred(request_params)
+        return self.fetch_deferred(request_for_crochet)
 
     @crochet.run_in_reactor
     def fetch_deferred(self, request_params):
@@ -149,19 +162,6 @@ class _HTTPBodyFetcher(Protocol):
                 self.request, self.response, self.buffer.getvalue()))
         else:
             self.finished.errback(reason)
-
-
-def stringify_body(request_params):
-    """Wraps the data using twisted FileBodyProducer
-    """
-    headers = request_params.get('headers', {})
-    if 'files' in request_params:
-        data = create_multipart_content(request_params, headers)
-    elif headers.get('content-type') == http_client.APP_FORM:
-        data = urllib_utf8.urlencode(request_params.get('data', {}))
-    else:
-        data = client.stringify_body(request_params.get('data', ''))
-    return FileBodyProducer(StringIO(data)) if data else None
 
 
 def listify_headers(headers):

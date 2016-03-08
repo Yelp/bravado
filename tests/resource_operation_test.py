@@ -214,8 +214,7 @@ class ResourceOperationTest(unittest.TestCase):
         self.register_urls()
         httpretty.register_uri(
             httpretty.POST, "http://localhost/test_http?", body='')
-        resource = SwaggerClient.from_url(
-            u'http://localhost/api-docs').api_test
+        resource = SwaggerClient.from_url(u'http://localhost/api-docs').api_test
         with open("test-data/1.2/simple/simple.json", "rb") as f:
             resource.testHTTP(param_id=42, file_name=f).result()
             content_type = httpretty.last_request().headers['content-type']
