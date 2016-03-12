@@ -8,7 +8,7 @@ Install directly from github as:
 
 ::
 
-    $ pip install --upgrade git+git://github.com/Yelp/swagger-py
+    $ pip install --upgrade git+git://github.com/Yelp/bravado@swaggerpy
 
 .. _hello-pet:
 
