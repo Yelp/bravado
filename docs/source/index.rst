@@ -1,6 +1,8 @@
 swagger-py documentation
 ========================
 
+Source code is available on `Github <https://github.com/Yelp/bravado/tree/swaggerpy>`_.
+
 This project acts as a generic client library for services which follow *Swagger* schema.
 
 More information on Swagger can be found `on the Swagger website
@@ -11,7 +13,7 @@ It aims to be a complete replacement to `swagger codegen <https://github.com/wor
 Features include:
 
 * Synchronous and Asynchronous clients out of the box.
- 
+
 * Caching of api-docs with regular staleness check.
 
 * Strict validations to check swagger spec is `v1.2 <https://github.com/wordnik/swagger-spec/blob/master/versions/1.2.md/>`_ compatible.
