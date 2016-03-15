@@ -22,7 +22,7 @@ def test_success_yaml(filename):
 
 def test_spec_internal_representation_identical():
     spec_json = load_file('test-data/2.0/petstore/swagger.json')
-    spec_yaml = load_file('test-data/2.0/petstore/swagger.json')
+    spec_yaml = load_file('test-data/2.0/petstore/swagger.yaml')
 
     assert spec_yaml == spec_json
 

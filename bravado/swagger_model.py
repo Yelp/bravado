@@ -31,7 +31,7 @@ class FileEventual(object):
             self.headers = {}
 
         def json(self):
-            return self.text
+            return json.loads(self.text)
 
     def __init__(self, path):
         self.path = path
@@ -44,7 +44,7 @@ class FileEventual(object):
 
     def wait(self, timeout=None):
         with contextlib.closing(urllib.request.urlopen(self.get_path())) as fp:
-            content = fp.read() if self.is_yaml else json.load(fp)
+            content = fp.read()
             return self.FileResponse(content)
 
     def result(self, *args, **kwargs):
