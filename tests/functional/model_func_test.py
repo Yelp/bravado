@@ -91,8 +91,16 @@ def swagger_dict():
     }
 
 
-def test_model_in_response(httprettified, swagger_dict, sample_model):
-    register_spec(swagger_dict)
+@pytest.mark.parametrize(
+    'spec_type',
+    (
+        ('json',),
+        ('yaml',),
+    )
+)
+def test_model_in_response(
+        httprettified, swagger_dict, sample_model, spec_type):
+    register_spec(swagger_dict, spec_type=spec_type)
     register_get("http://localhost/test_http", body=json.dumps(sample_model))
     client = SwaggerClient.from_url(API_DOCS_URL)
     result = client.api_test.testHTTP().result()

@@ -3,6 +3,7 @@ import json
 
 import httpretty
 import pytest
+import yaml
 
 
 API_DOCS_URL = "http://localhost/api-docs"
@@ -11,11 +12,23 @@ API_DOCS_URL = "http://localhost/api-docs"
 register_get = functools.partial(httpretty.register_uri, httpretty.GET)
 
 
-def register_spec(swagger_dict, response_spec=None):
+def register_spec(swagger_dict, response_spec=None, spec_type='json'):
     if response_spec is not None:
         response_specs = swagger_dict['paths']['/test_http']['get']['responses']
         response_specs['200']['schema'] = response_spec
-    register_get(API_DOCS_URL, body=json.dumps(swagger_dict))
+
+    if spec_type == 'yaml':
+        serialize_function = yaml.dump
+        content_type = 'application/yaml'
+    else:
+        serialize_function = json.dumps
+        content_type = 'application/json'
+    headers = 'Content-Type: {0}'.format(content_type)
+    register_get(
+        API_DOCS_URL,
+        body=serialize_function(swagger_dict),
+        headers=headers,
+    )
 
 
 @pytest.fixture
