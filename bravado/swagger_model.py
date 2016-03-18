@@ -114,7 +114,7 @@ class Loader(object):
         :return: Python dictionary representing the spec.
         :raise: yaml.parser.ParserError: If the text is not valid YAML.
         """
-        data = yaml.load(text)
+        data = yaml.safe_load(text)
         for path, methods in iter(data.get('paths', {}).items()):
             for method, operation in iter(methods.items()):
                 if 'responses' in operation:
