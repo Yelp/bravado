@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
 import logging
-
+import requests
 import six
 
 if six.PY3:
     raise ImportError("The fido client is not yet supported in py3")
 
 import fido
-from bravado_core.param import stringify_body as param_stringify_body
 from bravado_core.response import IncomingResponse
-from yelp_uri import urllib_utf8
-
-from bravado.http_client import APP_FORM, HttpClient
+from bravado.http_client import HttpClient
 from bravado.http_future import HttpFuture
-from bravado.multipart_response import create_multipart_content
 
 log = logging.getLogger(__name__)
 
@@ -70,20 +66,10 @@ class FidoClient(HttpClient):
 
         :rtype: :class: `bravado_core.http_future.HttpFuture`
         """
-        url = '%s?%s' % (request_params['url'], urllib_utf8.urlencode(
-            request_params.get('params', []), True))
 
-        fetch_kwargs = {
-            'method': str(request_params.get('method', 'GET')),
-            'body': stringify_body(request_params),
-            'headers': request_params.get('headers', {}),
-        }
+        request_for_crochet = self.prepare_request_for_crochet(request_params)
 
-        for fetch_kwarg in ('connect_timeout', 'timeout'):
-            if fetch_kwarg in request_params:
-                fetch_kwargs[fetch_kwarg] = request_params[fetch_kwarg]
-
-        concurrent_future = fido.fetch(url, **fetch_kwargs)
+        concurrent_future = fido.fetch(**request_for_crochet)
 
         return HttpFuture(concurrent_future,
                           FidoResponseAdapter,
@@ -91,15 +77,33 @@ class FidoClient(HttpClient):
                           response_callbacks,
                           also_return_response)
 
+    @staticmethod
+    def prepare_request_for_crochet(request_params):
 
-def stringify_body(request_params):
-    """Wraps the data using twisted FileBodyProducer
-    """
-    headers = request_params.get('headers', {})
-    if 'files' in request_params:
-        return create_multipart_content(request_params, headers)
-    if headers.get('content-type') == APP_FORM:
-        return urllib_utf8.urlencode(request_params.get('data', {}))
+        prepared_request = requests.PreparedRequest()
+        prepared_request.prepare(
+            headers=request_params.get('headers'),
+            data=request_params.get('data'),
+            params=request_params.get('params'),
+            files=request_params.get('files'),
+            url=request_params.get('url'),
+            method=request_params.get('method')
+        )
 
-    # TODO: same method 'stringify_body' exists with different args - fix!
-    return param_stringify_body(request_params.get('data', ''))
+        # content-length was computed by 'requests' based on the current body
+        # but body will be processed by fido using twisted FileBodyProducer
+        # causing content-length to lose meaning and break the client.
+        prepared_request.headers.pop('Content-Length', None)
+
+        request_for_crochet = {
+            'method': prepared_request.method or 'GET',
+            'body': prepared_request.body,
+            'headers': prepared_request.headers,
+            'url': prepared_request.url,
+        }
+
+        for fetch_kwarg in ('connect_timeout', 'timeout'):
+            if fetch_kwarg in request_params:
+                request_for_crochet[fetch_kwarg] = request_params[fetch_kwarg]
+
+        return request_for_crochet
