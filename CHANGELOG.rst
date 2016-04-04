@@ -1,9 +1,9 @@
 Changelog
 =========
 
-8.1.0 (2016-XX-XX)
+8.1.0 (2016-04-04)
 ------------------
-- Support for YAML Swagger specs
+- Support for YAML Swagger specs - PR #198
 - Remove pytest-mock dependency from requirements-dev.txt. No longer used and it was breaking the build.
 - Requires bravado-core >= 4.2.2
 - Fix unit test for default values getting sent in the request
