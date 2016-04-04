@@ -1,9 +1,8 @@
 """
 Request related functional tests
 """
-from six.moves import cStringIO
-
 import httpretty
+from six.moves import cStringIO
 from six.moves.urllib import parse as urlparse
 
 from bravado.client import SwaggerClient
@@ -76,13 +75,15 @@ def test_parameter_in_path_of_request(httprettified, swagger_dict):
     assert resource.testHTTP(test_param="foo", param_id="42").result() is None
 
 
-def test_default_value_in_request(httprettified, swagger_dict):
+def test_default_value_not_in_request(httprettified, swagger_dict):
+    # Default should be applied on the server side so no need to send it in
+    # the request.
     swagger_dict['paths']['/test_http']['get']['parameters'][0]['default'] = 'X'
     register_spec(swagger_dict)
     register_get("http://localhost/test_http?")
     resource = SwaggerClient.from_url(API_DOCS_URL).api_test
     resource.testHTTP().result()
-    assert ['X'] == httpretty.last_request().querystring['test_param']
+    assert 'test_param' not in httpretty.last_request().querystring
 
 
 def test_array_with_collection_format_in_path_of_request(

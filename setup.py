@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Copyright (c) 2013, Digium, Inc.
-# Copyright (c) 2014-2015, Yelp, Inc.
+# Copyright (c) 2014-2016, Yelp, Inc.
 
 import os
 
@@ -30,7 +30,7 @@ setup(
         "Programming Language :: Python :: 3.4",
     ],
     install_requires=[
-        "bravado-core >= 4.1.0",
+        "bravado-core >= 4.2.2",
         "crochet >= 1.4.0",
         "fido >= 2.1.0",
         "python-dateutil",
