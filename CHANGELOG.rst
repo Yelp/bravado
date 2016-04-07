@@ -1,3 +1,7 @@
+0.8.0 (2016-04-06)
+-------------------
+- Swaggerpy module importable under Py3. Tests for py3 needs more work.
+
 0.7.12 (2016-03-04)
 -------------------
 - Fix bugs when using the Asynchronous client with form data.
