@@ -49,7 +49,7 @@ import datetime
 from mock import patch
 from swaggerpy.compat import json
 import unittest
-import urlparse
+import six.moves.urllib_parse as urlparse
 
 import httpretty
 from dateutil.tz import tzutc

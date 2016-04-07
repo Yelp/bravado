@@ -51,17 +51,18 @@ without caching
         client = swaggerpy.client.SwaggerClient.from_url(api_docs_url)
 
 """
+from __future__ import absolute_import
 
-from swaggerpy.compat import json
 import logging
 import os.path
 import time
 import urllib
-from urlparse import urlparse
+from six.moves.urllib_parse import urlparse
 
 from yelp_uri import urllib_utf8
 
-import swagger_type
+from . import swagger_type
+from swaggerpy.compat import json
 from swaggerpy.http_client import APP_JSON, SynchronousHttpClient
 from swaggerpy.response import HTTPFuture, post_receive
 from swaggerpy.swagger_model import (

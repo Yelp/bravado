@@ -31,6 +31,7 @@ setup(
         "crochet >= 1.4.0",
         "python-dateutil",
         "requests",
+        'six',
         "twisted >= 14.0.0, < 15.5.0", # Twisted dropped Python 2.6 support in 15.5.0
         "yelp_uri >= 1.0.1",
     ],

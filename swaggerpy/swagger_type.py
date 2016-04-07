@@ -1,29 +1,36 @@
 # -*- coding: utf-8 -*-
 """Code to check the validity of swagger types and conversion to python types
 """
-
 import datetime
+import io
 
 import dateutil.parser
+import six
 
 from swaggerpy.processors import SwaggerError
+
+
+if six.PY2:  # pragma: no cover (PY2)
+    _file_types = (file, io.IOBase)
+else:  # pragma: no cover (PY3)
+    _file_types = io.IOBase
 
 # Tuple is added to allow a response '4' which is of
 # python type 'int' but swagger_type could be 'int64'
 # so ('int', 'long') both are allowed for swagger 'int64'
 SWAGGER_TO_PY_TYPE_MAPPING = {
     'int32': int,
-    'int64': (long, int),
-    'integer': (long, int),
+    'int64': six.integer_types,
+    'integer': six.integer_types,
     'float': float,
     'double': float,
     'number': float,
-    'string': (str, unicode),
+    'string': six.string_types,
     'boolean': bool,
     'date': datetime.date,
     'date-time': datetime.datetime,
     'byte': bytes,
-    'File': file
+    'File': _file_types,
 }
 
 

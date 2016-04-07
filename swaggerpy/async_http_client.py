@@ -8,7 +8,7 @@
 """Asynchronous HTTP client abstractions.
 """
 
-from cStringIO import StringIO
+from io import BytesIO
 from swaggerpy.compat import json
 import logging
 import requests
@@ -55,7 +55,7 @@ class AsynchronousHttpClient(http_client.HttpClient):
 
         request_for_crochet = {
             'method': prepared_request.method or 'GET',
-            'bodyProducer': FileBodyProducer(StringIO(prepared_request.body))
+            'bodyProducer': FileBodyProducer(BytesIO(prepared_request.body))
             if prepared_request.body else None,
             'headers': listify_headers(prepared_request.headers),
             'uri': prepared_request.url,
@@ -145,7 +145,7 @@ class _HTTPBodyFetcher(Protocol):
     """
 
     def __init__(self, request, response, finished):
-        self.buffer = StringIO()
+        self.buffer = BytesIO()
         self.request = request
         self.response = response
         self.finished = finished

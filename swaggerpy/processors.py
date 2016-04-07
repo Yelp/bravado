@@ -11,7 +11,7 @@ particular use case (such as ensuring that description and summary fields
 exist)
 """
 import logging
-from itertools import izip
+from six.moves import zip as izip
 
 from swaggerpy.exception import SwaggerError
 

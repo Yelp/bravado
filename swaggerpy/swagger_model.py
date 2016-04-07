@@ -5,7 +5,7 @@ from functools import partial
 import logging
 import os
 import urllib
-import urlparse
+import six.moves.urllib_parse as urlparse
 
 from swaggerpy import swagger_type
 from swaggerpy.compat import json
