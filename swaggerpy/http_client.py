@@ -9,7 +9,7 @@
 """HTTP client abstractions.
 """
 import logging
-import urlparse
+import six.moves.urllib_parse as urlparse
 
 import requests
 import requests.auth

@@ -7,10 +7,14 @@
 """Code for checking the response from API. If correct, it proceeds to convert
 it into Python class types
 """
+from __future__ import absolute_import
+
 import sys
 
-import swagger_type
-from swagger_type import SwaggerTypeCheck
+import six
+
+from . import swagger_type
+from .swagger_type import SwaggerTypeCheck
 from swaggerpy.exception import CancelledError, HTTPError
 
 
@@ -36,7 +40,7 @@ def handle_response_errors(e):
     if hasattr(e, 'request'):
         kwargs['request'] = e.request
 
-    raise HTTPError(*args, **kwargs), None, sys.exc_info()[2]
+    six.reraise(HTTPError, HTTPError(*args, **kwargs), sys.exc_info()[2])
 
 
 class HTTPFuture(object):
