@@ -8,12 +8,33 @@ import six
 from bravado.exception import HTTPError
 
 
-class HttpFuture(object):
-    """Wrapper for a :class:`concurrent.futures.Future` that returns an HTTP
-    response.
+class FutureAdapter(object):
+    """
+    Mimics a :class:`concurrent.futures.Future` regardless of which client is
+    performing the request, whether it is synchronous or actually asynchornous.
 
-    :param concurrent_future: The concurrent concurrent_future to wrap.
-    :type concurrent_future: :class: `concurrent.futures.Future`
+    This adapter must be implemented by all bravado clients such as FidoClient
+    or RequestsClient to wrap the object returned by their 'request' method.
+
+    """
+
+    def result(self, timeout=None):
+        """
+        Must implement a result method which blocks on result retrieval.
+
+        :param timeout: maximum time to wait on result retrieval. Defaults to
+            None which means blocking undefinitely.
+        """
+        raise NotImplementedError(
+            "FutureAdapter must implement 'result' method"
+        )
+
+
+class HttpFuture(object):
+    """Wrapper for a :class:`FutureAdapter` that returns an HTTP response.
+
+    :param future: The future object to wrap.
+    :type future: :class: `FutureAdapter`
     :param response_adapter: Adapter type which exposes the innards of the HTTP
         response in a non-http client specific way.
     :type response_adapter: type that is a subclass of
@@ -29,9 +50,9 @@ class HttpFuture(object):
         http response code, etc.
         Defaults to False for backwards compatibility.
     """
-    def __init__(self, concurrent_future, response_adapter, operation=None,
+    def __init__(self, future, response_adapter, operation=None,
                  response_callbacks=None, also_return_response=False):
-        self.concurrent_future = concurrent_future
+        self.future = future
         self.response_adapter = response_adapter
         self.operation = operation
         self.response_callbacks = response_callbacks or []
@@ -46,7 +67,7 @@ class HttpFuture(object):
         :return: Depends on the value of also_return_response sent in
             to the constructor.
         """
-        inner_response = self.concurrent_future.result(timeout=timeout)
+        inner_response = self.future.result(timeout=timeout)
         incoming_response = self.response_adapter(inner_response)
 
         if self.operation is not None:

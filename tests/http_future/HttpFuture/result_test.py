@@ -1,6 +1,6 @@
 from bravado_core.operation import Operation
 from bravado_core.response import IncomingResponse
-from concurrent.futures import Future
+from bravado.http_future import FutureAdapter
 from mock import patch, Mock
 import pytest
 
@@ -11,7 +11,7 @@ def test_200_get_swagger_spec():
     response_adapter_instance = Mock(spec=IncomingResponse, status_code=200)
     response_adapter_type = Mock(return_value=response_adapter_instance)
     http_future = HttpFuture(
-        concurrent_future=Mock(spec=Future),
+        future=Mock(spec=FutureAdapter),
         response_adapter=response_adapter_type)
 
     assert response_adapter_instance == http_future.result()
@@ -23,7 +23,7 @@ def test_500_get_swagger_spec():
 
     with pytest.raises(HTTPError) as excinfo:
         HttpFuture(
-            concurrent_future=Mock(spec=Future),
+            future=Mock(spec=FutureAdapter),
             response_adapter=response_adapter_type).result()
 
     assert excinfo.value.response.status_code == 500
@@ -39,7 +39,7 @@ def test_200_service_call(_):
     response_adapter_type = Mock(return_value=response_adapter_instance)
 
     http_future = HttpFuture(
-        concurrent_future=Mock(spec=Future),
+        future=Mock(spec=FutureAdapter),
         response_adapter=response_adapter_type,
         operation=Mock(spec=Operation))
 
@@ -56,7 +56,7 @@ def test_400_service_call(mock_unmarshal_response):
     response_adapter_type = Mock(return_value=response_adapter_instance)
 
     http_future = HttpFuture(
-        concurrent_future=Mock(spec=Future),
+        future=Mock(spec=FutureAdapter),
         response_adapter=response_adapter_type,
         operation=Mock(spec=Operation))
 
@@ -76,7 +76,7 @@ def test_also_return_response_true(_):
     response_adapter_type = Mock(return_value=response_adapter_instance)
 
     http_future = HttpFuture(
-        concurrent_future=Mock(spec=Future),
+        future=Mock(spec=FutureAdapter),
         response_adapter=response_adapter_type,
         operation=Mock(spec=Operation),
         also_return_response=True)
