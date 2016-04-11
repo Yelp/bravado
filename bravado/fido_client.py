@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+
 import requests
 import six
 
@@ -67,9 +68,9 @@ class FidoClient(HttpClient):
         :rtype: :class: `bravado_core.http_future.HttpFuture`
         """
 
-        request_for_crochet = self.prepare_request_for_crochet(request_params)
+        request_for_twisted = self.prepare_request_for_twisted(request_params)
 
-        concurrent_future = fido.fetch(**request_for_crochet)
+        concurrent_future = fido.fetch(**request_for_twisted)
 
         return HttpFuture(concurrent_future,
                           FidoResponseAdapter,
@@ -78,7 +79,24 @@ class FidoClient(HttpClient):
                           also_return_response)
 
     @staticmethod
-    def prepare_request_for_crochet(request_params):
+    def prepare_request_for_twisted(request_params):
+        """
+        Uses the python package 'requests' to prepare the data as per twisted
+        needs. requests.PreparedRequest.prepare is able to compute the body and
+        the headers for the http call based on the input request_params. This
+        contains any query parameters, files, body and headers to include.
+
+        :return: dictionary in the form
+            {
+                'body': string,  # (can represent any content-type i.e. json,
+                    file, multipart..),
+                'headers': dictionary,  # headers->values
+                'method': string,  # can be 'GET', 'POST' etc.
+                'url': string,
+                'timeout': float,  # optional
+                'connect_timeout': float,  # optional
+            }
+        """
 
         prepared_request = requests.PreparedRequest()
         prepared_request.prepare(
@@ -95,7 +113,7 @@ class FidoClient(HttpClient):
         # causing content-length to lose meaning and break the client.
         prepared_request.headers.pop('Content-Length', None)
 
-        request_for_crochet = {
+        request_for_twisted = {
             'method': prepared_request.method or 'GET',
             'body': prepared_request.body,
             'headers': prepared_request.headers,
@@ -104,6 +122,6 @@ class FidoClient(HttpClient):
 
         for fetch_kwarg in ('connect_timeout', 'timeout'):
             if fetch_kwarg in request_params:
-                request_for_crochet[fetch_kwarg] = request_params[fetch_kwarg]
+                request_for_twisted[fetch_kwarg] = request_params[fetch_kwarg]
 
-        return request_for_crochet
+        return request_for_twisted
