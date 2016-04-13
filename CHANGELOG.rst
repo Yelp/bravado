@@ -1,6 +1,10 @@
 Changelog
 =========
 
+8.1.1 (2016-04-13)
+------------------
+- Removed logic to build multipart forms. Using python 'requests' instead to build the entire http request.
+
 8.1.0 (2016-04-04)
 ------------------
 - Support for YAML Swagger specs - PR #198
