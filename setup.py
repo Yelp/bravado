@@ -37,6 +37,9 @@ setup(
         "pyyaml",
         "requests",
         "six",
-        "twisted >= 14.0.0, < 15.5.0", # Python 2.6 support was dropped in 15.5.0
     ],
+    extras_require={
+        ':python_version=="2.6"': ['twisted >= 14.0.0, < 15.5'],
+        ':python_version!="2.6"': ['twisted >= 14.0.0'],
+    },
 )
