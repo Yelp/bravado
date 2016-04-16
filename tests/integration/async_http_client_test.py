@@ -10,8 +10,8 @@ import bottle
 from swaggerpy.async_http_client import AsynchronousHttpClient
 
 
-ROUTE_1_RESPONSE = "HEY BUDDY"
-ROUTE_2_RESPONSE = "BYE BUDDY"
+ROUTE_1_RESPONSE = b"HEY BUDDY"
+ROUTE_2_RESPONSE = b"BYE BUDDY"
 
 
 @bottle.route("/1")
@@ -51,14 +51,14 @@ class TestServer(unittest.TestCase):
         client = AsynchronousHttpClient()
 
         request_one_params = {
-            'method': 'GET',
+            'method': b'GET',
             'headers': {},
             'url': "http://localhost:{0}/1".format(port),
             'params': {},
         }
 
         request_two_params = {
-            'method': 'GET',
+            'method': b'GET',
             'headers': {},
             'url': "http://localhost:{0}/2".format(port),
             'params': {},

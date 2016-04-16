@@ -198,7 +198,7 @@ class SwaggerResponseConstruct(object):
         klass = self._models[self._type]
         instance = klass()
         setattr(instance, '_raw', self._response)
-        for key in self._response.keys():
+        for key in self._response:
             type_ = klass._swagger_types.get(key)
             if type_ is None:
                 # Ignore unrecognized keys.  They will still be accessible in

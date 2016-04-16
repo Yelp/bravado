@@ -14,6 +14,7 @@ import logging
 import requests
 
 import crochet
+import six
 import twisted.internet.error
 import twisted.web.client
 from twisted.internet import reactor
@@ -22,6 +23,7 @@ from twisted.internet.protocol import Protocol
 from twisted.web.client import Agent
 from twisted.web.client import FileBodyProducer
 from twisted.web.http_headers import Headers
+from yelp_bytes import to_utf8
 
 from swaggerpy import http_client
 from swaggerpy.exception import HTTPError
@@ -67,9 +69,10 @@ class AsynchronousHttpClient(http_client.HttpClient):
         request_for_crochet['headers'].removeHeader('content-length')
 
         # crochet only supports bytes for the url
-        if isinstance(request_for_crochet['uri'], unicode):
-            request_for_crochet['uri'] = \
-                request_for_crochet['uri'].encode('utf-8')
+        request_for_crochet.update({
+            'method': to_utf8(request_for_crochet['method']),
+            'uri': to_utf8(request_for_crochet['uri']),
+        })
 
         crochet.setup()
         return self.fetch_deferred(request_for_crochet)
@@ -165,9 +168,8 @@ class _HTTPBodyFetcher(Protocol):
 
 
 def listify_headers(headers):
-    """Twisted agent requires header values as lists
-    """
-    for key, val in headers.iteritems():
+    """Twisted agent requires header values as lists"""
+    for key, val in six.iteritems(headers):
         if not isinstance(val, list):
             headers[key] = [val]
     return Headers(headers)

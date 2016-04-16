@@ -217,8 +217,8 @@ class ResourceTest(unittest.TestCase):
             u'http://localhost/api-docs').api_test
         models = resource.testHTTP._models
         school = models['School'](name='foo')
-        user = models['User'](id=1l, schools=[school])
-        self.assertTrue(isinstance(user.id, long))
+        user = models['User'](id=1, schools=[school])
+        self.assertTrue(isinstance(user.id, int))
         self.assertTrue(isinstance(user.schools, list))
         self.assertTrue(isinstance(school.name, str))
 
@@ -450,8 +450,8 @@ class ResourceTest(unittest.TestCase):
         user = User(id=42, schools=[School(name='s1'), None])
         future = resource.testHTTPPost(body=user)
         self.assertEqual(
-            json.dumps({'id': 42, 'schools': [{'name': 's1'}]}),
-            future._request.request.data,
+            {'id': 42, 'schools': [{'name': 's1'}]},
+            json.loads(future._request.request.data),
         )
 
     @httpretty.activate
@@ -518,8 +518,9 @@ class ResourceTest(unittest.TestCase):
         resource = SwaggerClient.from_url(
             u'http://localhost/api-docs').api_test
         resource.testHTTPPost(body=school).result()
-        self.assertEqual({"created": "2014-06-10", "name": "foo"},
-                         json.loads(httpretty.last_request().body))
+        self.assertEqual(
+            {"created": "2014-06-10", "name": "foo"},
+            json.loads(httpretty.last_request().body.decode('UTF-8')))
 
     @httpretty.activate
     def test_success_on_passing_datetime_in_body(self):
@@ -550,7 +551,7 @@ class ResourceTest(unittest.TestCase):
                 "created": "2014-06-10 23:49:54.728000+00:00",
                 "name": "foo"
             },
-            json.loads(httpretty.last_request().body))
+            json.loads(httpretty.last_request().body.decode('UTF-8')))
 
     @httpretty.activate
     def test_content_type_as_json_if_complex_type_in_body(self):

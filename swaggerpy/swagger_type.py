@@ -48,7 +48,7 @@ CONTAINER_MAPPING = {
 }
 
 
-CONTAINER_TYPES = CONTAINER_MAPPING.keys()
+CONTAINER_TYPES = list(CONTAINER_MAPPING)
 
 ARRAY = 'array'
 
@@ -71,7 +71,7 @@ def primitive_types():
     :returns: a list of only types
     :rtype: list
     """
-    return SWAGGER_PRIMITIVE_TYPE_TO_SWAGGER_FORMAT.keys()
+    return list(SWAGGER_PRIMITIVE_TYPE_TO_SWAGGER_FORMAT)
 
 
 def extract_format(_type_format):
@@ -225,7 +225,7 @@ def get_swagger_types(props):
     :rtype: dict
     """
     swagger_types = {}
-    for prop in props.keys():
+    for prop in props:
         swagger_types[prop] = get_swagger_type(props[prop])
     return swagger_types
 
@@ -327,10 +327,10 @@ class SwaggerTypeCheck(object):
             raise TypeError("Type for %s is expected to be object" %
                             self.value)
         required = list(klass._required) if klass._required else []
-        for key in self.value.keys():
+        for key in self.value:
             if key in required:
                 required.remove(key)
-            if key not in klass._swagger_types.keys():
+            if key not in klass._swagger_types:
                 # Ignore unrecognized keys
                 continue
             self.value[key] = SwaggerTypeCheck(key,

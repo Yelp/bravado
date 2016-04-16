@@ -4,8 +4,11 @@ from copy import copy
 from functools import partial
 import logging
 import os
-import urllib
+
+import six
 import six.moves.urllib_parse as urlparse
+from six.moves.urllib_request import urlopen
+from six.moves.urllib_request import pathname2url
 
 from swaggerpy import swagger_type
 from swaggerpy.compat import json
@@ -126,8 +129,8 @@ class FileEventual(object):
         return self.path
 
     def wait(self, timeout=None):
-        with contextlib.closing(urllib.urlopen(self.get_path())) as fp:
-            return self.FileResponse(json.load(fp))
+        with contextlib.closing(urlopen(self.get_path())) as fp:
+            return self.FileResponse(json.loads(fp.read().decode('UTF-8')))
 
     def cancel(self):
         pass
@@ -225,10 +228,10 @@ def load_file(resource_listing_file, http_client=None):
     :raise: IOError: On error reading api-docs.
     """
     file_path = os.path.abspath(resource_listing_file)
-    url = urlparse.urljoin(u'file:', urllib.pathname2url(file_path))
+    url = urlparse.urljoin(u'file:', pathname2url(file_path))
     # When loading from files, everything is relative to the resource listing
     dir_path = os.path.dirname(file_path)
-    base_url = urlparse.urljoin(u'file:', urllib.pathname2url(dir_path))
+    base_url = urlparse.urljoin(u'file:', pathname2url(dir_path))
     return load_url(url, http_client=http_client, base_url=base_url)
 
 
@@ -291,8 +294,8 @@ def set_props(model, **kwargs):
        :type kwargs: dict
     """
     types = getattr(model, '_swagger_types')
-    arg_keys = kwargs.keys()
-    for property_name, property_swagger_type in types.iteritems():
+    arg_keys = list(kwargs)
+    for property_name, property_swagger_type in six.iteritems(types):
         # Assign all property values specified in kwargs
         property_value = None
         if property_name in arg_keys:
@@ -344,7 +347,7 @@ def create_model_docstring(props):
     """
     types = swagger_type.get_swagger_types(props)
     docstring = "Attributes:\n\n\t"
-    for prop in props.keys():
+    for prop in props:
         py_type = swagger_type.swagger_to_py_type_string(types[prop])
         docstring += ("%s (%s) " % (prop, py_type))
         if props[prop].get('description'):
@@ -395,7 +398,7 @@ def create_flat_dict(model):
     if not hasattr(model, '__dict__'):
         return model
     model_dict = copy(model.__dict__)
-    for k, v in model.__dict__.iteritems():
+    for k, v in six.iteritems(model.__dict__):
         if isinstance(v, list):
             model_dict[k] = [create_flat_dict(x) for x in v if x is not None]
         elif v is None:
@@ -417,7 +420,7 @@ def create_model_repr(model):
     """
     string = ""
     separator = ""
-    for prop in getattr(model, '_swagger_types').keys():
+    for prop in model._swagger_types:
         string += ("%s%s=%r" % (separator, prop, getattr(model, prop)))
         separator = ", "
     return ("%s(%s)" % (model.__class__.__name__, string))

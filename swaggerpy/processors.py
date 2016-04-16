@@ -11,6 +11,8 @@ particular use case (such as ensuring that description and summary fields
 exist)
 """
 import logging
+
+import six
 from six.moves import zip as izip
 
 from swaggerpy.exception import SwaggerError
@@ -54,7 +56,7 @@ class ParsingContext(object):
         """
         if id_field not in json:
             raise SwaggerError(u"Missing id_field: %s" % id_field, self)
-        self.push_str(obj_type, json, unicode(json[id_field]))
+        self.push_str(obj_type, json, six.text_type(json[id_field]))
 
     def push_str(self, obj_type, json, id_string):
         """Pushes a new object into the context.
@@ -130,7 +132,7 @@ class SwaggerProcessor(object):
                 self.process_resource_api(**context.args)
                 for operation in api[u'operations']:
                     context.push(u'operation', operation, u'nickname')
-                    context.push(u'model_ids', {'model_ids': models.keys()},
+                    context.push(u'model_ids', {'model_ids': list(models)},
                                  u'model_ids')
                     self.process_operation(**context.args)
                     for parameter in operation.get(u'parameters', []):
@@ -149,7 +151,7 @@ class SwaggerProcessor(object):
                 self.process_model(**context.args)
                 for (name, prop) in model[u'properties'].items():
                     context.push(u'prop', prop, u'name')
-                    context.push(u'model_ids', {'model_ids': models.keys()},
+                    context.push(u'model_ids', {'model_ids': list(models)},
                                  u'model_ids')
                     self.process_property(**context.args)
                     context.pop()

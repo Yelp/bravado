@@ -242,7 +242,7 @@ class ClientTest(unittest.TestCase):
             status=requests.codes.no_content)
 
         temporary_file = tempfile.TemporaryFile()
-        temporary_file.write('\xff\xd8')
+        temporary_file.write(b'\xff\xd8')
         temporary_file.seek(0)
 
         resp = self.uut.pet.postVaccine(

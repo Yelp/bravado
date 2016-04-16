@@ -21,7 +21,7 @@ class HTTPError(IOError):
         super(HTTPError, self).__init__(*args, **kwargs)
 
 
-class CancelledError():
+class CancelledError(Exception):
     """Error raised when result() is called from HTTPFuture
     and call was actually cancelled
     """

@@ -193,7 +193,7 @@ class ResourceOperationTest(unittest.TestCase):
         resource.testHTTP(param_id=42, param_name='str').result()
         self.assertEqual('application/x-www-form-urlencoded',
                          httpretty.last_request().headers['content-type'])
-        self.assertEqual({'param_name': ['str'], 'param_id': ['42']},
+        self.assertEqual({b'param_name': [b'str'], b'param_id': [b'42']},
                          urlparse.parse_qs(httpretty.last_request().body))
 
     @httpretty.activate
@@ -220,9 +220,9 @@ class ResourceOperationTest(unittest.TestCase):
             content_type = httpretty.last_request().headers['content-type']
 
             self.assertTrue(content_type.startswith('multipart/form-data'))
-            self.assertTrue("42" in httpretty.last_request().body)
+            self.assertTrue(b"42" in httpretty.last_request().body)
             # instead of asserting the contents, just assert filename is there
-            self.assertTrue("simple.json" in httpretty.last_request().body)
+            self.assertTrue(b"simple.json" in httpretty.last_request().body)
 
     @httpretty.activate
     def test_success_on_get_with_path_and_query_params(self):
@@ -294,7 +294,6 @@ class ResourceOperationTest(unittest.TestCase):
                              }}).result()
         self.assertEqual('abc',
                          httpretty.last_request().headers['header_name'])
-        print dir(mock_log)
         mock_log.warn.assert_called_once_with(
             'Header header_name:xyz has been overridden by header_name:abc')
 
@@ -447,7 +446,7 @@ class ResourceOperationTest(unittest.TestCase):
             u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(test_param="foo", param_id="42",
                                  body="some_test").result()
-        self.assertEqual('some_test', httpretty.last_request().body)
+        self.assertEqual(b'some_test', httpretty.last_request().body)
         self.assertEqual(None, resp)
 
     @httpretty.activate
@@ -469,8 +468,9 @@ class ResourceOperationTest(unittest.TestCase):
         resource = SwaggerClient.from_url(
             u'http://localhost/api-docs').api_test
         resp = resource.testHTTP(body=["a", "b", "c"]).result()
-        self.assertEqual(["a", "b", "c"],
-                         json.loads(httpretty.last_request().body))
+        self.assertEqual(
+            ["a", "b", "c"],
+            json.loads(httpretty.last_request().body.decode('UTF-8')))
         self.assertEqual(None, resp)
 
     # ToDo: Wrong body type not being checked as of now...
