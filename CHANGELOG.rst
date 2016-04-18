@@ -1,5 +1,8 @@
 Changelog
 =========
+8.1.2 (2016-04-18)
+------------------
+- Don't unnecessarily constrain the version of twisted when not using python 2.6
 
 8.1.1 (2016-04-13)
 ------------------
