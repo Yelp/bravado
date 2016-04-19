@@ -1,3 +1,7 @@
+0.9.0 (2016-04-16)
+-------------------
+- Swaggerpy now py3 compatible.
+
 0.8.0 (2016-04-06)
 -------------------
 - Swaggerpy module importable under Py3. Tests for py3 needs more work.
