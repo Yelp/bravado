@@ -32,7 +32,11 @@ setup(
         "python-dateutil",
         "requests",
         'six',
-        "twisted >= 14.0.0, < 15.5.0", # Twisted dropped Python 2.6 support in 15.5.0
+        'yelp_bytes',
         "yelp_uri >= 1.0.1",
     ],
+    extras_require={
+        ':python_version=="2.6"': ['twisted >= 14.0.0, < 15.5'],
+        ':python_version!="2.6"': ['twisted >= 14.0.0'],
+    },
 )

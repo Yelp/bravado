@@ -23,7 +23,7 @@ class ClientTest(unittest.TestCase):
         resp = self.client.simple1.createAsterikInfoHttp(body=body).result()
         self.assertEqual('application/json',
                          httpretty.last_request().headers['content-type'])
-        self.assertEqual('{"id": "test_id"}',
+        self.assertEqual(b'{"id": "test_id"}',
                          httpretty.last_request().body)
         self.assertEqual([], resp)
 

@@ -1,13 +1,14 @@
 language: python
 env:
-- TOX_ENV=py26
-- TOX_ENV=py27
-- TOX_ENV=cover
-- TOX_ENV=docs
-- TOX_ENV=flake8
+- TOXENV=py26
+- TOXENV=py27
+- TOXENV=py34
+- TOXENV=cover
+- TOXENV=docs
+- TOXENV=flake8
 install:
-- "pip install --use-mirrors tox coveralls"
+- pip install tox coveralls
 script:
-- tox -e $TOX_ENV
+- tox
 after_success:
 - coveralls

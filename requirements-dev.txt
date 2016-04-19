@@ -1,6 +1,6 @@
 bottle
 httpretty
-mock<1.1.0
+mock==1.3
 ordereddict
 pre-commit
 pytest

@@ -27,9 +27,9 @@ import swaggerpy.http_client
 class AsyncHttpClientTest(unittest.TestCase):
 
     def test_listify_headers(self):
-        headers = {'a': 'foo', 'b': ['bar', 42]}
+        headers = {b'a': b'foo', b'b': [b'bar', 42]}
         resp = swaggerpy.async_http_client.listify_headers(headers)
-        self.assertEqual([('A', ['foo']), ('B', ['bar', 42])],
+        self.assertEqual([(b'A', [b'foo']), (b'B', [b'bar', 42])],
                          sorted(list(resp.getAllRawHeaders())))
 
     def test_success_AsyncHTTP_response(self):
@@ -72,7 +72,7 @@ class AsyncHttpClientTest(unittest.TestCase):
                 'method': 'GET',
                 'url': 'http://foo',
                 'data': None,
-                'headers': {'foo': 'bar'},
+                'headers': {b'foo': b'bar'},
                 'params': {'bar': u'酒場'},
             }
             mock_fetch_deferred.return_value.wait.return_value = Response(
@@ -84,14 +84,14 @@ class AsyncHttpClientTest(unittest.TestCase):
             mock_fetch_deferred.assert_called_once_with(
                 {
                     'headers': Headers({'foo': ['bar']}),
-                    'method': 'GET',
+                    'method': b'GET',
                     'bodyProducer': None,
-                    'uri': 'http://foo/?bar=%E9%85%92%E5%A0%B4'
+                    'uri': b'http://foo/?bar=%E9%85%92%E5%A0%B4',
                 }
             )
 
     def test_start_request_with_only_url(self):
-        url = 'http://example.com/api-docs'
+        url = b'http://example.com/api-docs'
         async_client = swaggerpy.async_http_client.AsynchronousHttpClient()
         # ugly mock, but this method runs in a twisted reactor which is
         # difficult to mock
@@ -101,7 +101,7 @@ class AsyncHttpClientTest(unittest.TestCase):
 
         async_client.fetch_deferred.assert_called_once_with({
             'headers': Headers({}),
-            'method': 'GET',
+            'method': b'GET',
             'bodyProducer': None,
             'uri': url,
         })
@@ -114,8 +114,8 @@ class HTTPBodyFetcherTest(unittest.TestCase):
             'req', 'resp', Mock())
 
     def test_HTTP_body_fetcher_data_received(self):
-        self.http_body_fetcher.dataReceived("helloWorld")
-        self.assertEqual("helloWorld",
+        self.http_body_fetcher.dataReceived(b"helloWorld")
+        self.assertEqual(b"helloWorld",
                          self.http_body_fetcher.buffer.getvalue())
 
     def test_success_HTTP_body_fetcher_connection_lost(self):
@@ -124,7 +124,7 @@ class HTTPBodyFetcherTest(unittest.TestCase):
             self.http_body_fetcher.finished.callback.return_value = None
             reason = Mock(**{'check.return_value': True})
             self.http_body_fetcher.connectionLost(reason)
-            mock_resp.assert_called_once_with('req', 'resp', '')
+            mock_resp.assert_called_once_with('req', 'resp', b'')
 
     def test_error_HTTP_body_fetcher_connection_lost(self):
         errback = Mock()
@@ -137,7 +137,7 @@ class HTTPBodyFetcherTest(unittest.TestCase):
 class AsyncResponseTest(unittest.TestCase):
 
     def test_build_async_response(self):
-        headers_orig = {'a': 'foo', 'b': ['bar', 42]}
+        headers_orig = {b'a': b'foo', b'b': [b'bar', 42]}
         headers = swaggerpy.async_http_client.listify_headers(headers_orig)
         resp = Mock(**{'code': 200, 'headers': headers})
         req = Mock()
@@ -145,7 +145,9 @@ class AsyncResponseTest(unittest.TestCase):
             req, resp, '{"valid":"json"}')
         self.assertEqual(200, async_resp.status_code)
         self.assertEqual(req, async_resp.request)
-        self.assertEqual({'A': ['foo'], 'B': ['bar', 42]}, async_resp.headers)
+        self.assertEqual(
+            {b'A': [b'foo'], b'B': [b'bar', 42]}, async_resp.headers,
+        )
         self.assertEqual({"valid": "json"}, async_resp.json())
 
     def test_raise_for_status_client_error(self):

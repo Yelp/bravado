@@ -56,9 +56,10 @@ from __future__ import absolute_import
 import logging
 import os.path
 import time
-import urllib
-from six.moves.urllib_parse import urlparse
 
+import six
+from six.moves.urllib_parse import quote
+from six.moves.urllib_parse import urlparse
 from yelp_uri import urllib_utf8
 
 from . import swagger_type
@@ -112,7 +113,7 @@ class SwaggerClientCache(object):
     def __call__(self, *args, **kwargs):
         # timeout is backwards compatible with 0.7
         ttl = kwargs.pop('ttl', kwargs.pop('timeout', SWAGGER_SPEC_CACHE_TTL))
-        key = repr(args) + repr(sorted(kwargs.iteritems()))
+        key = repr(args) + repr(sorted(kwargs.items()))
 
         if key not in self:
             self.cache[key] = CacheEntry(
@@ -121,7 +122,7 @@ class SwaggerClientCache(object):
         return self.cache[key].item
 
     def build_client(self, api_docs, *args, **kwargs):
-        if isinstance(api_docs, basestring):
+        if isinstance(api_docs, six.string_types):
             return SwaggerClient.from_url(api_docs, *args, **kwargs)
         return SwaggerClient.from_resource_listing(api_docs, *args, **kwargs)
 
@@ -217,7 +218,7 @@ class Operation(object):
 def build_models(model_dicts):
     return dict(
         (name, create_model_type(model_def))
-        for name, model_def in model_dicts.iteritems())
+        for name, model_def in six.iteritems(model_dicts))
 
 
 def get_resource_url(base_path, url_base, resource_base_path):
@@ -482,7 +483,7 @@ def add_param_to_req(param, value, request):
     if param_req_type == u'path':
         request['url'] = request['url'].replace(
             u'{%s}' % pname,
-            urllib.quote(unicode(value)))
+            quote(six.text_type(value)))
     elif param_req_type == u'query':
         request['params'][pname] = value
     elif param_req_type == u'body':
@@ -557,8 +558,7 @@ def validate_and_add_params_to_request(param, value, request, models):
 
 
 def stringify_body(value):
-    """Json dump the value to string if not already in string
-    """
-    if not value or isinstance(value, basestring):
+    """Json dump the value to string if not already in string"""
+    if not value or isinstance(value, six.string_types):
         return value
     return json.dumps(value)
