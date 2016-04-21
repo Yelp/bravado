@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
-
 import socket
 import threading
 import time
 import unittest
 
 import bottle
+import pytest
 
 from swaggerpy.async_http_client import AsynchronousHttpClient
+from swaggerpy.exception import HTTPError
+from swaggerpy.response import HTTPFuture
 
 
 ROUTE_1_RESPONSE = b"HEY BUDDY"
@@ -71,3 +73,20 @@ class TestServer(unittest.TestCase):
 
         self.assertEqual(resp_one.text, ROUTE_1_RESPONSE)
         self.assertEqual(resp_two.text, ROUTE_2_RESPONSE)
+
+    def test_erroring_request(self):
+        port = get_hopefully_free_port()
+        launch_threaded_http_server(port)
+
+        client = AsynchronousHttpClient()
+
+        params = {
+            'method': b'GET',
+            'headers': {},
+            'url': 'http://localhost:{0}/404'.format(port),
+            'params': {},
+        }
+
+        future = HTTPFuture(client, params, lambda x: x)
+        with pytest.raises(HTTPError):
+            future.result(timeout=1)
