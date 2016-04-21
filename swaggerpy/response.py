@@ -12,6 +12,7 @@ from __future__ import absolute_import
 import sys
 
 import six
+from yelp_bytes import from_bytes
 
 from . import swagger_type
 from .swagger_type import SwaggerTypeCheck
@@ -35,7 +36,7 @@ def handle_response_errors(e):
     if hasattr(e, 'response'):
         kwargs['response'] = e.response
         if hasattr(e.response, 'text'):
-            args[0] += (' : ' + e.response.text)
+            args[0] += ' : ' + from_bytes(e.response.text)
 
     if hasattr(e, 'request'):
         kwargs['request'] = e.request
