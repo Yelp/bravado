@@ -138,8 +138,7 @@ class RequestsClient(HttpClient):
         requests_future = RequestsFutureAdapter(
             self.session,
             self.authenticated_request(sanitized_params),
-            misc_options
-        )
+            misc_options)
 
         return HttpFuture(
             requests_future,
