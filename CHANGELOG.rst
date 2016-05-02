@@ -1,5 +1,11 @@
 Changelog
 =========
+8.2.0 (2016-04-29)
+------------------
+- Bravado compliant to Fido 3.0.0 
+- Dropped use of concurrent futures in favor of crochet EventualResult
+- Workaround for bypassing a unicode bug in python `requests` < 2.8.1
+
 8.1.2 (2016-04-18)
 ------------------
 - Don't unnecessarily constrain the version of twisted when not using python 2.6

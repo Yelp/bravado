@@ -76,10 +76,10 @@ class TestServer():
             'params': {},
         }
 
-        eventual_one = self.fido_client.request(request_one_params)
-        eventual_two = self.fido_client.request(request_two_params)
-        resp_one = eventual_one.result(timeout=1)
-        resp_two = eventual_two.result(timeout=1)
+        http_future_1 = self.fido_client.request(request_one_params)
+        http_future_2 = self.fido_client.request(request_two_params)
+        resp_one = http_future_1.result(timeout=1)
+        resp_two = http_future_2.result(timeout=1)
 
         assert resp_one.text == ROUTE_1_RESPONSE
         assert resp_two.text == ROUTE_2_RESPONSE
@@ -93,7 +93,7 @@ class TestServer():
             'data': {"number": 3},
         }
 
-        eventual = self.fido_client.request(request_args)
-        resp = eventual.result(timeout=1)
+        http_future = self.fido_client.request(request_args)
+        resp = http_future.result(timeout=1)
 
         assert resp.text == '6'

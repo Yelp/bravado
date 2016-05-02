@@ -7,6 +7,7 @@ import requests.auth
 from six.moves.urllib import parse as urlparse
 
 from bravado.http_client import HttpClient
+from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
 
 
@@ -193,7 +194,7 @@ class RequestsResponseAdapter(IncomingResponse):
         return self._delegate.json(**kwargs)
 
 
-class RequestsFutureAdapter(object):
+class RequestsFutureAdapter(FutureAdapter):
     """Mimics a :class:`concurrent.futures.Future` for the purposes of making
     HTTP calls with the Requests library in a future-y sort of way.
     """

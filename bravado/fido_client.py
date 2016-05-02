@@ -10,6 +10,7 @@ if six.PY3:
 import fido
 from bravado_core.response import IncomingResponse
 from bravado.http_client import HttpClient
+from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
 
 log = logging.getLogger(__name__)
@@ -70,9 +71,9 @@ class FidoClient(HttpClient):
 
         request_for_twisted = self.prepare_request_for_twisted(request_params)
 
-        concurrent_future = fido.fetch(**request_for_twisted)
+        future_adapter = FidoFutureAdapter(fido.fetch(**request_for_twisted))
 
-        return HttpFuture(concurrent_future,
+        return HttpFuture(future_adapter,
                           FidoResponseAdapter,
                           operation,
                           response_callbacks,
@@ -114,7 +115,10 @@ class FidoClient(HttpClient):
         prepared_request.headers.pop('Content-Length', None)
 
         request_for_twisted = {
-            'method': prepared_request.method or 'GET',
+            # converting to string for `requests` method is necessary when
+            # using requests < 2.8.1 due to a bug while handling unicode values
+            # See changelog 2.8.1 at https://pypi.python.org/pypi/requests
+            'method': str(prepared_request.method or 'GET'),
             'body': prepared_request.body,
             'headers': prepared_request.headers,
             'url': prepared_request.url,
@@ -125,3 +129,17 @@ class FidoClient(HttpClient):
                 request_for_twisted[fetch_kwarg] = request_params[fetch_kwarg]
 
         return request_for_twisted
+
+
+class FidoFutureAdapter(FutureAdapter):
+    """
+    This is just a wrapper for an EventualResult object from crochet.
+    It implements the 'result' method which is needed by our HttpFuture to
+    retrieve results.
+    """
+
+    def __init__(self, eventual_result):
+        self._eventual_result = eventual_result
+
+    def result(self, timeout=None):
+        return self._eventual_result.wait(timeout=timeout)
