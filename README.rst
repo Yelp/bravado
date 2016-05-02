@@ -18,19 +18,21 @@ Bravado
 About
 -----
 
-From Swagger's home page:
+Bravado is a Yelp maintained fork of `digium/swagger-py <https://github.com/digium/swagger-py/>`__
+for use with `OpenAPI Specification <https://github.com/OAI/OpenAPI-Specification>`__ (previously
+known as Swagger).
 
-    Swagger is a specification and complete framework implementation for
-    describing, producing, consuming, and visualizing RESTful web
-    services.
+From the OpenAPI Specification project:
 
-Client libraries can automatically be generated from the `Swagger
-specification <https://github.com/wordnik/swagger-core/wiki>`__, however Bravado
-aims to be a complete replacement for code generation (`swagger-codegen
-<https://github.com/wordnik/swagger-codegen>`__).
+    The goal of The OpenAPI Specification is to define a standard,
+    language-agnostic interface to REST APIs which allows both humans and
+    computers to discover and understand the capabilities of the service
+    without access to source code, documentation, or through network traffic
+    inspection.
 
-Bravado is a forked from `digium/swagger-py <https://github.com/digium/swagger-py/>`__
-for using `Swagger <https://developers.helloreverb.com/swagger/>`__ defined API's.
+Client libraries can automatically be generated from the OpenAPI specification,
+however Bravado aims to be a complete replacement for code generation
+(`swagger-codegen <https://github.com/wordnik/swagger-codegen>`__).
 
 Example Usage
 -------------
