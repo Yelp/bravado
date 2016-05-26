@@ -9,16 +9,9 @@ from mock import Mock
 import pytest
 import six
 
-try:
-    from bravado.fido_client import FidoClient
-except ImportError:
-    FidoClient = Mock()  # Tests will be skipped in py3
+from bravado.fido_client import FidoClient
 
 
-@pytest.mark.skipif(
-    six.PY3,
-    reason="Fido client is not usable in py3 until twisted supports it",
-)
 def test_prepare_request_for_twisted():
     request_params = dict(
         url='http://example.com/api-docs',
@@ -36,10 +29,6 @@ def test_prepare_request_for_twisted():
     }
 
 
-@pytest.mark.skipif(
-    six.PY3,
-    reason="Fido client is not usable in py3 until twisted supports it",
-)
 def test_prepare_request_for_twisted_timeouts_added():
     request_params = dict(
         url='http://example.com/api-docs', timeout=15, connect_timeout=15)

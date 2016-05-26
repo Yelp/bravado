@@ -4,9 +4,6 @@ import logging
 import requests
 import six
 
-if six.PY3:
-    raise ImportError("The fido client is not yet supported in py3")
-
 import fido
 from bravado_core.response import IncomingResponse
 from bravado.http_client import HttpClient
