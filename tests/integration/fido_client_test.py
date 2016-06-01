@@ -10,8 +10,8 @@ import six
 
 from bravado.fido_client import FidoClient
 
-ROUTE_1_RESPONSE = "HEY BUDDY"
-ROUTE_2_RESPONSE = "BYE BUDDY"
+ROUTE_1_RESPONSE = b"HEY BUDDY"
+ROUTE_2_RESPONSE = b"BYE BUDDY"
 
 
 @bottle.route("/1")
@@ -92,4 +92,4 @@ class TestServer():
         http_future = self.fido_client.request(request_args)
         resp = http_future.result(timeout=1)
 
-        assert resp.text == '6'
+        assert resp.text == b'6'
