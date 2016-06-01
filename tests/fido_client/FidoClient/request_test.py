@@ -1,14 +1,8 @@
 import mock
-from mock import patch, Mock
-
-import pytest
-import six
+from mock import patch
 
 
-try:
-    from bravado.fido_client import FidoClient
-except ImportError:
-    FidoClient = Mock()
+from bravado.fido_client import FidoClient
 
 
 def test_request_no_timeouts_passed_to_fido():

@@ -4,10 +4,6 @@ Not Tested:
 1) Callbacks triggered by twisted and crochet
 2) Timeouts by crochet's wait()
 """
-from mock import Mock
-
-import pytest
-import six
 
 from bravado.fido_client import FidoClient
 

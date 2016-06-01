@@ -5,8 +5,6 @@ import threading
 import time
 
 import bottle
-import pytest
-import six
 
 from bravado.fido_client import FidoClient
 

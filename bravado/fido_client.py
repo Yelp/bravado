@@ -2,7 +2,6 @@
 import logging
 
 import requests
-import six
 
 import fido
 from bravado_core.response import IncomingResponse
@@ -117,7 +116,8 @@ class FidoClient(HttpClient):
             # using requests < 2.8.1 due to a bug while handling unicode values
             # See changelog 2.8.1 at https://pypi.python.org/pypi/requests
             'method': str(prepared_request.method or 'GET'),
-            'body': to_bytes(prepared_request.body) if prepared_request.body is not None else None,
+            'body': to_bytes(prepared_request.body) if prepared_request.body \
+            is not None else None,
             'headers': prepared_request.headers,
             'url': prepared_request.url,
         }
