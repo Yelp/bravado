@@ -2,11 +2,12 @@
 Functional tests related to passing models in req/response
 """
 import httpretty
-from jsonschema.exceptions import ValidationError
 import pytest
 
-from bravado.compat import json
+from jsonschema.exceptions import ValidationError
+
 from bravado.client import SwaggerClient
+from bravado.compat import json
 from tests.functional.conftest import register_spec, register_get, API_DOCS_URL
 
 
@@ -183,5 +184,5 @@ def test_model_in_body_of_request(httprettified, swagger_dict, sample_model):
     School = client.get_model('School')
     user = User(id=42, schools=[School(name='s1')])
     resource.testHTTPPost(body=user).result()
-    body = json.loads(httpretty.last_request().body)
+    body = json.loads(httpretty.last_request().body.decode('utf-8'))
     assert {'schools': [{'name': 's1'}], 'id': 42} == body

@@ -9,8 +9,9 @@ from bravado.fido_client import FidoClient
 
 
 def test_prepare_request_for_twisted_get():
-    request_params = dict(
-        url='http://example.com/api-docs')
+    request_params = {
+        'url': 'http://example.com/api-docs'
+    }
     request_for_twisted = FidoClient.prepare_request_for_twisted(request_params)
 
     assert request_for_twisted == {
@@ -22,12 +23,12 @@ def test_prepare_request_for_twisted_get():
 
 
 def test_prepare_request_for_twisted_body_is_bytes():
-    request_params = dict(
-        url='http://example.com/api-docs',
-        method='POST',
-        data=42,
-        params={'username': 'yelp'},
-    )
+    request_params = {
+        'url': 'http://example.com/api-docs',
+        'method': 'POST',
+        'data': 42,
+        'params': {'username': 'yelp'},
+    }
     request_for_twisted = FidoClient.prepare_request_for_twisted(request_params)
 
     assert request_for_twisted == {
@@ -39,8 +40,11 @@ def test_prepare_request_for_twisted_body_is_bytes():
 
 
 def test_prepare_request_for_twisted_timeouts_added():
-    request_params = dict(
-        url='http://example.com/api-docs', timeout=15, connect_timeout=15)
+    request_params = {
+        'url': 'http://example.com/api-docs',
+        'timeout': 15,
+        'connect_timeout': 15
+    }
     request_for_twisted = FidoClient.prepare_request_for_twisted(request_params)
 
     assert request_for_twisted == {
