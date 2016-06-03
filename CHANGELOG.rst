@@ -2,6 +2,10 @@ Changelog
 =========
 8.2.0 (2016-04-29)
 ------------------
+- Bravado using Fido 3.2.0 python 3 ready
+
+8.2.0 (2016-04-29)
+------------------
 - Bravado compliant to Fido 3.0.0 
 - Dropped use of concurrent futures in favor of crochet EventualResult
 - Workaround for bypassing a unicode bug in python `requests` < 2.8.1
