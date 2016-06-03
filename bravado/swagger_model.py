@@ -31,7 +31,7 @@ class FileEventual(object):
             self.headers = {}
 
         def json(self):
-            return json.loads(self.text)
+            return json.loads(self.text.decode('utf-8'))
 
     def __init__(self, path):
         self.path = path

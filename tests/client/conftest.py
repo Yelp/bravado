@@ -1,6 +1,6 @@
 import os
 
-import simplejson as json
+from bravado.compat import json
 import pytest
 
 from bravado.client import Spec

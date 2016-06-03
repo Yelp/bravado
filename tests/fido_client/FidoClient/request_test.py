@@ -1,17 +1,10 @@
 import mock
-from mock import patch, Mock
-
-import pytest
-import six
+from mock import patch
 
 
-try:
-    from bravado.fido_client import FidoClient
-except ImportError:
-    FidoClient = Mock()
+from bravado.fido_client import FidoClient
 
 
-@pytest.mark.skipif(six.PY3, reason="twisted doesnt support py3 yet")
 def test_request_no_timeouts_passed_to_fido():
     with patch('bravado.fido_client.fido.fetch') as fetch:
         request_params = dict(url='http://foo.com/')
@@ -24,7 +17,6 @@ def test_request_no_timeouts_passed_to_fido():
         )
 
 
-@pytest.mark.skipif(six.PY3, reason="twisted doesnt support py3 yet")
 def test_request_timeout_passed_to_fido():
     with patch('bravado.fido_client.fido.fetch') as fetch:
         request_params = dict(url='http://foo.com/', timeout=1)
@@ -38,7 +30,6 @@ def test_request_timeout_passed_to_fido():
         )
 
 
-@pytest.mark.skipif(six.PY3, reason="twisted doesnt support py3 yet")
 def test_request_connect_timeout_passed_to_fido():
     with patch('bravado.fido_client.fido.fetch') as fetch:
         request_params = dict(url='http://foo.com/', connect_timeout=1)
@@ -52,7 +43,6 @@ def test_request_connect_timeout_passed_to_fido():
         )
 
 
-@pytest.mark.skipif(six.PY3, reason="twisted doesnt support py3 yet")
 def test_request_connect_timeout_and_timeout_passed_to_fido():
     with patch('bravado.fido_client.fido.fetch') as fetch:
         request_params = dict(url='http://foo.com/', connect_timeout=1,

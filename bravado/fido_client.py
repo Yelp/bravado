@@ -2,16 +2,13 @@
 import logging
 
 import requests
-import six
-
-if six.PY3:
-    raise ImportError("The fido client is not yet supported in py3")
 
 import fido
 from bravado_core.response import IncomingResponse
 from bravado.http_client import HttpClient
 from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
+from yelp_bytes import to_bytes
 
 log = logging.getLogger(__name__)
 
@@ -119,7 +116,10 @@ class FidoClient(HttpClient):
             # using requests < 2.8.1 due to a bug while handling unicode values
             # See changelog 2.8.1 at https://pypi.python.org/pypi/requests
             'method': str(prepared_request.method or 'GET'),
-            'body': prepared_request.body,
+            'body': (
+                to_bytes(prepared_request.body)
+                if prepared_request.body is not None else None
+            ),
             'headers': prepared_request.headers,
             'url': prepared_request.url,
         }
