@@ -1,6 +1,6 @@
 Changelog
 =========
-8.2.0 (2016-04-29)
+8.3.0 (2016-06-03)
 ------------------
 - Bravado using Fido 3.2.0 python 3 ready
 
