@@ -43,6 +43,29 @@ Example Usage
     client = SwaggerClient.from_url("http://petstore.swagger.io/v2/swagger.json")
     pet = client.pet.getPetById(petId=42).result()
 
+Example with Basic Authentication
+-------------------------
+
+.. code-block:: python
+
+    from bravado.requests_client import RequestsClient
+    from bravado.client import SwaggerClient
+    from bravado.swagger_model import load_file
+    
+    spec = load_file('/tmp/swagger.json') # if to load a custom spec
+    http_client = RequestsClient()
+    http_client.set_basic_auth(
+        'api.yourhost.com',
+        'username', 'password'
+    )
+    # some APIs, like Circonus, require header "Accept: application/json"
+    http_client.session.headers.update(
+        Accept='application/json'
+    )
+    client = SwaggerClient.from_spec(spec, http_client=http_client)
+    ice_creams = client.icecream.list_icecream().result()
+
+
 Documentation
 -------------
 
