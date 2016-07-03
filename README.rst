@@ -52,19 +52,20 @@ Example with Basic Authentication
     from bravado.client import SwaggerClient
     from bravado.swagger_model import load_file
     
-    spec = load_file('/tmp/swagger.json') # if to load a custom spec
     http_client = RequestsClient()
     http_client.set_basic_auth(
         'api.yourhost.com',
         'username', 'password'
     )
-    # some APIs, like Circonus, require header "Accept: application/json"
+    # some APIs, require explicitly set header "Accept: application/json"
     http_client.session.headers.update(
         Accept='application/json'
     )
-    client = SwaggerClient.from_spec(spec, http_client=http_client)
-    ice_creams = client.icecream.list_icecream().result()
-
+    client = SwaggerClient.from_url(
+        "http://petstore.swagger.io/v2/swagger.json",
+        http_client=http_client
+    )
+    pet = client.pet.getPetById(petId=42).result()
 
 Documentation
 -------------
