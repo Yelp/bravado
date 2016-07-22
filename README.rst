@@ -40,7 +40,26 @@ Example Usage
 .. code:: Python
 
     from bravado.client import SwaggerClient
-    client = SwaggerClient.from_url("http://petstore.swagger.io/v2/swagger.json")
+    client = SwaggerClient.from_url('http://petstore.swagger.io/v2/swagger.json')
+    pet = client.pet.getPetById(petId=42).result()
+
+Example with Basic Authentication
+---------------------------------
+
+.. code-block:: python
+
+    from bravado.requests_client import RequestsClient
+    from bravado.client import SwaggerClient
+    
+    http_client = RequestsClient()
+    http_client.set_basic_auth(
+        'api.yourhost.com',
+        'username', 'password'
+    )
+    client = SwaggerClient.from_url(
+        'http://petstore.swagger.io/v2/swagger.json',
+        http_client=http_client,
+    )
     pet = client.pet.getPetById(petId=42).result()
 
 Documentation
