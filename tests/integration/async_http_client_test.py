@@ -26,6 +26,12 @@ def two():
     return ROUTE_2_RESPONSE
 
 
+@bottle.route("/post", method="POST")
+def post():
+    name = bottle.request.forms.get("name")
+    return 'Hello {name}! Have a snowman: ☃'.format(name=name)
+
+
 def get_hopefully_free_port():
     s = socket.socket()
     s.bind(('', 0))
@@ -73,6 +79,27 @@ class TestServer(unittest.TestCase):
 
         self.assertEqual(resp_one.text, ROUTE_1_RESPONSE)
         self.assertEqual(resp_two.text, ROUTE_2_RESPONSE)
+
+    def test_make_post_request(self):
+        port = get_hopefully_free_port()
+        launch_threaded_http_server(port)
+
+        client = AsynchronousHttpClient()
+
+        request_params = {
+            'method': b'POST',
+            'headers': {},
+            'url': "http://localhost:{0}/post".format(port),
+            'data': {'name': 'Matt'},
+        }
+
+        future = client.start_request(request_params)
+        response = future.wait(timeout=1)
+
+        self.assertEqual(
+            response.text,
+            u'Hello Matt! Have a snowman: ☃'.encode('utf-8'),
+        )
 
     def test_erroring_request(self):
         port = get_hopefully_free_port()
