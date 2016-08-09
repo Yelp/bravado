@@ -55,10 +55,18 @@ class AsynchronousHttpClient(http_client.HttpClient):
             method=request_params.get('method')
         )
 
+        if isinstance(
+            prepared_request.body,
+            six.text_type,
+        ):  # pragma: no cover (PY2)
+            body_bytes = prepared_request.body.encode('utf-8')
+        else:
+            body_bytes = prepared_request.body
+
         request_for_crochet = {
             'method': prepared_request.method or 'GET',
-            'bodyProducer': FileBodyProducer(BytesIO(prepared_request.body))
-            if prepared_request.body else None,
+            'bodyProducer': FileBodyProducer(BytesIO(body_bytes))
+            if body_bytes else None,
             'headers': listify_headers(prepared_request.headers),
             'uri': prepared_request.url,
         }
