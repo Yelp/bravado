@@ -128,7 +128,7 @@ Alternatively, you can also use the ``load_file`` helper method.
 
     from bravado.swagger_model import load_file
 
-    client = SwaggerClient.from_dict(load_file('/path/to/swagger.json'))
+    client = SwaggerClient.from_spec(load_file('/path/to/swagger.json'))
 
 .. _getting_access_to_the_http_response:
 
