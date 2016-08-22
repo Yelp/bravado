@@ -30,6 +30,26 @@ class FutureAdapter(object):
         )
 
 
+class SwaggerpyLegacyHttpFuture(object):
+    """
+    This future object implements an interface backward-compatible with
+    Swaggerpy. The main difference is that result retrieval happens on calling
+    .wait() instead of .result(). All the error handling code is removed as
+    swaggerpy performs it differently from bravado
+    (see SwaggerpyLegacyResponseAdapter).
+    """
+
+    def __init__(self, future, response_adapter):
+        self.future = future
+        self.response_adapter = response_adapter
+
+    def wait(self, timeout=None):
+
+        inner_response = self.future.result(timeout=timeout)
+        incoming_response = self.response_adapter(inner_response)
+        return incoming_response
+
+
 class HttpFuture(object):
     """Wrapper for a :class:`FutureAdapter` that returns an HTTP response.
 

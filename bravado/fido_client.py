@@ -5,9 +5,11 @@ import requests
 
 import fido
 from bravado_core.response import IncomingResponse
+from bravado.exception import HTTPError
 from bravado.http_client import HttpClient
 from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
+from bravado.http_future import SwaggerpyLegacyHttpFuture
 from yelp_bytes import to_bytes
 
 log = logging.getLogger(__name__)
@@ -43,9 +45,55 @@ class FidoResponseAdapter(IncomingResponse):
         return self._delegate.json()
 
 
+class SwaggerpyLegacyResponseAdapter(FidoResponseAdapter):
+    """
+    SwaggerpyLegacyResponseAdapter is a FidoResponseAdapter with an additional
+    method 'raise_for_status' for backward compatibility with swaggerpy.
+    The method raise_for_status is used for error handling by swaggerpy.
+    """
+
+    def __init__(self, incoming_response):
+        super(SwaggerpyLegacyResponseAdapter, self).__init__(incoming_response)
+
+    def raise_for_status(self):
+        """Raises stored `HTTPError`, if one occured.
+        """
+
+        http_error_msg = ''
+
+        if 400 <= self.status_code < 500:
+            http_error_msg = '%s Client Error' % self.status_code
+
+        elif 500 <= self.status_code < 600:
+            http_error_msg = '%s Server Error' % self.status_code
+
+        if http_error_msg:
+            raise HTTPError(http_error_msg, response=self)
+
+
 class FidoClient(HttpClient):
     """Fido (Asynchronous) HTTP client implementation.
     """
+
+    def start_request(
+        self,
+        request_params,
+        operation=None,
+        response_callbacks=None,
+        also_return_response=False
+    ):
+        """
+        Backward-compatible method used by the swaggerpy swagger client to
+        issue http requests. Allows FidoClient to be used by swaggerpy.
+        """
+
+        request_for_twisted = self.prepare_request_for_twisted(request_params)
+        future_adapter = FidoFutureAdapter(fido.fetch(**request_for_twisted))
+
+        return SwaggerpyLegacyHttpFuture(
+            future_adapter,
+            SwaggerpyLegacyResponseAdapter
+        )
 
     def request(self, request_params, operation=None, response_callbacks=None,
                 also_return_response=False):
