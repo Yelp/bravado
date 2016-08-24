@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from mock import Mock
 import pytest
 from requests.sessions import Session
