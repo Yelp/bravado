@@ -37,7 +37,14 @@ def minimal_swagger_spec(getPetById_spec):
             '/pet/{petId}': {
                 'get': getPetById_spec
             }
-        }
+        },
+        'securityDefinitions': {
+            'api_key': {
+                'type': 'apiKey',
+                'name': 'api_key',
+                'in': 'header',
+            },
+        },
     }
     spec = Spec(spec_dict)
     spec.api_url = 'http://localhost/swagger.json'
