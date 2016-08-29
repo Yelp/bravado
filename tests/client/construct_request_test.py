@@ -16,6 +16,6 @@ def test_with_timeouts(mock_marshal_param, minimal_swagger_spec,
     op = CallableOperation(Operation.from_spec(
         minimal_swagger_spec, '/pet/{petId}', 'get', getPetById_spec))
     k, v = timeout_kv
-    request = construct_request(op, request_options={k: v}, petId=34)
+    request = construct_request(op, request_options={k: v}, petId=34, api_key='foo')
     assert request[k] == v
-    assert mock_marshal_param.call_count == 1
+    assert mock_marshal_param.call_count == 2

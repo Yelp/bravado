@@ -14,8 +14,8 @@ def test_simple(mock_marshal_param, minimal_swagger_spec, getPetById_spec,
     request_dict['url'] = '/pet/{petId}'
     op = CallableOperation(Operation.from_spec(
         minimal_swagger_spec, '/pet/{petId}', 'get', getPetById_spec))
-    construct_params(op, request_dict, op_kwargs={'petId': 34})
-    assert 1 == mock_marshal_param.call_count
+    construct_params(op, request_dict, op_kwargs={'petId': 34, 'api_key': 'foo'})
+    assert 2 == mock_marshal_param.call_count
 
 
 @patch('bravado.client.marshal_param')
@@ -57,5 +57,5 @@ def test_non_required_parameter_with_default_used(
     request_dict['url'] = '/pet/{petId}'
     op = CallableOperation(Operation.from_spec(
         minimal_swagger_spec, '/pet/{petId}', 'get', getPetById_spec))
-    construct_params(op, request_dict, op_kwargs={})
-    assert 1 == mock_marshal_param.call_count
+    construct_params(op, request_dict, op_kwargs={'api_key': 'foo'})
+    assert 2 == mock_marshal_param.call_count
