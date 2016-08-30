@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 import logging
 
+import crochet
 import requests
-
 import fido
+from yelp_bytes import to_bytes
+
 from bravado_core.response import IncomingResponse
 from bravado.http_client import HttpClient
 from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
-from yelp_bytes import to_bytes
 
 log = logging.getLogger(__name__)
 
@@ -142,4 +143,8 @@ class FidoFutureAdapter(FutureAdapter):
         self._eventual_result = eventual_result
 
     def result(self, timeout=None):
-        return self._eventual_result.wait(timeout=timeout)
+        try:
+            return self._eventual_result.wait(timeout=timeout)
+        except crochet.TimeoutError:
+            self._eventual_result.cancel()
+            raise
