@@ -70,18 +70,17 @@ class HttpFuture(object):
         inner_response = self.future.result(timeout=timeout)
         incoming_response = self.response_adapter(inner_response)
 
-        if self.operation is not None:
-            unmarshal_response(
-                incoming_response,
-                self.operation,
-                self.response_callbacks)
-
-            swagger_result = incoming_response.swagger_result
-            if self.also_return_response:
-                return swagger_result, incoming_response
-            return swagger_result
-
         if 200 <= incoming_response.status_code < 300:
+            if self.operation is not None:
+                unmarshal_response(
+                    incoming_response,
+                    self.operation,
+                    self.response_callbacks)
+
+                swagger_result = incoming_response.swagger_result
+                if self.also_return_response:
+                    return swagger_result, incoming_response
+                return swagger_result
             return incoming_response
 
         raise HTTPError(response=incoming_response)
