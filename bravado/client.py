@@ -314,7 +314,7 @@ def construct_params(operation, request, op_kwargs):
 
     # Check required params and non-required params with a 'default' value
     for remaining_param in itervalues(current_params):
-        if remaining_param.required:
+        if remaining_param.required and remaining_param.location != 'header':
             raise SwaggerMappingError(
                 '{0} is a required parameter'.format(remaining_param.name))
         if not remaining_param.required and remaining_param.has_default():
