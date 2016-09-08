@@ -26,7 +26,10 @@ def test_no_params(mock_marshal_param, minimal_swagger_spec, request_dict):
         minimal_swagger_spec, '/pet/{petId}', 'get', {}))
     construct_params(op, request_dict, op_kwargs={})
     assert 0 == mock_marshal_param.call_count
-    assert 0 == len(request_dict)
+    assert request_dict == {
+        'params': {},
+        'headers': {},
+    }
 
 
 def test_extra_parameter_error(minimal_swagger_spec, request_dict):
@@ -45,6 +48,18 @@ def test_required_parameter_missing(
     with pytest.raises(SwaggerMappingError) as excinfo:
         construct_params(op, request_dict, op_kwargs={})
     assert 'required parameter' in str(excinfo.value)
+
+
+@patch('bravado.client.marshal_param')
+def test_validate_header_parameter_from_request_options(
+        mock_marshal_param, minimal_swagger_spec, getPetById_spec, request_dict):
+    request_dict['url'] = '/pet/{petId}'
+    request_dict['headers']['api_key'] = 'api_key'
+
+    op = CallableOperation(Operation.from_spec(
+        minimal_swagger_spec, '/pet/{petId}', 'delete', getPetById_spec))
+    construct_params(op, request_dict, op_kwargs={'petId': 1})
+    assert 2 == mock_marshal_param.call_count
 
 
 @patch('bravado.client.marshal_param')

@@ -22,7 +22,10 @@ def petstore_client(petstore_dict):
 
 @pytest.fixture
 def request_dict():
-    return {}
+    return {
+        'params': {},
+        'headers': {},
+    }
 
 
 @pytest.fixture
