@@ -50,14 +50,16 @@ def test_required_parameter_missing(
     assert 'required parameter' in str(excinfo.value)
 
 
+@patch('bravado.client.marshal_param')
 def test_validate_header_parameter_from_request_options(
-        minimal_swagger_spec, getPetById_spec, request_dict):
+        mock_marshal_param, minimal_swagger_spec, getPetById_spec, request_dict):
     request_dict['url'] = '/pet/{petId}'
     request_dict['headers']['api_key'] = 'api_key'
 
     op = CallableOperation(Operation.from_spec(
         minimal_swagger_spec, '/pet/{petId}', 'delete', getPetById_spec))
     construct_params(op, request_dict, op_kwargs={'petId': 1})
+    assert 2 == mock_marshal_param.call_count
 
 
 @patch('bravado.client.marshal_param')
