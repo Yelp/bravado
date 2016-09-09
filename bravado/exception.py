@@ -54,6 +54,10 @@ class HTTPBadRequest(HTTPClientError):
     status_code = 400
 
 
+class HTTPUnauthorized(HTTPClientError):
+    status_code = 401
+
+
 class HTTPForbidden(HTTPClientError):
     status_code = 403
 
@@ -68,6 +72,14 @@ class HTTPServerError(HTTPError):
 
 class HTTPInternalServerError(HTTPServerError):
     status_code = 500
+
+
+class HTTPBadGateway(HTTPServerError):
+    status_code = 503
+
+
+class HTTPGatewayTimeout(HTTPServerError):
+    status_code = 504
 
 
 def make_http_exception(response, message=None, swagger_result=None):
