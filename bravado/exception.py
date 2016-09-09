@@ -77,7 +77,7 @@ class HTTPServerError(HTTPError):
     """5xx responses."""
 
 
-# The follow are based on the HTTP Status Code Registery at
+# The follow are based on the HTTP Status Code Registry at
 # http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
 
 class HTTPBadRequest(HTTPClientError):
