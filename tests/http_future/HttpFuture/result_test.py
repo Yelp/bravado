@@ -4,7 +4,8 @@ from bravado.http_future import FutureAdapter
 from mock import patch, Mock
 import pytest
 
-from bravado.http_future import HTTPError, HttpFuture
+from bravado.http_future import HttpFuture
+from bravado.exception import HTTPError
 
 
 def test_200_get_swagger_spec():

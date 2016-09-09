@@ -5,7 +5,7 @@ import bravado_core
 from bravado_core.exception import MatchingResponseNotFound
 import six
 
-from bravado.exception import HTTPError
+from bravado.exception import make_http_exception
 
 
 class FutureAdapter(object):
@@ -84,7 +84,7 @@ class HttpFuture(object):
         if 200 <= incoming_response.status_code < 300:
             return incoming_response
 
-        raise HTTPError(response=incoming_response)
+        raise make_http_exception(response=incoming_response)
 
 
 def unmarshal_response(incoming_response, operation, response_callbacks=None):
@@ -114,9 +114,13 @@ def unmarshal_response(incoming_response, operation, response_callbacks=None):
                 incoming_response,
                 operation)
     except MatchingResponseNotFound as e:
+        exception = make_http_exception(
+            response=incoming_response,
+            message=str(e)
+        )
         six.reraise(
-            HTTPError,
-            HTTPError(response=incoming_response, message=str(e)),
+            type(exception),
+            exception,
             sys.exc_info()[2])
     finally:
         # Always run the callbacks regardless of success/failure
@@ -133,7 +137,7 @@ def raise_on_unexpected(http_response):
     :raises: HTTPError
     """
     if 500 <= http_response.status_code <= 599:
-        raise HTTPError(response=http_response)
+        raise make_http_exception(response=http_response)
 
 
 def raise_on_expected(http_response):
@@ -144,6 +148,6 @@ def raise_on_expected(http_response):
     :raises: HTTPError
     """
     if not 200 <= http_response.status_code < 300:
-        raise HTTPError(
+        raise make_http_exception(
             response=http_response,
             swagger_result=http_response.swagger_result)

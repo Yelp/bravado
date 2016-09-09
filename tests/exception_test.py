@@ -3,6 +3,9 @@ import pytest
 from requests.models import Response
 
 from bravado.exception import HTTPError
+from bravado.exception import make_http_exception
+from bravado.exception import HTTPInternalServerError
+from bravado.exception import HTTPServerError
 from bravado.requests_client import RequestsResponseAdapter
 
 
@@ -38,3 +41,16 @@ def test_response_and_message_and_swagger_result(response_500):
         message="Holy moly!",
         swagger_result={'msg': 'Kaboom'}))
     assert actual == "500 Server Error: Holy moly!: {'msg': 'Kaboom'}"
+
+
+def test_make_http_exception(response_500):
+    incoming_response = RequestsResponseAdapter(response_500)
+    exc = make_http_exception(
+        incoming_response,
+        message="Holy moly!",
+        swagger_result={'msg': 'Kaboom'}
+    )
+    assert isinstance(exc, HTTPError)
+    assert isinstance(exc, HTTPServerError)
+    assert type(exc) == HTTPInternalServerError
+    assert str(exc) == "500 Server Error: Holy moly!: {'msg': 'Kaboom'}"
