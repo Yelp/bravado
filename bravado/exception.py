@@ -2,14 +2,21 @@
 from six import with_metaclass
 
 
+# Dictionary of HTTP status codes to exception classes
 status_map = {}
 
 
 def _register_exception(exception_class):
+    """Store an HTTP exception class with a status code into a mapping
+    of status codes to exception classes.
+    :param exception_class: A subclass of HTTPError
+    :type exception_class: :class:`HTTPError`
+    """
     status_map[exception_class.status_code] = exception_class
 
 
 class HTTPErrorType(type):
+    """A metaclass for registering HTTPError subclasses."""
 
     def __new__(cls, *args, **kwargs):
         new_class = super(HTTPErrorType, cls).__new__(cls, *args, **kwargs)
@@ -84,11 +91,15 @@ class HTTPGatewayTimeout(HTTPServerError):
 
 def make_http_exception(response, message=None, swagger_result=None):
     """
+    Return an HTTP exception class  based on the response. If a specific
+    class doesn't exist for a particular HTTP status code, a more
+    general :class:`HTTPError` class will be returned.
     :type response: :class:`bravado_core.response.IncomingResponse`
     :param message: Optional string message
     :param swagger_result: If the response for this HTTPError is
         documented in the swagger spec, then this should be the result
         value of the response.
+    :return: An HTTP exception class that can be raised
     """
     exc_class = status_map.get(response.status_code, HTTPError)
     return exc_class(response, message=message, swagger_result=swagger_result)
