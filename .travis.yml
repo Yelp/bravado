@@ -1,7 +1,10 @@
 language: python
+matrix:
+  include:
+  - python: "3.5"
+    env: TOX_ENV=py35
 env:
 - TOX_ENV=py27
-- TOX_ENV=py35
 - TOX_ENV=cover
 - TOX_ENV=docs
 - TOX_ENV=flake8
