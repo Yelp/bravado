@@ -9,7 +9,7 @@ env:
 - TOX_ENV=docs
 - TOX_ENV=flake8
 install:
-- "pip install --use-mirrors tox coveralls"
+- "pip install tox coveralls"
 script:
 - tox -e $TOX_ENV
 after_success:
