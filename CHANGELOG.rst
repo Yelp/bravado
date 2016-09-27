@@ -1,5 +1,10 @@
 Changelog
 =========
+8.4.0 (2016-09-27)
+------------------
+- Remove support for Python 2.6, fixing a build failure.
+- Switch from Python 3.4 to Python 3.5 for tests.
+
 8.3.0 (2016-06-03)
 ------------------
 - Bravado using Fido 3.2.0 python 3 ready
