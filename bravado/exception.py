@@ -40,7 +40,7 @@ class HTTPError(with_metaclass(HTTPErrorType, IOError)):
         self.response = response
         self.message = message
         self.swagger_result = swagger_result
-        self.status_code = self.response.status_code
+        self.status_code = getattr(self.response, 'status_code')
 
     def __str__(self):
         # Try to surface the most useful/relevant information available
