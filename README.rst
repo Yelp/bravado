@@ -62,6 +62,25 @@ Example with Basic Authentication
     )
     pet = client.pet.getPetById(petId=42).result()
 
+Example with Header Authentication
+---------------------------------
+
+.. code-block:: python
+
+    from bravado.requests_client import RequestsClient
+    from bravado.client import SwaggerClient
+    
+    http_client = RequestsClient()
+    http_client.set_api_key(
+        'api.yourhost.com', 'token'
+        param_name='api_key', param_in='header'
+    )
+    client = SwaggerClient.from_url(
+        'http://petstore.swagger.io/v2/swagger.json',
+        http_client=http_client,
+    )
+    pet = client.pet.getPetById(petId=42).result()
+
 Documentation
 -------------
 

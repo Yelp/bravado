@@ -7,4 +7,5 @@ Changelog-Master
 
 X.X.X (XXXX-XX-XX)
 ------------------
+- Add API key authentication via header to RequestsClient
 - PLACEHOLDER (add before this line your modifications summary)
