@@ -258,6 +258,11 @@ class ClientTest(unittest.TestCase):
         resp = self.uut.pet.deletePet(petId=1234).result()
         self.assertEqual(None, resp)
 
+    def test_unicode_method(self):
+        self.assertEqual(
+                self.uut.pet.listPets._construct_request()['method'],
+                'GET')
+
     def setUp(self):
         # Default handlers for all swagger.py access
         self.resource_listing = {

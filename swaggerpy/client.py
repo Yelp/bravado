@@ -182,7 +182,7 @@ class Operation(object):
         request = {}
         # The requests library expects native strings. Without this, POST
         # with a binary file upload throws a UnicodeDecodeError.
-        request['method'] = self._json[u'method'].encode('utf8')
+        request['method'] = str(self._json[u'method'])
         request['url'] = self._uri
         request['params'] = {}
         request['headers'] = _request_options.get('headers', {}) or {}

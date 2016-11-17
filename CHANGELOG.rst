@@ -1,3 +1,7 @@
+0.9.4 (2016-11-17)
+-------------------
+- Fix Swaggerpy unicode bug for py3
+
 0.9.0 (2016-04-16)
 -------------------
 - Swaggerpy now py3 compatible.
