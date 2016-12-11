@@ -11,7 +11,7 @@ from bravado.exception import make_http_exception
 class FutureAdapter(object):
     """
     Mimics a :class:`concurrent.futures.Future` regardless of which client is
-    performing the request, whether it is synchronous or actually asynchornous.
+    performing the request, whether it is synchronous or actually asynchronous.
 
     This adapter must be implemented by all bravado clients such as FidoClient
     or RequestsClient to wrap the object returned by their 'request' method.
@@ -39,7 +39,7 @@ class HttpFuture(object):
         response in a non-http client specific way.
     :type response_adapter: type that is a subclass of
         :class:`bravado_core.response.IncomingResponse`.
-    :param response_callbacks: See bravado_core.client.REQUEST_OPTIONS_DEFAULTS
+    :param response_callbacks: See bravado.client.REQUEST_OPTIONS_DEFAULTS
     :param also_return_response: Determines if the incoming http response is
         included as part of the return value from calling
         `HttpFuture.result()`.
