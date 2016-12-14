@@ -10,7 +10,8 @@ import bravado
 
 setup(
     name="bravado",
-    version=bravado.version,
+    # cloudlock version, no twisted dependency
+    version=bravado.version + "cl", 
     license="BSD 3-Clause License",
     description="Library for accessing Swagger-enabled API's",
     long_description=open(os.path.join(os.path.dirname(__file__),
@@ -31,8 +32,6 @@ setup(
     ],
     install_requires=[
         "bravado-core >= 4.2.2",
-        "crochet >= 1.4.0",
-        "fido >= 2.1.0",
         "yelp_bytes",
         "python-dateutil",
         "pyyaml",
@@ -40,7 +39,5 @@ setup(
         "six",
     ],
     extras_require={
-        ':python_version=="2.6"': ['twisted >= 14.0.0, < 15.5'],
-        ':python_version!="2.6"': ['twisted >= 14.0.0'],
     },
 )
