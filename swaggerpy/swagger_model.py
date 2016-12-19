@@ -20,6 +20,9 @@ SWAGGER_VERSIONS = [u"1.2"]
 
 log = logging.getLogger(__name__)
 
+# max timeout for swagger client initialization
+SWAGGER_INIT_TIMEOUT = 5
+
 
 # TODO: replace with swagger_schema_validator
 class ValidationProcessor(SwaggerProcessor):
@@ -170,7 +173,7 @@ def load_resource_listing(
         the http request to fetch resources.
     """
     request_options = request_options or {}
-    timeout = request_options.get('timeout', 5)
+    timeout = request_options.pop('timeout', SWAGGER_INIT_TIMEOUT)
     base_url = base_url or url
     processor = ValidationProcessor()
 

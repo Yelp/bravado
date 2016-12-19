@@ -72,6 +72,21 @@ class ResourceListingTest(unittest.TestCase):
         [iterate_test(field) for field in ('swaggerVersion', 'apis')]
 
     @httpretty.activate
+    def test_request_options_timeout(self):
+        """We should be able to include a timeout for client initialization"""
+        self.register_urls()
+        httpretty.register_uri(
+            httpretty.GET, "http://localhost/api-docs/api",
+            body='{"swaggerVersion": "1.2", "basePath": "/", "apis":[]}')
+
+        SwaggerClient.from_url(
+            u'http://localhost/api-docs',
+            request_options={
+                'timeout': 15,
+            }
+        )
+
+    @httpretty.activate
     def test_success_with_api_call(self):
         self.register_urls()
         httpretty.register_uri(
