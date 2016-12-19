@@ -1,13 +1,17 @@
+0.9.5 (2016-12-19)
+------------------
+- Fix TypeError bug when passing timeout in request_options
+
 0.9.4 (2016-11-17)
--------------------
+------------------
 - Fix Swaggerpy unicode bug for py3
 
 0.9.0 (2016-04-16)
--------------------
+------------------
 - Swaggerpy now py3 compatible.
 
 0.8.0 (2016-04-06)
--------------------
+------------------
 - Swaggerpy module importable under Py3. Tests for py3 needs more work.
 
 0.7.12 (2016-03-04)
@@ -21,7 +25,7 @@
 - Require twisted < 15.5.0 since Python 2.6 support was dropped.
 
 0.7.10 (2015-07-07)
-------------------
+-------------------
 - Make request and response available as attrs on HTTPError
 
 0.7.5 (2015-01-21)

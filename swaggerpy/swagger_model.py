@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 # max timeout for swagger client initialization
 SWAGGER_INIT_TIMEOUT = 5
 
+
 # TODO: replace with swagger_schema_validator
 class ValidationProcessor(SwaggerProcessor):
     """A processor that validates the Swagger model.
