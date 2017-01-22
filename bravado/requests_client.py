@@ -48,20 +48,25 @@ class Authenticator(object):
 class ApiKeyAuthenticator(Authenticator):
     """?api_key authenticator.
 
-    This authenticator adds a query parameter to specify an API key.
+    This authenticator adds an API key via query parameter or header.
 
     :param host: Host to authenticate for.
     :param api_key: API key.
     :param param_name: Query parameter specifying the API key.
+    :param param_in: How to send the API key. Can be 'query' or 'header'.
     """
 
-    def __init__(self, host, api_key, param_name=u'api_key'):
+    def __init__(self, host, api_key, param_name=u'api_key', param_in=u'query'):
         super(ApiKeyAuthenticator, self).__init__(host)
         self.param_name = param_name
+        self.param_in = param_in
         self.api_key = api_key
 
     def apply(self, request):
-        request.params[self.param_name] = self.api_key
+        if self.param_in == 'header':
+            request.headers[self.param_name] = self.api_key
+        else:
+            request.params[self.param_name] = self.api_key
         return request
 
 
@@ -151,9 +156,9 @@ class RequestsClient(HttpClient):
         self.authenticator = BasicAuthenticator(
             host=host, username=username, password=password)
 
-    def set_api_key(self, host, api_key, param_name=u'api_key'):
+    def set_api_key(self, host, api_key, param_name=u'api_key', param_in=u'query'):
         self.authenticator = ApiKeyAuthenticator(
-            host=host, api_key=api_key, param_name=param_name)
+            host=host, api_key=api_key, param_name=param_name, param_in=param_in)
 
     def authenticated_request(self, request_params):
         return self.apply_authentication(requests.Request(**request_params))
