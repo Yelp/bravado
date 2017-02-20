@@ -1,17 +1,25 @@
 language: python
+
+python:
+- "2.7"
+- "3.5"
+env:
+- TOX_FLAVOR=default
+- TOX_FLAVOR=fido
+
 matrix:
   include:
-  - python: "3.5"
-    env: TOX_ENV=py35
-env:
-- TOX_ENV=py27
-- TOX_ENV=cover
-- TOX_ENV=docs
-- TOX_ENV=flake8
+  - python: "2.7"
+    env: TOX_ENV=cover
+  - python: "2.7"
+    env: TOX_ENV=docs
+  - python: "2.7"
+    env: TOX_ENV=flake8
+
 install:
 - "pip install tox coveralls"
 script:
-- tox -e $TOX_ENV
+- tox -e `if [ "x$TOX_ENV" == "x" ]; then echo py${TRAVIS_PYTHON_VERSION/./}-$TOX_FLAVOR; else echo $TOX_ENV; fi`
 after_success:
 - coveralls
 # Faster runs on container based infrastucture
