@@ -8,6 +8,12 @@ from setuptools import setup
 
 import bravado
 
+fido_client_dependencies = [
+    "crochet >= 1.4.0",
+    "fido >= 2.1.0",
+    "yelp_bytes",
+]
+
 setup(
     name="bravado",
     version=bravado.version,
@@ -25,22 +31,17 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.4",
     ],
     install_requires=[
         "bravado-core >= 4.2.2",
-        "crochet >= 1.4.0",
-        "fido >= 2.1.0",
-        "yelp_bytes",
         "python-dateutil",
         "pyyaml",
         "requests",
         "six",
     ],
     extras_require={
-        ':python_version=="2.6"': ['twisted >= 14.0.0, < 15.5'],
-        ':python_version!="2.6"': ['twisted >= 14.0.0'],
+        "fido": fido_client_dependencies,
     },
 )
