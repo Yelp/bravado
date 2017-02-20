@@ -20,6 +20,7 @@ class FidoResponseAdapter(IncomingResponse):
 
     :type fido_response: :class:`fido.fido.Response`
     """
+
     def __init__(self, fido_response):
         self._delegate = fido_response
 

@@ -176,6 +176,7 @@ class RequestsResponseAdapter(IncomingResponse):
 
     :type requests_lib_response: :class:`requests.models.Response`
     """
+
     def __init__(self, requests_lib_response):
         self._delegate = requests_lib_response
 

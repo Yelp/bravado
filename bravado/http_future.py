@@ -50,6 +50,7 @@ class HttpFuture(object):
         http response code, etc.
         Defaults to False for backwards compatibility.
     """
+
     def __init__(self, future, response_adapter, operation=None,
                  response_callbacks=None, also_return_response=False):
         self.future = future

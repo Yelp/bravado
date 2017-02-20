@@ -84,6 +84,7 @@ class SwaggerClient(object):
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     """
+
     def __init__(self, swagger_spec):
         self.swagger_spec = swagger_spec
 
@@ -220,6 +221,7 @@ class CallableOperation(object):
 
     :type operation: :class:`bravado_core.operation.Operation`
     """
+
     def __init__(self, operation):
         self.operation = operation
 
