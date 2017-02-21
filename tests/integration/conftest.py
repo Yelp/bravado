@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
-
 import threading
 import time
 
-from six.moves import urllib
-
-
-import ephemeral_port_reserve
 import bottle
-
+import ephemeral_port_reserve
 import pytest
+from six.moves import urllib
 
 ROUTE_1_RESPONSE = b"HEY BUDDY"
 ROUTE_2_RESPONSE = b"BYE BUDDY"

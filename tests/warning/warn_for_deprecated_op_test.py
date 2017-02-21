@@ -1,4 +1,6 @@
-from mock import Mock, patch
+# -*- coding: utf-8 -*-
+from mock import Mock
+from mock import patch
 
 from bravado.client import CallableOperation
 from bravado.warning import warn_for_deprecated_op

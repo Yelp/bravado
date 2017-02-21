@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-from mock import Mock
-import pytest
-
 import crochet
+import pytest
+from mock import Mock
 
 from bravado.fido_client import FidoFutureAdapter
 

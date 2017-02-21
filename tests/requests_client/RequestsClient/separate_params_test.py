@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from bravado.requests_client import RequestsClient
 
 

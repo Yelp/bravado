@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from mock import Mock
 import pytest
+from mock import Mock
 from requests.sessions import Session
 
 from bravado.requests_client import RequestsFutureAdapter

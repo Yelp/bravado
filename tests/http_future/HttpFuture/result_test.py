@@ -1,11 +1,13 @@
+# -*- coding: utf-8 -*-
+import pytest
 from bravado_core.operation import Operation
 from bravado_core.response import IncomingResponse
-from bravado.http_future import FutureAdapter
-from mock import patch, Mock
-import pytest
+from mock import Mock
+from mock import patch
 
-from bravado.http_future import HttpFuture
 from bravado.exception import HTTPError
+from bravado.http_future import FutureAdapter
+from bravado.http_future import HttpFuture
 
 
 def test_200_get_swagger_spec():

@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 import os
 
-from bravado.compat import json
 import pytest
 
 from bravado.client import Spec
 from bravado.client import SwaggerClient
+from bravado.compat import json
 
 
 @pytest.fixture

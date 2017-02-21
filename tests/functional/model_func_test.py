@@ -1,14 +1,16 @@
+# -*- coding: utf-8 -*-
 """
 Functional tests related to passing models in req/response
 """
 import httpretty
 import pytest
-
 from jsonschema.exceptions import ValidationError
 
 from bravado.client import SwaggerClient
 from bravado.compat import json
-from tests.functional.conftest import register_spec, register_get, API_DOCS_URL
+from tests.functional.conftest import API_DOCS_URL
+from tests.functional.conftest import register_get
+from tests.functional.conftest import register_spec
 
 
 @pytest.fixture

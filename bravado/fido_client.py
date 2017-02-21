@@ -2,11 +2,11 @@
 import logging
 
 import crochet
-import requests
 import fido
+import requests
+from bravado_core.response import IncomingResponse
 from yelp_bytes import to_bytes
 
-from bravado_core.response import IncomingResponse
 from bravado.http_client import HttpClient
 from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture

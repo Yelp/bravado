@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 def test_uses_default_of_available(petstore):
     status_code, pets = petstore.pet.findPetsByStatus().result()
     assert pets

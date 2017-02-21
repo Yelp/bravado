@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from bravado_core.response import IncomingResponse
 import requests
 import requests.auth
+from bravado_core.response import IncomingResponse
 from six.moves.urllib import parse as urlparse
 
 from bravado.http_client import HttpClient

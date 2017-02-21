@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Request related functional tests
 """
@@ -6,7 +7,9 @@ from six.moves import cStringIO
 from six.moves.urllib import parse as urlparse
 
 from bravado.client import SwaggerClient
-from tests.functional.conftest import register_spec, API_DOCS_URL, register_get
+from tests.functional.conftest import API_DOCS_URL
+from tests.functional.conftest import register_get
+from tests.functional.conftest import register_spec
 
 
 def test_form_params_in_request(httprettified, swagger_dict):

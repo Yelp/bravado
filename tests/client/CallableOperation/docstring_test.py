@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from bravado_core.operation import Operation
 
 from bravado.client import CallableOperation

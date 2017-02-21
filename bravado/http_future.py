@@ -2,8 +2,8 @@
 import sys
 
 import bravado_core
-from bravado_core.exception import MatchingResponseNotFound
 import six
+from bravado_core.exception import MatchingResponseNotFound
 
 from bravado.exception import make_http_exception
 

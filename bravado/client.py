@@ -50,7 +50,8 @@ from bravado_core.exception import SwaggerMappingError
 from bravado_core.formatter import SwaggerFormat  # noqa
 from bravado_core.param import marshal_param
 from bravado_core.spec import Spec
-from six import iteritems, itervalues
+from six import iteritems
+from six import itervalues
 
 from bravado.docstring_property import docstring_property
 from bravado.requests_client import RequestsClient

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # Copyright (c) 2013, Digium, Inc.
 # Copyright (c) 2014-2016, Yelp, Inc.
-
 import os
 
 from setuptools import setup

@@ -4,8 +4,8 @@ import tempfile
 import unittest
 
 import httpretty
-import requests
 import pytest
+import requests
 
 from bravado.client import SwaggerClient
 
