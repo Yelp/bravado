@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from bravado.fido_client import FidoClient
-from tests.integration.requests_client_test import TestServerRequestsClient
+from tests.integration import requests_client_test
 
 
-class TestServerFidoClient(TestServerRequestsClient):
+class TestServerFidoClient(requests_client_test.TestServerRequestsClient):
 
     @classmethod
     def setup_class(cls):
