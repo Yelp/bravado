@@ -8,12 +8,6 @@ from setuptools import setup
 
 import bravado
 
-fido_client_dependencies = [
-    "crochet >= 1.4.0",
-    "fido >= 2.1.0",
-    "yelp_bytes",
-]
-
 setup(
     name="bravado",
     version=bravado.version,
@@ -42,6 +36,6 @@ setup(
         "six",
     ],
     extras_require={
-        "fido": fido_client_dependencies,
+        "fido": ["fido >= 2.1.0"],
     },
 )
