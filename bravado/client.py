@@ -50,7 +50,8 @@ from bravado_core.exception import SwaggerMappingError
 from bravado_core.formatter import SwaggerFormat  # noqa
 from bravado_core.param import marshal_param
 from bravado_core.spec import Spec
-from six import iteritems, itervalues
+from six import iteritems
+from six import itervalues
 
 from bravado.docstring_property import docstring_property
 from bravado.requests_client import RequestsClient
@@ -84,6 +85,7 @@ class SwaggerClient(object):
 
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     """
+
     def __init__(self, swagger_spec):
         self.swagger_spec = swagger_spec
 
@@ -220,6 +222,7 @@ class CallableOperation(object):
 
     :type operation: :class:`bravado_core.operation.Operation`
     """
+
     def __init__(self, operation):
         self.operation = operation
 

@@ -1,6 +1,6 @@
+# -*- coding: utf-8 -*-
 import mock
 from mock import patch
-
 
 from bravado.fido_client import FidoClient
 

@@ -7,6 +7,7 @@ class HttpClient(object):
     """Interface for a minimal HTTP client that can retrieve Swagger specs
     and perform HTTP calls to fulfill a Swagger operation.
     """
+
     def request(self, request_params, operation=None, response_callbacks=None,
                 also_return_response=False):
         """

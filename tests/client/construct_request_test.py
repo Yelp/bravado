@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
+import pytest
 from bravado_core.operation import Operation
 from mock import patch
-import pytest
 
-from bravado.client import CallableOperation, construct_request
+from bravado.client import CallableOperation
+from bravado.client import construct_request
 
 
 @pytest.mark.parametrize('timeout_kv', [

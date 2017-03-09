@@ -2,8 +2,8 @@
 import sys
 
 import bravado_core
-from bravado_core.exception import MatchingResponseNotFound
 import six
+from bravado_core.exception import MatchingResponseNotFound
 
 from bravado.exception import make_http_exception
 
@@ -50,6 +50,7 @@ class HttpFuture(object):
         http response code, etc.
         Defaults to False for backwards compatibility.
     """
+
     def __init__(self, future, response_adapter, operation=None,
                  response_callbacks=None, also_return_response=False):
         self.future = future

@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
 import pytest
-from mock import Mock, patch
 from bravado_core.exception import MatchingResponseNotFound
 from bravado_core.operation import Operation
 from bravado_core.response import IncomingResponse
+from mock import Mock
+from mock import patch
 
 from bravado.exception import HTTPError
 from bravado.http_future import unmarshal_response

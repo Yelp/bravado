@@ -3,8 +3,8 @@ import contextlib
 import logging
 import os
 import os.path
-import yaml
 
+import yaml
 from bravado_core.spec import is_yaml
 from six.moves import urllib
 from six.moves.urllib import parse as urlparse

@@ -61,13 +61,18 @@ Time to get Twisted! (Asynchronous client)
 
         client = SwaggerClient.from_url(
             'http://petstore.swagger.io/v2/swagger.json',
-            FidoClient())
+            FidoClient()
+        )
 
         result = client.pet.getPetById(petId=42).result(timeout=4)
 
 .. note::
 
         ``timeout`` parameter here is the timeout (in seconds) the call will block waiting for the complete response. The default timeout is to wait indefinitely.
+
+.. note::
+
+        To use Fido client you should install bravado with fido extra via ``pip install bravado[fido]``.
 
 This is too fancy for me! I want a simple dict response!
 --------------------------------------------------------
@@ -81,7 +86,8 @@ This is too fancy for me! I want a simple dict response!
 
         client = SwaggerClient.from_url(
             'http://petstore.swagger.io/v2/swagger.json',
-            config={'use_models': False})
+            config={'use_models': False}
+        )
 
         result = client.pet.getPetById(petId=42).result(timeout=4)
 

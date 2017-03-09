@@ -1,16 +1,19 @@
+# -*- coding: utf-8 -*-
 """
 Response related functional tests
 """
 import datetime
 import functools
 
-from jsonschema.exceptions import ValidationError
 import pytest
+from jsonschema.exceptions import ValidationError
 
 from bravado.client import SwaggerClient
 from bravado.compat import json
 from bravado.exception import HTTPError
-from tests.functional.conftest import register_spec, register_get, API_DOCS_URL
+from tests.functional.conftest import API_DOCS_URL
+from tests.functional.conftest import register_get
+from tests.functional.conftest import register_spec
 
 
 register_test_http = functools.partial(

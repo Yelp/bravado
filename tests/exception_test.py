@@ -3,9 +3,9 @@ import pytest
 from requests.models import Response
 
 from bravado.exception import HTTPError
-from bravado.exception import make_http_exception
 from bravado.exception import HTTPInternalServerError
 from bravado.exception import HTTPServerError
+from bravado.exception import make_http_exception
 from bravado.requests_client import RequestsResponseAdapter
 
 

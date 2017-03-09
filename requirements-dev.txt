@@ -1,5 +1,6 @@
 # Unit test dependencies
 bottle
+ephemeral_port_reserve
 httpretty
 mock
 pre-commit

@@ -1,17 +1,28 @@
 language: python
+
 matrix:
   include:
-  - python: "3.5"
-    env: TOX_ENV=py35
-env:
-- TOX_ENV=py27
-- TOX_ENV=cover
-- TOX_ENV=docs
-- TOX_ENV=flake8
+  - env: TOXENV=py27-default
+  - env: TOXENV=py27-fido
+
+  - env: TOXENV=py35-default
+    python: "3.5"
+  - env: TOXENV=py35-fido
+    python: "3.5"
+
+  - env: TOXENV=py36-default
+    python: "3.6"
+  - env: TOXENV=py36-fido
+    python: "3.6"
+
+  - env: TOXENV=cover
+  - env: TOXENV=docs
+  - env: TOXENV=flake8
+
 install:
 - "pip install tox coveralls"
 script:
-- tox -e $TOX_ENV
+- tox -e $TOXENV
 after_success:
 - coveralls
 # Faster runs on container based infrastucture

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from bravado_core.response import IncomingResponse
 import requests
 import requests.auth
+from bravado_core.response import IncomingResponse
 from six.moves.urllib import parse as urlparse
 
 from bravado.http_client import HttpClient
@@ -176,6 +176,7 @@ class RequestsResponseAdapter(IncomingResponse):
 
     :type requests_lib_response: :class:`requests.models.Response`
     """
+
     def __init__(self, requests_lib_response):
         self._delegate = requests_lib_response
 

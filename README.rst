@@ -37,7 +37,7 @@ however Bravado aims to be a complete replacement for code generation
 Example Usage
 -------------
 
-.. code:: Python
+.. code-block:: Python
 
     from bravado.client import SwaggerClient
     client = SwaggerClient.from_url('http://petstore.swagger.io/v2/swagger.json')
@@ -63,7 +63,7 @@ Example with Basic Authentication
     pet = client.pet.getPetById(petId=42).result()
 
 Example with Header Authentication
----------------------------------
+----------------------------------
 
 .. code-block:: python
 
@@ -81,6 +81,22 @@ Example with Header Authentication
     )
     pet = client.pet.getPetById(petId=42).result()
 
+Example with Fido Client (Async Http Client)
+--------------------------------------------
+
+.. code-block:: python
+
+    # Install bravado with fido extra (``pip install bravado[fido]``)
+    from bravado.fido_client import FidoClient
+    from bravado.client import SwaggerClient
+
+    http_client = FidoClient()
+    client = SwaggerClient.from_url(
+        'http://petstore.swagger.io/v2/swagger.json',
+        http_client=http_client,
+    )
+    pet = client.pet.getPetById(petId=42).result()
+
 Documentation
 -------------
 
@@ -89,9 +105,13 @@ More documentation is available at http://bravado.readthedocs.org
 Installation
 ------------
 
-::
+.. code-block:: bash
 
+    # To install bravado with Synchronous Http Client only.
     $ pip install bravado
+
+    # To install bravado with Synchronous and Asynchronous Http Client (RequestsClient and FidoClient).
+    $ pip install bravado[fido]
 
 Development
 ===========
@@ -104,12 +124,13 @@ recommended to keep dependencies and libraries isolated.
 Setup
 -----
 
-::
+.. code-block:: bash
 
     # Run tests
     tox
+
     # Install git pre-commit hooks
-    .tox/py27/bin/pre-commit install
+    tox -e pre-commit install
 
 Contributing
 ------------
