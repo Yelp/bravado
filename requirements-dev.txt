@@ -5,3 +5,4 @@ mock
 pip>=9.0.1 # workaround to https://github.com/pypa/pip/issues/3903
 pre-commit
 pytest
+cryptography==1.3.4
