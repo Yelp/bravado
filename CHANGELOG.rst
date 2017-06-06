@@ -1,5 +1,10 @@
 Changelog
 =========
+9.0.0 (2017-06-06)
+------------------
+- Add API key authentication via header to RequestsClient.
+- Fido client is now an optional dependency. **NOTE**: if you intend to use bravado with the fido client you need to install bravado with fido extras (``pip install bravado[fido]``)
+
 8.4.0 (2016-09-27)
 ------------------
 - Remove support for Python 2.6, fixing a build failure.
