@@ -5,6 +5,6 @@ Changelog-Master
 
 *The content will be used to build the Changelog of the new bravado release.*
 
-X.X.X (XXXX-XX-XX)
+9.0.1 (2017-06-06)
 ------------------
-- PLACEHOLDER (add before this line your modifications summary)
+- Convert http method to str while constructing the request
