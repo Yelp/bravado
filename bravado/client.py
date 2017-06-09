@@ -280,7 +280,7 @@ def construct_request(operation, request_options, **op_kwargs):
     """
     url = operation.swagger_spec.api_url.rstrip('/') + operation.path_name
     request = {
-        'method': operation.http_method.upper(),
+        'method': str(operation.http_method.upper()),
         'url': url,
         'params': {},  # filled in downstream
         'headers': request_options.get('headers', {}),
