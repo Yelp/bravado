@@ -5,6 +5,3 @@ Changelog-Master
 
 *The content will be used to build the Changelog of the new bravado release.*
 
-9.0.1 (2017-06-06)
-------------------
-- Convert http method to str while constructing the request
