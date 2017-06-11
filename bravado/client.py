@@ -283,7 +283,9 @@ def construct_request(operation, request_options, **op_kwargs):
         'method': str(operation.http_method.upper()),
         'url': url,
         'params': {},  # filled in downstream
-        'headers': request_options.get('headers', {}),
+        # Ensure that headers injected via request_options are converted to string
+        # This is need to workaround https://github.com/requests/requests/issues/3491
+        'headers': {k: str(v) for k, v in iteritems(request_options.get('headers', {}))},
     }
 
     # Copy over optional request options
