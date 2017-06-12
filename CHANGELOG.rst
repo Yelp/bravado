@@ -1,3 +1,7 @@
+0.9.6 (2017-06-12)
+------------------
+- Cast header values to string to fix an issue with newer versions of the requests library
+
 0.9.5 (2016-12-19)
 ------------------
 - Fix TypeError bug when passing timeout in request_options
