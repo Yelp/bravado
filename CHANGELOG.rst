@@ -1,6 +1,10 @@
 Changelog
 =========
 
+9.0.2 (2017-06-12)
+------------------
+- ``_requests_options`` headers are casted to ``string`` to support newer version of ``requests`` library.
+
 9.0.1 (2017-06-09)
 ------------------
 - Convert http method to str while constructing the request to fix an issue with file uploads when using requests library versions before 2.8.
