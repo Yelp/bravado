@@ -179,6 +179,15 @@ class Operation(object):
     def _construct_request(self, **kwargs):
         _request_options = kwargs.pop('_request_options', {}) or {}
 
+        if 'headers' in _request_options:
+            # Ensure that headers injected via request_options are converted
+            # to string. This is need to workaround
+            # https://github.com/requests/requests/issues/3491
+            _request_options['headers'] = dict(
+                (k, str(v))
+                for k, v in six.iteritems(_request_options['headers'])
+            )
+
         request = {}
         # The requests library expects native strings. Without this, POST
         # with a binary file upload throws a UnicodeDecodeError.

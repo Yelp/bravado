@@ -167,10 +167,12 @@ class ClientTest(unittest.TestCase):
         self.uut = SwaggerClient.from_resource_listing(self.resource_listing)
         httpretty.register_uri(
             httpretty.GET, "http://swagger.py/swagger-test/pet",
-            body='[]')
+            body='[]',
+        )
 
         self.uut.pet.listPets(
-            _request_options={'headers': {'foo': 'bar'}}).result()
+            _request_options={'headers': {'foo': 'bar'}},
+        ).result()
         self.assertEqual('bar', httpretty.last_request().headers['foo'])
 
     @httpretty.activate
@@ -180,11 +182,22 @@ class ClientTest(unittest.TestCase):
             httpretty.GET, "http://swagger.py/swagger-test/pet",
             body='[]')
 
+        headers = {
+            'string': 'string',
+            'boolean': False,
+            'integer': 1,
+            'float': 2.0,
+        }
+
         self.uut.pet.listPets(
-            _request_options={'headers': {'foo': 'bar', 'sweet': 'bike'}},
+            _request_options={'headers': headers},
         ).result()
-        self.assertEqual('bar', httpretty.last_request().headers['foo'])
-        self.assertEqual('bike', httpretty.last_request().headers['sweet'])
+
+        for name, value in headers.items():
+            self.assertEqual(
+                str(value),
+                httpretty.last_request().headers[name],
+            )
 
     @httpretty.activate
     def test_get(self):
@@ -260,8 +273,9 @@ class ClientTest(unittest.TestCase):
 
     def test_unicode_method(self):
         self.assertEqual(
-                self.uut.pet.listPets._construct_request()['method'],
-                'GET')
+            self.uut.pet.listPets._construct_request()['method'],
+            'GET',
+        )
 
     def setUp(self):
         # Default handlers for all swagger.py access
