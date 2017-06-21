@@ -3,6 +3,7 @@ import logging
 
 import crochet
 import fido
+import fido.exceptions
 import requests
 from bravado_core.response import IncomingResponse
 from yelp_bytes import to_bytes
@@ -148,4 +149,8 @@ class FidoFutureAdapter(FutureAdapter):
             return self._eventual_result.wait(timeout=timeout)
         except crochet.TimeoutError:
             self._eventual_result.cancel()
-            raise
+            raise fido.exceptions.HTTPTimeoutError(
+                'Connection was closed by fido after blocking for '
+                'timeout={timeout} seconds waiting for the server to '
+                'send the response'.format(timeout=timeout)
+            )
