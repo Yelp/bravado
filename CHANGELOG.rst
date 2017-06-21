@@ -1,6 +1,10 @@
 Changelog
 =========
 
+9.0.3 (2017-06-21)
+------------------
+- When using the fido HTTP client and passing a timeout to ``result()``, make sure we throw a fido HTTPTimeoutError instead of a crochet TimeoutError when hitting the timeout. 
+
 9.0.2 (2017-06-12)
 ------------------
 - ``_requests_options`` headers are casted to ``string`` to support newer version of ``requests`` library.
