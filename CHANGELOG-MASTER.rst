@@ -5,3 +5,4 @@ Changelog-Master
 
 *The content will be used to build the Changelog of the new bravado release.*
 
+- Fix regression introduced by PR #288
