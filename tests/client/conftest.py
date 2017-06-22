@@ -35,7 +35,7 @@ def getPetById_spec(petstore_dict):
 
 
 @pytest.fixture
-def minimal_swagger_spec(getPetById_spec):
+def minimal_swagger_dict(getPetById_spec):
     spec_dict = {
         'paths': {
             '/pet/{petId}': {
@@ -50,6 +50,11 @@ def minimal_swagger_spec(getPetById_spec):
             },
         },
     }
-    spec = Spec(spec_dict)
-    spec.api_url = 'http://localhost/swagger.json'
+    return spec_dict
+
+
+@pytest.fixture
+def minimal_swagger_spec(minimal_swagger_dict):
+    spec = Spec(minimal_swagger_dict)
+    spec.api_url = 'http://localhost/'
     return spec
