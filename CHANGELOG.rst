@@ -1,6 +1,10 @@
 Changelog
 =========
 
+9.0.4 (2017-06-22)
+------------------
+- Fix regression when passing swagger parameters of type header in ``_request_options`` introduced by PR #288
+
 9.0.3 (2017-06-21)
 ------------------
 - When using the fido HTTP client and passing a timeout to ``result()``, make sure we throw a fido HTTPTimeoutError instead of a crochet TimeoutError when hitting the timeout. 
