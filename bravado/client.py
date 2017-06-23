@@ -293,12 +293,6 @@ def construct_request(operation, request_options, **op_kwargs):
 
     construct_params(operation, request, op_kwargs)
 
-    # Ensure that all the headers are converted to strings.
-    # This is need to workaround https://github.com/requests/requests/issues/3491
-    request['headers'] = {
-        k: str(v)
-        for k, v in iteritems(request['headers'])
-    }
     return request
 
 

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import threading
 import time
 
@@ -7,8 +8,16 @@ import ephemeral_port_reserve
 import pytest
 from six.moves import urllib
 
+from tests.conftest import petstore_dict
+from tests.conftest import test_dir
+
 ROUTE_1_RESPONSE = b"HEY BUDDY"
 ROUTE_2_RESPONSE = b"BYE BUDDY"
+
+
+@bottle.get("/swagger.json")
+def swagger_spec():
+    return json.dumps(petstore_dict(test_dir()))
 
 
 @bottle.route("/1")

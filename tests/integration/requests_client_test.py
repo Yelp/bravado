@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from bravado.requests_client import RequestsClient
+from bravado.swagger_model import Loader
 from tests.integration.conftest import ROUTE_1_RESPONSE
 from tests.integration.conftest import ROUTE_2_RESPONSE
 
@@ -16,6 +17,14 @@ class TestServerRequestsClient:
             return response.decode('utf-8')
         else:
             return str(response)
+
+    def test_fetch_specs(self, threaded_http_server, petstore_dict):
+        loader = Loader(
+            http_client=self.http_client,
+            request_headers={'boolean-header': True},
+        )
+        spec = loader.load_spec('http://localhost:{0}/swagger.json'.format(threaded_http_server))
+        assert spec == petstore_dict
 
     def test_multiple_requests(self, threaded_http_server):
 
@@ -54,3 +63,13 @@ class TestServerRequestsClient:
         resp = http_future.result(timeout=1)
 
         assert resp.text == self.encode_expected_response(b'6')
+
+    def test_boolean_header(self, threaded_http_server):
+        response = self.http_client.request({
+            'method': 'GET',
+            'headers': {'boolean-header': True},
+            'url': "http://localhost:{0}/1".format(threaded_http_server),
+            'params': {},
+        }).result(timeout=1)
+
+        assert response.text == self.encode_expected_response(ROUTE_1_RESPONSE)
