@@ -1,6 +1,10 @@
 Changelog
 =========
 
+9.0.5 (2017-06-23)
+------------------
+- Make sure headers passed in for fetching specs are converted to str as well
+
 9.0.4 (2017-06-22)
 ------------------
 - Fix regression when passing swagger parameters of type header in ``_request_options`` introduced by PR #288
