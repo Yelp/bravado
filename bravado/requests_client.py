@@ -4,6 +4,7 @@ import logging
 import requests
 import requests.auth
 from bravado_core.response import IncomingResponse
+from six import iteritems
 from six.moves.urllib import parse as urlparse
 
 from bravado.http_client import HttpClient
@@ -143,14 +144,16 @@ class RequestsClient(HttpClient):
         requests_future = RequestsFutureAdapter(
             self.session,
             self.authenticated_request(sanitized_params),
-            misc_options)
+            misc_options,
+        )
 
         return HttpFuture(
             requests_future,
             RequestsResponseAdapter,
             operation,
             response_callbacks,
-            also_return_response)
+            also_return_response,
+        )
 
     def set_basic_auth(self, host, username, password):
         self.authenticator = BasicAuthenticator(
@@ -271,8 +274,17 @@ class RequestsFutureAdapter(FutureAdapter):
         :rtype: dict
         """
         request = self.request
+
+        # Ensure that all the headers are converted to strings.
+        # This is need to workaround https://github.com/requests/requests/issues/3491
+        request.headers = {
+            k: str(v)
+            for k, v in iteritems(request.headers)
+        }
+
         prepared_request = self.session.prepare_request(request)
         response = self.session.send(
             prepared_request,
-            timeout=self.build_timeout(timeout))
+            timeout=self.build_timeout(timeout),
+        )
         return response

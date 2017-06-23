@@ -1,19 +1,8 @@
 # -*- coding: utf-8 -*-
-import os
-
 import pytest
 
 from bravado.client import Spec
 from bravado.client import SwaggerClient
-from bravado.compat import json
-
-
-@pytest.fixture
-def petstore_dict():
-    my_dir = os.path.abspath(os.path.dirname(__file__))
-    fpath = os.path.join(my_dir, '../../test-data/2.0/petstore/swagger.json')
-    with open(fpath) as f:
-        return json.loads(f.read())
 
 
 @pytest.fixture

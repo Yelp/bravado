@@ -102,6 +102,14 @@ class FidoClient(HttpClient):
         """
 
         prepared_request = requests.PreparedRequest()
+
+        # Ensure that all the headers are converted to strings.
+        # This is need to workaround https://github.com/requests/requests/issues/3491
+        request_params['headers'] = {
+            k: str(v)
+            for k, v in six.iteritems(request_params.get('headers', {}))
+        }
+
         prepared_request.prepare(
             headers=request_params.get('headers'),
             data=request_params.get('data'),
