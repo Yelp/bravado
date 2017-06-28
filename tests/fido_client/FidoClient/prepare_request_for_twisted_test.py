@@ -38,6 +38,22 @@ def test_prepare_request_for_twisted_body_is_bytes():
     }
 
 
+def test_prepare_request_for_twisted_header_values_are_bytes():
+    request_params = {
+        'url': 'http://example.com/api-docs',
+        'headers': {b'X-Foo': b'hi'},
+        'method': 'GET',
+    }
+    request_for_twisted = FidoClient.prepare_request_for_twisted(request_params)
+
+    assert request_for_twisted == {
+        'body': None,
+        'headers': {'X-Foo': b'hi'},
+        'method': 'GET',
+        'url': 'http://example.com/api-docs'
+    }
+
+
 def test_prepare_request_for_twisted_timeouts_added():
     request_params = {
         'url': 'http://example.com/api-docs',
