@@ -1,6 +1,10 @@
 Changelog
 =========
 
+9.0.6 (2017-06-28)
+------------------
+- Don't mangle headers with bytestring values on Python 3
+
 9.0.5 (2017-06-23)
 ------------------
 - Make sure headers passed in for fetching specs are converted to str as well
