@@ -3,6 +3,7 @@ import logging
 
 import requests
 import requests.auth
+import six
 from bravado_core.response import IncomingResponse
 from six import iteritems
 from six.moves.urllib import parse as urlparse
@@ -278,7 +279,7 @@ class RequestsFutureAdapter(FutureAdapter):
         # Ensure that all the headers are converted to strings.
         # This is need to workaround https://github.com/requests/requests/issues/3491
         request.headers = {
-            k: str(v)
+            k: str(v) if not isinstance(v, six.binary_type) else v
             for k, v in iteritems(request.headers)
         }
 

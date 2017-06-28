@@ -1,19 +1,5 @@
 # -*- coding: utf-8 -*-
-import pytest
-from mock import Mock
-from requests.sessions import Session
-
 from bravado.requests_client import RequestsFutureAdapter
-
-
-@pytest.fixture
-def request():
-    return dict(url='http://foo.com')
-
-
-@pytest.fixture
-def session():
-    return Mock(spec=Session)
 
 
 def test_no_timeouts(session, request):
