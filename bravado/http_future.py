@@ -132,12 +132,12 @@ def unmarshal_response(incoming_response, operation, response_callbacks=None):
 
 
 def raise_on_unexpected(http_response):
-    """Raise an HTTPError if the response is 5XX.
+    """Raise an HTTPError if the response is 4XX or 5XX.
 
     :param http_response: :class:`bravado_core.response.IncomingResponse`
     :raises: HTTPError
     """
-    if 500 <= http_response.status_code <= 599:
+    if 400 <= http_response.status_code <= 599:
         raise make_http_exception(response=http_response)
 
 
