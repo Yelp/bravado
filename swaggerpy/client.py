@@ -184,7 +184,7 @@ class Operation(object):
             # to string. This is need to workaround
             # https://github.com/requests/requests/issues/3491
             _request_options['headers'] = dict(
-                (k, str(v))
+                (k, v if isinstance(v, six.binary_type) else str(v))
                 for k, v in six.iteritems(_request_options['headers'])
             )
 

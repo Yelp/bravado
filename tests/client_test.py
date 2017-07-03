@@ -200,6 +200,19 @@ class ClientTest(unittest.TestCase):
             )
 
     @httpretty.activate
+    def test_header_bytestrings(self):
+        self.uut = SwaggerClient.from_resource_listing(self.resource_listing)
+        httpretty.register_uri(
+            httpretty.GET, "http://swagger.py/swagger-test/pet",
+            body='[]',
+        )
+
+        self.uut.pet.listPets(
+            _request_options={'headers': {b'foo': b'bar'}},
+        ).result()
+        self.assertEqual('bar', httpretty.last_request().headers['foo'])
+
+    @httpretty.activate
     def test_get(self):
         httpretty.register_uri(
             httpretty.GET, "http://swagger.py/swagger-test/pet",
