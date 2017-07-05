@@ -38,6 +38,6 @@ setup(
         "six",
     ],
     extras_require={
-        "fido": ["fido >= 2.1.0"],
+        "fido": ["fido >= 4.2.1"],
     },
 )
