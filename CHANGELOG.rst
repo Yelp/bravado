@@ -1,6 +1,10 @@
 Changelog
 =========
 
+9.0.7 (2017-07-05)
+------------------
+- Require fido version 4.2.1 so we stay compatible to code catching crochet.TimeoutError
+
 9.0.6 (2017-06-28)
 ------------------
 - Don't mangle headers with bytestring values on Python 3
