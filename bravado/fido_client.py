@@ -6,6 +6,7 @@ import crochet
 import fido
 import fido.exceptions
 import requests
+import requests.structures
 import six
 from bravado_core.response import IncomingResponse
 from yelp_bytes import to_bytes
@@ -26,6 +27,7 @@ class FidoResponseAdapter(IncomingResponse):
 
     def __init__(self, fido_response):
         self._delegate = fido_response
+        self._headers = None
 
     @property
     def status_code(self):
@@ -41,7 +43,21 @@ class FidoResponseAdapter(IncomingResponse):
 
     @property
     def headers(self):
-        return self._delegate.headers
+        # Header names and values are bytestrings, which is an issue on Python 3. Additionally,
+        # header values are lists of strings. This is incompatible with how requests returns headers.
+        # Let's match the requests interface so code dealing with headers continues to work even when
+        # you change the HTTP client.
+        if not self._headers:
+            self._headers = requests.structures.CaseInsensitiveDict()
+            for header, values in self._delegate.headers.items():
+                # header names are encoded using latin1, while header values are encoded using UTF-8.
+                # We'll take the last entry in the list of values, making sure the latest header sent
+                # takes precedence. The fact that twisted uses lists of strings for values seems to be
+                # an edge case, I couldn't find any documentation or test using more than one entry in
+                # the list of values for a given header.
+                self._headers[header.decode('latin1')] = values[-1].decode('utf8')
+
+        return self._headers
 
     def json(self, **_):
         # TODO: pass the kwargs downstream
