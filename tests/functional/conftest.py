@@ -10,7 +10,7 @@ import yaml
 API_DOCS_URL = "http://localhost/api-docs"
 
 # Convenience for httpretty.register_uri(httpretty.GET, **kwargs)
-register_get = functools.partial(httpretty.register_uri, httpretty.GET)
+register_get = functools.partial(httpretty.register_uri, httpretty.GET, content_type='application/json')
 
 
 def register_spec(swagger_dict, response_spec=None, spec_type='json'):
