@@ -1,6 +1,13 @@
 Changelog
 =========
 
+9.1.0 (2017-08-02)
+------------------
+- Make sure HTTP header names and values are unicode strings when using the fido HTTP client.
+  NOTE: this is a potentially backwards incompatible change if you're using the fido HTTP client and
+  are working with response headers. It's also highly advised to not upgrade to bravado-core 4.8.0+
+  if you're using fido unless you're also upgrading to a bravado version that contains this change.
+
 9.0.7 (2017-07-05)
 ------------------
 - Require fido version 4.2.1 so we stay compatible to code catching crochet.TimeoutError
