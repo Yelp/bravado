@@ -123,6 +123,15 @@ class RequestsClient(HttpClient):
 
         return sanitized_params, misc_options
 
+    def updateProxies(self, proxies):
+        """
+        :param proxies: proxies for Requests session
+        :type proxies: dict
+
+        :returns None
+        """
+        self.session.proxies.update(proxies)
+
     def request(self, request_params, operation=None, response_callbacks=None,
                 also_return_response=False):
         """
