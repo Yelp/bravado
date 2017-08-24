@@ -34,7 +34,7 @@ setup(
         "bravado-core >= 4.2.2",
         "python-dateutil",
         "pyyaml",
-        "requests",
+        "requests >= 2",
         "six",
     ],
     extras_require={
