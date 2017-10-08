@@ -56,3 +56,16 @@ def test_request_connect_timeout_and_timeout_passed_to_fido():
             connect_timeout=1,
             timeout=2,
         )
+
+
+def test_request_tcp_nodeley_passed_to_fido():
+    with patch('bravado.fido_client.fido.fetch') as fetch:
+        request_params = dict(url='http://foo.com/', tcp_nodelay=True)
+        FidoClient().request(request_params)
+        assert fetch.call_args == mock.call(
+            url='http://foo.com/',
+            body=None,
+            headers={},
+            method='GET',
+            tcp_nodelay=True
+        )

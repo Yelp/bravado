@@ -153,7 +153,7 @@ class FidoClient(HttpClient):
             'url': prepared_request.url,
         }
 
-        for fetch_kwarg in ('connect_timeout', 'timeout'):
+        for fetch_kwarg in ('connect_timeout', 'timeout', 'tcp_nodelay'):
             if fetch_kwarg in request_params:
                 request_for_twisted[fetch_kwarg] = request_params[fetch_kwarg]
 
