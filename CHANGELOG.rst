@@ -1,6 +1,10 @@
 Changelog
 =========
 
+9.1.1 (2017-10-10)
+------------------
+- Allow users to pass the tcp_nodelay request parameter to FidoClient requests - PR #319
+
 9.1.0 (2017-08-02)
 ------------------
 - Make sure HTTP header names and values are unicode strings when using the fido HTTP client.
