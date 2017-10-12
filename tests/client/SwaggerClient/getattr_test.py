@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from bravado.client import ResourceDecorator, SwaggerClient
+from bravado.client import ResourceDecorator
+from bravado.client import SwaggerClient
 
 
 def test_resource_exists(petstore_client):
@@ -41,4 +42,4 @@ def client_tags_with_spaces():
 
 
 def test_get_resource(client_tags_with_spaces):
-    assert type(client_tags_with_spaces.get_resource('my tag')) == ResourceDecorator
+    assert type(client_tags_with_spaces._get_resource('my tag')) == ResourceDecorator

@@ -148,7 +148,7 @@ class SwaggerClient(object):
     def get_model(self, model_name):
         return self.swagger_spec.definitions[model_name]
 
-    def get_resource(self, item):
+    def _get_resource(self, item):
         """
         :param item: name of the resource to return
         :return: :class:`Resource`
@@ -167,7 +167,7 @@ class SwaggerClient(object):
         return u"%s(%s)" % (self.__class__.__name__, self.swagger_spec.api_url)
 
     def __getattr__(self, item):
-        return self.get_resource(item)
+        return self._get_resource(item)
 
     def __dir__(self):
         return self.swagger_spec.resources.keys()
