@@ -10,30 +10,35 @@ from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
 
 
-def test_200_get_swagger_spec():
+@pytest.fixture
+def mock_future_adapter():
+    return Mock(spec=FutureAdapter, timeout_errors=None)
+
+
+def test_200_get_swagger_spec(mock_future_adapter):
     response_adapter_instance = Mock(spec=IncomingResponse, status_code=200)
     response_adapter_type = Mock(return_value=response_adapter_instance)
     http_future = HttpFuture(
-        future=Mock(spec=FutureAdapter),
+        future=mock_future_adapter,
         response_adapter=response_adapter_type)
 
     assert response_adapter_instance == http_future.result()
 
 
-def test_500_get_swagger_spec():
+def test_500_get_swagger_spec(mock_future_adapter):
     response_adapter_instance = Mock(spec=IncomingResponse, status_code=500)
     response_adapter_type = Mock(return_value=response_adapter_instance)
 
     with pytest.raises(HTTPError) as excinfo:
         HttpFuture(
-            future=Mock(spec=FutureAdapter),
+            future=mock_future_adapter,
             response_adapter=response_adapter_type).result()
 
     assert excinfo.value.response.status_code == 500
 
 
 @patch('bravado.http_future.unmarshal_response', autospec=True)
-def test_200_service_call(_):
+def test_200_service_call(_, mock_future_adapter):
     response_adapter_instance = Mock(
         spec=IncomingResponse,
         status_code=200,
@@ -42,7 +47,7 @@ def test_200_service_call(_):
     response_adapter_type = Mock(return_value=response_adapter_instance)
 
     http_future = HttpFuture(
-        future=Mock(spec=FutureAdapter),
+        future=mock_future_adapter,
         response_adapter=response_adapter_type,
         operation=Mock(spec=Operation))
 
@@ -50,7 +55,7 @@ def test_200_service_call(_):
 
 
 @patch('bravado.http_future.unmarshal_response', autospec=True)
-def test_400_service_call(mock_unmarshal_response):
+def test_400_service_call(mock_unmarshal_response, mock_future_adapter):
     response_adapter_instance = Mock(
         spec=IncomingResponse,
         status_code=400,
@@ -59,7 +64,7 @@ def test_400_service_call(mock_unmarshal_response):
     response_adapter_type = Mock(return_value=response_adapter_instance)
 
     http_future = HttpFuture(
-        future=Mock(spec=FutureAdapter),
+        future=mock_future_adapter,
         response_adapter=response_adapter_type,
         operation=Mock(spec=Operation))
 
@@ -69,7 +74,7 @@ def test_400_service_call(mock_unmarshal_response):
 
 
 @patch('bravado.http_future.unmarshal_response', autospec=True)
-def test_also_return_response_true(_):
+def test_also_return_response_true(_, mock_future_adapter):
     # Verify HTTPFuture(..., also_return_response=True).result()
     # returns the (swagger_result, http_response) and not just swagger_result
     response_adapter_instance = Mock(
@@ -79,7 +84,7 @@ def test_also_return_response_true(_):
     response_adapter_type = Mock(return_value=response_adapter_instance)
 
     http_future = HttpFuture(
-        future=Mock(spec=FutureAdapter),
+        future=mock_future_adapter,
         response_adapter=response_adapter_type,
         operation=Mock(spec=Operation),
         also_return_response=True)
