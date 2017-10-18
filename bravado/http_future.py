@@ -35,7 +35,7 @@ class FutureAdapter(object):
         )
 
 
-def raraise_timeout_errors(func):
+def reraise_errors(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         timeout_errors = tuple(getattr(self.future, 'timeout_errors', None) or ())
@@ -95,7 +95,7 @@ class HttpFuture(object):
         self.response_callbacks = response_callbacks or []
         self.also_return_response = also_return_response
 
-    @raraise_timeout_errors
+    @reraise_errors
     def result(self, timeout=None):
         """Blocking call to wait for the HTTP response.
 
