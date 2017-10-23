@@ -167,6 +167,8 @@ class FidoFutureAdapter(FutureAdapter):
     retrieve results.
     """
 
+    timeout_errors = [fido.exceptions.HTTPTimeoutError]
+
     def __init__(self, eventual_result):
         self._eventual_result = eventual_result
 

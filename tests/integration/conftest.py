@@ -36,6 +36,13 @@ def double():
     return str(int(x) * 2)
 
 
+@bottle.route("/sleep")
+def sleep_api():
+    sec_to_sleep = float(bottle.request.GET.get('sec', '1'))
+    time.sleep(sec_to_sleep)
+    return sec_to_sleep
+
+
 def wait_unit_service_starts(url, timeout=10):
     start = time.time()
     while time.time() < start + timeout:
@@ -55,5 +62,6 @@ def threaded_http_server():
     )
     thread.daemon = True
     thread.start()
-    wait_unit_service_starts('http://localhost:{port}'.format(port=port))
-    yield port
+    server_address = 'http://localhost:{port}'.format(port=port)
+    wait_unit_service_starts(server_address)
+    yield server_address

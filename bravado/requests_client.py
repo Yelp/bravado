@@ -209,6 +209,8 @@ class RequestsFutureAdapter(FutureAdapter):
     HTTP calls with the Requests library in a future-y sort of way.
     """
 
+    timeout_errors = [requests.Timeout]
+
     def __init__(self, session, request, misc_options):
         """Kicks API call for Requests client
 

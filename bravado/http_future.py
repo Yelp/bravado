@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import sys
+from functools import wraps
 
 import bravado_core
 import six
 from bravado_core.exception import MatchingResponseNotFound
 
+from bravado.exception import BravadoTimeoutError
 from bravado.exception import make_http_exception
 
 
@@ -18,6 +20,9 @@ class FutureAdapter(object):
 
     """
 
+    # Make sure to define the timeout errors associated with your http client
+    timeout_errors = []
+
     def result(self, timeout=None):
         """
         Must implement a result method which blocks on result retrieval.
@@ -28,6 +33,37 @@ class FutureAdapter(object):
         raise NotImplementedError(
             "FutureAdapter must implement 'result' method"
         )
+
+
+def reraise_errors(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        timeout_errors = tuple(getattr(self.future, 'timeout_errors', None) or ())
+
+        # Make sure that timeout error type for a specific future adapter is generated only once
+        if timeout_errors and getattr(self.future, '__timeout_error_type', None) is None:
+            setattr(
+                self.future, '__timeout_error_type',
+                type(
+                    '{}Timeout'.format(self.future.__class__.__name__),
+                    tuple(list(timeout_errors) + [BravadoTimeoutError]),
+                    dict(),
+                ),
+            )
+
+        if timeout_errors:
+            try:
+                return func(self, *args, **kwargs)
+            except timeout_errors as exception:
+                six.reraise(
+                    self.future.__timeout_error_type,
+                    self.future.__timeout_error_type(*exception.args),
+                    sys.exc_info()[2],
+                )
+        else:
+            return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 class HttpFuture(object):
@@ -59,6 +95,7 @@ class HttpFuture(object):
         self.response_callbacks = response_callbacks or []
         self.also_return_response = also_return_response
 
+    @reraise_errors
     def result(self, timeout=None):
         """Blocking call to wait for the HTTP response.
 
