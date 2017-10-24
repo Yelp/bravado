@@ -141,7 +141,7 @@ class TestServerRequestsClientFake(TestServerRequestsClient):
             }).result(timeout=0.01)
         except BravadoTimeoutError:
             pytest.fail('DID RAISE BravadoTimeoutError')
-        except:
+        except Exception:
             pass
 
     def test_timeout_errors_are_catchable_with_original_exception_types(self, threaded_http_server):
