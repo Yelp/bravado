@@ -141,6 +141,10 @@ class SwaggerClient(object):
         # Apply bravado config defaults
         config = dict(CONFIG_DEFAULTS, **(config or {}))
 
+        # Apply bravado proxy settings
+        if 'proxies' in config:
+            http_client.updateProxies(config['proxies'])
+
         swagger_spec = Spec.from_dict(
             spec_dict, origin_url, http_client, config)
         return cls(swagger_spec)
