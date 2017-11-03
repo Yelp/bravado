@@ -38,6 +38,10 @@ class FidoResponseAdapter(IncomingResponse):
         return self._delegate.body
 
     @property
+    def raw_bytes(self):
+        return self._delegate.body
+
+    @property
     def reason(self):
         return self._delegate.reason
 

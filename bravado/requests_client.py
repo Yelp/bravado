@@ -193,6 +193,10 @@ class RequestsResponseAdapter(IncomingResponse):
         return self._delegate.text
 
     @property
+    def raw_bytes(self):
+        return self._delegate.content
+
+    @property
     def reason(self):
         return self._delegate.reason
 
