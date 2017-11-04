@@ -160,9 +160,11 @@ class RequestsClient(HttpClient):
         self.authenticator = BasicAuthenticator(
             host=host, username=username, password=password)
 
-    def set_api_key(self, host, api_key, param_name=u'api_key', param_in=u'query'):
+    def set_api_key(self, host, api_key, param_name=u'api_key',
+                    param_in=u'query'):
         self.authenticator = ApiKeyAuthenticator(
-            host=host, api_key=api_key, param_name=param_name, param_in=param_in)
+            host=host, api_key=api_key, param_name=param_name,
+            param_in=param_in)
 
     def authenticated_request(self, request_params):
         return self.apply_authentication(requests.Request(**request_params))
@@ -256,10 +258,12 @@ class RequestsFutureAdapter(FutureAdapter):
                 timeout = service_timeout
             else:
                 timeout = max(service_timeout, result_timeout)
-            log.warn("Two different timeouts have been passed: "
-                     "_request_options['timeout'] = {0} and "
-                     "future.result(timeout={1}). Using timeout of {2}."
-                     .format(service_timeout, result_timeout, timeout))
+            log.warning(
+                "Two different timeouts have been passed: "
+                "_request_options['timeout'] = %s and "
+                "future.result(timeout=%s). Using timeout of %s.",
+                service_timeout, result_timeout, timeout,
+            )
 
         # Requests is weird in that if you want to specify a connect_timeout
         # and idle timeout, then the timeout is passed as a tuple

@@ -108,7 +108,7 @@ class SwaggerClient(object):
 
         :rtype: :class:`bravado_core.spec.Spec`
         """
-        log.debug(u"Loading from %s" % spec_url)
+        log.debug(u"Loading from %s", spec_url)
         http_client = http_client or RequestsClient()
         loader = Loader(http_client, request_headers=request_headers)
         spec_dict = loader.load_spec(spec_url)
@@ -249,7 +249,7 @@ class CallableOperation(object):
 
         :rtype: :class:`bravado.http_future.HTTPFuture`
         """
-        log.debug(u"%s(%s)" % (self.operation.operation_id, op_kwargs))
+        log.debug(u'%s(%s)', self.operation.operation_id, op_kwargs)
         warn_for_deprecated_op(self.operation)
 
         # Apply request_options defaults

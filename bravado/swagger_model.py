@@ -6,6 +6,8 @@ import os.path
 
 import yaml
 from bravado_core.spec import is_yaml
+from six import iteritems
+from six import itervalues
 from six.moves import urllib
 from six.moves.urllib import parse as urlparse
 
@@ -42,7 +44,7 @@ class FileEventual(object):
             return self.path + '.json'
         return self.path
 
-    def wait(self, timeout=None):
+    def wait(self, **kwargs):
         with contextlib.closing(urllib.request.urlopen(self.get_path())) as fp:
             content = fp.read()
             return self.FileResponse(content)
@@ -115,15 +117,13 @@ class Loader(object):
         :raise: yaml.parser.ParserError: If the text is not valid YAML.
         """
         data = yaml.safe_load(text)
-        for path, methods in iter(data.get('paths', {}).items()):
-            for method, operation in iter(methods.items()):
+        for methods in itervalues(data.get('paths', {})):
+            for operation in itervalues(methods):
                 if 'responses' in operation:
-                    operation['responses'] = dict(
-                        (str(code), response)
-                        for code, response in iter(
-                            operation['responses'].items()
-                        )
-                    )
+                    operation['responses'] = {
+                        str(code): response
+                        for code, response in iteritems(operation['responses'])
+                    }
 
         return data
 
