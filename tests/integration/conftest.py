@@ -6,6 +6,7 @@ import time
 import bottle
 import ephemeral_port_reserve
 import pytest
+import umsgpack
 from six.moves import urllib
 
 from tests.conftest import petstore_dict
@@ -13,6 +14,7 @@ from tests.conftest import test_dir
 
 ROUTE_1_RESPONSE = b"HEY BUDDY"
 ROUTE_2_RESPONSE = b"BYE BUDDY"
+MSGPACK_RESPONSE = {'answer': 42}
 
 
 @bottle.get("/swagger.json")
@@ -36,7 +38,13 @@ def double():
     return str(int(x) * 2)
 
 
-@bottle.route("/sleep")
+@bottle.route('/msgpack')
+def msgpack():
+    bottle.response.content_type = 'application/msgpack'
+    return umsgpack.packb(MSGPACK_RESPONSE)
+
+
+@bottle.get("/sleep")
 def sleep_api():
     sec_to_sleep = float(bottle.request.GET.get('sec', '1'))
     time.sleep(sec_to_sleep)
