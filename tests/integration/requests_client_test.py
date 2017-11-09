@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 import pytest
 import requests
+import umsgpack
 from mock import mock
 
 from bravado.exception import BravadoTimeoutError
 from bravado.requests_client import RequestsClient
 from bravado.requests_client import RequestsFutureAdapter
 from bravado.swagger_model import Loader
+from tests.integration.conftest import MSGPACK_RESPONSE
 from tests.integration.conftest import ROUTE_1_RESPONSE
 from tests.integration.conftest import ROUTE_2_RESPONSE
 
@@ -86,6 +88,16 @@ class TestServerRequestsClient:
         }).result(timeout=1)
 
         assert response.text == self.encode_expected_response(ROUTE_1_RESPONSE)
+
+    def test_msgpack_support(self, threaded_http_server):
+        response = self.http_client.request({
+            'method': 'GET',
+            'url': '{server_address}/msgpack'.format(server_address=threaded_http_server),
+            'params': {},
+        }).result(timeout=1)
+
+        assert response.headers['Content-Type'] == 'application/msgpack'
+        assert umsgpack.unpackb(response.raw_bytes) == MSGPACK_RESPONSE
 
     def test_timeout_errors_are_thrown_as_BravadoTimeoutError(self, threaded_http_server):
         timeout_errors = getattr(self.http_future_adapter_type, 'timeout_errors', [])
