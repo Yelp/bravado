@@ -86,7 +86,8 @@ class SwaggerClient(object):
     :type swagger_spec: :class:`bravado_core.spec.Spec`
     """
 
-    def __init__(self, swagger_spec):
+    def __init__(self, swagger_spec, also_return_response=False):
+        self.__also_return_response = also_return_response
         self.swagger_spec = swagger_spec
 
     @classmethod
@@ -107,7 +108,7 @@ class SwaggerClient(object):
 
         :rtype: :class:`bravado_core.spec.Spec`
         """
-        log.debug(u"Loading from %s" % spec_url)
+        log.debug(u"Loading from %s", spec_url)
         http_client = http_client or RequestsClient()
         loader = Loader(http_client, request_headers=request_headers)
         spec_dict = loader.load_spec(spec_url)
@@ -141,9 +142,11 @@ class SwaggerClient(object):
         # Apply bravado config defaults
         config = dict(CONFIG_DEFAULTS, **(config or {}))
 
+        also_return_response = config.pop('also_return_response', False)
         swagger_spec = Spec.from_dict(
-            spec_dict, origin_url, http_client, config)
-        return cls(swagger_spec)
+            spec_dict, origin_url, http_client, config,
+        )
+        return cls(swagger_spec, also_return_response=also_return_response)
 
     def get_model(self, model_name):
         return self.swagger_spec.definitions[model_name]
@@ -161,7 +164,7 @@ class SwaggerClient(object):
 
         # Wrap bravado-core's Resource and Operation objects in order to
         # execute a service call via the http_client.
-        return ResourceDecorator(resource)
+        return ResourceDecorator(resource, self.__also_return_response)
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.swagger_spec.api_url)
@@ -200,17 +203,18 @@ class ResourceDecorator(object):
     operations can be instrumented.
     """
 
-    def __init__(self, resource):
+    def __init__(self, resource, also_return_response=False):
         """
         :type resource: :class:`bravado_core.resource.Resource`
         """
+        self.also_return_response = also_return_response
         self.resource = resource
 
     def __getattr__(self, name):
         """
         :rtype: :class:`CallableOperation`
         """
-        return CallableOperation(getattr(self.resource, name))
+        return CallableOperation(getattr(self.resource, name), self.also_return_response)
 
     def __dir__(self):
         """
@@ -226,7 +230,8 @@ class CallableOperation(object):
     :type operation: :class:`bravado_core.operation.Operation`
     """
 
-    def __init__(self, operation):
+    def __init__(self, operation, also_return_response=False):
+        self.also_return_response = also_return_response
         self.operation = operation
 
     @docstring_property(__doc__)
@@ -244,7 +249,7 @@ class CallableOperation(object):
 
         :rtype: :class:`bravado.http_future.HTTPFuture`
         """
-        log.debug(u"%s(%s)" % (self.operation.operation_id, op_kwargs))
+        log.debug(u'%s(%s)', self.operation.operation_id, op_kwargs)
         warn_for_deprecated_op(self.operation)
 
         # Apply request_options defaults
@@ -255,13 +260,13 @@ class CallableOperation(object):
         request_params = construct_request(
             self.operation, request_options, **op_kwargs)
 
-        config = self.operation.swagger_spec.config
         http_client = self.operation.swagger_spec.http_client
 
         # Per-request config overrides client wide config
         also_return_response = request_options.get(
             'also_return_response',
-            config['also_return_response'])
+            self.also_return_response,
+        )
 
         return http_client.request(
             request_params,
