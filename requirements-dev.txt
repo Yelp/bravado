@@ -5,4 +5,4 @@ mock
 pip>=9.0.1 # workaround to https://github.com/pypa/pip/issues/3903
 pre-commit
 pytest
-umsgpack
+u-msgpack-python
