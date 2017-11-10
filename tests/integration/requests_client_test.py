@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
+import json
+
+import mock
 import pytest
 import requests
 import umsgpack
-from mock import mock
+from bravado_core.content_type import APP_MSGPACK
 
+from bravado.client import SwaggerClient
 from bravado.exception import BravadoTimeoutError
 from bravado.requests_client import RequestsClient
 from bravado.requests_client import RequestsFutureAdapter
 from bravado.swagger_model import Loader
-from tests.integration.conftest import MSGPACK_RESPONSE
+from tests.integration.conftest import API_RESPONSE
 from tests.integration.conftest import ROUTE_1_RESPONSE
 from tests.integration.conftest import ROUTE_2_RESPONSE
+from tests.integration.conftest import SWAGGER_SPEC_DICT
 
 
 class TestServerRequestsClient:
@@ -33,16 +38,34 @@ class TestServerRequestsClient:
         else:
             return str(response)
 
-    def test_fetch_specs(self, threaded_http_server, petstore_dict):
+    def test_fetch_specs(self, threaded_http_server):
         loader = Loader(
             http_client=self.http_client,
             request_headers={'boolean-header': True},
         )
         spec = loader.load_spec('{server_address}/swagger.json'.format(server_address=threaded_http_server))
-        assert spec == petstore_dict
+        assert spec == SWAGGER_SPEC_DICT
+
+    @pytest.fixture
+    def swagger_client(self, threaded_http_server):
+        return SwaggerClient.from_url(
+            spec_url='{server_address}/swagger.json'.format(
+                server_address=threaded_http_server),
+            http_client=self.http_client,
+            config={'use_models': False, 'also_return_response': True}
+        )
+
+    def test_swagger_client_json_response(self, swagger_client):
+        marshaled_response, raw_response = swagger_client.json.get_json().result(timeout=1)
+        assert marshaled_response == API_RESPONSE
+        assert raw_response.raw_bytes == json.dumps(API_RESPONSE).encode('utf-8')
+
+    def test_swagger_client_msgpack_response(self, swagger_client):
+        marshaled_response, raw_response = swagger_client.msgpack.get_msgpack().result(timeout=1)
+        assert marshaled_response == API_RESPONSE
+        assert raw_response.raw_bytes == umsgpack.packb(API_RESPONSE)
 
     def test_multiple_requests(self, threaded_http_server):
-
         request_one_params = {
             'method': 'GET',
             'headers': {},
@@ -96,8 +119,8 @@ class TestServerRequestsClient:
             'params': {},
         }).result(timeout=1)
 
-        assert response.headers['Content-Type'] == 'application/msgpack'
-        assert umsgpack.unpackb(response.raw_bytes) == MSGPACK_RESPONSE
+        assert response.headers['Content-Type'] == APP_MSGPACK
+        assert umsgpack.unpackb(response.raw_bytes) == API_RESPONSE
 
     def test_timeout_errors_are_thrown_as_BravadoTimeoutError(self, threaded_http_server):
         timeout_errors = getattr(self.http_future_adapter_type, 'timeout_errors', [])

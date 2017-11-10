@@ -14,4 +14,4 @@ def test_dir():
 def petstore_dict(test_dir):
     fpath = os.path.join(test_dir, '../test-data/2.0/petstore/swagger.json')
     with open(fpath) as f:
-        return json.loads(f.read())
+        return json.load(f)
