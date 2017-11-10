@@ -1,6 +1,13 @@
 Changelog
 =========
 
+9.2.0 (2017-11-10)
+------------------
+- Support msgpack as wire format for response data - PR #323, 328, 330, 331
+- Allow client to access resources for tags which are not valid Python identifier names, by adding the ``SwaggerClient.get_resource`` method.
+  For example, ``client.get_resource('My Pets').list_pets()`` - PR #320. Thanks Craig Blaszczyk for your contribution!
+- Unify timeout exception classes. You can now simply catch ``bravado.exception.BravadoTimeoutError`` (or ``builtins.TimeoutError`` if you're using Python 3.3+) - PR #321
+
 9.1.1 (2017-10-10)
 ------------------
 - Allow users to pass the tcp_nodelay request parameter to FidoClient requests - PR #319
