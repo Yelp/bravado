@@ -53,31 +53,14 @@ from bravado_core.spec import Spec
 from six import iteritems
 from six import itervalues
 
+from bravado.config_defaults import CONFIG_DEFAULTS
+from bravado.config_defaults import REQUEST_OPTIONS_DEFAULTS
 from bravado.docstring_property import docstring_property
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
 from bravado.warning import warn_for_deprecated_op
 
 log = logging.getLogger(__name__)
-
-
-CONFIG_DEFAULTS = {
-    # See the constructor of :class:`bravado.http_future.HttpFuture` for an
-    # in depth explanation of what this means.
-    'also_return_response': False,
-}
-
-REQUEST_OPTIONS_DEFAULTS = {
-    # List of callbacks that are executed after the incoming response has been
-    # validated and the swagger_result has been unmarshalled.
-    #
-    # The callback should expect two arguments:
-    #   param : incoming_response
-    #   type  : subclass of class:`bravado_core.response.IncomingResponse`
-    #   param : operation
-    #   type  : class:`bravado_core.operation.Operation`
-    'response_callbacks': [],
-}
 
 
 class SwaggerClient(object):
@@ -91,8 +74,7 @@ class SwaggerClient(object):
         self.swagger_spec = swagger_spec
 
     @classmethod
-    def from_url(cls, spec_url, http_client=None, request_headers=None,
-                 config=None):
+    def from_url(cls, spec_url, http_client=None, request_headers=None, config=None):
         """Build a :class:`SwaggerClient` from a url to the Swagger
         specification for a RESTful API.
 
