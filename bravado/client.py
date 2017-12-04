@@ -275,7 +275,7 @@ class CallableOperation(object):
             also_return_response=also_return_response)
 
 
-def construct_request(operation, request_options, **op_kwargs):
+def construct_request(operation, request_options, _use_msgpack=False, **op_kwargs):
     """Construct the outgoing request dict.
 
     :type operation: :class:`bravado_core.operation.Operation`
@@ -293,6 +293,9 @@ def construct_request(operation, request_options, **op_kwargs):
         'params': {},  # filled in downstream
         'headers': request_options.get('headers', {}),
     }
+    # Adds Accept header to request for msgpack response if specified
+    if _use_msgpack:
+        request['headers']['Accept'] = 'application/msgpack'
 
     # Copy over optional request options
     for request_option in ('connect_timeout', 'timeout'):
