@@ -32,6 +32,7 @@ setup(
     ],
     install_requires=[
         "bravado-core >= 4.11.0",
+        "msgpack-python",
         "python-dateutil",
         "pyyaml",
         "requests >= 2",
