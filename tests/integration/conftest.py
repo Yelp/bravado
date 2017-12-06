@@ -43,9 +43,12 @@ SWAGGER_SPEC_DICT = {
                 },
             },
         },
-        '/msgpack': {
+        '/json_or_msgpack': {
             'get': {
-                'produces': ['application/msgpack'],
+                'produces': [
+                    'application/msgpack',
+                    'application/json'
+                 ],
                 'responses': {
                     '200': {
                         'description': 'HTTP/200',
@@ -69,10 +72,13 @@ def api_json():
     return API_RESPONSE
 
 
-@bottle.route('/msgpack')
-def api_msgpack():
-    bottle.response.content_type = APP_MSGPACK
-    return umsgpack.packb(API_RESPONSE)
+@bottle.route('/json_or_msgpack')
+def api_json_or_msgpack():
+    if bottle.request.headers.get('accept') == APP_MSGPACK:
+        bottle.response.content_type = APP_MSGPACK
+        return umsgpack.packb(API_RESPONSE)
+    else:
+        return API_RESPONSE
 
 
 @bottle.route('/1')

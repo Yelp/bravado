@@ -60,8 +60,17 @@ class TestServerRequestsClient:
         assert marshaled_response == API_RESPONSE
         assert raw_response.raw_bytes == json.dumps(API_RESPONSE).encode('utf-8')
 
-    def test_swagger_client_msgpack_response(self, swagger_client):
-        marshaled_response, raw_response = swagger_client.msgpack.get_msgpack().result(timeout=1)
+    def test_swagger_client_msgpack_response_without_flag(self, swagger_client):
+        marshaled_response, raw_response = swagger_client.json_or_msgpack.get_json_or_msgpack().result(timeout=1)
+        assert marshaled_response == API_RESPONSE
+        assert raw_response.raw_bytes == json.dumps(API_RESPONSE).encode('utf-8')
+
+    def test_swagger_client_msgpack_response_with_flag(self, swagger_client):
+        marshaled_response, raw_response = swagger_client.json_or_msgpack.get_json_or_msgpack(
+            _request_options={
+                'use_msgpack': True,
+            },
+        ).result(timeout=1)
         assert marshaled_response == API_RESPONSE
         assert raw_response.raw_bytes == umsgpack.packb(API_RESPONSE)
 
@@ -115,8 +124,11 @@ class TestServerRequestsClient:
     def test_msgpack_support(self, threaded_http_server):
         response = self.http_client.request({
             'method': 'GET',
-            'url': '{server_address}/msgpack'.format(server_address=threaded_http_server),
+            'url': '{server_address}/json_or_msgpack'.format(server_address=threaded_http_server),
             'params': {},
+            'headers': {
+                'Accept': APP_MSGPACK,
+            },
         }).result(timeout=1)
 
         assert response.headers['Content-Type'] == APP_MSGPACK
