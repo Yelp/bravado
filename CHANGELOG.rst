@@ -1,6 +1,10 @@
 Changelog
 =========
 
+9.2.1 (2017-12-07)
+------------------
+- The timeout exception for the requests client should inherit from ``requests.exceptions.ReadTimeout`` instead of ``requests.exceptions.Timeout`` - PR #337
+
 9.2.0 (2017-11-10)
 ------------------
 - Support msgpack as wire format for response data - PR #323, 328, 330, 331
