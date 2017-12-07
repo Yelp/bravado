@@ -83,3 +83,25 @@ def test_with_not_string_headers(
     assert request['headers'][header_name] == str(header_value)
     unmarshalled_request = unmarshal_request(request_object, operation)
     assert unmarshalled_request[header_name] == header_value
+
+
+def test_use_msgpack(
+    minimal_swagger_spec,
+    getPetById_spec,
+):
+    op = CallableOperation(
+        Operation.from_spec(
+            minimal_swagger_spec,
+            '/pet/{petId}',
+            'get',
+            getPetById_spec
+        )
+    )
+    request = construct_request(
+        op,
+        request_options={
+            'use_msgpack': True,
+        },
+        petId=1,
+    )
+    assert request['headers']['Accept'] == 'application/msgpack'

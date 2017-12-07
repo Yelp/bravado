@@ -82,4 +82,6 @@ Config key                Type            Default    Description
                                                      | - ``operation`` of type ``bravado_core.operation.Operation``
 *timeout*                 float           N/A        | TCP idle timeout in seconds. This is passed along to the
                                                      | http_client when making a service call.
+*use_msgpack*             boolean         False      | If a msgpack serialization is desired for the response. This
+                                                     | will add a Accept: application/msgpack header to the request.
 ========================= =============== =========  ===============================================================
