@@ -3,6 +3,7 @@ import logging
 
 import requests
 import requests.auth
+import requests.exceptions
 import six
 from bravado_core.response import IncomingResponse
 from six import iteritems
@@ -215,7 +216,7 @@ class RequestsFutureAdapter(FutureAdapter):
     HTTP calls with the Requests library in a future-y sort of way.
     """
 
-    timeout_errors = [requests.Timeout]
+    timeout_errors = [requests.exceptions.ReadTimeout]
 
     def __init__(self, session, request, misc_options):
         """Kicks API call for Requests client
