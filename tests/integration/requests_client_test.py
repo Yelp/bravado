@@ -4,6 +4,7 @@ import json
 import mock
 import pytest
 import requests
+import requests.exceptions
 import umsgpack
 from bravado_core.content_type import APP_MSGPACK
 
@@ -146,6 +147,17 @@ class TestServerRequestsClient:
                     'url': '{server_address}/sleep?sec=0.1'.format(server_address=threaded_http_server),
                     'params': {},
                 }).result(timeout=0.01)
+
+    def test_timeout_errors_are_catchable_as_requests_timeout(self, threaded_http_server):
+        if not self.http_client_type == RequestsClient:
+            pytest.skip('{} is not using RequestsClient'.format(self.http_future_adapter_type))
+
+        with pytest.raises(requests.exceptions.Timeout):
+            self.http_client.request({
+                'method': 'GET',
+                'url': '{server_address}/sleep?sec=0.1'.format(server_address=threaded_http_server),
+                'params': {},
+            }).result(timeout=0.01)
 
 
 class FakeRequestsFutureAdapter(RequestsFutureAdapter):
