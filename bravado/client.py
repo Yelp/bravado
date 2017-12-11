@@ -275,6 +275,9 @@ def construct_request(operation, request_options, **op_kwargs):
         'params': {},  # filled in downstream
         'headers': request_options.get('headers', {}),
     }
+    # Adds Accept header to request for msgpack response if specified
+    if request_options.get('use_msgpack', False):
+        request['headers']['Accept'] = 'application/msgpack'
 
     # Copy over optional request options
     for request_option in ('connect_timeout', 'timeout'):
