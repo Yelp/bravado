@@ -1,6 +1,10 @@
 Changelog
 =========
 
+9.2.2 (2017-12-19)
+------------------
+- Fix msgpack import issue - PR #341. Thanks Jesse Myers for your contribution!
+
 9.2.1 (2017-12-07)
 ------------------
 - The timeout exception for the requests client should inherit from ``requests.exceptions.ReadTimeout`` instead of ``requests.exceptions.Timeout`` - PR #337
