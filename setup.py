@@ -40,5 +40,6 @@ setup(
     ],
     extras_require={
         "fido": ["fido >= 4.2.1"],
+        "umsgpack": ["umsgpack >= 0.1.0"],
     },
 )
