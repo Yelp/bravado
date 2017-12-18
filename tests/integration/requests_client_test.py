@@ -5,7 +5,7 @@ import mock
 import pytest
 import requests
 import requests.exceptions
-import umsgpack
+from msgpack import packb, unpackb
 from bravado_core.content_type import APP_MSGPACK
 
 from bravado.client import SwaggerClient
@@ -73,7 +73,7 @@ class TestServerRequestsClient:
             },
         ).result(timeout=1)
         assert marshaled_response == API_RESPONSE
-        assert raw_response.raw_bytes == umsgpack.packb(API_RESPONSE)
+        assert raw_response.raw_bytes == packb(API_RESPONSE)
 
     def test_multiple_requests(self, threaded_http_server):
         request_one_params = {
@@ -133,7 +133,7 @@ class TestServerRequestsClient:
         }).result(timeout=1)
 
         assert response.headers['Content-Type'] == APP_MSGPACK
-        assert umsgpack.unpackb(response.raw_bytes) == API_RESPONSE
+        assert unpackb(response.raw_bytes, encoding='utf-8') == API_RESPONSE
 
     def test_timeout_errors_are_thrown_as_BravadoTimeoutError(self, threaded_http_server):
         timeout_errors = getattr(self.http_future_adapter_type, 'timeout_errors', [])
