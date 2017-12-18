@@ -3,7 +3,11 @@ import sys
 from functools import wraps
 
 import six
-import umsgpack
+try:
+    from umsgpack import unpackb
+except ImportError:
+    unpackb = None
+
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
 from bravado_core.exception import MatchingResponseNotFound
@@ -193,8 +197,10 @@ def unmarshal_response_inner(response, op):
         content_spec = deref(response_spec['schema'])
         if content_type.startswith(APP_JSON):
             content_value = response.json()
+        elif unpackb is None:
+            raise Exception("umsgpack is required")
         else:
-            content_value = umsgpack.unpackb(response.raw_bytes)
+            content_value = unpackb(response.raw_bytes)
 
         if op.swagger_spec.config.get('validate_responses', False):
             validate_schema_object(op.swagger_spec, content_spec, content_value)
