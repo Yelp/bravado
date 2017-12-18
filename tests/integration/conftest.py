@@ -5,7 +5,7 @@ import time
 import bottle
 import ephemeral_port_reserve
 import pytest
-import umsgpack
+from msgpack import packb
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
 from six.moves import urllib
@@ -76,7 +76,7 @@ def api_json():
 def api_json_or_msgpack():
     if bottle.request.headers.get('accept') == APP_MSGPACK:
         bottle.response.content_type = APP_MSGPACK
-        return umsgpack.packb(API_RESPONSE)
+        return packb(API_RESPONSE)
     else:
         return API_RESPONSE
 

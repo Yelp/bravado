@@ -3,7 +3,7 @@ import sys
 from functools import wraps
 
 import six
-import umsgpack
+from msgpack import unpackb
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
 from bravado_core.exception import MatchingResponseNotFound
@@ -194,7 +194,7 @@ def unmarshal_response_inner(response, op):
         if content_type.startswith(APP_JSON):
             content_value = response.json()
         else:
-            content_value = umsgpack.unpackb(response.raw_bytes)
+            content_value = unpackb(response.raw_bytes, encoding='utf-8')
 
         if op.swagger_spec.config.get('validate_responses', False):
             validate_schema_object(op.swagger_spec, content_spec, content_value)
