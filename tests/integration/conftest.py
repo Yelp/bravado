@@ -56,8 +56,55 @@ SWAGGER_SPEC_DICT = {
                     }
                 }
             }
-        }
-    }
+        },
+        '/echo': {
+            'get': {
+                'produces': ['application/json'],
+                'parameters': [
+                    {
+                        'in': 'query',
+                        'name': 'message',
+                        'type': 'string',
+                        'required': True,
+                    }
+                ],
+                'responses': {
+                    '200': {
+                        'description': 'HTTP/200',
+                        'schema': {
+                            'type': 'object',
+                            'properties': {
+                                'message': {
+                                    'type': 'string',
+                                },
+                            },
+                            'required': ['message'],
+                        },
+                    },
+                },
+            },
+        },
+        '/char_test/{special}': {
+            'get': {
+                'operationId': 'get_char_test',
+                'produces': ['application/json'],
+                'parameters': [
+                    {
+                        'in': 'path',
+                        'name': 'special',
+                        'type': 'string',
+                        'required': True,
+                    }
+                ],
+                'responses': {
+                    '200': {
+                        'description': 'HTTP/200',
+                        'schema': {'$ref': '#/definitions/api_response'},
+                    },
+                },
+            },
+        },
+    },
 }
 
 
@@ -95,6 +142,18 @@ def two():
 def double():
     x = bottle.request.params['number']
     return str(int(x) * 2)
+
+
+@bottle.get('/echo')
+def echo():
+    bottle.response.content_type = APP_JSON
+    return {'message': bottle.request.params['message']}
+
+
+@bottle.get('/char_test/spe%ial?')
+def char_test():
+    bottle.response.content_type = APP_JSON
+    return API_RESPONSE
 
 
 @bottle.get('/sleep')

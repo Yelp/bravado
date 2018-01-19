@@ -31,7 +31,7 @@ setup(
         "Programming Language :: Python :: 3.6",
     ],
     install_requires=[
-        "bravado-core >= 4.11.0",
+        "bravado-core >= 4.11.4",
         "msgpack-python",
         "python-dateutil",
         "pyyaml",
