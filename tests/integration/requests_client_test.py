@@ -75,6 +75,15 @@ class TestServerRequestsClient:
         assert marshaled_response == API_RESPONSE
         assert raw_response.raw_bytes == packb(API_RESPONSE)
 
+    def test_swagger_client_special_chars_query(self, swagger_client):
+        message = 'My Me$$age with %pecial characters?"'
+        marshaled_response, _ = swagger_client.echo.get_echo(message=message).result(timeout=1)
+        assert marshaled_response == {'message': message}
+
+    def test_swagger_client_special_chars_path(self, swagger_client):
+        marshaled_response, _ = swagger_client.char_test.get_char_test(special='spe%ial?').result(timeout=1)
+        assert marshaled_response == API_RESPONSE
+
     def test_multiple_requests(self, threaded_http_server):
         request_one_params = {
             'method': 'GET',
