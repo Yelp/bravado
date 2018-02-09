@@ -50,7 +50,7 @@ Example with Basic Authentication
 
     from bravado.requests_client import RequestsClient
     from bravado.client import SwaggerClient
-    
+
     http_client = RequestsClient()
     http_client.set_basic_auth(
         'api.yourhost.com',
@@ -69,7 +69,7 @@ Example with Header Authentication
 
     from bravado.requests_client import RequestsClient
     from bravado.client import SwaggerClient
-    
+
     http_client = RequestsClient()
     http_client.set_api_key(
         'api.yourhost.com', 'token'

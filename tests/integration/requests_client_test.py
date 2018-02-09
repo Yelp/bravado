@@ -5,8 +5,9 @@ import mock
 import pytest
 import requests
 import requests.exceptions
-from msgpack import packb, unpackb
 from bravado_core.content_type import APP_MSGPACK
+from msgpack import packb
+from msgpack import unpackb
 
 from bravado.client import SwaggerClient
 from bravado.exception import BravadoTimeoutError
@@ -82,6 +83,24 @@ class TestServerRequestsClient:
 
     def test_swagger_client_special_chars_path(self, swagger_client):
         marshaled_response, _ = swagger_client.char_test.get_char_test(special='spe%ial?').result(timeout=1)
+        assert marshaled_response == API_RESPONSE
+
+    def test_sanitized_resource_and_param(self, swagger_client):
+        marshaled_response, _ = swagger_client.sanitize_test.get_sanitized_param(X_User_Id='admin').result(timeout=1)
+        assert marshaled_response == API_RESPONSE
+
+    def test_unsanitized_resource_and_param(self, swagger_client):
+        params = {'X-User-Id': 'admin'}
+        marshaled_response, _ = swagger_client._get_resource(
+            'sanitize-test',
+        ).get_sanitized_param(**params).result(timeout=1)
+        assert marshaled_response == API_RESPONSE
+
+    def test_unsanitized_param_as_header(self, swagger_client):
+        headers = {'X-User-Id': 'admin'}
+        marshaled_response, _ = swagger_client.sanitize_test.get_sanitized_param(
+            _request_options={'headers': headers},
+        ).result(timeout=1)
         assert marshaled_response == API_RESPONSE
 
     def test_multiple_requests(self, threaded_http_server):

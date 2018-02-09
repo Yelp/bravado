@@ -5,9 +5,9 @@ import time
 import bottle
 import ephemeral_port_reserve
 import pytest
-from msgpack import packb
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
+from msgpack import packb
 from six.moves import urllib
 
 
@@ -48,7 +48,7 @@ SWAGGER_SPEC_DICT = {
                 'produces': [
                     'application/msgpack',
                     'application/json'
-                 ],
+                ],
                 'responses': {
                     '200': {
                         'description': 'HTTP/200',
@@ -92,6 +92,26 @@ SWAGGER_SPEC_DICT = {
                     {
                         'in': 'path',
                         'name': 'special',
+                        'type': 'string',
+                        'required': True,
+                    }
+                ],
+                'responses': {
+                    '200': {
+                        'description': 'HTTP/200',
+                        'schema': {'$ref': '#/definitions/api_response'},
+                    },
+                },
+            },
+        },
+        '/sanitize-test': {
+            'get': {
+                'operationId': 'get_sanitized_param',
+                'produces': ['application/json'],
+                'parameters': [
+                    {
+                        'in': 'header',
+                        'name': 'X-User-Id',
                         'type': 'string',
                         'required': True,
                     }
@@ -154,6 +174,14 @@ def echo():
 def char_test():
     bottle.response.content_type = APP_JSON
     return API_RESPONSE
+
+
+@bottle.get('/sanitize-test')
+def sanitize_test():
+    if bottle.request.headers.get('X-User-Id') == 'admin':
+        bottle.response.content_type = APP_JSON
+        return API_RESPONSE
+    return bottle.HTTPResponse(status=404)
 
 
 @bottle.get('/sleep')

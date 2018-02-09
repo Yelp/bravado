@@ -45,7 +45,7 @@ Changelog
 
 9.0.3 (2017-06-21)
 ------------------
-- When using the fido HTTP client and passing a timeout to ``result()``, make sure we throw a fido HTTPTimeoutError instead of a crochet TimeoutError when hitting the timeout. 
+- When using the fido HTTP client and passing a timeout to ``result()``, make sure we throw a fido HTTPTimeoutError instead of a crochet TimeoutError when hitting the timeout.
 
 9.0.2 (2017-06-12)
 ------------------
@@ -71,7 +71,7 @@ Changelog
 
 8.2.0 (2016-04-29)
 ------------------
-- Bravado compliant to Fido 3.0.0 
+- Bravado compliant to Fido 3.0.0
 - Dropped use of concurrent futures in favor of crochet EventualResult
 - Workaround for bypassing a unicode bug in python `requests` < 2.8.1
 
