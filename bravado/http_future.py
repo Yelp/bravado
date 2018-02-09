@@ -3,13 +3,13 @@ import sys
 from functools import wraps
 
 import six
-from msgpack import unpackb
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
 from bravado_core.exception import MatchingResponseNotFound
 from bravado_core.response import get_response_spec
 from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
+from msgpack import unpackb
 
 from bravado.config_defaults import REQUEST_OPTIONS_DEFAULTS
 from bravado.exception import BravadoTimeoutError

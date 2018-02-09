@@ -13,7 +13,7 @@ Features include:
 * Dynamically generated client - no code generation needed!
 
 * `Synchronous <http://docs.python-requests.org/en/latest/>`_ and `Asynchronous <https://github.com/Yelp/fido>`_ http clients out of the box.
- 
+
 * Strict validations to verify that your Swagger Schema is  `v2.0 <https://github.com/wordnik/swagger-spec/blob/master/versions/2.0.md/>`_ compatible.
 
 * HTTP request and response validation against your Swagger Schema.

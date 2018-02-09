@@ -155,4 +155,3 @@ is easily done via configuration to return a
     print http_response.headers
     print http_response.status_code
     print pet.name
-
