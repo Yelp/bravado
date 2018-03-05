@@ -19,7 +19,7 @@ About
 -----
 
 Bravado is a Yelp maintained fork of `digium/swagger-py <https://github.com/digium/swagger-py/>`__
-for use with `OpenAPI Specification <https://github.com/OAI/OpenAPI-Specification>`__ (previously
+for use with `OpenAPI Specification version 2.0 <https://github.com/OAI/OpenAPI-Specification/blob/master/versions/2.0.md>`__ (previously
 known as Swagger).
 
 From the OpenAPI Specification project:
