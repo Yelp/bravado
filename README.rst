@@ -72,7 +72,7 @@ Example with Header Authentication
 
     http_client = RequestsClient()
     http_client.set_api_key(
-        'api.yourhost.com', 'token'
+        'api.yourhost.com', 'token',
         param_name='api_key', param_in='header'
     )
     client = SwaggerClient.from_url(
