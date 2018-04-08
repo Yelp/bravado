@@ -148,6 +148,16 @@ class SwaggerClient(object):
         # execute a service call via the http_client.
         return ResourceDecorator(resource, self.__also_return_response)
 
+    def _get_operation(self, operation_id):
+        """ Find an operation by operationId """
+
+        # Find it in the resources, we could add a single dict to lookup
+        # operationId since it is required to be unique across the spec
+        for resource in self.resources.values():
+            op = resource.operations.get(operation_id)
+            if op:
+                return op
+
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.swagger_spec.api_url)
 

@@ -199,14 +199,55 @@ def unmarshal_response_inner(response, op):
         if op.swagger_spec.config.get('validate_responses', False):
             validate_schema_object(op.swagger_spec, content_spec, content_value)
 
-        return unmarshal_schema_object(
+        result = unmarshal_schema_object(
             swagger_spec=op.swagger_spec,
             schema_object_spec=content_spec,
             value=content_value,
         )
 
+        if op.swagger_spec.config.get('add_linked_fetch', False):
+            wrap_linked_objects_with_fetch(op, result, content_spec)
+
+        return result
     # TODO: Non-json response contents
     return response.text
+
+
+def wrap_linked_objects_with_fetch(op, result, content_spec):
+    for key in result:
+        properties = content_spec['properties'][key]
+        linked_op_id = properties.get('x-operationId')
+        if (linked_op_id
+            and properties.get('type') == 'string'
+                and properties.get('format') == 'url'):
+
+            linked_op = op.swagger_spec._get_operation(linked_op_id)
+            if linked_op:
+                result[key] = AddLinkedFetchWrapper(result[key], linked_op)
+            else:
+                # XXX find more appropriate exception
+                raise NotImplementedError("x-operationId: {} NOT FOUND".format(linked_op_id))
+
+
+class AddLinkedFetchWrapper(object):
+    def __init__(self, baseObject, op):
+        self.__class__ = type(baseObject.__class__.__name__,
+                              (self.__class__, baseObject.__class__),
+                              {})
+        self.__dict__ = baseObject.__dict__
+        self._linked_operation = op
+
+    def _linked_operation(self):
+        return self._linked_operation
+
+    def _linked_fetch(self):
+        op = self._linked_operation
+
+        http_client = op.swagger_spec.http_client
+        return http_client.request({'method': 'GET', 'url': self.__str__},
+                                   operation=op,
+                                   also_return_response=True)
+        # op.config.get('also_return_response'))
 
 
 def raise_on_unexpected(http_response):
