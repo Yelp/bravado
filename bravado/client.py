@@ -72,6 +72,8 @@ class SwaggerClient(object):
     def __init__(self, swagger_spec, also_return_response=False):
         self.__also_return_response = also_return_response
         self.swagger_spec = swagger_spec
+        # provide a backref to the client from the spec
+        self.swagger_spec._client = self
 
     @classmethod
     def from_url(cls, spec_url, http_client=None, request_headers=None, config=None):
@@ -153,7 +155,7 @@ class SwaggerClient(object):
 
         # Find it in the resources, we could add a single dict to lookup
         # operationId since it is required to be unique across the spec
-        for resource in self.resources.values():
+        for resource in self.swagger_spec.resources.values():
             op = resource.operations.get(operation_id)
             if op:
                 return op

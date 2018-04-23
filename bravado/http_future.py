@@ -205,7 +205,7 @@ def unmarshal_response_inner(response, op):
             value=content_value,
         )
 
-        if op.swagger_spec.config.get('add_linked_fetch', False):
+        if op.swagger_spec.config.get('add_fetch_link', False):
             wrap_linked_objects_with_fetch(op, result, content_spec)
 
         return result
@@ -214,40 +214,58 @@ def unmarshal_response_inner(response, op):
 
 
 def wrap_linked_objects_with_fetch(op, result, content_spec):
+    """
+    Wraps any returned results that have a x-operationId property
+    with a wrapper that allows the object to be callable to retrieve
+    the linked resource.
+    You can use both obj() and obj._fetch_linked() to access
+    the http_request for the linked resource.
+    """
+
     for key in result:
-        properties = content_spec['properties'][key]
+        properties = content_spec['properties'].get(key)
         linked_op_id = properties.get('x-operationId')
-        if (linked_op_id
+        if (linked_op_id and result[key]
             and properties.get('type') == 'string'
                 and properties.get('format') == 'url'):
 
-            linked_op = op.swagger_spec._get_operation(linked_op_id)
+            linked_op = op.swagger_spec._client._get_operation(linked_op_id)
+
             if linked_op:
-                result[key] = AddLinkedFetchWrapper(result[key], linked_op)
+                result[key] = FetchLink(result[key], op=linked_op)
             else:
                 # XXX find more appropriate exception
                 raise NotImplementedError("x-operationId: {} NOT FOUND".format(linked_op_id))
 
 
-class AddLinkedFetchWrapper(object):
-    def __init__(self, baseObject, op):
-        self.__class__ = type(baseObject.__class__.__name__,
-                              (self.__class__, baseObject.__class__),
-                              {})
-        self.__dict__ = baseObject.__dict__
+class FetchLink(object):
+    """
+    This class makes an url object callable.
+
+    You can use both obj() and obj._fetch_linked() to access
+    the http_request for the linked resource.
+    """
+
+    def __init__(self, url, op):
+        self._url = str(url)
         self._linked_operation = op
 
-    def _linked_operation(self):
-        return self._linked_operation
+    def __str__(self):
+        return self._url
 
-    def _linked_fetch(self):
+    def __repr__(self):
+        return "{}({},{})".format(self.__class__.__name__, self._url, str(self._linked_operation))
+
+    def __call__(self):
+        return self._fetch_linked()
+
+    def _fetch_linked(self):
         op = self._linked_operation
 
         http_client = op.swagger_spec.http_client
-        return http_client.request({'method': 'GET', 'url': self.__str__},
+        return http_client.request({'method': 'GET', 'url': str(self)},
                                    operation=op,
-                                   also_return_response=True)
-        # op.config.get('also_return_response'))
+                                   also_return_response=op.swagger_spec.config.get('also_return_response'))
 
 
 def raise_on_unexpected(http_response):
