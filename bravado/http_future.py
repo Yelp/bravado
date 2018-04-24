@@ -124,25 +124,16 @@ class HttpFuture(object):
         :type exceptions_to_catch: List/Tuple of Exception classes.
         :return: A BravadoResponse instance containing the swagger result and response metadata.
         """
-        swagger_result = None
+        incoming_response = None
         try:
-            incoming_response = self._get_incoming_response(timeout)
-            if self.operation is not None:
-                unmarshal_response(
-                    incoming_response,
-                    self.operation,
-                    self.response_callbacks,
-                )
-
-                swagger_result = incoming_response.swagger_result
-            elif incoming_response.status_code >= 300:
+            swagger_result, incoming_response = self._get_result_and_incoming_response(timeout)
+            if self.operation is None and incoming_response.status_code >= 300:
                 raise make_http_exception(response=incoming_response)
         except exceptions_to_catch as e:
             if fallback_response:
                 swagger_result = fallback_response(e)
-                incoming_response = None
             else:
-                raise
+                six.reraise(type(e), e, sys.exc_info()[2])
 
         return BravadoResponse(
             result=swagger_result,
@@ -160,15 +151,9 @@ class HttpFuture(object):
         :return: Depends on the value of also_return_response sent in
             to the constructor.
         """
-        incoming_response = self._get_incoming_response(timeout)
+        swagger_result, incoming_response = self._get_result_and_incoming_response(timeout)
 
         if self.operation is not None:
-            unmarshal_response(
-                incoming_response,
-                self.operation,
-                self.response_callbacks)
-
-            swagger_result = incoming_response.swagger_result
             if self.also_return_response:
                 return swagger_result, incoming_response
             return swagger_result
@@ -179,9 +164,19 @@ class HttpFuture(object):
         raise make_http_exception(response=incoming_response)
 
     @reraise_errors
-    def _get_incoming_response(self, timeout=None):
+    def _get_result_and_incoming_response(self, timeout=None):
         inner_response = self.future.result(timeout=timeout)
-        return self.response_adapter(inner_response)
+        incoming_response = self.response_adapter(inner_response)
+        swagger_result = None
+        if self.operation is not None:
+            unmarshal_response(
+                incoming_response,
+                self.operation,
+                self.response_callbacks,
+            )
+            swagger_result = incoming_response.swagger_result
+
+        return swagger_result, incoming_response
 
 
 def unmarshal_response(incoming_response, operation, response_callbacks=None):
