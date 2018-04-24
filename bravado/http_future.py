@@ -13,7 +13,15 @@ from msgpack import unpackb
 
 from bravado.config_defaults import REQUEST_OPTIONS_DEFAULTS
 from bravado.exception import BravadoTimeoutError
+from bravado.exception import HTTPServerError
 from bravado.exception import make_http_exception
+from bravado.response import BravadoResponse
+
+
+FALLBACK_EXCEPTIONS = (
+    BravadoTimeoutError,
+    HTTPServerError,
+)
 
 
 class FutureAdapter(object):
@@ -101,9 +109,50 @@ class HttpFuture(object):
         self.response_callbacks = response_callbacks or REQUEST_OPTIONS_DEFAULTS['response_callbacks']
         self.also_return_response = also_return_response
 
-    @reraise_errors
-    def result(self, timeout=None):
+    def response(self, timeout=None, fallback_response=None, exceptions_to_catch=FALLBACK_EXCEPTIONS):
         """Blocking call to wait for the HTTP response.
+
+        :param timeout: Number of seconds to wait for a response. Defaults to
+            None which means wait indefinitely.
+        :type timeout: float
+        :param fallback_response: callable that accepts an exception as argument and returns the
+            swagger result to use in case of errors
+        :type fallback_response: callable that takes an exception and returns a fallback swagger result
+        :param exceptions_to_catch: Exception classes to catch and call `fallback_response`
+            with. Has no effect if `fallback_response` is not provided. By default, `fallback_response`
+            will be called for read timeout and server errors (HTTP 5XX).
+        :type exceptions_to_catch: List/Tuple of Exception classes.
+        :return: A BravadoResponse instance containing the swagger result and response metadata.
+        """
+        swagger_result = None
+        try:
+            incoming_response = self._get_incoming_response(timeout)
+            if self.operation is not None:
+                unmarshal_response(
+                    incoming_response,
+                    self.operation,
+                    self.response_callbacks,
+                )
+
+                swagger_result = incoming_response.swagger_result
+            elif incoming_response.status_code >= 300:
+                raise make_http_exception(response=incoming_response)
+        except exceptions_to_catch as e:
+            if fallback_response:
+                swagger_result = fallback_response(e)
+                incoming_response = None
+            else:
+                raise
+
+        return BravadoResponse(
+            result=swagger_result,
+            incoming_response=incoming_response,
+        )
+
+    def result(self, timeout=None):
+        """DEPRECATED: please use the `response()` method instead.
+
+        Blocking call to wait for the HTTP response.
 
         :param timeout: Number of seconds to wait for a response. Defaults to
             None which means wait indefinitely.
@@ -111,8 +160,7 @@ class HttpFuture(object):
         :return: Depends on the value of also_return_response sent in
             to the constructor.
         """
-        inner_response = self.future.result(timeout=timeout)
-        incoming_response = self.response_adapter(inner_response)
+        incoming_response = self._get_incoming_response(timeout)
 
         if self.operation is not None:
             unmarshal_response(
@@ -129,6 +177,11 @@ class HttpFuture(object):
             return incoming_response
 
         raise make_http_exception(response=incoming_response)
+
+    @reraise_errors
+    def _get_incoming_response(self, timeout=None):
+        inner_response = self.future.result(timeout=timeout)
+        return self.response_adapter(inner_response)
 
 
 def unmarshal_response(incoming_response, operation, response_callbacks=None):
