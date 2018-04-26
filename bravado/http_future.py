@@ -143,7 +143,7 @@ class HttpFuture(object):
     def result(self, timeout=None):
         """DEPRECATED: please use the `response()` method instead.
 
-        Blocking call to wait for the HTTP response.
+        Blocking call to wait for and return the unmarshalled swagger result.
 
         :param timeout: Number of seconds to wait for a response. Defaults to
             None which means wait indefinitely.
