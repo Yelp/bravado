@@ -35,8 +35,4 @@ setup(
         'yelp_bytes',
         "yelp_uri >= 1.0.1",
     ],
-    extras_require={
-        ':python_version=="2.6"': ['twisted >= 14.0.0, < 15.5'],
-        ':python_version!="2.6"': ['twisted >= 14.0.0'],
-    },
 )
