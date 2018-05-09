@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import threading
+from multiprocessing import Process
 import time
 
 import bottle
@@ -8,7 +8,7 @@ import pytest
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
 from msgpack import packb
-from six.moves import urllib
+import requests
 
 
 ROUTE_1_RESPONSE = b'HEY BUDDY'
@@ -191,25 +191,28 @@ def sleep_api():
     return sec_to_sleep
 
 
-def wait_unit_service_starts(url, timeout=10):
-    start = time.time()
-    while time.time() < start + timeout:
-        try:
-            urllib.request.urlopen(url, timeout=2)
-        except urllib.error.HTTPError:
-            return
-        except urllib.error.URLError:
-            time.sleep(0.1)
+@pytest.fixture(scope='session')
+def swagger_http_server():
+    def wait_unit_service_starts(url, max_wait_time=10):
+        start = time.time()
+        check_url = '{url}/swagger.json'.format(url=url)
+        while time.time() < start + max_wait_time:
+            try:
+                requests.get(check_url, timeout=1)
+            except requests.ConnectionError:
+                time.sleep(0.1)
+            else:
+                return
 
-
-@pytest.yield_fixture(scope='session')
-def threaded_http_server():
     port = ephemeral_port_reserve.reserve()
-    thread = threading.Thread(
-        target=bottle.run, kwargs={'host': 'localhost', 'port': port},
+
+    web_service_process = Process(
+        target=bottle.run, kwargs={'quiet': True, 'host': 'localhost', 'port': port},
     )
-    thread.daemon = True
-    thread.start()
-    server_address = 'http://localhost:{port}'.format(port=port)
-    wait_unit_service_starts(server_address)
-    yield server_address
+    try:
+        web_service_process.start()
+        server_address = 'http://localhost:{port}'.format(port=port)
+        wait_unit_service_starts(server_address, 10)
+        yield server_address
+    finally:
+        web_service_process.terminate()
