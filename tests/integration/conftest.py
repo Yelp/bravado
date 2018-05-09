@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-from multiprocessing import Process
 import time
+from multiprocessing import Process
 
 import bottle
 import ephemeral_port_reserve
 import pytest
+import requests
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
 from msgpack import packb
-import requests
 
 
 ROUTE_1_RESPONSE = b'HEY BUDDY'
