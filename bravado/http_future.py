@@ -126,7 +126,8 @@ class HttpFuture(object):
         """
         incoming_response = None
         try:
-            swagger_result, incoming_response = self._get_result_and_incoming_response(timeout)
+            incoming_response = self._get_incoming_response(timeout)
+            swagger_result = self._get_swagger_result(incoming_response)
             if self.operation is None and incoming_response.status_code >= 300:
                 raise make_http_exception(response=incoming_response)
         except exceptions_to_catch as e:
@@ -151,7 +152,8 @@ class HttpFuture(object):
         :return: Depends on the value of also_return_response sent in
             to the constructor.
         """
-        swagger_result, incoming_response = self._get_result_and_incoming_response(timeout)
+        incoming_response = self._get_incoming_response(timeout)
+        swagger_result = self._get_swagger_result(incoming_response)
 
         if self.operation is not None:
             if self.also_return_response:
@@ -164,9 +166,12 @@ class HttpFuture(object):
         raise make_http_exception(response=incoming_response)
 
     @reraise_errors
-    def _get_result_and_incoming_response(self, timeout=None):
+    def _get_incoming_response(self, timeout=None):
         inner_response = self.future.result(timeout=timeout)
         incoming_response = self.response_adapter(inner_response)
+        return incoming_response
+
+    def _get_swagger_result(self, incoming_response):
         swagger_result = None
         if self.operation is not None:
             unmarshal_response(
@@ -176,7 +181,7 @@ class HttpFuture(object):
             )
             swagger_result = incoming_response.swagger_result
 
-        return swagger_result, incoming_response
+        return swagger_result
 
 
 def unmarshal_response(incoming_response, operation, response_callbacks=None):
