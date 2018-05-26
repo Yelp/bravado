@@ -76,6 +76,7 @@ def make_http_exception(response, message=None, swagger_result=None):
 
     if exc_class is None:
         exception_families = {
+            300: HTTPRedirection,
             400: HTTPClientError,
             500: HTTPServerError,
         }
@@ -85,6 +86,10 @@ def make_http_exception(response, message=None, swagger_result=None):
         )
 
     return exc_class(response, message=message, swagger_result=swagger_result)
+
+
+class HTTPRedirection(HTTPError):
+    """3xx responses."""
 
 
 class HTTPClientError(HTTPError):
@@ -97,6 +102,37 @@ class HTTPServerError(HTTPError):
 
 # The follow are based on the HTTP Status Code Registry at
 # http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
+class HTTPMultipleChoices(HTTPRedirection):
+    status_code = 300
+
+
+class HTTPMovedPermanently(HTTPRedirection):
+    status_code = 301
+
+
+class HTTPFound(HTTPRedirection):
+    status_code = 302
+
+
+class HTTPSeeOther(HTTPRedirection):
+    status_code = 303
+
+
+class HTTPNotModified(HTTPRedirection):
+    status_code = 304
+
+
+class HTTPUseProxy(HTTPRedirection):
+    status_code = 305
+
+
+class HTTPTemporaryRedirect(HTTPRedirection):
+    status_code = 307
+
+
+class HTTPPermanentRedirect(HTTPRedirection):
+    status_code = 308
+
 
 class HTTPBadRequest(HTTPClientError):
     status_code = 400

@@ -6,6 +6,8 @@ from bravado.exception import HTTPClientError
 from bravado.exception import HTTPError
 from bravado.exception import HTTPForbidden
 from bravado.exception import HTTPInternalServerError
+from bravado.exception import HTTPMovedPermanently
+from bravado.exception import HTTPRedirection
 from bravado.exception import HTTPServerError
 from bravado.exception import HTTPServiceUnavailable
 from bravado.exception import make_http_exception
@@ -62,6 +64,8 @@ def test_make_http_exception(response_500):
 @pytest.mark.parametrize(
     'status_code, expected_type',
     [
+        [301, HTTPMovedPermanently],
+        [399, HTTPRedirection],
         [403, HTTPForbidden],
         [499, HTTPClientError],
         [503, HTTPServiceUnavailable],
