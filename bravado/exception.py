@@ -71,7 +71,19 @@ def make_http_exception(response, message=None, swagger_result=None):
         value of the response.
     :return: An HTTP exception class that can be raised
     """
-    exc_class = status_map.get(response.status_code, HTTPError)
+    status_code = response.status_code
+    exc_class = status_map.get(status_code)
+
+    if exc_class is None:
+        exception_families = {
+            400: HTTPClientError,
+            500: HTTPServerError,
+        }
+        exc_class = exception_families.get(
+            (status_code // 100) * 100,
+            HTTPError,
+        )
+
     return exc_class(response, message=message, swagger_result=swagger_result)
 
 
