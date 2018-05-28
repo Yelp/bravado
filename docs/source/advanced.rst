@@ -11,7 +11,7 @@ Validation example:
 .. code-block:: python
 
     pet = Pet(id="I should be integer :(", name="tommy")
-    client.pet.addPet(body=pet).result()
+    client.pet.addPet(body=pet).response().result
 
 will result in an error like so:
 
@@ -38,7 +38,7 @@ Adding Request Headers
     swagger_client.pet.addPet(
         body=pet,
         _request_options={"headers": {"foo": "bar"}},
-    ).result()
+    ).response().result
 
 
 Docstrings
@@ -139,7 +139,7 @@ The default behavior for a service call is to return the swagger result like so:
 
 .. code-block:: python
 
-    pet = petstore.pet.getPetById(petId=42).result()
+    pet = petstore.pet.getPetById(petId=42).response().result
     print pet.name
 
 However, there are times when it is necessary to have access to the actual
@@ -150,7 +150,7 @@ is easily done via configuration to return a
 .. code-block:: python
 
     petstore = Swagger.from_url(..., config={'also_return_response': True})
-    pet, http_response = petstore.pet.getPetById(petId=42).result()
+    pet, http_response = petstore.pet.getPetById(petId=42).response().result
     assert isinstance(http_response, bravado_core.response.IncomingResponse)
     print http_response.headers
     print http_response.status_code

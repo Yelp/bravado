@@ -50,7 +50,8 @@ Config key                Type            Default    Description
                                                      | Specifically, the return value of ``HttpFuture.result()``.
                                                      | When ``False``, the swagger result is returned.
                                                      | When ``True``, the tuple ``(swagger result, http response)``
-                                                     | is returned.
+                                                     | is returned. Has no effect on the return value of
+                                                     | ``HttpFuture.response()``.
                                                      | See :ref:`getting_access_to_the_http_response`.
 ========================= =============== =========  ===============================================================
 
@@ -63,7 +64,7 @@ Configuration can also be applied on a per-request basis by passing in
 
     client = SwaggerClient.from_url(...)
     request_options = { ... }
-    client.pet.getPetById(petId=42, _request_options=request_options).result()
+    client.pet.getPetById(petId=42, _request_options=request_options).response().result
 
 ========================= =============== =========  ===============================================================
 Config key                Type            Default    Description
