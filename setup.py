@@ -35,7 +35,7 @@ setup(
         "msgpack-python",
         "python-dateutil",
         "pyyaml",
-        "requests >= 2",
+        "requests >= 2.4",
         "six",
     ],
     extras_require={
