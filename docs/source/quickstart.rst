@@ -22,7 +22,7 @@ Here is a simple example to try from a REPL (like IPython):
     from bravado.client import SwaggerClient
 
     client = SwaggerClient.from_url("http://petstore.swagger.io/v2/swagger.json")
-    pet = client.pet.getPetById(petId=42).result()
+    pet = client.pet.getPetById(petId=42).response().result
 
 If you were lucky, and pet Id with 42 was present, you will get back a result.
 It will be a dynamically created instance of ``bravado.model.Pet`` with attributes ``category``, etc. You can even try ``pet.category.id`` or ``pet.tags[0]``.
@@ -44,7 +44,7 @@ Here we will demonstrate how ``bravado`` hides all the ``JSON`` handling from th
         Pet = client.get_model('Pet')
         Category = client.get_model('Category')
         pet = Pet(id=42, name="tommy", category=Category(id=24))
-        client.pet.addPet(body=pet).result()
+        client.pet.addPet(body=pet).response().result
 
 
 Time to get Twisted! (Asynchronous client)
