@@ -2,9 +2,14 @@
 import pytest
 from requests.models import Response
 
+from bravado.exception import HTTPClientError
 from bravado.exception import HTTPError
+from bravado.exception import HTTPForbidden
 from bravado.exception import HTTPInternalServerError
+from bravado.exception import HTTPMovedPermanently
+from bravado.exception import HTTPRedirection
 from bravado.exception import HTTPServerError
+from bravado.exception import HTTPServiceUnavailable
 from bravado.exception import make_http_exception
 from bravado.requests_client import RequestsResponseAdapter
 
@@ -56,11 +61,23 @@ def test_make_http_exception(response_500):
     assert str(exc) == "500 Server Error: Holy moly!: {'msg': 'Kaboom'}"
 
 
-def test_make_http_exception_unknown():
+@pytest.mark.parametrize(
+    'status_code, expected_type',
+    [
+        [301, HTTPMovedPermanently],
+        [399, HTTPRedirection],
+        [403, HTTPForbidden],
+        [499, HTTPClientError],
+        [503, HTTPServiceUnavailable],
+        [599, HTTPServerError],
+        [600, HTTPError],
+    ],
+)
+def test_make_http_exception_type(status_code, expected_type):
     requests_response = Response()
-    requests_response.status_code = 600
+    requests_response.status_code = status_code
     requests_response.reason = "Womp Error"
     exc = make_http_exception(
         RequestsResponseAdapter(requests_response),
     )
-    assert type(exc) == HTTPError
+    assert type(exc) == expected_type
