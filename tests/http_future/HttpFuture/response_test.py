@@ -21,5 +21,4 @@ def test_fallback_result(mock_future_adapter):
 
     assert response.result == fallback_result
     assert response.response_metadata.is_fallback_result is True
-    assert response.response_metadata.exc_info is not None
     assert response.response_metadata.exc_info[0] is BravadoTimeoutError

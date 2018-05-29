@@ -131,7 +131,6 @@ class HttpFuture(object):
         use at your own risk.
         """
         incoming_response = None
-        is_fallback_result = False
         exc_info = None
         end_time = None
         try:
@@ -146,14 +145,12 @@ class HttpFuture(object):
             exc_info = sys.exc_info()
             if fallback_result:
                 swagger_result = fallback_result(e)
-                is_fallback_result = True
             else:
                 six.reraise(*exc_info)
 
         response_metadata = BravadoResponseMetadata(
             incoming_response=incoming_response,
             swagger_result=swagger_result,
-            is_fallback_result=is_fallback_result,
             elapsed_time=end_time - self._start_time,
             exc_info=exc_info,
         )
