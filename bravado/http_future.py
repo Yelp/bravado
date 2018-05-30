@@ -2,6 +2,7 @@
 import sys
 from functools import wraps
 
+import monotonic
 import six
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
@@ -16,6 +17,7 @@ from bravado.exception import BravadoTimeoutError
 from bravado.exception import HTTPServerError
 from bravado.exception import make_http_exception
 from bravado.response import BravadoResponse
+from bravado.response import BravadoResponseMetadata
 
 
 FALLBACK_EXCEPTIONS = (
@@ -103,42 +105,58 @@ class HttpFuture(object):
 
     def __init__(self, future, response_adapter, operation=None,
                  response_callbacks=None, also_return_response=False):
+        self._start_time = monotonic.monotonic()
         self.future = future
         self.response_adapter = response_adapter
         self.operation = operation
         self.response_callbacks = response_callbacks or REQUEST_OPTIONS_DEFAULTS['response_callbacks']
         self.also_return_response = also_return_response
 
-    def response(self, timeout=None, fallback_response=None, exceptions_to_catch=FALLBACK_EXCEPTIONS):
+    def response(self, timeout=None, fallback_result=None, exceptions_to_catch=FALLBACK_EXCEPTIONS):
         """Blocking call to wait for the HTTP response.
 
         :param timeout: Number of seconds to wait for a response. Defaults to
             None which means wait indefinitely.
         :type timeout: float
-        :param fallback_response: callable that accepts an exception as argument and returns the
+        :param fallback_result: callable that accepts an exception as argument and returns the
             swagger result to use in case of errors
-        :type fallback_response: callable that takes an exception and returns a fallback swagger result
-        :param exceptions_to_catch: Exception classes to catch and call `fallback_response`
-            with. Has no effect if `fallback_response` is not provided. By default, `fallback_response`
+        :type fallback_result: callable that takes an exception and returns a fallback swagger result
+        :param exceptions_to_catch: Exception classes to catch and call `fallback_result`
+            with. Has no effect if `fallback_result` is not provided. By default, `fallback_result`
             will be called for read timeout and server errors (HTTP 5XX).
         :type exceptions_to_catch: List/Tuple of Exception classes.
         :return: A BravadoResponse instance containing the swagger result and response metadata.
+
+        WARNING: This interface is considered UNSTABLE. Backwards-incompatible API changes may occur;
+        use at your own risk.
         """
         incoming_response = None
+        exc_info = None
+        end_time = None
         try:
             incoming_response = self._get_incoming_response(timeout)
+            end_time = monotonic.monotonic()
             swagger_result = self._get_swagger_result(incoming_response)
             if self.operation is None and incoming_response.status_code >= 300:
                 raise make_http_exception(response=incoming_response)
         except exceptions_to_catch as e:
-            if fallback_response:
-                swagger_result = fallback_response(e)
+            if end_time is None:
+                end_time = monotonic.monotonic()
+            exc_info = sys.exc_info()
+            if fallback_result:
+                swagger_result = fallback_result(e)
             else:
-                six.reraise(type(e), e, sys.exc_info()[2])
+                six.reraise(*exc_info)
 
+        response_metadata = BravadoResponseMetadata(
+            incoming_response=incoming_response,
+            swagger_result=swagger_result,
+            elapsed_time=end_time - self._start_time,
+            exc_info=exc_info,
+        )
         return BravadoResponse(
             result=swagger_result,
-            incoming_response=incoming_response,
+            response_metadata=response_metadata,
         )
 
     def result(self, timeout=None):
