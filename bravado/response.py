@@ -30,7 +30,7 @@ class BravadoResponseMetadata(object):
     """
 
     def __init__(self, incoming_response, swagger_result, elapsed_time, exc_info):
-        self.incoming_response = incoming_response
+        self._incoming_response = incoming_response
         self.elapsed_time = elapsed_time
         self.exc_info = exc_info
 
@@ -39,17 +39,17 @@ class BravadoResponseMetadata(object):
         self._swagger_result = swagger_result
 
     @property
-    def status_code(self):
-        if not self.incoming_response:
+    def incoming_response(self):
+        if not self._incoming_response:
             raise ValueError('No incoming_response present')
+        return self._incoming_response
 
+    @property
+    def status_code(self):
         return self.incoming_response.status_code
 
     @property
     def headers(self):
-        if not self.incoming_response:
-            raise ValueError('No incoming_response present')
-
         return self.incoming_response.headers
 
     @property
