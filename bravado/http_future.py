@@ -12,12 +12,11 @@ from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
 from msgpack import unpackb
 
-from bravado.config_defaults import REQUEST_OPTIONS_DEFAULTS
+from bravado.config import REQUEST_OPTIONS_DEFAULTS
 from bravado.exception import BravadoTimeoutError
 from bravado.exception import HTTPServerError
 from bravado.exception import make_http_exception
 from bravado.response import BravadoResponse
-from bravado.response import BravadoResponseMetadata
 
 
 FALLBACK_EXCEPTIONS = (
@@ -143,12 +142,16 @@ class HttpFuture(object):
             if end_time is None:
                 end_time = monotonic.monotonic()
             exc_info = sys.exc_info()
-            if fallback_result:
+            if (
+                fallback_result and self.operation
+                and not self.operation.swagger_spec.config['bravado'].disable_fallback_results
+            ):
                 swagger_result = fallback_result(e)
             else:
                 six.reraise(*exc_info)
 
-        response_metadata = BravadoResponseMetadata(
+        metadata_class = self.operation.swagger_spec.config['bravado'].response_metadata_class
+        response_metadata = metadata_class(
             incoming_response=incoming_response,
             swagger_result=swagger_result,
             elapsed_time=end_time - self._start_time,

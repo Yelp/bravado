@@ -53,8 +53,8 @@ from bravado_core.spec import Spec
 from six import iteritems
 from six import itervalues
 
-from bravado.config_defaults import CONFIG_DEFAULTS
-from bravado.config_defaults import REQUEST_OPTIONS_DEFAULTS
+from bravado.config import BravadoConfig
+from bravado.config import REQUEST_OPTIONS_DEFAULTS
 from bravado.docstring_property import docstring_property
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
@@ -120,15 +120,20 @@ class SwaggerClient(object):
         :rtype: :class:`bravado_core.spec.Spec`
         """
         http_client = http_client or RequestsClient()
+        config = config or {}
 
         # Apply bravado config defaults
-        config = dict(CONFIG_DEFAULTS, **(config or {}))
+        bravado_config = BravadoConfig.from_config_dict(config)
+        # remove bravado configs from config dict
+        for key in set(bravado_config._fields).intersection(set(config)):
+            del config[key]
+        # set bravado config object
+        config['bravado'] = bravado_config
 
-        also_return_response = config.pop('also_return_response', False)
         swagger_spec = Spec.from_dict(
             spec_dict, origin_url, http_client, config,
         )
-        return cls(swagger_spec, also_return_response=also_return_response)
+        return cls(swagger_spec, also_return_response=bravado_config.also_return_response)
 
     def get_model(self, model_name):
         return self.swagger_spec.definitions[model_name]
