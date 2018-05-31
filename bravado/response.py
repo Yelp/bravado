@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+import logging
+
+from bravado.config import _import_class
+
+log = logging.getLogger(__name__)
 
 
 class BravadoResponse(object):
@@ -55,3 +60,20 @@ class BravadoResponseMetadata(object):
     @property
     def is_fallback_result(self):
         return self.exc_info is not None
+
+
+def get_metadata_class(fully_qualified_class_str):
+    class_to_import = _import_class(fully_qualified_class_str)
+    if not class_to_import:
+        return BravadoResponseMetadata
+
+    if issubclass(class_to_import, BravadoResponseMetadata):
+        return class_to_import
+
+    log.warning(
+        'bravado configuration error: the metadata class {fully_qualified_class_str}\' does not extend '
+        'BravadoResponseMetadata. Using default class instead.'.format(
+            fully_qualified_class_str=fully_qualified_class_str,
+        )
+    )
+    return BravadoResponseMetadata
