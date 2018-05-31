@@ -125,7 +125,7 @@ class SwaggerClient(object):
         # Apply bravado config defaults
         bravado_config = BravadoConfig.from_config_dict(config)
         # remove bravado configs from config dict
-        for key in set(bravado_config).intersection(set(config)):
+        for key in set(bravado_config._fields).intersection(set(config)):
             del config[key]
         # set bravado config object
         config['bravado'] = bravado_config

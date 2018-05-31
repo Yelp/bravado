@@ -4,10 +4,46 @@ import tempfile
 import unittest
 
 import httpretty
+import mock
 import pytest
 import requests
 
 from bravado.client import SwaggerClient
+from bravado.config import CONFIG_DEFAULTS
+
+
+@pytest.fixture
+def mock_spec():
+    with mock.patch('bravado.client.Spec') as _mock:
+        yield _mock
+
+
+def test_remove_bravado_configs(mock_spec, processed_default_config):
+    config = CONFIG_DEFAULTS.copy()
+    config['validate_swagger_spec'] = False  # bravado_core config
+
+    SwaggerClient.from_spec({}, config=config)
+
+    mock_spec.from_dict.assert_called_once_with(
+        {},  # spec_dict
+        None,  # spec_url
+        mock.ANY,  # http_client
+        {
+            'bravado': processed_default_config,
+            'validate_swagger_spec': False,
+        },  # config
+    )
+
+
+def test_also_return_response(mock_spec):
+    with mock.patch('bravado.client.SwaggerClient.__init__') as mock_init:
+        mock_init.return_value = None
+        SwaggerClient.from_spec({}, config={'also_return_response': True})
+
+    mock_init.assert_called_once_with(
+        mock_spec.from_dict.return_value,
+        also_return_response=True,
+    )
 
 
 @pytest.mark.xfail

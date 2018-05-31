@@ -42,7 +42,7 @@ class BravadoConfig(
     def from_config_dict(config):
         if config is None:
             config = {}
-        bravado_config = {key: value for key, value in config.iteritems() if key in BravadoConfig._fields}
+        bravado_config = {key: value for key, value in config.items() if key in BravadoConfig._fields}
         bravado_config = dict(CONFIG_DEFAULTS, **bravado_config)
         bravado_config['response_metadata_class'] = get_response_metadata_class(
             bravado_config['response_metadata_class'],
