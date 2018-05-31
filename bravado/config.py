@@ -44,7 +44,7 @@ class BravadoConfig(
             config = {}
         bravado_config = {key: value for key, value in config.items() if key in BravadoConfig._fields}
         bravado_config = dict(CONFIG_DEFAULTS, **bravado_config)
-        bravado_config['response_metadata_class'] = get_response_metadata_class(
+        bravado_config['response_metadata_class'] = _get_response_metadata_class(
             bravado_config['response_metadata_class'],
         )
         return BravadoConfig(
@@ -52,7 +52,7 @@ class BravadoConfig(
         )
 
 
-def get_response_metadata_class(fully_qualified_class_str):
+def _get_response_metadata_class(fully_qualified_class_str):
     class_to_import = _import_class(fully_qualified_class_str)
     if not class_to_import:
         return BravadoResponseMetadata

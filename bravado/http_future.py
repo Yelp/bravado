@@ -142,7 +142,10 @@ class HttpFuture(object):
             if end_time is None:
                 end_time = monotonic.monotonic()
             exc_info = sys.exc_info()
-            if self.operation and not self.operation.swagger_spec.config['bravado'].disable_fallback_results:
+            if (
+                fallback_result and self.operation
+                and not self.operation.swagger_spec.config['bravado'].disable_fallback_results
+            ):
                 swagger_result = fallback_result(e)
             else:
                 six.reraise(*exc_info)

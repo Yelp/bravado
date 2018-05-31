@@ -2,9 +2,9 @@
 import mock
 import pytest
 
+from bravado.config import _get_response_metadata_class
 from bravado.config import BravadoConfig
 from bravado.config import CONFIG_DEFAULTS
-from bravado.config import get_response_metadata_class
 from bravado.response import BravadoResponseMetadata
 
 
@@ -49,14 +49,14 @@ def test_ignore_unknown_configs(processed_default_config):
 
 
 def test_get_response_metadata_class_invalid_str(mock_log):
-    metadata_class = get_response_metadata_class('some_invalid_str')
+    metadata_class = _get_response_metadata_class('some_invalid_str')
     assert metadata_class is BravadoResponseMetadata
     assert mock_log.warning.call_count == 1
     assert 'Error while importing' in mock_log.warning.call_args[0][0]
 
 
 def test_get_response_metadata_class_invalid_class(mock_log):
-    metadata_class = get_response_metadata_class('tests.config_test.IncorrectResponseMetadata')
+    metadata_class = _get_response_metadata_class('tests.config_test.IncorrectResponseMetadata')
     assert metadata_class is BravadoResponseMetadata
     assert mock_log.warning.call_count == 1
     assert 'does not extend' in mock_log.warning.call_args[0][0]
