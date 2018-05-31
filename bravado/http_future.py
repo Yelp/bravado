@@ -130,7 +130,10 @@ class HttpFuture(object):
         use at your own risk.
         """
         incoming_response = None
-        exc_info = None
+        # the Python 2 documentation states that we shouldn't assign the traceback to a local variable,
+        # as that would cause a circular reference. We'll use this bool to track whether an exception
+        # was handled instead.
+        caught_exception = False
         end_time = None
         try:
             incoming_response = self._get_incoming_response(timeout)
@@ -141,25 +144,25 @@ class HttpFuture(object):
         except exceptions_to_catch as e:
             if end_time is None:
                 end_time = monotonic.monotonic()
-            exc_info = sys.exc_info()
+            caught_exception = True
             if (
                 fallback_result and self.operation
                 and not self.operation.swagger_spec.config['bravado'].disable_fallback_results
             ):
                 swagger_result = fallback_result(e)
             else:
-                six.reraise(*exc_info)
+                six.reraise(*sys.exc_info())
 
         metadata_class = self.operation.swagger_spec.config['bravado'].response_metadata_class
         response_metadata = metadata_class(
             incoming_response=incoming_response,
             swagger_result=swagger_result,
             elapsed_time=end_time - self._start_time,
-            exc_info=exc_info,
+            handled_exception_info=sys.exc_info() if caught_exception else None,
         )
         return BravadoResponse(
             result=swagger_result,
-            response_metadata=response_metadata,
+            metadata=response_metadata,
         )
 
     def result(self, timeout=None):

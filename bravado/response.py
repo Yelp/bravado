@@ -8,13 +8,13 @@ class BravadoResponse(object):
     use at your own risk.
     """
 
-    def __init__(self, result, response_metadata):
+    def __init__(self, result, metadata):
         self.result = result
-        self.response_metadata = response_metadata
+        self.metadata = metadata
 
     @property
     def incoming_response(self):
-        return self.response_metadata.incoming_response
+        return self.metadata.incoming_response
 
 
 class BravadoResponseMetadata(object):
@@ -29,10 +29,17 @@ class BravadoResponseMetadata(object):
     use at your own risk.
     """
 
-    def __init__(self, incoming_response, swagger_result, elapsed_time, exc_info):
+    def __init__(self, incoming_response, swagger_result, elapsed_time, handled_exception_info):
+        """
+        :param incoming_response: a subclass of bravado_core.response.IncomingResponse.
+        :param swagger_result: the unmarshalled result that is being returned to the user.
+        :param elapsed_time: float containing an approximate elapsed time since creating the future, in seconds.
+        :param handled_exception_info: sys.exc_info() data if an exception was caught and handled as
+            part of a fallback response.
+        """
         self._incoming_response = incoming_response
         self.elapsed_time = elapsed_time
-        self.exc_info = exc_info
+        self.handled_exception_info = handled_exception_info
 
         # we expose the result to the user through the BravadoResponse object;
         # we're passing it in to this object in case custom implementations need it
@@ -54,4 +61,4 @@ class BravadoResponseMetadata(object):
 
     @property
     def is_fallback_result(self):
-        return self.exc_info is not None
+        return self.handled_exception_info is not None
