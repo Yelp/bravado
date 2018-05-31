@@ -17,7 +17,6 @@ from bravado.exception import BravadoTimeoutError
 from bravado.exception import HTTPServerError
 from bravado.exception import make_http_exception
 from bravado.response import BravadoResponse
-from bravado.response import get_metadata_class
 
 
 FALLBACK_EXCEPTIONS = (
@@ -148,7 +147,7 @@ class HttpFuture(object):
             else:
                 six.reraise(*exc_info)
 
-        metadata_class = get_metadata_class(self.operation.swagger_spec.config['bravado'].response_metadata_class)
+        metadata_class = self.operation.swagger_spec.config['bravado'].response_metadata_class
         response_metadata = metadata_class(
             incoming_response=incoming_response,
             swagger_result=swagger_result,

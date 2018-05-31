@@ -3,6 +3,8 @@ import logging
 from collections import namedtuple
 from importlib import import_module
 
+from bravado.response import BravadoResponseMetadata
+
 
 log = logging.getLogger(__name__)
 
@@ -42,9 +44,28 @@ class BravadoConfig(
             config = {}
         bravado_config = {key: value for key, value in config.iteritems() if key in BravadoConfig._fields}
         bravado_config = dict(CONFIG_DEFAULTS, **bravado_config)
+        bravado_config['response_metadata_class'] = get_response_metadata_class(
+            bravado_config['response_metadata_class'],
+        )
         return BravadoConfig(
             **bravado_config
         )
+
+
+def get_response_metadata_class(fully_qualified_class_str):
+    class_to_import = _import_class(fully_qualified_class_str)
+    if not class_to_import:
+        return BravadoResponseMetadata
+
+    if issubclass(class_to_import, BravadoResponseMetadata):
+        return class_to_import
+
+    log.warning(
+        'bravado configuration error: the metadata class \'%s\' does not extend '
+        'BravadoResponseMetadata. Using default class instead.',
+        fully_qualified_class_str,
+    )
+    return BravadoResponseMetadata
 
 
 def _import_class(fully_qualified_class_str):
@@ -53,11 +74,9 @@ def _import_class(fully_qualified_class_str):
         return getattr(import_module(module_name), class_name)
     except (ImportError, AttributeError, ValueError) as e:
         log.warning(
-            'Error while importing \'{fully_qualified_class_str}\': '
-            '{exception_class}: {exception_content}'.format(
-                fully_qualified_class_str=fully_qualified_class_str,
-                exception_class=type(e),
-                exception_content=str(e),
-            )
+            'Error while importing \'%s\': %s: %s',
+            fully_qualified_class_str,
+            type(e),
+            str(e),
         )
         return None
