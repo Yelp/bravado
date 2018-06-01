@@ -39,8 +39,8 @@ def test_fallback_result(mock_future_adapter, mock_operation, http_future):
     response = http_future.response(fallback_result=lambda e: fallback_result)
 
     assert response.result == fallback_result
-    assert response.response_metadata.is_fallback_result is True
-    assert response.response_metadata.exc_info[0] is BravadoTimeoutError
+    assert response.metadata.is_fallback_result is True
+    assert response.metadata.handled_exception_info[0] is BravadoTimeoutError
 
 
 def test_no_fallback_result_if_not_provided(mock_future_adapter, http_future):
@@ -68,4 +68,4 @@ def test_custom_response_metadata(mock_operation, http_future):
 
     with mock.patch('bravado.http_future.unmarshal_response'):
         response = http_future.response()
-    assert response.response_metadata.__class__ is ResponseMetadata
+    assert response.metadata.__class__ is ResponseMetadata

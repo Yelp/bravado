@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
+import traceback
 from functools import wraps
 
 import monotonic
@@ -141,25 +142,29 @@ class HttpFuture(object):
         except exceptions_to_catch as e:
             if end_time is None:
                 end_time = monotonic.monotonic()
-            exc_info = sys.exc_info()
+            # the Python 2 documentation states that we shouldn't assign the traceback to a local variable,
+            # as that would cause a circular reference. We'll store a string representation of the traceback
+            # instead.
+            exc_info = list(sys.exc_info()[:2])
+            exc_info.append(traceback.format_exc())
             if (
                 fallback_result and self.operation
                 and not self.operation.swagger_spec.config['bravado'].disable_fallback_results
             ):
                 swagger_result = fallback_result(e)
             else:
-                six.reraise(*exc_info)
+                six.reraise(*sys.exc_info())
 
         metadata_class = self.operation.swagger_spec.config['bravado'].response_metadata_class
         response_metadata = metadata_class(
             incoming_response=incoming_response,
             swagger_result=swagger_result,
             elapsed_time=end_time - self._start_time,
-            exc_info=exc_info,
+            handled_exception_info=exc_info,
         )
         return BravadoResponse(
             result=swagger_result,
-            response_metadata=response_metadata,
+            metadata=response_metadata,
         )
 
     def result(self, timeout=None):
