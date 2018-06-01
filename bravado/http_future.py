@@ -132,16 +132,16 @@ class HttpFuture(object):
         """
         incoming_response = None
         exc_info = None
-        end_time = None
+        request_end_time = None
         try:
             incoming_response = self._get_incoming_response(timeout)
-            end_time = monotonic.monotonic()
+            request_end_time = monotonic.monotonic()
             swagger_result = self._get_swagger_result(incoming_response)
             if self.operation is None and incoming_response.status_code >= 300:
                 raise make_http_exception(response=incoming_response)
         except exceptions_to_catch as e:
-            if end_time is None:
-                end_time = monotonic.monotonic()
+            if request_end_time is None:
+                request_end_time = monotonic.monotonic()
             # the Python 2 documentation states that we shouldn't assign the traceback to a local variable,
             # as that would cause a circular reference. We'll store a string representation of the traceback
             # instead.
@@ -159,7 +159,8 @@ class HttpFuture(object):
         response_metadata = metadata_class(
             incoming_response=incoming_response,
             swagger_result=swagger_result,
-            elapsed_time=end_time - self._start_time,
+            start_time=self._start_time,
+            request_end_time=request_end_time,
             handled_exception_info=exc_info,
         )
         return BravadoResponse(
