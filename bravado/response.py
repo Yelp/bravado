@@ -35,7 +35,8 @@ class BravadoResponseMetadata(object):
         :param swagger_result: the unmarshalled result that is being returned to the user.
         :param elapsed_time: float containing an approximate elapsed time since creating the future, in seconds.
         :param handled_exception_info: sys.exc_info() data if an exception was caught and handled as
-            part of a fallback response.
+            part of a fallback response; note that the third element in the list is a string representation
+            of the traceback, not a traceback object.
         """
         self._incoming_response = incoming_response
         self.elapsed_time = elapsed_time
