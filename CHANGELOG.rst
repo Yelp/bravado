@@ -1,6 +1,13 @@
 Changelog
 =========
 
+9.3.0 (2018-06-05)
+------------------
+- Introduce the HTTPFuture.response API as well as support for returning a fallback result. - PR #365, #366, #367, #368
+
+  *NOTE:* Most of this API is not documented yet and is considered experimental; we're working on stabilizing it
+  and providing developer documentation.
+
 9.2.2 (2017-12-19)
 ------------------
 - Fix msgpack import issue - PR #341. Thanks Jesse Myers for your contribution!
