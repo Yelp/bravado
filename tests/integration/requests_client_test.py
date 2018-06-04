@@ -57,50 +57,74 @@ class TestServerRequestsClient:
             config={'use_models': False, 'also_return_response': True}
         )
 
-    def test_swagger_client_json_response(self, swagger_client):
-        marshaled_response, raw_response = swagger_client.json.get_json().result(timeout=1)
+    @pytest.fixture(params=['result', 'response'])
+    def result_getter(self, request):
+        if request.param == 'result':
+            return lambda future, timeout: future.result(timeout)
+        elif request.param == 'response':
+            def _response_getter(future, timeout):
+                response = future.response(timeout)
+                return response.result, response.incoming_response
+            return _response_getter
+
+        raise ValueError
+
+    def test_swagger_client_json_response(self, swagger_client, result_getter):
+        marshaled_response, raw_response = result_getter(swagger_client.json.get_json(), timeout=1)
         assert marshaled_response == API_RESPONSE
         assert raw_response.raw_bytes == json.dumps(API_RESPONSE).encode('utf-8')
 
-    def test_swagger_client_msgpack_response_without_flag(self, swagger_client):
-        marshaled_response, raw_response = swagger_client.json_or_msgpack.get_json_or_msgpack().result(timeout=1)
+    def test_swagger_client_msgpack_response_without_flag(self, swagger_client, result_getter):
+        marshaled_response, raw_response = result_getter(
+            swagger_client.json_or_msgpack.get_json_or_msgpack(),
+            timeout=1,
+        )
         assert marshaled_response == API_RESPONSE
         assert raw_response.raw_bytes == json.dumps(API_RESPONSE).encode('utf-8')
 
-    def test_swagger_client_msgpack_response_with_flag(self, swagger_client):
-        marshaled_response, raw_response = swagger_client.json_or_msgpack.get_json_or_msgpack(
-            _request_options={
-                'use_msgpack': True,
-            },
-        ).result(timeout=1)
+    def test_swagger_client_msgpack_response_with_flag(self, swagger_client, result_getter):
+        marshaled_response, raw_response = result_getter(
+            swagger_client.json_or_msgpack.get_json_or_msgpack(
+                _request_options={
+                    'use_msgpack': True,
+                },
+            ),
+            timeout=1,
+        )
         assert marshaled_response == API_RESPONSE
         assert raw_response.raw_bytes == packb(API_RESPONSE)
 
-    def test_swagger_client_special_chars_query(self, swagger_client):
+    def test_swagger_client_special_chars_query(self, swagger_client, result_getter):
         message = 'My Me$$age with %pecial characters?"'
-        marshaled_response, _ = swagger_client.echo.get_echo(message=message).result(timeout=1)
+        marshaled_response, _ = result_getter(swagger_client.echo.get_echo(message=message), timeout=1)
         assert marshaled_response == {'message': message}
 
-    def test_swagger_client_special_chars_path(self, swagger_client):
-        marshaled_response, _ = swagger_client.char_test.get_char_test(special='spe%ial?').result(timeout=1)
+    def test_swagger_client_special_chars_path(self, swagger_client, result_getter):
+        marshaled_response, _ = result_getter(swagger_client.char_test.get_char_test(special='spe%ial?'), timeout=1)
         assert marshaled_response == API_RESPONSE
 
-    def test_sanitized_resource_and_param(self, swagger_client):
-        marshaled_response, _ = swagger_client.sanitize_test.get_sanitized_param(X_User_Id='admin').result(timeout=1)
+    def test_sanitized_resource_and_param(self, swagger_client, result_getter):
+        marshaled_response, _ = result_getter(
+            swagger_client.sanitize_test.get_sanitized_param(X_User_Id='admin'),
+            timeout=1,
+        )
         assert marshaled_response == API_RESPONSE
 
-    def test_unsanitized_resource_and_param(self, swagger_client):
+    def test_unsanitized_resource_and_param(self, swagger_client, result_getter):
         params = {'X-User-Id': 'admin'}
-        marshaled_response, _ = swagger_client._get_resource(
-            'sanitize-test',
-        ).get_sanitized_param(**params).result(timeout=1)
+        marshaled_response, _ = result_getter(
+            swagger_client._get_resource(
+                'sanitize-test',
+            ).get_sanitized_param(**params),
+            timeout=1,
+        )
         assert marshaled_response == API_RESPONSE
 
-    def test_unsanitized_param_as_header(self, swagger_client):
+    def test_unsanitized_param_as_header(self, swagger_client, result_getter):
         headers = {'X-User-Id': 'admin'}
-        marshaled_response, _ = swagger_client.sanitize_test.get_sanitized_param(
+        marshaled_response, _ = result_getter(swagger_client.sanitize_test.get_sanitized_param(
             _request_options={'headers': headers},
-        ).result(timeout=1)
+        ), timeout=1)
         assert marshaled_response == API_RESPONSE
 
     def test_multiple_requests(self, swagger_http_server):

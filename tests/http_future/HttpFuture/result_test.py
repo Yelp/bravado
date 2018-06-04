@@ -6,13 +6,7 @@ from mock import Mock
 from mock import patch
 
 from bravado.exception import HTTPError
-from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
-
-
-@pytest.fixture
-def mock_future_adapter():
-    return Mock(spec=FutureAdapter, timeout_errors=None)
 
 
 def test_200_get_swagger_spec(mock_future_adapter):

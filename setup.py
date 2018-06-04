@@ -31,12 +31,13 @@ setup(
         "Programming Language :: Python :: 3.6",
     ],
     install_requires=[
-        "bravado-core >= 4.12.1",
+        "bravado-core >= 5.0.1",
         "msgpack-python",
         "python-dateutil",
         "pyyaml",
         "requests >= 2.4",
         "six",
+        "monotonic",
     ],
     extras_require={
         "fido": ["fido >= 4.2.1"],

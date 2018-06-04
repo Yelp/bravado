@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import sys
+import traceback
 from functools import wraps
 
+import monotonic
 import six
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
@@ -11,9 +13,17 @@ from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
 from msgpack import unpackb
 
-from bravado.config_defaults import REQUEST_OPTIONS_DEFAULTS
+from bravado.config import REQUEST_OPTIONS_DEFAULTS
 from bravado.exception import BravadoTimeoutError
+from bravado.exception import HTTPServerError
 from bravado.exception import make_http_exception
+from bravado.response import BravadoResponse
+
+
+FALLBACK_EXCEPTIONS = (
+    BravadoTimeoutError,
+    HTTPServerError,
+)
 
 
 class FutureAdapter(object):
@@ -95,15 +105,73 @@ class HttpFuture(object):
 
     def __init__(self, future, response_adapter, operation=None,
                  response_callbacks=None, also_return_response=False):
+        self._start_time = monotonic.monotonic()
         self.future = future
         self.response_adapter = response_adapter
         self.operation = operation
         self.response_callbacks = response_callbacks or REQUEST_OPTIONS_DEFAULTS['response_callbacks']
         self.also_return_response = also_return_response
 
-    @reraise_errors
-    def result(self, timeout=None):
+    def response(self, timeout=None, fallback_result=None, exceptions_to_catch=FALLBACK_EXCEPTIONS):
         """Blocking call to wait for the HTTP response.
+
+        :param timeout: Number of seconds to wait for a response. Defaults to
+            None which means wait indefinitely.
+        :type timeout: float
+        :param fallback_result: callable that accepts an exception as argument and returns the
+            swagger result to use in case of errors
+        :type fallback_result: callable that takes an exception and returns a fallback swagger result
+        :param exceptions_to_catch: Exception classes to catch and call `fallback_result`
+            with. Has no effect if `fallback_result` is not provided. By default, `fallback_result`
+            will be called for read timeout and server errors (HTTP 5XX).
+        :type exceptions_to_catch: List/Tuple of Exception classes.
+        :return: A BravadoResponse instance containing the swagger result and response metadata.
+
+        WARNING: This interface is considered UNSTABLE. Backwards-incompatible API changes may occur;
+        use at your own risk.
+        """
+        incoming_response = None
+        exc_info = None
+        request_end_time = None
+        try:
+            incoming_response = self._get_incoming_response(timeout)
+            request_end_time = monotonic.monotonic()
+            swagger_result = self._get_swagger_result(incoming_response)
+            if self.operation is None and incoming_response.status_code >= 300:
+                raise make_http_exception(response=incoming_response)
+        except exceptions_to_catch as e:
+            if request_end_time is None:
+                request_end_time = monotonic.monotonic()
+            # the Python 2 documentation states that we shouldn't assign the traceback to a local variable,
+            # as that would cause a circular reference. We'll store a string representation of the traceback
+            # instead.
+            exc_info = list(sys.exc_info()[:2])
+            exc_info.append(traceback.format_exc())
+            if (
+                fallback_result and self.operation
+                and not self.operation.swagger_spec.config['bravado'].disable_fallback_results
+            ):
+                swagger_result = fallback_result(e)
+            else:
+                six.reraise(*sys.exc_info())
+
+        metadata_class = self.operation.swagger_spec.config['bravado'].response_metadata_class
+        response_metadata = metadata_class(
+            incoming_response=incoming_response,
+            swagger_result=swagger_result,
+            start_time=self._start_time,
+            request_end_time=request_end_time,
+            handled_exception_info=exc_info,
+        )
+        return BravadoResponse(
+            result=swagger_result,
+            metadata=response_metadata,
+        )
+
+    def result(self, timeout=None):
+        """DEPRECATED: please use the `response()` method instead.
+
+        Blocking call to wait for and return the unmarshalled swagger result.
 
         :param timeout: Number of seconds to wait for a response. Defaults to
             None which means wait indefinitely.
@@ -111,16 +179,10 @@ class HttpFuture(object):
         :return: Depends on the value of also_return_response sent in
             to the constructor.
         """
-        inner_response = self.future.result(timeout=timeout)
-        incoming_response = self.response_adapter(inner_response)
+        incoming_response = self._get_incoming_response(timeout)
+        swagger_result = self._get_swagger_result(incoming_response)
 
         if self.operation is not None:
-            unmarshal_response(
-                incoming_response,
-                self.operation,
-                self.response_callbacks)
-
-            swagger_result = incoming_response.swagger_result
             if self.also_return_response:
                 return swagger_result, incoming_response
             return swagger_result
@@ -129,6 +191,24 @@ class HttpFuture(object):
             return incoming_response
 
         raise make_http_exception(response=incoming_response)
+
+    @reraise_errors
+    def _get_incoming_response(self, timeout=None):
+        inner_response = self.future.result(timeout=timeout)
+        incoming_response = self.response_adapter(inner_response)
+        return incoming_response
+
+    def _get_swagger_result(self, incoming_response):
+        swagger_result = None
+        if self.operation is not None:
+            unmarshal_response(
+                incoming_response,
+                self.operation,
+                self.response_callbacks,
+            )
+            swagger_result = incoming_response.swagger_result
+
+        return swagger_result
 
 
 def unmarshal_response(incoming_response, operation, response_callbacks=None):
