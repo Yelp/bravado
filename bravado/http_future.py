@@ -18,6 +18,7 @@ from bravado.exception import BravadoTimeoutError
 from bravado.exception import HTTPServerError
 from bravado.exception import make_http_exception
 from bravado.response import BravadoResponse
+from bravado.response import FallbackIncomingResponse
 
 
 FALLBACK_EXCEPTIONS = (
@@ -151,7 +152,8 @@ class HttpFuture(object):
                 fallback_result and self.operation
                 and not self.operation.swagger_spec.config['bravado'].disable_fallback_results
             ):
-                swagger_result = fallback_result(e)
+                # unmarshal and validate the fallback result
+                swagger_result = self._get_swagger_result(FallbackIncomingResponse(fallback_result(e)))
             else:
                 six.reraise(*sys.exc_info())
 

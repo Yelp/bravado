@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import monotonic
+from bravado_core.content_type import APP_JSON
+from bravado_core.response import IncomingResponse
 
 
 class BravadoResponse(object):
@@ -78,3 +80,19 @@ class BravadoResponseMetadata(object):
     @property
     def elapsed_time(self):
         return self.processing_end_time - self.start_time
+
+
+class FallbackIncomingResponse(IncomingResponse):
+    """An IncomingResponse implementation that contains a fallback result to be returned; we're using it
+    so that we can unmarshal (and potentially validate) the response the user provided."""
+
+    def __init__(self, result, status_code=200):
+        self._result = result
+        self.status_code = status_code
+
+    @property
+    def headers(self):
+        return {'content-type': APP_JSON}
+
+    def json(self):
+        return self._result
