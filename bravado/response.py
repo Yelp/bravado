@@ -7,6 +7,9 @@ class BravadoResponse(object):
 
     WARNING: This interface is considered UNSTABLE. Backwards-incompatible API changes may occur;
     use at your own risk.
+
+    :ivar result: Swagger result from the server
+    :ivar BravadoResponseMetadata metadata: metadata for this response including HTTP response
     """
 
     def __init__(self, result, metadata):
@@ -28,6 +31,12 @@ class BravadoResponseMetadata(object):
 
     WARNING: This interface is considered UNSTABLE. Backwards-incompatible API changes may occur;
     use at your own risk.
+
+    :ivar float start_time: monotonic timestamp at which the future was created
+    :ivar float request_end_time: monotonic timestamp at which we received the HTTP response
+    :ivar float processing_end_time: monotonic timestamp at which processing the response ended
+    :ivar tuple handled_exception_info: 3-tuple of exception class, exception instance and string
+        representation of the traceback in case an exception was caught during request processing.
     """
 
     def __init__(self, incoming_response, swagger_result, start_time, request_end_time, handled_exception_info):
