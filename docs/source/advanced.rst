@@ -185,7 +185,8 @@ In the simplest case, you can just specify what you're going to return:
     )
 
 This code will return an empty list in case the server doesn't respond quickly enough (or it
-responded quickly enough, but returned an error).
+responded quickly enough, but returned an error). See :mod:`bravado.exception` for a list of
+possible exception types.
 
 But what if you're using models (the default) and the endpoint you're calling returns one? You'll have
 to return one as well from your fallback_result function to stay compatible with the rest of your code:
