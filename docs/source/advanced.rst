@@ -172,8 +172,8 @@ provided by :meth:`.HttpFuture.response`.
 :meth:`.HttpFuture.response` takes an optional argument ``fallback_result`` which is a callable
 that returns a Swagger result. The callable takes one mandatory argument: the exception that would
 have been raised normally. This allows you to return different results based on the type of error
-(e.g. a :class:`.BravadoTimeoutError`) or, if a server response was received, on the type of HTTP
-code.
+(e.g. a :class:`.BravadoTimeoutError`) or, if a server response was received, on any data pertaining
+to that response, like the HTTP status code.
 
 In the simplest case, you can just specify what you're going to return:
 
@@ -199,7 +199,8 @@ to return one as well from your fallback_result function to stay compatible with
 
 Two things to note here: first, use :meth:`.SwaggerClient.get_model` to get the model class for a
 model name. Second, since ``name`` and ``photoUrls`` are required fields for this model, we probably should not leave them
-empty (they'll be accessible, but ``None``). It's up to you how you decide to deal with this case.
+empty (if we do they'd still be accessible, but the value would be ``None``). It's up to you how you decide to deal
+with this case.
 
 :attr:`.BravadoResponseMetadata.is_fallback_result` will be True if a fallback result has been returned
 by the call to :meth:`.HttpFuture.response`.
