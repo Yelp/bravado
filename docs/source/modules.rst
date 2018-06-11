@@ -1,5 +1,5 @@
-bravado
-=======
+API reference
+=============
 
 .. toctree::
    :maxdepth: 4

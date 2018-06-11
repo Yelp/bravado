@@ -31,7 +31,9 @@ Contents:
 
    quickstart
    configuration
+   requests_and_responses
    advanced
+   modules
    changelog
 
 Indices and tables

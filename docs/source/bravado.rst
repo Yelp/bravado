@@ -1,6 +1,10 @@
 bravado Package
 ===============
 
+.. toctree::
+   :maxdepth: 4
+
+
 :mod:`bravado` Package
 ----------------------
 
@@ -8,6 +12,14 @@ bravado Package
 --------------------
 
 .. automodule:: bravado.client
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`config` Module
+--------------------
+
+.. automodule:: bravado.config
     :members:
     :undoc-members:
     :show-inheritance:
@@ -32,6 +44,14 @@ bravado Package
 -------------------------
 
 .. automodule:: bravado.http_future
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`response` Module
+-------------------------
+
+.. automodule:: bravado.response
     :members:
     :undoc-members:
     :show-inheritance:
