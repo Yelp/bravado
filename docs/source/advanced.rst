@@ -236,3 +236,8 @@ of your properties, use :attr:`.BravadoResponseMetadata.headers` to access respo
 
 If, for some reason, you need your own ``__init__`` method, make sure you have the same signature
 as the base method and that you call it (the base method) from your own implementation.
+
+While developing custom :class:`.BravadoResponseMetadata` classes we recommend to avoid,
+if possible, the usage of attributes for data that's expensive to compute. Since the object
+will be created for every response, implementing these fields as properties makes sure
+the evaluation is only done if the field is accessed.
