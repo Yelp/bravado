@@ -27,7 +27,7 @@ Futures and responses
 The return value of the operation method is a :class:`.HttpFuture`. To access the response, call :meth:`.HttpFuture.response`.
 This call will block, i.e. it will wait until the response is received or the timeout you specified is reached.
 
-If the request succeeded and the server returned a HTTP status code between 200 and 399, the return value of
+If the request succeeded and the server returned a HTTP status code between 100 and 299, the return value of
 :meth:`.HttpFuture.response()` will be a :class:`~bravado.response.BravadoResponse` instance. You may access the Swagger
 result of your call through :attr:`.BravadoResponse.result`.
 

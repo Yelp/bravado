@@ -178,6 +178,7 @@ to that response, like the HTTP status code.
 In the simplest case, you can just specify what you're going to return:
 
 .. code-block:: python
+
     petstore = Swagger.from_url('http://petstore.swagger.io/swagger.json')
     response = petstore.pet.findPetsByStatus(status=['available']).response(
         timeout=0.5,
@@ -185,13 +186,26 @@ In the simplest case, you can just specify what you're going to return:
     )
 
 This code will return an empty list in case the server doesn't respond quickly enough (or it
-responded quickly enough, but returned an error). See :mod:`bravado.exception` for a list of
-possible exception types.
+responded quickly enough, but returned an error).
+
+Customizing which error types to handle
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, the fallback result will be used either when the server doesn't send the response
+in time or when it returns a server error (i.e. a result with a HTTP 5XX status code). To override this behavior,
+specify the ``exceptions_to_catch`` argument to :meth:`.HttpFuture.response`.
+
+The default is defined in :data:`bravado.http_future.FALLBACK_EXCEPTIONS`. See
+:mod:`bravado.exception` for a list of possible exception types.
+
+Models and fallback results
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 But what if you're using models (the default) and the endpoint you're calling returns one? You'll have
 to return one as well from your fallback_result function to stay compatible with the rest of your code:
 
 .. code-block:: python
+
     petstore = Swagger.from_url('http://petstore.swagger.io/swagger.json')
     response = petstore.pet.getPetById(petId=101).response(
         timeout=0.5,
