@@ -12,6 +12,7 @@ def test_response_metadata_times():
             start_time=5,
             request_end_time=10,
             handled_exception_info=None,
+            request_config=None,
         )
 
     assert metadata.elapsed_time == 6

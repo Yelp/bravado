@@ -29,6 +29,7 @@ REQUEST_OPTIONS_DEFAULTS = {
     #   param : operation
     #   type  : class:`bravado_core.operation.Operation`
     'response_callbacks': [],
+    'force_fallback_result': False,
 }
 
 
@@ -50,6 +51,33 @@ class BravadoConfig(
         return BravadoConfig(
             **bravado_config
         )
+
+
+class RequestConfig(
+    namedtuple(
+        'RequestConfig',
+        [
+            'also_return_response',
+            'force_fallback_result',
+            'response_callbacks',
+            # options used to construct the request params
+            'connect_timeout',
+            'headers',
+            'use_msgpack',
+            'timeout',
+        ]
+    )
+):
+    @staticmethod
+    def from_request_options_dict(request_options, also_return_response_default):
+        request_config = {
+            key: request_options.get(key, REQUEST_OPTIONS_DEFAULTS.get(key))
+            for key in RequestConfig._fields
+        }
+        if 'also_return_response' not in request_options:
+            request_config['also_return_response'] = also_return_response_default
+
+        return RequestConfig(**request_config)
 
 
 def _get_response_metadata_class(fully_qualified_class_str):
