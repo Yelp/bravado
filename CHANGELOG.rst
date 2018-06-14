@@ -1,6 +1,10 @@
 Changelog
 =========
 
+9.3.1 (2018-06-14)
+------------------
+- Add ability to force returning fallback results - PR #372
+
 9.3.0 (2018-06-05)
 ------------------
 - Introduce the HTTPFuture.response API as well as support for returning a fallback result. - PR #365, #366, #367, #368
