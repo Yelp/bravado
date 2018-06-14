@@ -220,6 +220,13 @@ with this case.
 :attr:`.BravadoResponseMetadata.is_fallback_result` will be True if a fallback result has been returned
 by the call to :meth:`.HttpFuture.response`.
 
+Testing fallback results
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can trigger returning fallback results for testing purposes. Just set the option ``force_fallback_result``
+to ``True`` in the request configuration (see :ref:`request_config`). In this case a :class:`.ForcedFallbackResultError`
+exception will be passed to your fallback result callback, so make sure you handle it properly.
+
 .. _custom_response_metadata:
 
 Custom response metadata

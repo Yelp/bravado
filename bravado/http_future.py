@@ -3,6 +3,7 @@ import logging
 import sys
 import traceback
 from functools import wraps
+from itertools import chain
 
 import monotonic
 import six
@@ -16,7 +17,7 @@ from msgpack import unpackb
 
 from bravado.config import RequestConfig
 from bravado.exception import BravadoTimeoutError
-from bravado.exception import HTTPError
+from bravado.exception import ForcedFallbackResultError
 from bravado.exception import HTTPServerError
 from bravado.exception import make_http_exception
 from bravado.response import BravadoResponse
@@ -106,7 +107,7 @@ class HttpFuture(object):
         self.future = future
         self.response_adapter = response_adapter
         self.operation = operation
-        self.request_config = request_config or RequestConfig.from_request_options_dict(
+        self.request_config = request_config or RequestConfig(
             {},
             also_return_response_default=False,
         )
@@ -132,6 +133,9 @@ class HttpFuture(object):
         incoming_response = None
         exc_info = None
         request_end_time = None
+        if self.request_config.force_fallback_result:
+            exceptions_to_catch = tuple(chain(exceptions_to_catch, (ForcedFallbackResultError,)))
+
         try:
             incoming_response = self._get_incoming_response(timeout)
             request_end_time = monotonic.monotonic()
@@ -145,9 +149,7 @@ class HttpFuture(object):
                     )
                 else:
                     # raise an exception to trigger fallback result handling
-                    fake_exception_type = exceptions_to_catch[0]
-                    args = (incoming_response,) if issubclass(fake_exception_type, HTTPError) else ()
-                    raise fake_exception_type(*args)
+                    raise ForcedFallbackResultError()
 
             swagger_result = self._get_swagger_result(incoming_response)
 

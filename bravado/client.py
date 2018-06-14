@@ -241,7 +241,7 @@ class CallableOperation(object):
 
         # Get per-request config
         request_options = op_kwargs.pop('_request_options', {})
-        request_config = RequestConfig.from_request_options_dict(request_options, self.also_return_response)
+        request_config = RequestConfig(request_options, self.also_return_response)
 
         request_params = construct_request(
             self.operation, request_options, **op_kwargs)

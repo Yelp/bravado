@@ -3,6 +3,10 @@ import logging
 from collections import namedtuple
 from importlib import import_module
 
+import typing  # noqa: F401
+from bravado_core.operation import Operation  # noqa: F401
+from bravado_core.response import IncomingResponse  # noqa: F401
+
 from bravado.response import BravadoResponseMetadata
 
 
@@ -16,20 +20,6 @@ CONFIG_DEFAULTS = {
     # Kill switch to disable returning fallback results even if provided.
     'disable_fallback_results': False,
     'response_metadata_class': 'bravado.response.BravadoResponseMetadata',
-}
-
-
-REQUEST_OPTIONS_DEFAULTS = {
-    # List of callbacks that are executed after the incoming response has been
-    # validated and the swagger_result has been unmarshalled.
-    #
-    # The callback should expect two arguments:
-    #   param : incoming_response
-    #   type  : subclass of class:`bravado_core.response.IncomingResponse`
-    #   param : operation
-    #   type  : class:`bravado_core.operation.Operation`
-    'response_callbacks': [],
-    'force_fallback_result': False,
 }
 
 
@@ -53,31 +43,40 @@ class BravadoConfig(
         )
 
 
-class RequestConfig(
-    namedtuple(
-        'RequestConfig',
-        [
-            'also_return_response',
-            'force_fallback_result',
-            'response_callbacks',
-            # options used to construct the request params
-            'connect_timeout',
-            'headers',
-            'use_msgpack',
-            'timeout',
-        ]
-    )
-):
-    @staticmethod
-    def from_request_options_dict(request_options, also_return_response_default):
-        request_config = {
-            key: request_options.get(key, REQUEST_OPTIONS_DEFAULTS.get(key))
-            for key in RequestConfig._fields
-        }
-        if 'also_return_response' not in request_options:
-            request_config['also_return_response'] = also_return_response_default
+class RequestConfig(object):
 
-        return RequestConfig(**request_config)
+    also_return_response = False  # type: bool
+    force_fallback_result = False  # type: bool
+
+    # List of callbacks that are executed after the incoming response has been
+    # validated and the swagger_result has been unmarshalled.
+    #
+    # The callback should expect two arguments:
+    #   param : incoming_response
+    #   type  : subclass of class:`bravado_core.response.IncomingResponse`
+    #   param : operation
+    #   type  : class:`bravado_core.operation.Operation`
+    response_callbacks = []  # type: typing.List[typing.Callable[[IncomingResponse, Operation], None]]
+
+    # options used to construct the request params
+    connect_timeout = None  # type: typing.Optional[float]
+    headers = {}  # type: typing.Mapping[str, str]
+    use_msgpack = False  # type: bool
+    timeout = None  # type: typing.Optional[float]
+
+    # Extra options passed in that we don't know about
+    additional_properties = {}  # type: typing.Mapping[str, typing.Any]
+
+    def __init__(self, request_options, also_return_response_default):
+        # type: (typing.Dict[str, typing.Any], bool) -> None
+        request_options = request_options.copy()  # don't modify the original object
+        self.also_return_response = also_return_response_default
+
+        for key in list(request_options.keys()):
+            if hasattr(self, key):
+                setattr(self, key, request_options.pop(key))
+
+        self.additional_properties = request_options
 
 
 def _get_response_metadata_class(fully_qualified_class_str):

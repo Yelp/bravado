@@ -6,6 +6,7 @@ from bravado_core.response import IncomingResponse
 from bravado.config import BravadoConfig
 from bravado.config import RequestConfig
 from bravado.exception import BravadoTimeoutError
+from bravado.exception import ForcedFallbackResultError
 from bravado.exception import HTTPInternalServerError
 from bravado.http_future import HttpFuture
 from bravado.response import BravadoResponseMetadata
@@ -53,6 +54,16 @@ def test_fallback_result(fallback_result, mock_future_adapter, mock_operation, h
     assert response.metadata.handled_exception_info[0] is BravadoTimeoutError
 
 
+def test_no_fallback_result_if_not_in_exceptions_to_catch(fallback_result, mock_future_adapter, http_future):
+    mock_future_adapter.result.side_effect = BravadoTimeoutError()
+
+    with pytest.raises(BravadoTimeoutError):
+        http_future.response(
+            fallback_result=lambda e: fallback_result,
+            exceptions_to_catch=(HTTPInternalServerError,),
+        )
+
+
 def test_no_fallback_result_if_not_provided(mock_future_adapter, http_future):
     mock_future_adapter.result.side_effect = BravadoTimeoutError()
 
@@ -70,8 +81,8 @@ def test_no_fallback_result_if_config_disabled(mock_future_adapter, mock_operati
         http_future.response(fallback_result=lambda e: None)
 
 
-def test_force_fallback_result(mock_incoming_response, mock_operation, fallback_result, http_future):
-    http_future.request_config = RequestConfig.from_request_options_dict(
+def test_force_fallback_result(mock_operation, fallback_result, http_future):
+    http_future.request_config = RequestConfig(
         {'force_fallback_result': True},
         also_return_response_default=False,
     )
@@ -80,19 +91,15 @@ def test_force_fallback_result(mock_incoming_response, mock_operation, fallback_
     }
 
     with mock.patch('bravado.http_future.unmarshal_response', autospec=True):
-        response = http_future.response(
-            fallback_result=lambda e: fallback_result,
-            exceptions_to_catch=(HTTPInternalServerError,),
-        )
+        response = http_future.response(fallback_result=lambda e: fallback_result)
 
     assert response.result == fallback_result
     assert response.metadata.is_fallback_result is True
-    assert response.metadata.handled_exception_info[0] is HTTPInternalServerError
-    assert response.metadata.handled_exception_info[1].response is mock_incoming_response
+    assert response.metadata.handled_exception_info[0] is ForcedFallbackResultError
 
 
 def test_no_force_fallback_result_if_disabled(http_future, mock_operation, mock_incoming_response, fallback_result):
-    http_future.request_config = RequestConfig.from_request_options_dict(
+    http_future.request_config = RequestConfig(
         {'force_fallback_result': True},
         also_return_response_default=False,
     )

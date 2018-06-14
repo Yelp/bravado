@@ -70,6 +70,8 @@ Config key                 Type            Description
                                            Default: ``False``
 ========================== =============== ===============================================================
 
+.. _request_configuration:
+
 Per-request Configuration
 --------------------------
 Configuration can also be applied on a per-request basis by passing in

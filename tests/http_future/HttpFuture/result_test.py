@@ -82,7 +82,7 @@ def test_also_return_response_true(_, mock_future_adapter):
         future=mock_future_adapter,
         response_adapter=response_adapter_type,
         operation=Mock(spec=Operation),
-        request_config=RequestConfig.from_request_options_dict({}, also_return_response_default=True))
+        request_config=RequestConfig({}, also_return_response_default=True))
 
     swagger_result, http_response = http_future.result()
 
