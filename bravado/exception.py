@@ -334,3 +334,8 @@ class HTTPNetworkAuthenticationRequired(HTTPServerError):
 
 class BravadoTimeoutError(base_exception):
     pass
+
+
+class ForcedFallbackResultError(Exception):
+    """This exception will be handled if the option to force returning a fallback result
+     is used."""
