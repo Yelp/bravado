@@ -140,6 +140,11 @@ class HttpFuture(object):
             incoming_response = self._get_incoming_response(timeout)
             request_end_time = monotonic.monotonic()
 
+            swagger_result = self._get_swagger_result(incoming_response)
+
+            if self.operation is None and incoming_response.status_code >= 300:
+                raise make_http_exception(response=incoming_response)
+
             # Trigger fallback_result if the option is set
             if fallback_result and self.request_config.force_fallback_result:
                 if self.operation.swagger_spec.config['bravado'].disable_fallback_results:
@@ -150,11 +155,6 @@ class HttpFuture(object):
                 else:
                     # raise an exception to trigger fallback result handling
                     raise ForcedFallbackResultError()
-
-            swagger_result = self._get_swagger_result(incoming_response)
-
-            if self.operation is None and incoming_response.status_code >= 300:
-                raise make_http_exception(response=incoming_response)
 
         except exceptions_to_catch as e:
             if request_end_time is None:
