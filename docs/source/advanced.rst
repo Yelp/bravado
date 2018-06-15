@@ -220,6 +220,13 @@ with this case.
 :attr:`.BravadoResponseMetadata.is_fallback_result` will be True if a fallback result has been returned
 by the call to :meth:`.HttpFuture.response`.
 
+Testing fallback results
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can trigger returning fallback results for testing purposes. Just set the option ``force_fallback_result``
+to ``True`` in the request configuration (see :ref:`request_config`). In this case a :class:`.ForcedFallbackResultError`
+exception will be passed to your fallback result callback, so make sure you handle it properly.
+
 .. _custom_response_metadata:
 
 Custom response metadata
@@ -234,8 +241,16 @@ In your code, create a class that subclasses :class:`bravado.response.BravadoRes
 of your properties, use :attr:`.BravadoResponseMetadata.headers` to access response headers, or
 :attr:`.BravadoResponseMetadata.incoming_response` to access any other part of the HTTP response.
 
-If, for some reason, you need your own ``__init__`` method, make sure you have the same signature
-as the base method and that you call it (the base method) from your own implementation.
+If, for some reason, you need your own ``__init__`` method, make sure that your signature accepts
+any positional and keyword argument, and that you call the base method with these arguments from
+your own implementation. That way, your class will remain compatible with the base class even
+if new arguments get added to the __init__ method. Example minimal implementation:
+
+.. code-block:: python
+
+    class MyResponseMetadata(ResponseMetadata):
+        def __init__(self, *args, **kwargs):
+            super(MyResponseMetadata, self).__init__(*args, **kwargs)
 
 While developing custom :class:`.BravadoResponseMetadata` classes we recommend to avoid,
 if possible, the usage of attributes for data that's expensive to compute. Since the object

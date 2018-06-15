@@ -124,8 +124,7 @@ class RequestsClient(HttpClient):
 
         return sanitized_params, misc_options
 
-    def request(self, request_params, operation=None, response_callbacks=None,
-                also_return_response=False):
+    def request(self, request_params, operation=None, request_config=None):
         """
         :param request_params: complete request data.
         :type request_params: dict
@@ -133,10 +132,7 @@ class RequestsClient(HttpClient):
             to None - in which case, we're obviously just retrieving a Swagger
             Spec.
         :type operation: :class:`bravado_core.operation.Operation`
-        :param response_callbacks: List of callables to post-process the
-            incoming response. Expects args incoming_response and operation.
-        :param also_return_response: Consult the constructor documentation for
-            :class:`bravado.http_future.HttpFuture`.
+        :param RequestConfig request_config: per-request configuration
 
         :returns: HTTP Future object
         :rtype: :class: `bravado_core.http_future.HttpFuture`
@@ -153,8 +149,7 @@ class RequestsClient(HttpClient):
             requests_future,
             RequestsResponseAdapter,
             operation,
-            response_callbacks,
-            also_return_response,
+            request_config,
         )
 
     def set_basic_auth(self, host, username, password):

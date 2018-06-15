@@ -54,7 +54,7 @@ from six import iteritems
 from six import itervalues
 
 from bravado.config import BravadoConfig
-from bravado.config import REQUEST_OPTIONS_DEFAULTS
+from bravado.config import RequestConfig
 from bravado.docstring_property import docstring_property
 from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
@@ -239,27 +239,20 @@ class CallableOperation(object):
         log.debug(u'%s(%s)', self.operation.operation_id, op_kwargs)
         warn_for_deprecated_op(self.operation)
 
-        # Apply request_options defaults
-        request_options = dict(
-            REQUEST_OPTIONS_DEFAULTS,
-            **(op_kwargs.pop('_request_options', {})))
+        # Get per-request config
+        request_options = op_kwargs.pop('_request_options', {})
+        request_config = RequestConfig(request_options, self.also_return_response)
 
         request_params = construct_request(
             self.operation, request_options, **op_kwargs)
 
         http_client = self.operation.swagger_spec.http_client
 
-        # Per-request config overrides client wide config
-        also_return_response = request_options.get(
-            'also_return_response',
-            self.also_return_response,
-        )
-
         return http_client.request(
             request_params,
             operation=self.operation,
-            response_callbacks=request_options['response_callbacks'],
-            also_return_response=also_return_response)
+            request_config=request_config,
+        )
 
 
 def construct_request(operation, request_options, **op_kwargs):

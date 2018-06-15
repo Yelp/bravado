@@ -41,5 +41,6 @@ setup(
     ],
     extras_require={
         "fido": ["fido >= 4.2.1"],
+        ':python_version<"3.5"': ['typing'],
     },
 )
