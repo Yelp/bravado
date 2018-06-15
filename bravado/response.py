@@ -39,15 +39,7 @@ class BravadoResponseMetadata(object):
         representation of the traceback in case an exception was caught during request processing.
     """
 
-    def __init__(
-        self,
-        incoming_response,
-        swagger_result,
-        start_time,
-        request_end_time,
-        handled_exception_info,
-        request_config,
-    ):
+    def __init__(self, incoming_response, swagger_result, start_time, request_end_time, handled_exception_info):
         """
         :param incoming_response: a subclass of bravado_core.response.IncomingResponse.
         :param swagger_result: the unmarshalled result that is being returned to the user.
@@ -59,15 +51,12 @@ class BravadoResponseMetadata(object):
         :param handled_exception_info: sys.exc_info() data if an exception was caught and handled as
             part of a fallback response; note that the third element in the list is a string representation
             of the traceback, not a traceback object.
-        :param RequestConfig request_config: namedtuple containing the request options that were used
-            for making this request.
         """
         self._incoming_response = incoming_response
         self.start_time = start_time
         self.request_end_time = request_end_time
         self.processing_end_time = monotonic.monotonic()
         self.handled_exception_info = handled_exception_info
-        self.request_config = request_config
 
         # we expose the result to the user through the BravadoResponse object;
         # we're passing it in to this object in case custom implementations need it

@@ -70,8 +70,6 @@ Config key                 Type            Description
                                            Default: ``False``
 ========================== =============== ===============================================================
 
-.. _request_configuration:
-
 Per-request Configuration
 --------------------------
 Configuration can also be applied on a per-request basis by passing in
@@ -102,7 +100,4 @@ Config key                Type            Default    Description
                                                      | http_client when making a service call.
 *use_msgpack*             boolean         False      | If a msgpack serialization is desired for the response. This
                                                      | will add a Accept: application/msgpack header to the request.
-*force_fallback_result*   boolean         False      | Whether a potentially provided fallback result should always
-                                                     | be returned, regardless of whether the request succeeded.
-                                                     | Mainly useful for manual and automated testing.
 ========================= =============== =========  ===============================================================

@@ -8,7 +8,8 @@ class HttpClient(object):
     and perform HTTP calls to fulfill a Swagger operation.
     """
 
-    def request(self, request_params, operation=None, request_config=None):
+    def request(self, request_params, operation=None, response_callbacks=None,
+                also_return_response=False):
         """
         :param request_params: complete request data. e.g. url, method,
             headers, body, params, connect_timeout, timeout, etc.
@@ -17,7 +18,9 @@ class HttpClient(object):
             to None - in which case, we're obviously just retrieving a Swagger
             Spec.
         :type operation: :class:`bravado_core.operation.Operation`
-        :param RequestConfig request_config: Per-request config that is passed to
+        :param response_callbacks: List of callables to post-process the
+            incoming response. Expects args incoming_response and operation.
+        :param also_return_response: Consult the constructor documentation for
             :class:`bravado.http_future.HttpFuture`.
 
         :returns: HTTP Future object

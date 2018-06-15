@@ -5,7 +5,6 @@ from bravado_core.response import IncomingResponse
 from mock import Mock
 from mock import patch
 
-from bravado.config import RequestConfig
 from bravado.exception import HTTPError
 from bravado.http_future import HttpFuture
 
@@ -82,7 +81,7 @@ def test_also_return_response_true(_, mock_future_adapter):
         future=mock_future_adapter,
         response_adapter=response_adapter_type,
         operation=Mock(spec=Operation),
-        request_config=RequestConfig({}, also_return_response_default=True))
+        also_return_response=True)
 
     swagger_result, http_response = http_future.result()
 

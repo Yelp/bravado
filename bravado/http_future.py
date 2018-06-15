@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-import logging
 import sys
 import traceback
 from functools import wraps
-from itertools import chain
 
 import monotonic
 import six
@@ -15,15 +13,11 @@ from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
 from msgpack import unpackb
 
-from bravado.config import RequestConfig
+from bravado.config import REQUEST_OPTIONS_DEFAULTS
 from bravado.exception import BravadoTimeoutError
-from bravado.exception import ForcedFallbackResultError
 from bravado.exception import HTTPServerError
 from bravado.exception import make_http_exception
 from bravado.response import BravadoResponse
-
-
-log = logging.getLogger(__name__)
 
 
 FALLBACK_EXCEPTIONS = (
@@ -97,20 +91,26 @@ class HttpFuture(object):
         response in a non-http client specific way.
     :type response_adapter: type that is a subclass of
         :class:`bravado_core.response.IncomingResponse`.
-    :param RequestConfig request_config: See :class:`bravado.config.RequestConfig` and
-        :data:`bravado.client.REQUEST_OPTIONS_DEFAULTS`
+    :param response_callbacks: See bravado.client.REQUEST_OPTIONS_DEFAULTS
+    :param also_return_response: Determines if the incoming http response is
+        included as part of the return value from calling
+        `HttpFuture.result()`.
+        When False, only the swagger result is returned.
+        When True, the tuple(swagger result, http response) is returned.
+        This is useful if you want access to additional data that is not
+        accessible from the swagger result. e.g. http headers,
+        http response code, etc.
+        Defaults to False for backwards compatibility.
     """
 
     def __init__(self, future, response_adapter, operation=None,
-                 request_config=None):
+                 response_callbacks=None, also_return_response=False):
         self._start_time = monotonic.monotonic()
         self.future = future
         self.response_adapter = response_adapter
         self.operation = operation
-        self.request_config = request_config or RequestConfig(
-            {},
-            also_return_response_default=False,
-        )
+        self.response_callbacks = response_callbacks or REQUEST_OPTIONS_DEFAULTS['response_callbacks']
+        self.also_return_response = also_return_response
 
     def response(self, timeout=None, fallback_result=None, exceptions_to_catch=FALLBACK_EXCEPTIONS):
         """Blocking call to wait for the HTTP response.
@@ -133,29 +133,12 @@ class HttpFuture(object):
         incoming_response = None
         exc_info = None
         request_end_time = None
-        if self.request_config.force_fallback_result:
-            exceptions_to_catch = tuple(chain(exceptions_to_catch, (ForcedFallbackResultError,)))
-
         try:
             incoming_response = self._get_incoming_response(timeout)
             request_end_time = monotonic.monotonic()
-
             swagger_result = self._get_swagger_result(incoming_response)
-
             if self.operation is None and incoming_response.status_code >= 300:
                 raise make_http_exception(response=incoming_response)
-
-            # Trigger fallback_result if the option is set
-            if fallback_result and self.request_config.force_fallback_result:
-                if self.operation.swagger_spec.config['bravado'].disable_fallback_results:
-                    log.warning(
-                        'force_fallback_result set in request options and disable_fallback_results '
-                        'set in client config; not using fallback result.'
-                    )
-                else:
-                    # raise an exception to trigger fallback result handling
-                    raise ForcedFallbackResultError()
-
         except exceptions_to_catch as e:
             if request_end_time is None:
                 request_end_time = monotonic.monotonic()
@@ -179,7 +162,6 @@ class HttpFuture(object):
             start_time=self._start_time,
             request_end_time=request_end_time,
             handled_exception_info=exc_info,
-            request_config=self.request_config,
         )
         return BravadoResponse(
             result=swagger_result,
@@ -201,7 +183,7 @@ class HttpFuture(object):
         swagger_result = self._get_swagger_result(incoming_response)
 
         if self.operation is not None:
-            if self.request_config.also_return_response:
+            if self.also_return_response:
                 return swagger_result, incoming_response
             return swagger_result
 
@@ -222,7 +204,7 @@ class HttpFuture(object):
             unmarshal_response(
                 incoming_response,
                 self.operation,
-                self.request_config.response_callbacks,
+                self.response_callbacks,
             )
             swagger_result = incoming_response.swagger_result
 
