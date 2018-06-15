@@ -1,6 +1,11 @@
 Changelog
 =========
 
+9.3.2 (2018-06-15)
+------------------
+- Revert ability to force returning fallback results which was introduced in 9.3.1, since it contains
+  backwards-incompatible changes that break third-party HTTP clients like bravado-asyncio.
+
 9.3.1 (2018-06-14)
 ------------------
 - Add ability to force returning fallback results - PR #372
