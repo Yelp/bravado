@@ -1,6 +1,12 @@
 Changelog
 =========
 
+10.0.0 (2018-06-15)
+-------------------
+- Re-add ability to force returning fallback results - PR #372. Per-request configuration is now handled by the
+  new :class:`bravado.config.RequestConfig` class. This change requires an updated version of bravado-asyncio
+  in case you're using that HTTP client.
+
 9.3.2 (2018-06-15)
 ------------------
 - Revert ability to force returning fallback results which was introduced in 9.3.1, since it contains
