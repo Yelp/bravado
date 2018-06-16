@@ -135,6 +135,27 @@ class RequestsClientTestCase(unittest.TestCase):
         self.assertEqual('abc123', httpretty.last_request().headers['Key'])
 
     @httpretty.activate
+    def test_api_key_header_overwrite(self):
+        httpretty.register_uri(
+            httpretty.GET, "http://swagger.py/client-test",
+            body='expected')
+
+        client = RequestsClient()
+        client.set_api_key("swagger.py", 'abc123', param_name='Key',
+                           param_in='header')
+        params = self._default_params()
+        params['params'] = {'foo': 'bar'}
+        params['headers'] = {'Key': 'def456'}
+
+        resp = client.request(params).result()
+
+        self.assertEqual(200, resp.status_code)
+        self.assertEqual('expected', resp.text)
+        self.assertEqual({'foo': ['bar']},
+                         httpretty.last_request().querystring)
+        self.assertEqual('def456', httpretty.last_request().headers['Key'])
+
+    @httpretty.activate
     def test_auth_leak(self):
         httpretty.register_uri(
             httpretty.GET, "http://hackerz.py",

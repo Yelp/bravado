@@ -67,7 +67,7 @@ class ApiKeyAuthenticator(Authenticator):
 
     def apply(self, request):
         if self.param_in == 'header':
-            request.headers[self.param_name] = self.api_key
+            request.headers.setdefault(self.param_name, self.api_key)
         else:
             request.params[self.param_name] = self.api_key
         return request
