@@ -139,7 +139,7 @@ The default behavior for a service call is to return the swagger result like so:
 
 .. code-block:: python
 
-    pet = petstore.pet.getPetById(petId=42).response().result
+    pet = client.pet.getPetById(petId=42).response().result
     print pet.name
 
 However, there are times when it is necessary to have access to the actual
@@ -149,7 +149,7 @@ attribute to access the incoming response:
 
 .. code-block:: python
 
-    petstore = Swagger.from_url(
+    petstore = SwaggerClient.from_url(
         'http://petstore.swagger.io/swagger.json',
         config={'also_return_response': True},
     )
@@ -179,7 +179,7 @@ In the simplest case, you can just specify what you're going to return:
 
 .. code-block:: python
 
-    petstore = Swagger.from_url('http://petstore.swagger.io/swagger.json')
+    petstore = SwaggerClient.from_url('http://petstore.swagger.io/swagger.json')
     response = petstore.pet.findPetsByStatus(status=['available']).response(
         timeout=0.5,
         fallback_result=lambda e: [],
@@ -206,7 +206,7 @@ to return one as well from your fallback_result function to stay compatible with
 
 .. code-block:: python
 
-    petstore = Swagger.from_url('http://petstore.swagger.io/swagger.json')
+    petstore = SwaggerClient.from_url('http://petstore.swagger.io/swagger.json')
     response = petstore.pet.getPetById(petId=101).response(
         timeout=0.5,
         fallback_result=lambda e: petstore.get_model('Pet')(name='No Pet found', photoUrls=[]),
@@ -224,7 +224,7 @@ Testing fallback results
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can trigger returning fallback results for testing purposes. Just set the option ``force_fallback_result``
-to ``True`` in the request configuration (see :ref:`request_config`). In this case a :class:`.ForcedFallbackResultError`
+to ``True`` in the request configuration (see :ref:`request_configuration`). In this case a :class:`.ForcedFallbackResultError`
 exception will be passed to your fallback result callback, so make sure you handle it properly.
 
 .. _custom_response_metadata:
