@@ -1,9 +1,17 @@
 # -*- coding: utf-8 -*-
-import mock
+from bravado_core.response import IncomingResponse
 
 from bravado.exception import BravadoTimeoutError
 from bravado.http_future import FALLBACK_EXCEPTIONS
 from bravado.response import BravadoResponseMetadata
+
+
+class FakeIncomingResponse(IncomingResponse):
+    def __init__(self, status_code, **kwargs):
+        self.headers = {}
+        self.status_code = status_code
+        for name, value in kwargs.items():
+            setattr(self, name, value)
 
 
 class BravadoResponseMock(object):
@@ -17,10 +25,7 @@ class BravadoResponseMock(object):
             self._metadata = metadata
         else:
             self._metadata = BravadoResponseMetadata(
-                incoming_response=mock.Mock(
-                    status_code=200,
-                    headers={},
-                ),
+                incoming_response=FakeIncomingResponse(status_code=200),
                 swagger_result=self._result,
                 start_time=1528733800,
                 request_end_time=1528733801,
@@ -61,6 +66,8 @@ class FallbackResultBravadoResponseMock(object):
             )
 
     def __call__(self, timeout=None, fallback_result=None, exceptions_to_catch=FALLBACK_EXCEPTIONS):
+        assert callable(fallback_result), 'You\'re using FallbackResultBravadoResponseMock without a callable ' + \
+            'fallback_result. Either provide a callable or use BravadoResponseMock.'
         self._fallback_result = fallback_result(self._exception)
         self._metadata._swagger_result = self._fallback_result
         return self

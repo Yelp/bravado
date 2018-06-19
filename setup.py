@@ -42,7 +42,6 @@ setup(
     ],
     extras_require={
         'fido': ['fido >= 4.2.1'],
-        'testing': ['mock'],
         ':python_version<"3.5"': ['typing'],
     },
 )

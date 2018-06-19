@@ -79,3 +79,9 @@ def test_fallback_result_bravado_response_custom_metadata(mock_result, mock_meta
 
     assert response.metadata is mock_metadata
     assert response.metadata._swagger_result is mock_result
+
+
+def test_fallback_result_without_callable():
+    response_mock = FallbackResultBravadoResponseMock()
+    with pytest.raises(AssertionError):
+        response_mock(fallback_result={})
