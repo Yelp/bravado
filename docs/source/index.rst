@@ -33,6 +33,7 @@ Contents:
    configuration
    requests_and_responses
    advanced
+   testing
    modules
    changelog
 

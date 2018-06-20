@@ -63,3 +63,11 @@ bravado Package
     :members:
     :undoc-members:
     :show-inheritance:
+
+:mod:`testing` Module
+-----------------------
+
+.. automodule:: bravado.testing.response_mocks
+    :members:
+    :undoc-members:
+    :show-inheritance:

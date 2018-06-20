@@ -55,10 +55,12 @@ Config key                 Type            Description
 -------------------------- --------------- ---------------------------------------------------------------
 *response_metadata_class*  string          | The Metadata class to use; see
                                            | :ref:`custom_response_metadata` for details.
+
                                            Default: :class:`bravado.response.BravadoResponseMetadata`
 *disable_fallback_results* boolean         | Whether to disable returning fallback results, even if
                                            | they're provided as an argument to
                                            | to :meth:`.HttpFuture.response`.
+
                                            Default: ``False``
 *also_return_response*     boolean         | Determines what is returned by the service call.
                                            | Specifically, the return value of :meth:`.HttpFuture.result`.
@@ -67,6 +69,7 @@ Config key                 Type            Description
                                            | is returned. Has no effect on the return value of
                                            | :meth:`.HttpFuture.response`.
                                            | See :ref:`getting_access_to_the_http_response`.
+
                                            Default: ``False``
 ========================== =============== ===============================================================
 

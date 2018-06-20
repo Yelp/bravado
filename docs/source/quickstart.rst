@@ -93,7 +93,7 @@ This is too fancy for me! I want a simple dict response!
 
 ``result`` will look something like:
 
-.. code-block:: json
+.. code-block:: javascript
 
         {
             'category': {

@@ -39,5 +39,6 @@ htmlhelp_basename = 'bravado-pydoc'
 
 
 intersphinx_mapping = {
-    'http://docs.python.org/': None
+    'python': ('http://docs.python.org/', None),
+    'bravado-core': ('https://bravado-core.readthedocs.io/en/latest/', None),
 }
