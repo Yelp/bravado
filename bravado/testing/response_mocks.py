@@ -6,7 +6,7 @@ from bravado.http_future import FALLBACK_EXCEPTIONS
 from bravado.response import BravadoResponseMetadata
 
 
-class FakeIncomingResponse(IncomingResponse):
+class IncomingResponseMock(IncomingResponse):
     def __init__(self, status_code, **kwargs):
         self.headers = {}
         self.status_code = status_code
@@ -25,7 +25,7 @@ class BravadoResponseMock(object):
             self._metadata = metadata
         else:
             self._metadata = BravadoResponseMetadata(
-                incoming_response=FakeIncomingResponse(status_code=200),
+                incoming_response=IncomingResponseMock(status_code=200),
                 swagger_result=self._result,
                 start_time=1528733800,
                 request_end_time=1528733801,
