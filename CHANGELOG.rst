@@ -1,6 +1,10 @@
 Changelog
 =========
 
+10.0.1 (2018-06-20)
+-------------------
+- Add helper classes (in :mod:`bravado.testing.response_mocks`) for unit testing code using bravado - PR #375
+
 10.0.0 (2018-06-15)
 -------------------
 - Re-add ability to force returning fallback results - PR #372. Per-request configuration is now handled by the
