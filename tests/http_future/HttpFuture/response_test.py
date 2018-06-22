@@ -41,7 +41,23 @@ def fallback_result():
     return mock.Mock(name='fallback result')
 
 
+@pytest.mark.parametrize(
+    'fallback_result',
+    (None, False, [], (), object()),
+)
 def test_fallback_result(fallback_result, mock_future_adapter, mock_operation, http_future):
+    mock_future_adapter.result.side_effect = BravadoTimeoutError()
+    mock_operation.swagger_spec.config = {
+        'bravado': BravadoConfig.from_config_dict({'disable_fallback_results': False})
+    }
+
+    response = http_future.response(fallback_result=fallback_result)
+
+    assert response.result is fallback_result
+    assert response.metadata.is_fallback_result is True
+
+
+def test_fallback_result_callable(fallback_result, mock_future_adapter, mock_operation, http_future):
     mock_future_adapter.result.side_effect = BravadoTimeoutError()
     mock_operation.swagger_spec.config = {
         'bravado': BravadoConfig.from_config_dict({'disable_fallback_results': False})

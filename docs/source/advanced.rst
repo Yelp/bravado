@@ -169,24 +169,29 @@ By default, if the server returns an error or doesn't respond in time, you have 
 the resulting exception accordingly. A simpler way would be to use the support for fallback results
 provided by :meth:`.HttpFuture.response`.
 
-:meth:`.HttpFuture.response` takes an optional argument ``fallback_result`` which is a callable
-that returns a Swagger result. The callable takes one mandatory argument: the exception that would
-have been raised normally. This allows you to return different results based on the type of error
-(e.g. a :class:`.BravadoTimeoutError`) or, if a server response was received, on any data pertaining
-to that response, like the HTTP status code.
-
-In the simplest case, you can just specify what you're going to return:
+:meth:`.HttpFuture.response` takes an optional argument ``fallback_result`` which is the fallback
+Swagger result to return in case of errors:
 
 .. code-block:: python
 
     petstore = SwaggerClient.from_url('http://petstore.swagger.io/swagger.json')
     response = petstore.pet.findPetsByStatus(status=['available']).response(
         timeout=0.5,
-        fallback_result=lambda e: [],
+        fallback_result=[],
     )
 
 This code will return an empty list in case the server doesn't respond quickly enough (or it
 responded quickly enough, but returned an error).
+
+Handling error types differently
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes, you might want to treat timeout errors differently from server errors. To do this you may
+pass in a callable as ``fallback_result`` argument. The callable takes one mandatory argument: the exception
+that would have been raised normally. This allows you to return different results based on the type of error
+(e.g. a :class:`.BravadoTimeoutError`) or, if a server response was received, on any data pertaining
+to that response, like the HTTP status code. Subclasses of :class:`.HTTPError` have a ``response`` attribute
+that provides access to that data.
 
 Customizing which error types to handle
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

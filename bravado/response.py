@@ -5,9 +5,6 @@ import monotonic
 class BravadoResponse(object):
     """Bravado response object containing the swagger result as well as response metadata.
 
-    WARNING: This interface is considered UNSTABLE. Backwards-incompatible API changes may occur;
-    use at your own risk.
-
     :ivar result: Swagger result from the server
     :ivar BravadoResponseMetadata metadata: metadata for this response including HTTP response
     """
@@ -28,9 +25,6 @@ class BravadoResponseMetadata(object):
     the operation object, as we only start measuring once the call to `HTTPClient.request` returns.
     Nevertheless, it should be accurate enough for logging and debugging, i.e. determining what went
     on and how much time was spent waiting for the response.
-
-    WARNING: This interface is considered UNSTABLE. Backwards-incompatible API changes may occur;
-    use at your own risk.
 
     :ivar float start_time: monotonic timestamp at which the future was created
     :ivar float request_end_time: monotonic timestamp at which we received the HTTP response
