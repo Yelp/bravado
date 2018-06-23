@@ -8,6 +8,7 @@ import fido.exceptions
 import requests
 import requests.structures
 import six
+import twisted
 from bravado_core.response import IncomingResponse
 from yelp_bytes import to_bytes
 
@@ -166,7 +167,9 @@ class FidoFutureAdapter(FutureAdapter):
     retrieve results.
     """
 
-    timeout_errors = [fido.exceptions.HTTPTimeoutError]
+    timeout_errors = (fido.exceptions.HTTPTimeoutError,
+                      twisted.internet.error.DNSLookupError,
+                      twisted.internet.error.ConnectingCancelledError,)
 
     def __init__(self, eventual_result):
         self._eventual_result = eventual_result
