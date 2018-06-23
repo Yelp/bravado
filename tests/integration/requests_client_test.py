@@ -297,7 +297,9 @@ class TestServerRequestsClient(ServerClientGeneric):
 
     http_client_type = RequestsClient
     http_future_adapter_type = RequestsFutureAdapter
-    connection_errors_exceptions = set()
+    connection_errors_exceptions = {
+        requests.exceptions.ConnectionError(),
+    }
 
     def test_timeout_errors_are_catchable_as_requests_timeout(self, swagger_http_server):
         with pytest.raises(requests.exceptions.Timeout):
