@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
+from six import with_metaclass
+
 try:
-    from builtins import TimeoutError as base_exception
+    from builtins import TimeoutError as base_timeout_error
 except ImportError:
     # TimeoutError was introduced in python 3.3+
-    base_exception = Exception
+    base_timeout_error = OSError
 
-
-from six import with_metaclass
 
 # Dictionary of HTTP status codes to exception classes
 status_map = {}
@@ -332,7 +332,7 @@ class HTTPNetworkAuthenticationRequired(HTTPServerError):
     status_code = 511
 
 
-class BravadoTimeoutError(base_exception):
+class BravadoTimeoutError(base_timeout_error):
     pass
 
 

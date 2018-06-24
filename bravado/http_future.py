@@ -43,7 +43,22 @@ class FutureAdapter(object):
     """
 
     # Make sure to define the timeout errors associated with your http client
-    timeout_errors = []
+    timeout_errors = ()
+
+    def _raise_error(self, base_exception_class, class_name_suffix, exception):
+        error_type = type(
+            '{}{}'.format(self.__class__.__name__, class_name_suffix),
+            (exception.__class__, base_exception_class),
+            dict(),
+        )
+        six.reraise(
+            error_type,
+            error_type(*exception.args),
+            sys.exc_info()[2],
+        )
+
+    def _raise_timeout_error(self, exception):
+        self._raise_error(BravadoTimeoutError, 'Timeout', exception)
 
     def result(self, timeout=None):
         """
@@ -58,32 +73,15 @@ class FutureAdapter(object):
 
 
 def reraise_errors(func):
+
     @wraps(func)
     def wrapper(self, *args, **kwargs):
-        timeout_errors = tuple(getattr(self.future, 'timeout_errors', None) or ())
+        timeout_errors = tuple(self.future.timeout_errors or ())
 
-        # Make sure that timeout error type for a specific future adapter is generated only once
-        if timeout_errors and getattr(self.future, '__timeout_error_type', None) is None:
-            setattr(
-                self.future, '__timeout_error_type',
-                type(
-                    '{}Timeout'.format(self.future.__class__.__name__),
-                    tuple(list(timeout_errors) + [BravadoTimeoutError]),
-                    dict(),
-                ),
-            )
-
-        if timeout_errors:
-            try:
-                return func(self, *args, **kwargs)
-            except timeout_errors as exception:
-                six.reraise(
-                    self.future.__timeout_error_type,
-                    self.future.__timeout_error_type(*exception.args),
-                    sys.exc_info()[2],
-                )
-        else:
+        try:
             return func(self, *args, **kwargs)
+        except timeout_errors as exception:
+            self.future._raise_timeout_error(exception)
 
     return wrapper
 
