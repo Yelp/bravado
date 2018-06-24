@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+import socket
 import time
+from contextlib import closing
 from multiprocessing import Process
 
 import bottle
@@ -124,6 +126,27 @@ SWAGGER_SPEC_DICT = {
                 },
             },
         },
+        '/sleep': {
+            'get': {
+                'operationId': 'sleep',
+                'produces': ['application/json'],
+                'parameters': [
+                    {
+                        'in': 'query',
+                        'name': 'sec',
+                        'type': 'number',
+                        'format': 'float',
+                        'required': True,
+                    }
+                ],
+                'responses': {
+                    '200': {
+                        'description': 'HTTP/200',
+                        'schema': {'$ref': '#/definitions/api_response'},
+                    },
+                },
+            },
+        },
     },
 }
 
@@ -216,3 +239,10 @@ def swagger_http_server():
         yield server_address
     finally:
         web_service_process.terminate()
+
+
+@pytest.fixture(scope='session')
+def not_answering_http_server():
+    with closing(socket.socket(socket.AF_INET)) as s:
+        s.bind(('', 0))
+        yield 'http://localhost:{port}'.format(port=s.getsockname()[1])

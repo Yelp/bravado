@@ -20,10 +20,13 @@ from tests.integration.conftest import ROUTE_2_RESPONSE
 from tests.integration.conftest import SWAGGER_SPEC_DICT
 
 
-class TestServerRequestsClient:
+class ServerClientGeneric:
+    """
+    Generic class to run integration tests with the different HTTP clients definitions
+    """
 
-    http_client_type = RequestsClient
-    http_future_adapter_type = RequestsFutureAdapter
+    http_client_type = None
+    http_future_adapter_type = None
 
     @classmethod
     def setup_class(cls):
@@ -39,14 +42,6 @@ class TestServerRequestsClient:
             return response.decode('utf-8')
         else:
             return str(response)
-
-    def test_fetch_specs(self, swagger_http_server):
-        loader = Loader(
-            http_client=self.http_client,
-            request_headers={'boolean-header': True},
-        )
-        spec = loader.load_spec('{server_address}/swagger.json'.format(server_address=swagger_http_server))
-        assert spec == SWAGGER_SPEC_DICT
 
     @pytest.fixture
     def swagger_client(self, swagger_http_server):
@@ -68,6 +63,14 @@ class TestServerRequestsClient:
             return _response_getter
 
         raise ValueError
+
+    def test_fetch_specs(self, swagger_http_server):
+        loader = Loader(
+            http_client=self.http_client,
+            request_headers={'boolean-header': True},
+        )
+        spec = loader.load_spec('{server_address}/swagger.json'.format(server_address=swagger_http_server))
+        assert spec == SWAGGER_SPEC_DICT
 
     def test_swagger_client_json_response(self, swagger_client, result_getter):
         marshaled_response, raw_response = result_getter(swagger_client.json.get_json(), timeout=1)
@@ -188,8 +191,7 @@ class TestServerRequestsClient:
         assert unpackb(response.raw_bytes, encoding='utf-8') == API_RESPONSE
 
     def test_timeout_errors_are_thrown_as_BravadoTimeoutError(self, swagger_http_server):
-        timeout_errors = getattr(self.http_future_adapter_type, 'timeout_errors', [])
-        if not timeout_errors:
+        if not self.http_future_adapter_type.timeout_errors:
             pytest.skip('{} does NOT defines timeout_errors'.format(self.http_future_adapter_type))
 
         with pytest.raises(BravadoTimeoutError):
@@ -199,23 +201,38 @@ class TestServerRequestsClient:
                 'params': {},
             }).result(timeout=0.01)
 
-    def test_timeout_errors_are_catchable_with_original_exception_types(self, swagger_http_server):
-        timeout_errors = getattr(self.http_future_adapter_type, 'timeout_errors', [])
-        if not timeout_errors:
+    def test_swagger_client_timeout_errors_are_thrown_as_BravadoTimeoutError(
+        self, swagger_client, result_getter,
+    ):
+        if not self.http_future_adapter_type.timeout_errors:
             pytest.skip('{} does NOT defines timeout_errors'.format(self.http_future_adapter_type))
 
-        for expected_exception in timeout_errors:
-            with pytest.raises(expected_exception):
+        with pytest.raises(BravadoTimeoutError):
+            result_getter(
+                swagger_client.sleep.sleep(sec=0.5),
+                timeout=0.1,
+            )
+
+    def test_timeout_errors_are_catchable_with_original_exception_types(self, swagger_http_server):
+        if not self.http_future_adapter_type.timeout_errors:
+            pytest.skip('{} does NOT defines timeout_errors'.format(self.http_future_adapter_type))
+
+        for expected_exception in self.http_future_adapter_type.timeout_errors:
+            with pytest.raises(expected_exception) as excinfo:
                 self.http_client.request({
                     'method': 'GET',
                     'url': '{server_address}/sleep?sec=0.1'.format(server_address=swagger_http_server),
                     'params': {},
                 }).result(timeout=0.01)
+            assert isinstance(excinfo.value, BravadoTimeoutError)
+
+
+class TestServerRequestsClient(ServerClientGeneric):
+
+    http_client_type = RequestsClient
+    http_future_adapter_type = RequestsFutureAdapter
 
     def test_timeout_errors_are_catchable_as_requests_timeout(self, swagger_http_server):
-        if not self.http_client_type == RequestsClient:
-            pytest.skip('{} is not using RequestsClient'.format(self.http_future_adapter_type))
-
         with pytest.raises(requests.exceptions.Timeout):
             self.http_client.request({
                 'method': 'GET',
@@ -234,7 +251,7 @@ class FakeRequestsClient(RequestsClient):
         return super(FakeRequestsClient, self).request(*args, **kwargs)
 
 
-class TestServerRequestsClientFake(TestServerRequestsClient):
+class TestServerRequestsClientFake(ServerClientGeneric):
     """
     This test class uses as http client a requests client that has no timeout error specified.
     This is needed to ensure that the changes are back compatible
@@ -250,15 +267,5 @@ class TestServerRequestsClientFake(TestServerRequestsClient):
                 'url': '{server_address}/sleep?sec=0.1'.format(server_address=swagger_http_server),
                 'params': {},
             }).result(timeout=0.01)
-        except BravadoTimeoutError:
-            pytest.fail('DID RAISE BravadoTimeoutError')
-        except Exception:
-            pass
-
-    def test_timeout_errors_are_catchable_with_original_exception_types(self, swagger_http_server):
-        with pytest.raises(requests.Timeout):
-            self.http_client.request({
-                'method': 'GET',
-                'url': '{server_address}/sleep?sec=0.1'.format(server_address=swagger_http_server),
-                'params': {},
-            }).result(timeout=0.01)
+        except Exception as e:
+            assert not isinstance(e, BravadoTimeoutError)
