@@ -46,14 +46,19 @@ class FutureAdapter(object):
     timeout_errors = ()
 
     def _raise_error(self, base_exception_class, class_name_suffix, exception):
-        error_type = type(
+        error = type(
             '{}{}'.format(self.__class__.__name__, class_name_suffix),
             (exception.__class__, base_exception_class),
-            dict(),
-        )
+            dict(
+                # Small hack to allow all exceptions to be generated even if they have parameters in the signature
+                exception.__dict__,
+                __init__=lambda *args, **kwargs: None,
+            ),
+        )()
+
         six.reraise(
-            error_type,
-            error_type(*exception.args),
+            error.__class__,
+            error,
             sys.exc_info()[2],
         )
 
