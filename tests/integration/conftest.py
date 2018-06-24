@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-import socket
 import time
-from contextlib import closing
 from multiprocessing import Process
 
 import bottle
@@ -243,6 +241,5 @@ def swagger_http_server():
 
 @pytest.fixture(scope='session')
 def not_answering_http_server():
-    with closing(socket.socket(socket.AF_INET)) as s:
-        s.bind(('', 0))
-        yield 'http://localhost:{port}'.format(port=s.getsockname()[1])
+    # Nobody could listen on such address, so TCP 3 way handshake will fail
+    yield 'http://0.0.0.0'

@@ -2,6 +2,13 @@
 from six import with_metaclass
 
 try:
+    from builtins import ConnectionError as base_connection_error
+except ImportError:
+    # ConnectionError was introduced in python 3.3+
+    base_connection_error = OSError
+
+
+try:
     from builtins import TimeoutError as base_timeout_error
 except ImportError:
     # TimeoutError was introduced in python 3.3+
@@ -333,6 +340,10 @@ class HTTPNetworkAuthenticationRequired(HTTPServerError):
 
 
 class BravadoTimeoutError(base_timeout_error):
+    pass
+
+
+class BravadoConnectionError(base_connection_error):
     pass
 
 

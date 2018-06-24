@@ -16,6 +16,7 @@ from bravado_core.validate import validate_schema_object
 from msgpack import unpackb
 
 from bravado.config import RequestConfig
+from bravado.exception import BravadoConnectionError
 from bravado.exception import BravadoTimeoutError
 from bravado.exception import ForcedFallbackResultError
 from bravado.exception import HTTPServerError
@@ -44,6 +45,7 @@ class FutureAdapter(object):
 
     # Make sure to define the timeout errors associated with your http client
     timeout_errors = ()
+    connection_errors = ()
 
     def _raise_error(self, base_exception_class, class_name_suffix, exception):
         error = type(
@@ -65,6 +67,9 @@ class FutureAdapter(object):
     def _raise_timeout_error(self, exception):
         self._raise_error(BravadoTimeoutError, 'Timeout', exception)
 
+    def _raise_connection_error(self, exception):
+        self._raise_error(BravadoConnectionError, 'ConnectionError', exception)
+
     def result(self, timeout=None):
         """
         Must implement a result method which blocks on result retrieval.
@@ -82,11 +87,14 @@ def reraise_errors(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         timeout_errors = tuple(self.future.timeout_errors or ())
+        connection_errors = tuple(self.future.connection_errors or ())
 
         try:
             return func(self, *args, **kwargs)
         except timeout_errors as exception:
             self.future._raise_timeout_error(exception)
+        except connection_errors as exception:
+            self.future._raise_connection_error(exception)
 
     return wrapper
 
