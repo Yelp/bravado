@@ -17,6 +17,7 @@ from bravado.exception import BravadoConnectionError
 from bravado.exception import BravadoTimeoutError
 from bravado.swagger_model import Loader
 
+
 ROUTE_1_RESPONSE = b'HEY BUDDY'
 ROUTE_2_RESPONSE = b'BYE BUDDY'
 API_RESPONSE = {'answer': 42}
@@ -244,8 +245,7 @@ class IntegrationTestingServicesAndClient:
 
     @pytest.fixture(scope='session')
     def not_answering_http_server(self):
-        # Nobody could listen on such address, so TCP 3 way handshake will fail
-        yield 'http://0.0.0.0:8080'
+        yield 'http://localhost:{}'.format(ephemeral_port_reserve.reserve())
 
     @pytest.fixture
     def swagger_client(self, swagger_http_server):
