@@ -245,7 +245,7 @@ class IntegrationTestingServicesAndClient:
     @pytest.fixture(scope='session')
     def not_answering_http_server(self):
         # Nobody could listen on such address, so TCP 3 way handshake will fail
-        yield 'http://0.0.0.0'
+        yield 'http://0.0.0.0:8080'
 
     @pytest.fixture
     def swagger_client(self, swagger_http_server):
