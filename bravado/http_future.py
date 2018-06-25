@@ -16,6 +16,7 @@ from bravado_core.validate import validate_schema_object
 from msgpack import unpackb
 
 from bravado.config import RequestConfig
+from bravado.exception import BravadoConnectionError
 from bravado.exception import BravadoTimeoutError
 from bravado.exception import ForcedFallbackResultError
 from bravado.exception import HTTPServerError
@@ -43,7 +44,31 @@ class FutureAdapter(object):
     """
 
     # Make sure to define the timeout errors associated with your http client
-    timeout_errors = []
+    timeout_errors = ()
+    connection_errors = ()
+
+    def _raise_error(self, base_exception_class, class_name_suffix, exception):
+        error = type(
+            '{}{}'.format(self.__class__.__name__, class_name_suffix),
+            (exception.__class__, base_exception_class),
+            dict(
+                # Small hack to allow all exceptions to be generated even if they have parameters in the signature
+                exception.__dict__,
+                __init__=lambda *args, **kwargs: None,
+            ),
+        )()
+
+        six.reraise(
+            error.__class__,
+            error,
+            sys.exc_info()[2],
+        )
+
+    def _raise_timeout_error(self, exception):
+        self._raise_error(BravadoTimeoutError, 'Timeout', exception)
+
+    def _raise_connection_error(self, exception):
+        self._raise_error(BravadoConnectionError, 'ConnectionError', exception)
 
     def result(self, timeout=None):
         """
@@ -58,32 +83,18 @@ class FutureAdapter(object):
 
 
 def reraise_errors(func):
+
     @wraps(func)
     def wrapper(self, *args, **kwargs):
-        timeout_errors = tuple(getattr(self.future, 'timeout_errors', None) or ())
+        timeout_errors = tuple(self.future.timeout_errors or ())
+        connection_errors = tuple(self.future.connection_errors or ())
 
-        # Make sure that timeout error type for a specific future adapter is generated only once
-        if timeout_errors and getattr(self.future, '__timeout_error_type', None) is None:
-            setattr(
-                self.future, '__timeout_error_type',
-                type(
-                    '{}Timeout'.format(self.future.__class__.__name__),
-                    tuple(list(timeout_errors) + [BravadoTimeoutError]),
-                    dict(),
-                ),
-            )
-
-        if timeout_errors:
-            try:
-                return func(self, *args, **kwargs)
-            except timeout_errors as exception:
-                six.reraise(
-                    self.future.__timeout_error_type,
-                    self.future.__timeout_error_type(*exception.args),
-                    sys.exc_info()[2],
-                )
-        else:
+        try:
             return func(self, *args, **kwargs)
+        except timeout_errors as exception:
+            self.future._raise_timeout_error(exception)
+        except connection_errors as exception:
+            self.future._raise_connection_error(exception)
 
     return wrapper
 

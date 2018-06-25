@@ -124,6 +124,27 @@ SWAGGER_SPEC_DICT = {
                 },
             },
         },
+        '/sleep': {
+            'get': {
+                'operationId': 'sleep',
+                'produces': ['application/json'],
+                'parameters': [
+                    {
+                        'in': 'query',
+                        'name': 'sec',
+                        'type': 'number',
+                        'format': 'float',
+                        'required': True,
+                    }
+                ],
+                'responses': {
+                    '200': {
+                        'description': 'HTTP/200',
+                        'schema': {'$ref': '#/definitions/api_response'},
+                    },
+                },
+            },
+        },
     },
 }
 
@@ -216,3 +237,9 @@ def swagger_http_server():
         yield server_address
     finally:
         web_service_process.terminate()
+
+
+@pytest.fixture(scope='session')
+def not_answering_http_server():
+    # Nobody could listen on such address, so TCP 3 way handshake will fail
+    yield 'http://0.0.0.0'
