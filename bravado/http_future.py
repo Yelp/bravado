@@ -123,8 +123,7 @@ class HttpFuture(object):
         :type timeout: float
         :param fallback_result: either the swagger result or a callable that accepts an exception as argument
             and returns the swagger result to use in case of errors
-        :type fallback_result: either any type of object that represents a valid Swagger result or a callable that
-            takes an exception and returns a fallback swagger result
+        :type fallback_result: Optional[Union[Any, Callable[[Exception], Any]]]
         :param exceptions_to_catch: Exception classes to catch and call `fallback_result`
             with. Has no effect if `fallback_result` is not provided. By default, `fallback_result`
             will be called for read timeout and server errors (HTTP 5XX).

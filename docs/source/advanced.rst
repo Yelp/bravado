@@ -150,7 +150,7 @@ attribute to access the incoming response:
 .. code-block:: python
 
     petstore = SwaggerClient.from_url(
-        'http://petstore.swagger.io/swagger.json',
+        'http://petstore.swagger.io/v2/swagger.json',
         config={'also_return_response': True},
     )
     pet_response = petstore.pet.getPetById(petId=42).response()
@@ -174,7 +174,7 @@ Swagger result to return in case of errors:
 
 .. code-block:: python
 
-    petstore = SwaggerClient.from_url('http://petstore.swagger.io/swagger.json')
+    petstore = SwaggerClient.from_url('http://petstore.swagger.io/v2/swagger.json')
     response = petstore.pet.findPetsByStatus(status=['available']).response(
         timeout=0.5,
         fallback_result=[],
@@ -192,6 +192,29 @@ that would have been raised normally. This allows you to return different result
 (e.g. a :class:`.BravadoTimeoutError`) or, if a server response was received, on any data pertaining
 to that response, like the HTTP status code. Subclasses of :class:`.HTTPError` have a ``response`` attribute
 that provides access to that data.
+
+.. code-block:: python
+
+    def pet_status_fallback(exc):
+        if isinstance(exc, BravadoTimeoutError):
+            # Backend is slow, return last cached response
+            return pet_status_cache
+
+        # Some server issue, let's not show any pets
+        return []
+
+    petstore = SwaggerClient.from_url(
+        'http://petstore.swagger.io/v2/swagger.json',
+        # The petstore result for this call is not spec compliant...
+        config={'validate_responses': False},
+    )
+    response = petstore.pet.findPetsByStatus(status=['available']).response(
+        timeout=0.5,
+        fallback_result=pet_status_fallback,
+    )
+
+    if not response.metadata.is_fallback_result:
+        pet_status_cache = response.result
 
 Customizing which error types to handle
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -211,10 +234,10 @@ to return one as well from your fallback_result function to stay compatible with
 
 .. code-block:: python
 
-    petstore = SwaggerClient.from_url('http://petstore.swagger.io/swagger.json')
+    petstore = SwaggerClient.from_url('http://petstore.swagger.io/v2/swagger.json')
     response = petstore.pet.getPetById(petId=101).response(
         timeout=0.5,
-        fallback_result=lambda e: petstore.get_model('Pet')(name='No Pet found', photoUrls=[]),
+        fallback_result=petstore.get_model('Pet')(name='No Pet found', photoUrls=[]),
     )
 
 Two things to note here: first, use :meth:`.SwaggerClient.get_model` to get the model class for a
