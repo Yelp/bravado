@@ -33,6 +33,9 @@ FALLBACK_EXCEPTIONS = (
 )
 
 
+SENTINEL = object()
+
+
 class FutureAdapter(object):
     """
     Mimics a :class:`concurrent.futures.Future` regardless of which client is
@@ -123,23 +126,20 @@ class HttpFuture(object):
             also_return_response_default=False,
         )
 
-    def response(self, timeout=None, fallback_result=None, exceptions_to_catch=FALLBACK_EXCEPTIONS):
+    def response(self, timeout=None, fallback_result=SENTINEL, exceptions_to_catch=FALLBACK_EXCEPTIONS):
         """Blocking call to wait for the HTTP response.
 
         :param timeout: Number of seconds to wait for a response. Defaults to
             None which means wait indefinitely.
         :type timeout: float
-        :param fallback_result: callable that accepts an exception as argument and returns the
-            swagger result to use in case of errors
-        :type fallback_result: callable that takes an exception and returns a fallback swagger result
+        :param fallback_result: either the swagger result or a callable that accepts an exception as argument
+            and returns the swagger result to use in case of errors
+        :type fallback_result: Optional[Union[Any, Callable[[Exception], Any]]]
         :param exceptions_to_catch: Exception classes to catch and call `fallback_result`
             with. Has no effect if `fallback_result` is not provided. By default, `fallback_result`
             will be called for read timeout and server errors (HTTP 5XX).
         :type exceptions_to_catch: List/Tuple of Exception classes.
         :return: A BravadoResponse instance containing the swagger result and response metadata.
-
-        WARNING: This interface is considered UNSTABLE. Backwards-incompatible API changes may occur;
-        use at your own risk.
         """
         incoming_response = None
         exc_info = None
@@ -157,7 +157,7 @@ class HttpFuture(object):
                 raise make_http_exception(response=incoming_response)
 
             # Trigger fallback_result if the option is set
-            if fallback_result and self.request_config.force_fallback_result:
+            if fallback_result is not SENTINEL and self.request_config.force_fallback_result:
                 if self.operation.swagger_spec.config['bravado'].disable_fallback_results:
                     log.warning(
                         'force_fallback_result set in request options and disable_fallback_results '
@@ -176,10 +176,11 @@ class HttpFuture(object):
             exc_info = list(sys.exc_info()[:2])
             exc_info.append(traceback.format_exc())
             if (
-                fallback_result and self.operation
+                fallback_result is not SENTINEL
+                and self.operation
                 and not self.operation.swagger_spec.config['bravado'].disable_fallback_results
             ):
-                swagger_result = fallback_result(e)
+                swagger_result = fallback_result(e) if callable(fallback_result) else fallback_result
             else:
                 six.reraise(*sys.exc_info())
 

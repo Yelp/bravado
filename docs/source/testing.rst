@@ -17,7 +17,7 @@ First of all, let's define the code we'd like to test:
 
     def get_available_pet_photos():
         petstore = SwaggerClient.from_url(
-            'http://petstore.swagger.io/swagger.json',
+            'http://petstore.swagger.io/v2/swagger.json',
         )
         pets = petstore.pet.findPetsByStatus(status=['available']).response(
             timeout=0.5,

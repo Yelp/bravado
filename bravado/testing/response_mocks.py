@@ -3,6 +3,7 @@ from bravado_core.response import IncomingResponse
 
 from bravado.exception import BravadoTimeoutError
 from bravado.http_future import FALLBACK_EXCEPTIONS
+from bravado.http_future import SENTINEL
 from bravado.response import BravadoResponseMetadata
 
 
@@ -33,7 +34,7 @@ class BravadoResponseMock(object):
                 request_config=None,
             )
 
-    def __call__(self, timeout=None, fallback_result=None, exceptions_to_catch=FALLBACK_EXCEPTIONS):
+    def __call__(self, timeout=None, fallback_result=SENTINEL, exceptions_to_catch=FALLBACK_EXCEPTIONS):
         return self
 
     @property
@@ -65,10 +66,10 @@ class FallbackResultBravadoResponseMock(object):
                 request_config=None,
             )
 
-    def __call__(self, timeout=None, fallback_result=None, exceptions_to_catch=FALLBACK_EXCEPTIONS):
-        assert callable(fallback_result), 'You\'re using FallbackResultBravadoResponseMock without a callable ' + \
+    def __call__(self, timeout=None, fallback_result=SENTINEL, exceptions_to_catch=FALLBACK_EXCEPTIONS):
+        assert fallback_result is not SENTINEL, 'You\'re using FallbackResultBravadoResponseMock without a callable ' \
             'fallback_result. Either provide a callable or use BravadoResponseMock.'
-        self._fallback_result = fallback_result(self._exception)
+        self._fallback_result = fallback_result(self._exception) if callable(fallback_result) else fallback_result
         self._metadata._swagger_result = self._fallback_result
         return self
 

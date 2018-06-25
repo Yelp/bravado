@@ -13,7 +13,7 @@ from bravado.testing.response_mocks import FallbackResultBravadoResponseMock
 
 @pytest.fixture
 def mock_result():
-    return mock.Mock(name='mock result')
+    return mock.NonCallableMock(name='mock result')
 
 
 @pytest.fixture
@@ -53,6 +53,15 @@ def test_bravado_response_custom_metadata(mock_result, mock_metadata):
 
 
 def test_fallback_result_bravado_response(mock_result):
+    response_mock = FallbackResultBravadoResponseMock()
+    response = response_mock(fallback_result=mock_result)
+
+    assert response.result is mock_result
+    assert isinstance(response.metadata, BravadoResponseMetadata)
+    assert response.metadata._swagger_result is mock_result
+
+
+def test_fallback_result_bravado_response_callable(mock_result):
     exception = HTTPServerError(mock.Mock('incoming response', status_code=500))
 
     def handle_fallback_result(exc):
@@ -68,20 +77,14 @@ def test_fallback_result_bravado_response(mock_result):
 
 
 def test_fallback_result_bravado_response_custom_metadata(mock_result, mock_metadata):
-    exception = HTTPServerError(mock.Mock('incoming response', status_code=500))
-
-    def handle_fallback_result(exc):
-        assert exc is exception
-        return mock_result
-
-    response_mock = FallbackResultBravadoResponseMock(exception, metadata=mock_metadata)
-    response = response_mock(fallback_result=handle_fallback_result)
+    response_mock = FallbackResultBravadoResponseMock(metadata=mock_metadata)
+    response = response_mock(fallback_result=mock_result)
 
     assert response.metadata is mock_metadata
     assert response.metadata._swagger_result is mock_result
 
 
-def test_fallback_result_without_callable():
+def test_fallback_result_response_without_fallback_result():
     response_mock = FallbackResultBravadoResponseMock()
     with pytest.raises(AssertionError):
-        response_mock(fallback_result={})
+        response_mock()

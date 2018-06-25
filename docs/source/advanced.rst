@@ -150,7 +150,7 @@ attribute to access the incoming response:
 .. code-block:: python
 
     petstore = SwaggerClient.from_url(
-        'http://petstore.swagger.io/swagger.json',
+        'http://petstore.swagger.io/v2/swagger.json',
         config={'also_return_response': True},
     )
     pet_response = petstore.pet.getPetById(petId=42).response()
@@ -169,24 +169,52 @@ By default, if the server returns an error or doesn't respond in time, you have 
 the resulting exception accordingly. A simpler way would be to use the support for fallback results
 provided by :meth:`.HttpFuture.response`.
 
-:meth:`.HttpFuture.response` takes an optional argument ``fallback_result`` which is a callable
-that returns a Swagger result. The callable takes one mandatory argument: the exception that would
-have been raised normally. This allows you to return different results based on the type of error
-(e.g. a :class:`.BravadoTimeoutError`) or, if a server response was received, on any data pertaining
-to that response, like the HTTP status code.
-
-In the simplest case, you can just specify what you're going to return:
+:meth:`.HttpFuture.response` takes an optional argument ``fallback_result`` which is the fallback
+Swagger result to return in case of errors:
 
 .. code-block:: python
 
-    petstore = SwaggerClient.from_url('http://petstore.swagger.io/swagger.json')
+    petstore = SwaggerClient.from_url('http://petstore.swagger.io/v2/swagger.json')
     response = petstore.pet.findPetsByStatus(status=['available']).response(
         timeout=0.5,
-        fallback_result=lambda e: [],
+        fallback_result=[],
     )
 
 This code will return an empty list in case the server doesn't respond quickly enough (or it
 responded quickly enough, but returned an error).
+
+Handling error types differently
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes, you might want to treat timeout errors differently from server errors. To do this you may
+pass in a callable as ``fallback_result`` argument. The callable takes one mandatory argument: the exception
+that would have been raised normally. This allows you to return different results based on the type of error
+(e.g. a :class:`.BravadoTimeoutError`) or, if a server response was received, on any data pertaining
+to that response, like the HTTP status code. Subclasses of :class:`.HTTPError` have a ``response`` attribute
+that provides access to that data.
+
+.. code-block:: python
+
+    def pet_status_fallback(exc):
+        if isinstance(exc, BravadoTimeoutError):
+            # Backend is slow, return last cached response
+            return pet_status_cache
+
+        # Some server issue, let's not show any pets
+        return []
+
+    petstore = SwaggerClient.from_url(
+        'http://petstore.swagger.io/v2/swagger.json',
+        # The petstore result for this call is not spec compliant...
+        config={'validate_responses': False},
+    )
+    response = petstore.pet.findPetsByStatus(status=['available']).response(
+        timeout=0.5,
+        fallback_result=pet_status_fallback,
+    )
+
+    if not response.metadata.is_fallback_result:
+        pet_status_cache = response.result
 
 Customizing which error types to handle
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -206,10 +234,10 @@ to return one as well from your fallback_result function to stay compatible with
 
 .. code-block:: python
 
-    petstore = SwaggerClient.from_url('http://petstore.swagger.io/swagger.json')
+    petstore = SwaggerClient.from_url('http://petstore.swagger.io/v2/swagger.json')
     response = petstore.pet.getPetById(petId=101).response(
         timeout=0.5,
-        fallback_result=lambda e: petstore.get_model('Pet')(name='No Pet found', photoUrls=[]),
+        fallback_result=petstore.get_model('Pet')(name='No Pet found', photoUrls=[]),
     )
 
 Two things to note here: first, use :meth:`.SwaggerClient.get_model` to get the model class for a
