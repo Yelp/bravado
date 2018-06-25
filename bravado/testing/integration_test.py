@@ -267,7 +267,7 @@ class IntegrationTestingServicesAndClient:
 
             return _response_getter
 
-        raise ValueError
+        raise ValueError  # pragma: no cover
 
 
 class IntegrationTestingFixturesMixin(IntegrationTestingServicesAndClient):
@@ -282,15 +282,19 @@ class IntegrationTestingFixturesMixin(IntegrationTestingServicesAndClient):
     @classmethod
     def setup_class(cls):
         if cls.http_client_type is None:
-            raise RuntimeError(
-                'Define http_client_type for {}'.format(cls.__name__))
+            raise RuntimeError(  # pragma: no cover
+                'Define http_client_type for {}'.format(cls.__name__)
+            )
         if cls.http_future_adapter_type is None:
-            raise RuntimeError(
-                'Define http_future_adapter_type for {}'.format(cls.__name__))
+            raise RuntimeError(  # pragma: no cover
+                'Define http_future_adapter_type for {}'.format(cls.__name__)
+            )
         if cls.connection_errors_exceptions is None:
-            raise RuntimeError(
+            raise RuntimeError(  # pragma: no cover
                 'Define connection_errors_exceptions for {}'.format(
-                    cls.__name__))
+                    cls.__name__,
+                ),
+            )
         cls.http_client = cls.http_client_type()
 
     @classmethod
@@ -298,7 +302,7 @@ class IntegrationTestingFixturesMixin(IntegrationTestingServicesAndClient):
         if isinstance(response, bytes):
             return response.decode('utf-8')
         else:
-            return str(response)
+            return str(response)  # pragma: no cover
 
     def cancel_http_future(self, http_future):
         pass
