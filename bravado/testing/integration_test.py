@@ -8,7 +8,6 @@ import ephemeral_port_reserve
 import pytest
 import requests
 import requests.exceptions
-from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
 from msgpack import packb
 from msgpack import unpackb
@@ -163,7 +162,6 @@ def swagger_spec():
 
 @bottle.get('/json')
 def api_json():
-    bottle.response.content_type = APP_JSON
     return API_RESPONSE
 
 
@@ -194,20 +192,17 @@ def double():
 
 @bottle.get('/echo')
 def echo():
-    bottle.response.content_type = APP_JSON
     return {'message': bottle.request.params['message']}
 
 
 @bottle.get('/char_test/spe%ial?')
 def char_test():
-    bottle.response.content_type = APP_JSON
     return API_RESPONSE
 
 
 @bottle.get('/sanitize-test')
 def sanitize_test():
     if bottle.request.headers.get('X-User-Id') == 'admin':
-        bottle.response.content_type = APP_JSON
         return API_RESPONSE
     return bottle.HTTPResponse(status=404)
 
