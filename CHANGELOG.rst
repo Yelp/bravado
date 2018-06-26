@@ -1,6 +1,13 @@
 Changelog
 =========
 
+10.1.0 (2018-06-26)
+-------------------
+- Add support for non-callable fallback results, stabilize the response API - PR #376
+- Add unified connection error handling support, introduce :class:`.bravado.exception.BravadoConnectionError` - PR #377
+- Support per-request API key header overwriting - PR #374. Thanks Yuliya Bagriy for your contribution!
+- Extract integration testing tools to :mod:`bravado.testing.integration_test` module - PR #378
+
 10.0.1 (2018-06-20)
 -------------------
 - Add helper classes (in :mod:`bravado.testing.response_mocks`) for unit testing code using bravado - PR #375
