@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import json
+import time
+from multiprocessing import Process
 
-import mock
+import bottle
+import ephemeral_port_reserve
 import pytest
 import requests
 import requests.exceptions
@@ -12,43 +15,237 @@ from msgpack import unpackb
 from bravado.client import SwaggerClient
 from bravado.exception import BravadoConnectionError
 from bravado.exception import BravadoTimeoutError
-from bravado.requests_client import RequestsClient
-from bravado.requests_client import RequestsFutureAdapter
 from bravado.swagger_model import Loader
-from tests.integration.conftest import API_RESPONSE
-from tests.integration.conftest import ROUTE_1_RESPONSE
-from tests.integration.conftest import ROUTE_2_RESPONSE
-from tests.integration.conftest import SWAGGER_SPEC_DICT
 
 
-class ServerClientGeneric:
-    """
-    Generic class to run integration tests with the different HTTP clients definitions
-    """
+ROUTE_1_RESPONSE = b'HEY BUDDY'
+ROUTE_2_RESPONSE = b'BYE BUDDY'
+API_RESPONSE = {'answer': 42}
+SWAGGER_SPEC_DICT = {
+    'swagger': '2.0',
+    'info': {'version': '1.0.0', 'title': 'Integration tests'},
+    'definitions': {
+        'api_response': {
+            'properties': {
+                'answer': {
+                    'type': 'integer'
+                },
+            },
+            'required': ['answer'],
+            'type': 'object',
+            'x-model': 'api_response',
+            'title': 'api_response',
+        }
+    },
+    'basePath': '/',
+    'paths': {
+        '/json': {
+            'get': {
+                'produces': ['application/json'],
+                'responses': {
+                    '200': {
+                        'description': 'HTTP/200',
+                        'schema': {'$ref': '#/definitions/api_response'},
+                    },
+                },
+            },
+        },
+        '/json_or_msgpack': {
+            'get': {
+                'produces': [
+                    'application/msgpack',
+                    'application/json'
+                ],
+                'responses': {
+                    '200': {
+                        'description': 'HTTP/200',
+                        'schema': {'$ref': '#/definitions/api_response'},
+                    }
+                }
+            }
+        },
+        '/echo': {
+            'get': {
+                'produces': ['application/json'],
+                'parameters': [
+                    {
+                        'in': 'query',
+                        'name': 'message',
+                        'type': 'string',
+                        'required': True,
+                    }
+                ],
+                'responses': {
+                    '200': {
+                        'description': 'HTTP/200',
+                        'schema': {
+                            'type': 'object',
+                            'properties': {
+                                'message': {
+                                    'type': 'string',
+                                },
+                            },
+                            'required': ['message'],
+                        },
+                    },
+                },
+            },
+        },
+        '/char_test/{special}': {
+            'get': {
+                'operationId': 'get_char_test',
+                'produces': ['application/json'],
+                'parameters': [
+                    {
+                        'in': 'path',
+                        'name': 'special',
+                        'type': 'string',
+                        'required': True,
+                    }
+                ],
+                'responses': {
+                    '200': {
+                        'description': 'HTTP/200',
+                        'schema': {'$ref': '#/definitions/api_response'},
+                    },
+                },
+            },
+        },
+        '/sanitize-test': {
+            'get': {
+                'operationId': 'get_sanitized_param',
+                'produces': ['application/json'],
+                'parameters': [
+                    {
+                        'in': 'header',
+                        'name': 'X-User-Id',
+                        'type': 'string',
+                        'required': True,
+                    }
+                ],
+                'responses': {
+                    '200': {
+                        'description': 'HTTP/200',
+                        'schema': {'$ref': '#/definitions/api_response'},
+                    },
+                },
+            },
+        },
+        '/sleep': {
+            'get': {
+                'operationId': 'sleep',
+                'produces': ['application/json'],
+                'parameters': [
+                    {
+                        'in': 'query',
+                        'name': 'sec',
+                        'type': 'number',
+                        'format': 'float',
+                        'required': True,
+                    }
+                ],
+                'responses': {
+                    '200': {
+                        'description': 'HTTP/200',
+                        'schema': {'$ref': '#/definitions/api_response'},
+                    },
+                },
+            },
+        },
+    },
+}
 
-    http_client_type = None
-    http_future_adapter_type = None
-    connection_errors_exceptions = None
 
-    @classmethod
-    def setup_class(cls):
-        if cls.http_client_type is None:
-            raise RuntimeError('Define http_client_type for {}'.format(cls.__name__))
-        if cls.http_future_adapter_type is None:
-            raise RuntimeError('Define http_future_adapter_type for {}'.format(cls.__name__))
-        if cls.connection_errors_exceptions is None:
-            raise RuntimeError('Define connection_errors_exceptions for {}'.format(cls.__name__))
-        cls.http_client = cls.http_client_type()
+@bottle.get('/swagger.json')
+def swagger_spec():
+    return SWAGGER_SPEC_DICT
 
-    @classmethod
-    def encode_expected_response(cls, response):
-        if isinstance(response, bytes):
-            return response.decode('utf-8')
-        else:
-            return str(response)
 
-    def cancel_http_future(self, http_future):
-        pass
+@bottle.get('/json')
+def api_json():
+    return API_RESPONSE
+
+
+@bottle.route('/json_or_msgpack')
+def api_json_or_msgpack():
+    if bottle.request.headers.get('accept') == APP_MSGPACK:
+        bottle.response.content_type = APP_MSGPACK
+        return packb(API_RESPONSE)
+    else:
+        return API_RESPONSE
+
+
+@bottle.route('/1')
+def one():
+    return ROUTE_1_RESPONSE
+
+
+@bottle.route('/2')
+def two():
+    return ROUTE_2_RESPONSE
+
+
+@bottle.post('/double')
+def double():
+    x = bottle.request.params['number']
+    return str(int(x) * 2)
+
+
+@bottle.get('/echo')
+def echo():
+    return {'message': bottle.request.params['message']}
+
+
+@bottle.get('/char_test/spe%ial?')
+def char_test():
+    return API_RESPONSE
+
+
+@bottle.get('/sanitize-test')
+def sanitize_test():
+    if bottle.request.headers.get('X-User-Id') == 'admin':
+        return API_RESPONSE
+    return bottle.HTTPResponse(status=404)
+
+
+@bottle.get('/sleep')
+def sleep_api():
+    sec_to_sleep = float(bottle.request.GET.get('sec', '1'))
+    time.sleep(sec_to_sleep)
+    return sec_to_sleep
+
+
+class IntegrationTestingServicesAndClient:
+    @pytest.fixture(scope='session')
+    def swagger_http_server(self):
+        def wait_unit_service_starts(url, max_wait_time=10):
+            start = time.time()
+            check_url = '{url}/swagger.json'.format(url=url)
+            while time.time() < start + max_wait_time:
+                try:
+                    requests.get(check_url, timeout=1)
+                except requests.ConnectionError:
+                    time.sleep(0.1)
+                else:
+                    return
+
+        port = ephemeral_port_reserve.reserve()
+
+        web_service_process = Process(
+            target=bottle.run,
+            kwargs={'quiet': True, 'host': 'localhost', 'port': port},
+        )
+        try:
+            web_service_process.start()
+            server_address = 'http://localhost:{port}'.format(port=port)
+            wait_unit_service_starts(server_address, 10)
+            yield server_address
+        finally:
+            web_service_process.terminate()
+
+    @pytest.fixture(scope='session')
+    def not_answering_http_server(self):
+        yield 'http://localhost:{}'.format(ephemeral_port_reserve.reserve())
 
     @pytest.fixture
     def swagger_client(self, swagger_http_server):
@@ -67,10 +264,51 @@ class ServerClientGeneric:
             def _response_getter(future, timeout):
                 response = future.response(timeout)
                 return response.result, response.incoming_response
+
             return _response_getter
 
-        raise ValueError
+        raise ValueError  # pragma: no cover
 
+
+class IntegrationTestingFixturesMixin(IntegrationTestingServicesAndClient):
+    """
+    Generic class to run integration tests with the different HTTP clients definitions
+    """
+
+    http_client_type = None
+    http_future_adapter_type = None
+    connection_errors_exceptions = None
+
+    @classmethod
+    def setup_class(cls):
+        if cls.http_client_type is None:
+            raise RuntimeError(  # pragma: no cover
+                'Define http_client_type for {}'.format(cls.__name__)
+            )
+        if cls.http_future_adapter_type is None:
+            raise RuntimeError(  # pragma: no cover
+                'Define http_future_adapter_type for {}'.format(cls.__name__)
+            )
+        if cls.connection_errors_exceptions is None:
+            raise RuntimeError(  # pragma: no cover
+                'Define connection_errors_exceptions for {}'.format(
+                    cls.__name__,
+                ),
+            )
+        cls.http_client = cls.http_client_type()
+
+    @classmethod
+    def encode_expected_response(cls, response):
+        if isinstance(response, bytes):
+            return response.decode('utf-8')
+        else:
+            return str(response)  # pragma: no cover
+
+    def cancel_http_future(self, http_future):
+        pass
+
+
+class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
     def test_fetch_specs(self, swagger_http_server):
         loader = Loader(
             http_client=self.http_client,
@@ -261,15 +499,17 @@ class ServerClientGeneric:
                     'url': not_answering_http_server,
                     'params': {},
                 })
+                self.cancel_http_future(http_future)
+
                 # Finding a way to force all the http clients to raise
                 # the expected exception while sending the real request is hard
                 # so we're mocking the future in order to throw the expected
                 # exception so we can validate that the exception is catchable
                 # with the original exception type too
-                self.cancel_http_future(http_future)
-                http_future.future.result = mock.Mock(
-                    side_effect=expected_exception,
-                )
+                def raise_expected_exception(*args, **kwargs):
+                    raise expected_exception
+                http_future.future.result = raise_expected_exception
+
                 http_future.result(timeout=0.1)
 
             # check that the raised exception is catchable as BravadoConnectionError too
@@ -291,52 +531,3 @@ class ServerClientGeneric:
                 }),
                 timeout=0.1,
             )
-
-
-class TestServerRequestsClient(ServerClientGeneric):
-
-    http_client_type = RequestsClient
-    http_future_adapter_type = RequestsFutureAdapter
-    connection_errors_exceptions = {
-        requests.exceptions.ConnectionError(),
-    }
-
-    def test_timeout_errors_are_catchable_as_requests_timeout(self, swagger_http_server):
-        with pytest.raises(requests.exceptions.Timeout):
-            self.http_client.request({
-                'method': 'GET',
-                'url': '{server_address}/sleep?sec=0.1'.format(server_address=swagger_http_server),
-                'params': {},
-            }).result(timeout=0.01)
-
-
-class FakeRequestsFutureAdapter(RequestsFutureAdapter):
-    timeout_errors = []
-    connection_errors = []
-
-
-class FakeRequestsClient(RequestsClient):
-    @mock.patch('bravado.requests_client.RequestsFutureAdapter', FakeRequestsFutureAdapter)
-    def request(self, *args, **kwargs):
-        return super(FakeRequestsClient, self).request(*args, **kwargs)
-
-
-class TestServerRequestsClientFake(ServerClientGeneric):
-    """
-    This test class uses as http client a requests client that has no timeout error specified.
-    This is needed to ensure that the changes are back compatible
-    """
-
-    http_client_type = FakeRequestsClient
-    http_future_adapter_type = FakeRequestsFutureAdapter
-    connection_errors_exceptions = set()
-
-    def test_timeout_error_not_throws_BravadoTimeoutError_if_no_timeout_errors_specified(self, swagger_http_server):
-        try:
-            self.http_client.request({
-                'method': 'GET',
-                'url': '{server_address}/sleep?sec=0.1'.format(server_address=swagger_http_server),
-                'params': {},
-            }).result(timeout=0.01)
-        except Exception as e:
-            assert not isinstance(e, BravadoTimeoutError)

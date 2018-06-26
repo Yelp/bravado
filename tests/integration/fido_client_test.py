@@ -5,10 +5,10 @@ import twisted.web.client
 
 from bravado.fido_client import FidoClient
 from bravado.fido_client import FidoFutureAdapter
-from tests.integration import requests_client_test
+from bravado.testing.integration_test import IntegrationTestsBaseClass
 
 
-class TestServerFidoClient(requests_client_test.ServerClientGeneric):
+class TestServerFidoClient(IntegrationTestsBaseClass):
 
     http_client_type = FidoClient
     http_future_adapter_type = FidoFutureAdapter
