@@ -442,12 +442,9 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
         }).result(timeout=1)
 
         expected_header_representations = {
-            header_name: repr(
-                str(header_value.decode())
-                if isinstance(header_value, bytes)
-                else str(header_value)
-            )
-            for header_name, header_value in headers.items()
+            'Header-Boolean': repr('True'),
+            'Header-Integer': repr('1'),
+            'Header-Bytes': repr('0'),
         }
         assert {
             header_name: {
