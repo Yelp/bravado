@@ -18,6 +18,10 @@ from bravado.exception import BravadoTimeoutError
 from bravado.swagger_model import Loader
 
 
+def _class_fqn(clz):
+    return '{t.__module__}.{t.__name__}'.format(t=clz)
+
+
 ROUTE_1_RESPONSE = b'HEY BUDDY'
 ROUTE_2_RESPONSE = b'BYE BUDDY'
 API_RESPONSE = {'answer': 42}
@@ -189,6 +193,18 @@ def two():
 def double():
     x = bottle.request.params['number']
     return str(int(x) * 2)
+
+
+@bottle.route('/headers')
+def headers():
+    return {
+        header_name: {
+            'type': _class_fqn(type(header_value)),
+            'representation': repr(header_value),
+        }
+        for header_name, header_value in bottle.request.headers.items()
+        if header_name.startswith('Header-')
+    }
 
 
 @bottle.get('/echo')
@@ -412,15 +428,31 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
 
         assert resp.text == self.encode_expected_response(b'6')
 
-    def test_boolean_header(self, swagger_http_server):
+    def test_non_string_headers(self, swagger_http_server):
+        headers = {
+            'Header-Boolean': True,
+            'Header-Integer': 1,
+            'Header-Bytes': b'0',
+        }
         response = self.http_client.request({
             'method': 'GET',
-            'headers': {'boolean-header': True},
-            'url': '{server_address}/1'.format(server_address=swagger_http_server),
+            'headers': headers,
+            'url': '{server_address}/headers'.format(server_address=swagger_http_server),
             'params': {},
         }).result(timeout=1)
 
-        assert response.text == self.encode_expected_response(ROUTE_1_RESPONSE)
+        expected_header_representations = {
+            'Header-Boolean': repr('True'),
+            'Header-Integer': repr('1'),
+            'Header-Bytes': repr('0'),
+        }
+        assert {
+            header_name: {
+                'type': _class_fqn(str),
+                'representation': expected_header_representations[header_name]
+            }
+            for header_name, header_value in headers.items()
+        } == response.json()
 
     def test_msgpack_support(self, swagger_http_server):
         response = self.http_client.request({
