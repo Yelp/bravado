@@ -29,6 +29,7 @@ log = logging.getLogger(__name__)
 
 FALLBACK_EXCEPTIONS = (
     BravadoTimeoutError,
+    BravadoConnectionError,
     HTTPServerError,
 )
 
