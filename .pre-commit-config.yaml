@@ -20,3 +20,9 @@ repos:
     sha: v1.0.1
     hooks:
     -   id: reorder-python-imports
+-   repo: git://github.com/Yelp/detect-secrets
+    sha: 0.9.1
+    hooks:
+    -   id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: tests/.*
