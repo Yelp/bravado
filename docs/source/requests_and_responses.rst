@@ -31,7 +31,7 @@ If the request succeeded and the server returned a HTTP status code between 100 
 :meth:`.HttpFuture.response()` will be a :class:`~bravado.response.BravadoResponse` instance. You may access the Swagger
 result of your call through :attr:`.BravadoResponse.result`.
 
-If the server sent a response with a HTTP code of 400 or higher, by default a subclass of :class:`.HTTPError` will be raised
+If the server sent a response with a HTTP code of 300 or higher, by default a subclass of :class:`.HTTPError` will be raised
 when you call :meth:`.HttpFuture.response`. The exception gives you access to the Swagger result (:attr:`.HTTPError.swagger_result`)
 as well as the HTTP response object (:attr:`.HTTPError.response`).
 
