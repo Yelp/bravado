@@ -80,7 +80,13 @@ def test_with_not_string_headers(
         'files': mock.Mock(),
     })
 
-    assert request['headers'][header_name] == str(header_value)
+    expected_header_value = str(header_value)
+    # we need to handle a backwards-incompatible change in bravado-core 5.0.5
+    if swagger_type == 'boolean':
+        assert request['headers'][header_name] in (expected_header_value, expected_header_value.lower())
+    else:
+        assert request['headers'][header_name] == expected_header_value
+
     unmarshalled_request = unmarshal_request(request_object, operation)
     assert unmarshalled_request[header_name] == header_value
 
