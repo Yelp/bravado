@@ -5,6 +5,10 @@ import os
 import os.path
 
 import yaml
+try:
+    from yaml import CSafeLoader as SafeLoader
+except ImportError:  # pragma: no cover
+    from yaml import SafeLoader
 from bravado_core.spec import is_yaml
 from six import iteritems
 from six import itervalues
@@ -116,7 +120,7 @@ class Loader(object):
         :return: Python dictionary representing the spec.
         :raise: yaml.parser.ParserError: If the text is not valid YAML.
         """
-        data = yaml.safe_load(text)
+        data = yaml.load(text, Loader=SafeLoader)
         for methods in itervalues(data.get('paths', {})):
             for operation in itervalues(methods):
                 if 'responses' in operation:
