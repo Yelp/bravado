@@ -8,6 +8,11 @@ def test_separate_params():
         'connect_timeout': 1,
         'timeout': 2
     }
-    sanitized, misc = RequestsClient.separate_params(request_params)
+    sanitized, misc = RequestsClient().separate_params(request_params)
     assert sanitized == {'url': 'http://foo.com'}
-    assert misc == {'connect_timeout': 1, 'timeout': 2}
+    assert misc == {
+        'connect_timeout': 1,
+        'ssl_cert': None,
+        'ssl_verify': True,
+        'timeout': 2,
+    }

@@ -95,12 +95,20 @@ class RequestsClient(HttpClient):
     """Synchronous HTTP client implementation.
     """
 
-    def __init__(self):
+    def __init__(self, ssl_verify=True, ssl_cert=None):
+        """
+        :param ssl_verify: Set to False to disable SSL certificate validation. Provide the path to a
+            CA bundle if you need to use a custom one.
+        :param ssl_cert: Provide a client-side certificate to use. Either a sequence of strings pointing
+            to the certificate (1) and the private key (2), or a string pointing to the combined certificate
+            and key.
+        """
         self.session = requests.Session()
         self.authenticator = None
+        self.ssl_verify = ssl_verify
+        self.ssl_cert = ssl_cert
 
-    @staticmethod
-    def separate_params(request_params):
+    def separate_params(self, request_params):
         """Splits the passed in dict of request_params into two buckets.
 
         - sanitized_params are valid kwargs for constructing a
@@ -113,7 +121,10 @@ class RequestsClient(HttpClient):
         :returns: tuple(sanitized_params, misc_options)
         """
         sanitized_params = request_params.copy()
-        misc_options = {}
+        misc_options = {
+            'ssl_verify': self.ssl_verify,
+            'ssl_cert': self.ssl_cert,
+        }
 
         if 'connect_timeout' in sanitized_params:
             misc_options['connect_timeout'] = \
@@ -291,8 +302,16 @@ class RequestsFutureAdapter(FutureAdapter):
         }
 
         prepared_request = self.session.prepare_request(request)
+        settings = self.session.merge_environment_settings(
+            prepared_request.url,
+            None,
+            None,
+            self.misc_options['ssl_verify'],
+            self.misc_options['ssl_cert'],
+        )
         response = self.session.send(
             prepared_request,
             timeout=self.build_timeout(timeout),
+            **settings
         )
         return response

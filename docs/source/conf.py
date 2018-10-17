@@ -26,6 +26,7 @@ exclude_patterns = []
 
 pygments_style = 'sphinx'
 
+autoclass_content = 'both'
 
 # -- Options for HTML output ---------------------------------------------
 
