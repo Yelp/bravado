@@ -177,9 +177,9 @@ class HttpFuture(object):
             exc_info = list(sys.exc_info()[:2])
             exc_info.append(traceback.format_exc())
             if (
-                fallback_result is not SENTINEL
-                and self.operation
-                and not self.operation.swagger_spec.config['bravado'].disable_fallback_results
+                fallback_result is not SENTINEL and
+                self.operation and
+                not self.operation.swagger_spec.config['bravado'].disable_fallback_results
             ):
                 swagger_result = fallback_result(e) if callable(fallback_result) else fallback_result
             else:
