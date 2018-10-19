@@ -1,6 +1,11 @@
 Changelog
 =========
 
+10.2.0 (2018-10-19)
+-------------------
+- Support customizing or disabling SSL/TLS validation for the default HTTP client - Issues #278, #311, PR #392
+- Use the fallback result in case of connection errors as well - PR #381
+
 10.1.0 (2018-06-26)
 -------------------
 - Add support for non-callable fallback results, stabilize the response API - PR #376
