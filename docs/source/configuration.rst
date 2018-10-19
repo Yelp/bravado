@@ -73,6 +73,27 @@ Config key                 Type            Description
                                            Default: ``False``
 ========================== =============== ===============================================================
 
+Customizing the HTTP client
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+bravado's default HTTP client uses the excellent `requests library <http://www.python-requests.org/>`_ to make HTTP
+calls. If you'd like to customize its behavior, create a :class:`bravado.requests_client.RequestsClient` instance
+yourself and pass it as ``http_client`` argument to :meth:`.SwaggerClient.from_url` or :meth:`.SwaggerClient.from_spec`.
+
+Currently, you can customize SSL/TLS behavior through the arguments ``ssl_verify`` and ``ssl_cert``. They're identical
+to the ``verify`` and ``cert`` options of the requests library; please check
+`their documentation <http://www.python-requests.org/en/master/user/advanced/#ssl-cert-verification>`_ for usage
+instructions. Note that bravado honors the ``REQUESTS_CA_BUNDLE`` environment variable as well.
+
+Using a different HTTP client
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can use other HTTP clients with bravado; the fido client ships with bravado (:class:`bravado.fido_client.FidoClient`).
+Currently the fido client doesn't support customizing SSL/TLS behavior.
+
+Another well-supported option is `bravado_asyncio <https://github.com/sjaensch/bravado-asyncio>`_, which requires
+Python 3.5+. It supports the same ssl options as the default requests client.
+
 .. _request_configuration:
 
 Per-request Configuration
