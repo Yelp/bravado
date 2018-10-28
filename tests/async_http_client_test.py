@@ -153,17 +153,17 @@ class AsyncResponseTest(unittest.TestCase):
     def test_raise_for_status_client_error(self):
         headers = swaggerpy.async_http_client.listify_headers({})
         resp = Mock(**{'code': 400, 'headers': headers})
-        async = swaggerpy.async_http_client.AsyncResponse(None, resp, None)
+        async_resp = swaggerpy.async_http_client.AsyncResponse(None, resp, None)
         try:
-            async.raise_for_status()
+            async_resp.raise_for_status()
         except swaggerpy.exception.HTTPError as e:
             self.assertEqual('400 Client Error', str(e))
 
     def test_raise_for_status_server_error(self):
         headers = swaggerpy.async_http_client.listify_headers({})
         resp = Mock(**{'code': 500, 'headers': headers})
-        async = swaggerpy.async_http_client.AsyncResponse(None, resp, None)
+        async_resp = swaggerpy.async_http_client.AsyncResponse(None, resp, None)
         try:
-            async.raise_for_status()
+            async_resp.raise_for_status()
         except swaggerpy.exception.HTTPError as e:
             self.assertEqual('500 Server Error', str(e))
