@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
+from bravado_core.spec import Spec
 
-from bravado.client import Spec
 from bravado.client import SwaggerClient
 
 
