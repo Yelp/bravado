@@ -3,12 +3,18 @@ import pytest
 from bravado_core.operation import Operation
 from bravado_core.request import IncomingRequest
 from bravado_core.request import unmarshal_request
+from bravado_core.spec import Spec
 from mock import mock
 from mock import patch
 
 from bravado.client import CallableOperation
 from bravado.client import construct_request
-from tests.client.conftest import minimal_swagger_spec as build_swagger_spec
+
+
+def build_swagger_spec(swagger_dict):
+    spec = Spec(swagger_dict)
+    spec.api_url = 'http://localhost/'
+    return spec
 
 
 @pytest.mark.parametrize('timeout_kv', [
