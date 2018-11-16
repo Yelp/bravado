@@ -229,6 +229,7 @@ class HttpFuture(object):
         incoming_response = self.response_adapter(inner_response)
         return incoming_response
 
+    @reraise_errors  # unmarshal_response_inner calls response.json(), which might raise errors
     def _get_swagger_result(self, incoming_response):
         swagger_result = None
         if self.operation is not None:
