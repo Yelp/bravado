@@ -1,6 +1,10 @@
 Changelog
 =========
 
+10.2.1 (2018-11-16)
+-------------------
+- Reraise network errors when unmarshalling - PR #397
+
 10.2.0 (2018-10-19)
 -------------------
 - Support customizing or disabling SSL/TLS validation for the default HTTP client - Issues #278, #311, PR #392
