@@ -304,10 +304,10 @@ class RequestsFutureAdapter(FutureAdapter):
         prepared_request = self.session.prepare_request(request)
         settings = self.session.merge_environment_settings(
             prepared_request.url,
-            None,
-            None,
-            self.misc_options['ssl_verify'],
-            self.misc_options['ssl_cert'],
+            proxies={},
+            stream=None,
+            verify=self.misc_options['ssl_verify'],
+            cert=self.misc_options['ssl_cert'],
         )
         response = self.session.send(
             prepared_request,
