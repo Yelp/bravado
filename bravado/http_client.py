@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -*-
+import typing  # noqa: F401
+
+from bravado.http_future import HttpFuture  # noqa: F401
+from bravado_core.operation import Operation  # noqa: F401
+
+from bravado.config import RequestConfig  # noqa: F401
+
 APP_FORM = 'application/x-www-form-urlencoded'
 MULT_FORM = 'multipart/form-data'
 
@@ -8,7 +15,13 @@ class HttpClient(object):
     and perform HTTP calls to fulfill a Swagger operation.
     """
 
-    def request(self, request_params, operation=None, request_config=None):
+    def request(
+        self,
+        request_params,  # type: typing.MutableMapping[str, typing.Any]
+        operation=None,  # type: typing.Optional[Operation]
+        request_config=None,  # type: typing.Optional[RequestConfig]
+    ):
+        # type: (...) -> HttpFuture
         """
         :param request_params: complete request data. e.g. url, method,
             headers, body, params, connect_timeout, timeout, etc.
@@ -27,4 +40,5 @@ class HttpClient(object):
             u"%s: Method not implemented", self.__class__.__name__)
 
     def __repr__(self):
+        # type: () -> str
         return "{0}()".format(type(self))
