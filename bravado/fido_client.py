@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import sys
+import typing
 
 import crochet
 import fido
@@ -10,14 +11,18 @@ import requests.structures
 import six
 import twisted.internet.error
 import twisted.web.client
+from bravado_core.operation import Operation  # noqa: F401
 from bravado_core.response import IncomingResponse
 from yelp_bytes import to_bytes
 
+from bravado.config import RequestConfig  # noqa: F401
 from bravado.http_client import HttpClient
 from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
 
+
 log = logging.getLogger(__name__)
+T = typing.TypeVar('T')
 
 
 class FidoResponseAdapter(IncomingResponse):
@@ -33,22 +38,27 @@ class FidoResponseAdapter(IncomingResponse):
 
     @property
     def status_code(self):
+        # type: () -> int
         return self._delegate.code
 
     @property
     def text(self):
+        # type: () -> typing.Text
         return self._delegate.body
 
     @property
     def raw_bytes(self):
+        # type: () -> typing.ByteString
         return self._delegate.body
 
     @property
     def reason(self):
+        # type: () -> typing.Text
         return self._delegate.reason
 
     @property
     def headers(self):
+        # type: () -> typing.Optional[typing.Mapping[str, str]]
         # Header names and values are bytestrings, which is an issue on Python 3. Additionally,
         # header values are lists of strings. This is incompatible with how requests returns headers.
         # Let's match the requests interface so code dealing with headers continues to work even when
@@ -66,15 +76,22 @@ class FidoResponseAdapter(IncomingResponse):
         return self._headers
 
     def json(self, **_):
+        # type: (typing.Any) -> typing.Mapping[str, typing.Any]
         # TODO: pass the kwargs downstream
         return self._delegate.json()
 
 
-class FidoClient(HttpClient):
+class FidoClient(typing.Generic[T], HttpClient):
     """Fido (Asynchronous) HTTP client implementation.
     """
 
-    def request(self, request_params, operation=None, request_config=None):
+    def request(
+        self,
+        request_params,  # type: typing.MutableMapping[str, typing.Any]
+        operation=None,  # type: typing.Optional[Operation]
+        request_config=None,  # type: typing.Optional[RequestConfig]
+    ):
+        # type: (...) -> HttpFuture
         """Sets up the request params as per Twisted Agent needs.
         Sets up crochet and triggers the API request in background
 
@@ -91,7 +108,7 @@ class FidoClient(HttpClient):
 
         request_for_twisted = self.prepare_request_for_twisted(request_params)
 
-        future_adapter = FidoFutureAdapter(fido.fetch(**request_for_twisted))
+        future_adapter = FidoFutureAdapter(fido.fetch(**request_for_twisted))  # type: FidoFutureAdapter[T]
 
         return HttpFuture(future_adapter,
                           FidoResponseAdapter,
@@ -100,6 +117,7 @@ class FidoClient(HttpClient):
 
     @staticmethod
     def prepare_request_for_twisted(request_params):
+        # type: (typing.MutableMapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]
         """
         Uses the python package 'requests' to prepare the data as per twisted
         needs. requests.PreparedRequest.prepare is able to compute the body and
@@ -161,7 +179,7 @@ class FidoClient(HttpClient):
         return request_for_twisted
 
 
-class FidoFutureAdapter(FutureAdapter):
+class FidoFutureAdapter(FutureAdapter[T]):
     """
     This is just a wrapper for an EventualResult object from crochet.
     It implements the 'result' method which is needed by our HttpFuture to
@@ -177,9 +195,11 @@ class FidoFutureAdapter(FutureAdapter):
     )
 
     def __init__(self, eventual_result):
+        # type: (typing.Any) -> None
         self._eventual_result = eventual_result
 
     def result(self, timeout=None):
+        # type: (typing.Optional[float]) -> T
         try:
             return self._eventual_result.wait(timeout=timeout)
         except crochet.TimeoutError:
