@@ -219,10 +219,7 @@ class HttpFuture(typing.Generic[T]):
             else:
                 six.reraise(*sys.exc_info())
 
-        metadata_class = typing.cast(
-            typing.Type[BravadoResponseMetadata],
-            self._bravado_config.response_metadata_class
-        )
+        metadata_class = self._bravado_config.response_metadata_class
         response_metadata = metadata_class(
             incoming_response=incoming_response,
             swagger_result=swagger_result,
