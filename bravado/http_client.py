@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import typing  # noqa: F401
-
-from bravado.http_future import HttpFuture  # noqa: F401
 from bravado_core.operation import Operation  # noqa: F401
 
 from bravado.config import RequestConfig  # noqa: F401
+from bravado.http_future import HttpFuture  # noqa: F401
 
 APP_FORM = 'application/x-www-form-urlencoded'
 MULT_FORM = 'multipart/form-data'

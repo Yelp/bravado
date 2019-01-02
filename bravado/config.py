@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
-import typing  # noqa: F401
 from importlib import import_module
 
+import typing  # noqa: F401
 from bravado_core.operation import Operation  # noqa: F401
 from bravado_core.response import IncomingResponse  # noqa: F401
 

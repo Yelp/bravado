@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import typing
-
 from bravado_core.response import IncomingResponse  # noqa: F401
 from six import with_metaclass
 

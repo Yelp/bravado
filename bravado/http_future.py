@@ -27,7 +27,7 @@ from bravado.exception import ForcedFallbackResultError
 from bravado.exception import HTTPServerError
 from bravado.exception import make_http_exception
 from bravado.response import BravadoResponse
-from bravado.response import BravadoResponseMetadata
+from bravado.response import BravadoResponseMetadata  # noqa: F401
 
 log = logging.getLogger(__name__)
 
