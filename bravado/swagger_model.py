@@ -15,7 +15,7 @@ from six import itervalues
 from six.moves import urllib
 from six.moves.urllib import parse as urlparse
 
-from bravado.compat import json
+import simplejson
 from bravado.requests_client import RequestsClient
 
 log = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class FileEventual(object):
             self.headers = {}
 
         def json(self):
-            return json.loads(self.text.decode('utf-8'))
+            return simplejson.loads(self.text.decode('utf-8'))
 
     def __init__(self, path):
         self.path = path

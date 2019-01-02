@@ -38,6 +38,7 @@ setup(
         'pyyaml',
         'requests >= 2.4',
         'six',
+        'simplejson',
         'monotonic',
     ],
     extras_require={
