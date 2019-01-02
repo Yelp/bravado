@@ -8,6 +8,7 @@ import ephemeral_port_reserve
 import pytest
 import requests
 import requests.exceptions
+import typing  # noqa: F401
 from bravado_core.content_type import APP_MSGPACK
 from msgpack import packb
 from msgpack import unpackb
@@ -15,6 +16,8 @@ from msgpack import unpackb
 from bravado.client import SwaggerClient
 from bravado.exception import BravadoConnectionError
 from bravado.exception import BravadoTimeoutError
+from bravado.http_client import HttpClient  # noqa: F401
+from bravado.http_future import FutureAdapter  # noqa: F401
 from bravado.swagger_model import Loader
 
 
@@ -291,9 +294,9 @@ class IntegrationTestingFixturesMixin(IntegrationTestingServicesAndClient):
     Generic class to run integration tests with the different HTTP clients definitions
     """
 
-    http_client_type = None
-    http_future_adapter_type = None
-    connection_errors_exceptions = None
+    http_client_type = None  # type: typing.Type[HttpClient]
+    http_future_adapter_type = None  # type: typing.Type[FutureAdapter]
+    connection_errors_exceptions = None  # type: typing.Set[Exception]
 
     @classmethod
     def setup_class(cls):

@@ -2,14 +2,16 @@
 from six import with_metaclass
 
 try:
-    from builtins import ConnectionError as base_connection_error
+    # ignored type ConnectionError is introduced in python3.3+ (mypy runs as 2.7)
+    from builtins import ConnectionError as base_connection_error  # type: ignore
 except ImportError:
     # ConnectionError was introduced in python 3.3+
     base_connection_error = OSError
 
 
 try:
-    from builtins import TimeoutError as base_timeout_error
+    # ignored type TimeoutError is introduced in python3.3+ (mypy runs as 2.7)
+    from builtins import TimeoutError as base_timeout_error  # type: ignore
 except ImportError:
     # TimeoutError was introduced in python 3.3+
     base_timeout_error = OSError

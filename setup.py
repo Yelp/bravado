@@ -31,6 +31,9 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
+    package_data={
+        'bravado': ['py.typed'],
+    },
     install_requires=[
         'bravado-core >= 5.0.1',
         'msgpack-python',

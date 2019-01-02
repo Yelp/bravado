@@ -5,6 +5,7 @@ import requests
 import requests.auth
 import requests.exceptions
 import six
+import typing  # noqa: F401
 from bravado_core.response import IncomingResponse
 from six import iteritems
 from six.moves.urllib import parse as urlparse
@@ -222,8 +223,8 @@ class RequestsFutureAdapter(FutureAdapter):
     HTTP calls with the Requests library in a future-y sort of way.
     """
 
-    timeout_errors = (requests.exceptions.ReadTimeout,)
-    connection_errors = (requests.exceptions.ConnectionError,)
+    timeout_errors = (requests.exceptions.ReadTimeout,)  # type: typing.Tuple[typing.Type[Exception], ...]
+    connection_errors = (requests.exceptions.ConnectionError,)  # type: typing.Tuple[typing.Type[Exception], ...]
 
     def __init__(self, session, request, misc_options):
         """Kicks API call for Requests client

@@ -7,6 +7,7 @@ from itertools import chain
 
 import monotonic
 import six
+import typing  # noqa: F401
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
 from bravado_core.exception import MatchingResponseNotFound
@@ -22,7 +23,6 @@ from bravado.exception import ForcedFallbackResultError
 from bravado.exception import HTTPServerError
 from bravado.exception import make_http_exception
 from bravado.response import BravadoResponse
-
 
 log = logging.getLogger(__name__)
 
@@ -48,8 +48,8 @@ class FutureAdapter(object):
     """
 
     # Make sure to define the timeout errors associated with your http client
-    timeout_errors = ()
-    connection_errors = ()
+    timeout_errors = ()  # type: typing.Tuple[typing.Type[BaseException], ...]
+    connection_errors = ()  # type: typing.Tuple[typing.Type[BaseException], ...]
 
     def _raise_error(self, base_exception_class, class_name_suffix, exception):
         error = type(

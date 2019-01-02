@@ -19,6 +19,8 @@ matrix:
   - env: TOXENV=cover
   - env: TOXENV=docs
   - env: TOXENV=pre-commit
+  - env: TOXENV=mypy
+    python: "3.6"
 
 install:
 - "pip install tox coveralls"

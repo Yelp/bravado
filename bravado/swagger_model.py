@@ -8,7 +8,7 @@ import yaml
 try:
     from yaml import CSafeLoader as SafeLoader
 except ImportError:  # pragma: no cover
-    from yaml import SafeLoader
+    from yaml import SafeLoader  # type: ignore
 from bravado_core.spec import is_yaml
 from six import iteritems
 from six import itervalues
