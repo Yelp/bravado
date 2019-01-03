@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import copy
 import logging
 
 import requests
@@ -95,18 +96,20 @@ class RequestsClient(HttpClient):
     """Synchronous HTTP client implementation.
     """
 
-    def __init__(self, ssl_verify=True, ssl_cert=None):
+    def __init__(self, ssl_verify=True, ssl_cert=None, session_per_request=False):
         """
         :param ssl_verify: Set to False to disable SSL certificate validation. Provide the path to a
             CA bundle if you need to use a custom one.
         :param ssl_cert: Provide a client-side certificate to use. Either a sequence of strings pointing
             to the certificate (1) and the private key (2), or a string pointing to the combined certificate
             and key.
+        :param session_per_request: Set to True to create new Session for every request.
         """
         self.session = requests.Session()
         self.authenticator = None
         self.ssl_verify = ssl_verify
         self.ssl_cert = ssl_cert
+        self.session_per_request = session_per_request
 
     def separate_params(self, request_params):
         """Splits the passed in dict of request_params into two buckets.
@@ -151,7 +154,7 @@ class RequestsClient(HttpClient):
         sanitized_params, misc_options = self.separate_params(request_params)
 
         requests_future = RequestsFutureAdapter(
-            self.session,
+            copy.deepcopy(self.session) if self.session_per_request else self.session,
             self.authenticated_request(sanitized_params),
             misc_options,
         )
