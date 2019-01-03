@@ -1,6 +1,10 @@
 Changelog
 =========
 
+10.2.2 (2019-01-03)
+-------------------
+- Fix issue with default (requests) HTTP client if HTTP_PROXY environment variable is set - Issue #401, PR #402. Thanks Lourens Veen for the initial report!
+
 10.2.1 (2018-11-16)
 -------------------
 - Reraise network errors when unmarshalling - PR #397
