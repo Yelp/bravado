@@ -44,6 +44,8 @@ class _SENTINEL(object):
 
 
 SENTINEL = _SENTINEL()
+FuncType = typing.Callable[..., typing.Any]
+F = typing.TypeVar('F', bound=FuncType)
 T = typing.TypeVar('T')
 
 
@@ -101,9 +103,11 @@ class FutureAdapter(typing.Generic[T]):
 
 
 def reraise_errors(func):
+    # type: (F) -> F
 
     @wraps(func)
     def wrapper(self, *args, **kwargs):
+        # type: (typing.Any, typing.Any, typing.Any) -> typing.Any
         timeout_errors = tuple(self.future.timeout_errors or ())
         connection_errors = tuple(self.future.connection_errors or ())
 
@@ -114,7 +118,7 @@ def reraise_errors(func):
         except connection_errors as exception:
             self.future._raise_connection_error(exception)
 
-    return wrapper
+    return typing.cast(F, wrapper)
 
 
 class HttpFuture(typing.Generic[T]):
@@ -212,12 +216,16 @@ class HttpFuture(typing.Generic[T]):
             # as that would cause a circular reference. We'll store a string representation of the traceback
             # instead.
             exc_info.append(traceback.format_exc())
+
             if (
                 fallback_result is not SENTINEL and
                 self.operation and
                 not self.operation.swagger_spec.config['bravado'].disable_fallback_results
             ):
-                swagger_result = fallback_result(e) if callable(fallback_result) else fallback_result
+                if callable(fallback_result):
+                    swagger_result = fallback_result(e)
+                else:
+                    swagger_result = typing.cast(T, fallback_result)
             else:
                 six.reraise(*sys.exc_info())
 
@@ -285,7 +293,12 @@ class HttpFuture(typing.Generic[T]):
         return swagger_result
 
 
-def unmarshal_response(incoming_response, operation, response_callbacks=None):
+def unmarshal_response(
+    incoming_response,  # type: IncomingResponse
+    operation,  # type: Operation
+    response_callbacks=None,  # type: typing.Optional[typing.List[typing.Callable[[typing.Any, typing.Any], None]]]
+):
+    # type: (...) -> None
     """So the http_client is finished with its part of processing the response.
     This hands the response over to bravado_core for validation and
     unmarshalling and then runs any response callbacks. On success, the
@@ -326,7 +339,11 @@ def unmarshal_response(incoming_response, operation, response_callbacks=None):
     raise_on_expected(incoming_response)
 
 
-def unmarshal_response_inner(response, op):
+def unmarshal_response_inner(
+    response,  # type: IncomingResponse
+    op,  # type: Operation
+):
+    # type: (...) -> typing.Optional[T]
     """
     Unmarshal incoming http response into a value based on the
     response specification.
@@ -364,6 +381,7 @@ def unmarshal_response_inner(response, op):
 
 
 def raise_on_unexpected(http_response):
+    # type: (IncomingResponse) -> None
     """Raise an HTTPError if the response is 5XX.
 
     :param http_response: :class:`bravado_core.response.IncomingResponse`
@@ -374,6 +392,7 @@ def raise_on_unexpected(http_response):
 
 
 def raise_on_expected(http_response):
+    # type: (IncomingResponse) -> None
     """Raise an HTTPError if the response is non-2XX and matches a response
     in the swagger spec.
 

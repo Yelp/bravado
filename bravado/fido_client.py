@@ -20,6 +20,17 @@ from bravado.http_client import HttpClient
 from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
 
+if typing.TYPE_CHECKING:
+    class _FidoStub(typing.Protocol):
+        code = None  # type: int
+        body = None  # type: str
+        reason = None  # type: typing.Text
+        headers = None  # type: typing.Mapping[bytes, typing.List[bytes]]
+
+        def json(self, *args, **kwargs):
+            # type: (typing.Any, typing.Any) -> typing.Mapping[typing.Text, typing.Any]
+            pass
+
 
 log = logging.getLogger(__name__)
 T = typing.TypeVar('T')
@@ -33,8 +44,9 @@ class FidoResponseAdapter(IncomingResponse):
     """
 
     def __init__(self, fido_response):
+        # type: (_FidoStub) -> None
         self._delegate = fido_response
-        self._headers = None
+        self._headers = None  # type: typing.Optional[typing.MutableMapping[typing.Text, typing.Text]]
 
     @property
     def status_code(self):
@@ -58,13 +70,16 @@ class FidoResponseAdapter(IncomingResponse):
 
     @property
     def headers(self):
-        # type: () -> typing.Optional[typing.Mapping[str, str]]
+        # type: () -> typing.Mapping[typing.Text, typing.Text]
         # Header names and values are bytestrings, which is an issue on Python 3. Additionally,
         # header values are lists of strings. This is incompatible with how requests returns headers.
         # Let's match the requests interface so code dealing with headers continues to work even when
         # you change the HTTP client.
         if not self._headers:
-            self._headers = requests.structures.CaseInsensitiveDict()
+            self._headers = typing.cast(
+                typing.MutableMapping[typing.Text, typing.Text],
+                requests.structures.CaseInsensitiveDict(),
+            )
             for header, values in self._delegate.headers.items():
                 # header names are encoded using latin1, while header values are encoded using UTF-8.
                 # We'll take the last entry in the list of values, making sure the latest header sent
@@ -73,10 +88,10 @@ class FidoResponseAdapter(IncomingResponse):
                 # the list of values for a given header.
                 self._headers[header.decode('latin1')] = values[-1].decode('utf8')
 
-        return self._headers
+        return typing.cast(typing.Mapping[typing.Text, typing.Text], self._headers)
 
     def json(self, **_):
-        # type: (typing.Any) -> typing.Mapping[str, typing.Any]
+        # type: (typing.Any) -> typing.Mapping[typing.Text, typing.Any]
         # TODO: pass the kwargs downstream
         return self._delegate.json()
 

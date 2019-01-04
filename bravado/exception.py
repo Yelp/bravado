@@ -38,6 +38,7 @@ class HTTPErrorType(type):
     """A metaclass for registering HTTPError subclasses."""
 
     def __new__(cls, *args, **kwargs):
+        # type: (typing.Type[type], typing.Any, typing.Any) -> type
         new_class = super(HTTPErrorType, cls).__new__(cls, *args, **kwargs)
         if hasattr(new_class, 'status_code'):
             _register_exception(new_class)
@@ -47,6 +48,7 @@ class HTTPErrorType(type):
 class HTTPError(with_metaclass(HTTPErrorType, IOError)):
     """Unified HTTPError used across all http_client implementations.
     """
+    status_code = None  # type: int
 
     def __init__(
         self,

@@ -19,7 +19,7 @@ class BravadoResponse(typing.Generic[T]):
 
     def __init__(
         self,
-        result,  # type: T
+        result,  # type: typing.Optional[T]
         metadata,  # type: 'BravadoResponseMetadata[T]'
     ):
         # type: (...) -> None
@@ -50,7 +50,7 @@ class BravadoResponseMetadata(typing.Generic[T]):
     def __init__(
         self,
         incoming_response,  # type: IncomingResponse
-        swagger_result,  # type: T
+        swagger_result,  # type: typing.Optional[T]
         start_time,  # type: float
         request_end_time,  # type: float
         handled_exception_info,  # type: typing.List[typing.Union[typing.Type[BaseException], BaseException, typing.Text]]  # noqa

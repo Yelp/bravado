@@ -205,7 +205,7 @@ class RequestsClient(HttpClient):
         )
 
     def authenticated_request(self, request_params):
-        # type: (...) -> requests.Request
+        # type: (typing.Mapping[str, typing.Any]) -> requests.Request
         return self.apply_authentication(requests.Request(**request_params))
 
     def apply_authentication(self, request):
@@ -249,11 +249,11 @@ class RequestsResponseAdapter(IncomingResponse):
 
     @property
     def headers(self):
-        # type: () -> typing.Optional[typing.Mapping[str, str]]
-        return self._delegate.headers
+        # type: () -> typing.Mapping[typing.Text, typing.Text]
+        return typing.cast(typing.Mapping[typing.Text, typing.Text], self._delegate.headers)
 
     def json(self, **kwargs):
-        # type: (typing.Any) -> typing.Mapping[str, typing.Any]
+        # type: (typing.Any) -> typing.Mapping[typing.Text, typing.Any]
         return self._delegate.json(**kwargs)
 
 
