@@ -18,8 +18,11 @@ from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
 
 
+if typing.TYPE_CHECKING:
+    T = typing.TypeVar('T')
+
+
 log = logging.getLogger(__name__)
-T = typing.TypeVar('T')
 
 
 class Authenticator(object):

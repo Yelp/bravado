@@ -29,6 +29,9 @@ from bravado.exception import make_http_exception
 from bravado.response import BravadoResponse
 
 
+FuncType = typing.Callable[..., typing.Any]
+F = typing.TypeVar('F', bound=FuncType)
+T = typing.TypeVar('T')
 log = logging.getLogger(__name__)
 
 
@@ -44,9 +47,6 @@ class _SENTINEL(object):
 
 
 SENTINEL = _SENTINEL()
-FuncType = typing.Callable[..., typing.Any]
-F = typing.TypeVar('F', bound=FuncType)
-T = typing.TypeVar('T')
 
 
 class FutureAdapter(typing.Generic[T]):

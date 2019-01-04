@@ -19,7 +19,10 @@ except ImportError:
     base_timeout_error = OSError
 
 
-T = typing.TypeVar('T')
+if typing.TYPE_CHECKING:
+    T = typing.TypeVar('T')
+
+
 # Dictionary of HTTP status codes to exception classes
 status_map = {}  # type: typing.MutableMapping[int, typing.Type['HTTPError']]
 
