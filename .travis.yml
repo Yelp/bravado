@@ -27,6 +27,6 @@ install:
 script:
 - tox -e $TOXENV
 after_success:
-- coveralls
+- if [ "$TOXENV" == "cover" ]; then coveralls; fi
 # Faster runs on container based infrastucture
 sudo: false

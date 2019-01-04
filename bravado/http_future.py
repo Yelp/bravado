@@ -27,7 +27,7 @@ from bravado.exception import ForcedFallbackResultError
 from bravado.exception import HTTPServerError
 from bravado.exception import make_http_exception
 from bravado.response import BravadoResponse
-from bravado.response import BravadoResponseMetadata  # noqa: F401
+
 
 log = logging.getLogger(__name__)
 
@@ -39,7 +39,11 @@ FALLBACK_EXCEPTIONS = (
 )
 
 
-SENTINEL = object()
+class _SENTINEL(object):
+    pass
+
+
+SENTINEL = _SENTINEL()
 T = typing.TypeVar('T')
 
 
@@ -154,7 +158,7 @@ class HttpFuture(typing.Generic[T]):
     def response(
         self,
         timeout=None,  # type: typing.Optional[float]
-        fallback_result=SENTINEL,  # type: typing.Optional[typing.Union[typing.Any, typing.Callable[[BaseException], typing.Any]]]  # noqa
+        fallback_result=SENTINEL,  # type: typing.Union[_SENTINEL, T, typing.Callable[[BaseException], T]]  # noqa
         exceptions_to_catch=FALLBACK_EXCEPTIONS,  # type: typing.Tuple[typing.Type[BaseException], ...]
     ):
         # type: (...) -> BravadoResponse[T]
@@ -165,11 +169,9 @@ class HttpFuture(typing.Generic[T]):
         :type timeout: float
         :param fallback_result: either the swagger result or a callable that accepts an exception as argument
             and returns the swagger result to use in case of errors
-        :type fallback_result: Optional[Union[Any, Callable[[Exception], Any]]]
         :param exceptions_to_catch: Exception classes to catch and call `fallback_result`
             with. Has no effect if `fallback_result` is not provided. By default, `fallback_result`
             will be called for read timeout and server errors (HTTP 5XX).
-        :type exceptions_to_catch: List/Tuple of Exception classes.
         :return: A BravadoResponse instance containing the swagger result and response metadata.
         """
         incoming_response = None
@@ -233,8 +235,11 @@ class HttpFuture(typing.Generic[T]):
             metadata=response_metadata,
         )
 
-    def result(self, timeout=None):
-        # type: (typing.Optional[float]) -> typing.Union[T, typing.Tuple[T, IncomingResponse]]
+    def result(
+        self,
+            timeout=None,  # type: typing.Optional[float]
+    ):
+        # type: (...) -> typing.Union[T, IncomingResponse, typing.Tuple[T, IncomingResponse]]
         """DEPRECATED: please use the `response()` method instead.
 
         Blocking call to wait for and return the unmarshalled swagger result.

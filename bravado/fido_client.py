@@ -48,7 +48,7 @@ class FidoResponseAdapter(IncomingResponse):
 
     @property
     def raw_bytes(self):
-        # type: () -> typing.ByteString
+        # type: () -> bytes
         return self._delegate.body
 
     @property
@@ -81,7 +81,7 @@ class FidoResponseAdapter(IncomingResponse):
         return self._delegate.json()
 
 
-class FidoClient(typing.Generic[T], HttpClient):
+class FidoClient(HttpClient):
     """Fido (Asynchronous) HTTP client implementation.
     """
 
@@ -91,7 +91,7 @@ class FidoClient(typing.Generic[T], HttpClient):
         operation=None,  # type: typing.Optional[Operation]
         request_config=None,  # type: typing.Optional[RequestConfig]
     ):
-        # type: (...) -> HttpFuture
+        # type: (...) -> HttpFuture[T]
         """Sets up the request params as per Twisted Agent needs.
         Sets up crochet and triggers the API request in background
 

@@ -7,7 +7,6 @@ if typing.TYPE_CHECKING:  # Needed to avoid cyclic import.
     from bravado.config import RequestConfig  # noqa: F401
 
 
-R = typing.TypeVar('R')
 T = typing.TypeVar('T')
 
 
@@ -20,7 +19,7 @@ class BravadoResponse(typing.Generic[T]):
 
     def __init__(
         self,
-        result,  # type: R
+        result,  # type: T
         metadata,  # type: 'BravadoResponseMetadata[T]'
     ):
         # type: (...) -> None
