@@ -133,7 +133,7 @@ class HttpFuture(typing.Generic[T]):
     def __init__(
         self,
         future,  # type: FutureAdapter
-        response_adapter,  # type: IncomingResponse
+        response_adapter,  # type: typing.Type[IncomingResponse]
         operation=None,  # type: typing.Optional[Operation]
         request_config=None,  # type: typing.Optional[RequestConfig]
     ):

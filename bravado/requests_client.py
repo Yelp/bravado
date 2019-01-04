@@ -1,21 +1,25 @@
 # -*- coding: utf-8 -*-
+import copy
 import logging
 
 import requests
 import requests.auth
 import requests.exceptions
 import six
-import typing  # noqa: F401
+import typing
+from bravado_core.operation import Operation  # noqa: F401
 from bravado_core.response import IncomingResponse
 from six import iteritems
 from six.moves.urllib import parse as urlparse
 
+from bravado.config import RequestConfig  # noqa: F401
 from bravado.http_client import HttpClient
 from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
 
 
 log = logging.getLogger(__name__)
+T = typing.TypeVar('T')
 
 
 class Authenticator(object):
@@ -25,12 +29,15 @@ class Authenticator(object):
     """
 
     def __init__(self, host):
+        # type: (str) -> None
         self.host = host
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self.host)
+        # type: () -> str
+        return "%s(%s)" % (self.__class__.__name__, self.host)
 
     def matches(self, url):
+        # type: (typing.Text) -> bool
         """Returns true if this authenticator applies to the given url.
 
         :param url: URL to check.
@@ -40,6 +47,7 @@ class Authenticator(object):
         return self.host == split.hostname
 
     def apply(self, request):
+        # type: (requests.Request) -> requests.Request
         """Apply authentication to a request.
 
         :param request: Request to add authentication information to.
@@ -60,13 +68,15 @@ class ApiKeyAuthenticator(Authenticator):
     :param param_in: How to send the API key. Can be 'query' or 'header'.
     """
 
-    def __init__(self, host, api_key, param_name=u'api_key', param_in=u'query'):
+    def __init__(self, host, api_key, param_name='api_key', param_in='query'):
+        # type: (str, str, str, str) -> None
         super(ApiKeyAuthenticator, self).__init__(host)
         self.param_name = param_name
         self.param_in = param_in
         self.api_key = api_key
 
     def apply(self, request):
+        # type: (requests.Request) -> requests.Request
         if self.param_in == 'header':
             request.headers.setdefault(self.param_name, self.api_key)
         else:
@@ -83,10 +93,12 @@ class BasicAuthenticator(Authenticator):
     """
 
     def __init__(self, host, username, password):
+        # type: (str, str, str) -> None
         super(BasicAuthenticator, self).__init__(host)
         self.auth = requests.auth.HTTPBasicAuth(username, password)
 
     def apply(self, request):
+        # type: (requests.Request) -> requests.Request
         request.auth = self.auth
 
         return request
@@ -97,6 +109,7 @@ class RequestsClient(HttpClient):
     """
 
     def __init__(self, ssl_verify=True, ssl_cert=None):
+        # type: (bool, typing.Any) -> None
         """
         :param ssl_verify: Set to False to disable SSL certificate validation. Provide the path to a
             CA bundle if you need to use a custom one.
@@ -105,11 +118,15 @@ class RequestsClient(HttpClient):
             and key.
         """
         self.session = requests.Session()
-        self.authenticator = None
+        self.authenticator = None  # type: typing.Optional[Authenticator]
         self.ssl_verify = ssl_verify
         self.ssl_cert = ssl_cert
 
-    def separate_params(self, request_params):
+    def separate_params(
+        self,
+        request_params,  # type: typing.MutableMapping[str, typing.Any]
+    ):
+        # type: (...) -> typing.Tuple[typing.Mapping[str, typing.Any], typing.Mapping[str, typing.Any]]
         """Splits the passed in dict of request_params into two buckets.
 
         - sanitized_params are valid kwargs for constructing a
@@ -121,7 +138,7 @@ class RequestsClient(HttpClient):
             read-only dict.
         :returns: tuple(sanitized_params, misc_options)
         """
-        sanitized_params = request_params.copy()
+        sanitized_params = copy.copy(request_params)
         misc_options = {
             'ssl_verify': self.ssl_verify,
             'ssl_cert': self.ssl_cert,
@@ -136,7 +153,13 @@ class RequestsClient(HttpClient):
 
         return sanitized_params, misc_options
 
-    def request(self, request_params, operation=None, request_config=None):
+    def request(
+        self,
+        request_params,  # type: typing.MutableMapping[str, typing.Any]
+        operation=None,  # type: typing.Optional[Operation]
+        request_config=None,  # type: typing.Optional[RequestConfig]
+    ):
+        # type: (...) -> HttpFuture[T]
         """
         :param request_params: complete request data.
         :type request_params: dict
@@ -165,19 +188,28 @@ class RequestsClient(HttpClient):
         )
 
     def set_basic_auth(self, host, username, password):
+        # type: (str, str, str) -> None
         self.authenticator = BasicAuthenticator(
-            host=host, username=username, password=password)
+            host=host,
+            username=username,
+            password=password,
+        )
 
-    def set_api_key(self, host, api_key, param_name=u'api_key',
-                    param_in=u'query'):
+    def set_api_key(self, host, api_key, param_name='api_key', param_in='query'):
+        # type: (str, str, str, str) -> None
         self.authenticator = ApiKeyAuthenticator(
-            host=host, api_key=api_key, param_name=param_name,
-            param_in=param_in)
+            host=host,
+            api_key=api_key,
+            param_name=param_name,
+            param_in=param_in,
+        )
 
     def authenticated_request(self, request_params):
+        # type: (...) -> requests.Request
         return self.apply_authentication(requests.Request(**request_params))
 
     def apply_authentication(self, request):
+        # type: (requests.Request) -> requests.Request
         if self.authenticator and self.authenticator.matches(request.url):
             return self.authenticator.apply(request)
 
@@ -192,29 +224,36 @@ class RequestsResponseAdapter(IncomingResponse):
     """
 
     def __init__(self, requests_lib_response):
+        # type: (requests.Response) -> None
         self._delegate = requests_lib_response
 
     @property
     def status_code(self):
+        # type: () -> int
         return self._delegate.status_code
 
     @property
     def text(self):
+        # type: () -> typing.Text
         return self._delegate.text
 
     @property
     def raw_bytes(self):
+        # type: () -> bytes
         return self._delegate.content
 
     @property
     def reason(self):
+        # type: () -> typing.Text
         return self._delegate.reason
 
     @property
     def headers(self):
+        # type: () -> typing.Optional[typing.Mapping[str, str]]
         return self._delegate.headers
 
     def json(self, **kwargs):
+        # type: (typing.Any) -> typing.Mapping[str, typing.Any]
         return self._delegate.json(**kwargs)
 
 
@@ -226,7 +265,13 @@ class RequestsFutureAdapter(FutureAdapter):
     timeout_errors = (requests.exceptions.ReadTimeout,)  # type: typing.Tuple[typing.Type[Exception], ...]
     connection_errors = (requests.exceptions.ConnectionError,)  # type: typing.Tuple[typing.Type[Exception], ...]
 
-    def __init__(self, session, request, misc_options):
+    def __init__(
+        self,
+        session,  # type: requests.Session
+        request,  # type: requests.Request
+        misc_options,  # type: typing.Mapping[str, typing.Any]
+    ):
+        # type: (...) -> None
         """Kicks API call for Requests client
 
         :param session: session object to use for making the request
@@ -239,7 +284,11 @@ class RequestsFutureAdapter(FutureAdapter):
         self.request = request
         self.misc_options = misc_options
 
-    def build_timeout(self, result_timeout):
+    def build_timeout(
+        self,
+        result_timeout,  # type: typing.Optional[float]
+    ):
+        # type: (...) -> typing.Union[typing.Optional[float], typing.Tuple[typing.Optional[float], typing.Optional[float]]]  # noqa
         """
         Build the appropriate timeout object to pass to `session.send(...)`
         based on connect_timeout, the timeout passed to the service call, and
@@ -281,10 +330,11 @@ class RequestsFutureAdapter(FutureAdapter):
         # Requests is weird in that if you want to specify a connect_timeout
         # and idle timeout, then the timeout is passed as a tuple
         if 'connect_timeout' in self.misc_options:
-            timeout = self.misc_options['connect_timeout'], timeout
+            return self.misc_options['connect_timeout'], timeout
         return timeout
 
     def result(self, timeout=None):
+        # type: (typing.Optional[float]) -> T
         """Blocking call to wait for API response
 
         :param timeout: timeout in seconds to wait for response. Defaults to
