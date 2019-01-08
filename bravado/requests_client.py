@@ -71,8 +71,14 @@ class ApiKeyAuthenticator(Authenticator):
     :param param_in: How to send the API key. Can be 'query' or 'header'.
     """
 
-    def __init__(self, host, api_key, param_name='api_key', param_in='query'):
-        # type: (str, str, str, str) -> None
+    def __init__(
+        self,
+        host,  # type: str
+        api_key,  # type: typing.Text
+        param_name=u'api_key',  # type: typing.Text
+        param_in=u'query',  # type: typing.Text
+    ):
+        # type: (...) -> None
         super(ApiKeyAuthenticator, self).__init__(host)
         self.param_name = param_name
         self.param_in = param_in
@@ -95,8 +101,13 @@ class BasicAuthenticator(Authenticator):
     :param password: Password
     """
 
-    def __init__(self, host, username, password):
-        # type: (str, str, str) -> None
+    def __init__(
+        self,
+        host,  # type: str
+        username,  # type: typing.Union[bytes, str]
+        password,  # type: typing.Union[bytes, str]
+    ):
+        # type: (...) -> None
         super(BasicAuthenticator, self).__init__(host)
         self.auth = requests.auth.HTTPBasicAuth(username, password)
 
@@ -190,16 +201,27 @@ class RequestsClient(HttpClient):
             request_config,
         )
 
-    def set_basic_auth(self, host, username, password):
-        # type: (str, str, str) -> None
+    def set_basic_auth(
+        self,
+        host,  # type: str
+        username,  # type: typing.Union[bytes, str]
+        password,  # type: typing.Union[bytes, str]
+    ):
+        # type: (...) -> None
         self.authenticator = BasicAuthenticator(
             host=host,
             username=username,
             password=password,
         )
 
-    def set_api_key(self, host, api_key, param_name='api_key', param_in='query'):
-        # type: (str, str, str, str) -> None
+    def set_api_key(
+        self,
+        host,  # type: str
+        api_key,  # type: typing.Text
+        param_name=u'api_key',  # type: typing.Text
+        param_in=u'query',  # type: typing.Text
+    ):
+        # type: (...) -> None
         self.authenticator = ApiKeyAuthenticator(
             host=host,
             api_key=api_key,
@@ -242,7 +264,7 @@ class RequestsResponseAdapter(IncomingResponse):
 
     @property
     def raw_bytes(self):
-        # type: () -> bytes
+        # type: () -> typing.Union[bytes, str]
         return self._delegate.content
 
     @property

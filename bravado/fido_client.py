@@ -60,7 +60,7 @@ class FidoResponseAdapter(IncomingResponse):
 
     @property
     def raw_bytes(self):
-        # type: () -> bytes
+        # type: () -> typing.Union[bytes, str]
         return self._delegate.body
 
     @property
@@ -88,7 +88,7 @@ class FidoResponseAdapter(IncomingResponse):
                 # the list of values for a given header.
                 self._headers[header.decode('latin1')] = values[-1].decode('utf8')
 
-        return typing.cast(typing.Mapping[typing.Text, typing.Text], self._headers)
+        return self._headers
 
     def json(self, **_):
         # type: (typing.Any) -> typing.Mapping[typing.Text, typing.Any]
