@@ -1,25 +1,34 @@
 # -*- coding: utf-8 -*-
+import typing
+from bravado_core.response import IncomingResponse  # noqa: F401
 from six import with_metaclass
 
 try:
-    from builtins import ConnectionError as base_connection_error
+    # ignored type ConnectionError is introduced in python3.3+ (mypy runs as 2.7)
+    from builtins import ConnectionError as base_connection_error  # type: ignore
 except ImportError:
     # ConnectionError was introduced in python 3.3+
     base_connection_error = OSError
 
 
 try:
-    from builtins import TimeoutError as base_timeout_error
+    # ignored type TimeoutError is introduced in python3.3+ (mypy runs as 2.7)
+    from builtins import TimeoutError as base_timeout_error  # type: ignore
 except ImportError:
     # TimeoutError was introduced in python 3.3+
     base_timeout_error = OSError
 
 
+if typing.TYPE_CHECKING:
+    T = typing.TypeVar('T')
+
+
 # Dictionary of HTTP status codes to exception classes
-status_map = {}
+status_map = {}  # type: typing.MutableMapping[int, typing.Type['HTTPError']]
 
 
 def _register_exception(exception_class):
+    # type: (typing.Type['HTTPError']) -> None
     """Store an HTTP exception class with a status code into a mapping
     of status codes to exception classes.
     :param exception_class: A subclass of HTTPError
@@ -32,6 +41,7 @@ class HTTPErrorType(type):
     """A metaclass for registering HTTPError subclasses."""
 
     def __new__(cls, *args, **kwargs):
+        # type: (typing.Type[type], typing.Any, typing.Any) -> type
         new_class = super(HTTPErrorType, cls).__new__(cls, *args, **kwargs)
         if hasattr(new_class, 'status_code'):
             _register_exception(new_class)
@@ -41,8 +51,15 @@ class HTTPErrorType(type):
 class HTTPError(with_metaclass(HTTPErrorType, IOError)):
     """Unified HTTPError used across all http_client implementations.
     """
+    status_code = None  # type: int
 
-    def __init__(self, response, message=None, swagger_result=None):
+    def __init__(
+        self,
+        response,  # type: IncomingResponse
+        message=None,   # type: typing.Optional[typing.Text]
+        swagger_result=None,  # type: typing.Optional[T]
+    ):
+        # type: (...) -> None
         """
         :type response: :class:`bravado_core.response.IncomingResponse`
         :param message: Optional string message
@@ -56,6 +73,7 @@ class HTTPError(with_metaclass(HTTPErrorType, IOError)):
         self.status_code = self.response.status_code
 
     def __str__(self):
+        # type: (...) -> str
         # Try to surface the most useful/relevant information available
         # since this is the first thing a developer sees when bad things
         # happen.
@@ -66,7 +84,12 @@ class HTTPError(with_metaclass(HTTPErrorType, IOError)):
         return '{0}{1}{2}'.format(status_and_reason, message, result)
 
 
-def make_http_exception(response, message=None, swagger_result=None):
+def make_http_exception(
+    response,  # type: IncomingResponse
+    message=None,  # type: typing.Optional[typing.Text]
+    swagger_result=None,  # type: typing.Optional[T]
+):
+    # type: (...) -> HTTPError
     """
     Return an HTTP exception class  based on the response. If a specific
     class doesn't exist for a particular HTTP status code, a more
@@ -89,8 +112,7 @@ def make_http_exception(response, message=None, swagger_result=None):
         }
         exc_class = exception_families.get(
             (status_code // 100) * 100,
-            HTTPError,
-        )
+        ) or HTTPError
 
     return exc_class(response, message=message, swagger_result=swagger_result)
 

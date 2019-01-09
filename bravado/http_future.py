@@ -7,14 +7,19 @@ from itertools import chain
 
 import monotonic
 import six
+import typing
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
 from bravado_core.exception import MatchingResponseNotFound
+from bravado_core.operation import Operation  # noqa: F401
 from bravado_core.response import get_response_spec
+from bravado_core.response import IncomingResponse  # noqa: F401
 from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
 from msgpack import unpackb
 
+from bravado.config import BravadoConfig
+from bravado.config import CONFIG_DEFAULTS
 from bravado.config import RequestConfig
 from bravado.exception import BravadoConnectionError
 from bravado.exception import BravadoTimeoutError
@@ -24,6 +29,9 @@ from bravado.exception import make_http_exception
 from bravado.response import BravadoResponse
 
 
+FuncType = typing.Callable[..., typing.Any]
+F = typing.TypeVar('F', bound=FuncType)
+T = typing.TypeVar('T')
 log = logging.getLogger(__name__)
 
 
@@ -34,10 +42,14 @@ FALLBACK_EXCEPTIONS = (
 )
 
 
-SENTINEL = object()
+class _SENTINEL(object):
+    pass
 
 
-class FutureAdapter(object):
+SENTINEL = _SENTINEL()
+
+
+class FutureAdapter(typing.Generic[T]):
     """
     Mimics a :class:`concurrent.futures.Future` regardless of which client is
     performing the request, whether it is synchronous or actually asynchronous.
@@ -48,10 +60,11 @@ class FutureAdapter(object):
     """
 
     # Make sure to define the timeout errors associated with your http client
-    timeout_errors = ()
-    connection_errors = ()
+    timeout_errors = ()  # type: typing.Tuple[typing.Type[BaseException], ...]
+    connection_errors = ()  # type: typing.Tuple[typing.Type[BaseException], ...]
 
     def _raise_error(self, base_exception_class, class_name_suffix, exception):
+        # type: (typing.Type[BaseException], typing.Text, BaseException) -> typing.NoReturn
         error = type(
             '{}{}'.format(self.__class__.__name__, class_name_suffix),
             (exception.__class__, base_exception_class),
@@ -69,12 +82,15 @@ class FutureAdapter(object):
         )
 
     def _raise_timeout_error(self, exception):
+        # type: (BaseException) -> typing.NoReturn
         self._raise_error(BravadoTimeoutError, 'Timeout', exception)
 
     def _raise_connection_error(self, exception):
+        # type: (BaseException) -> typing.NoReturn
         self._raise_error(BravadoConnectionError, 'ConnectionError', exception)
 
     def result(self, timeout=None):
+        # type: (typing.Optional[float]) -> T
         """
         Must implement a result method which blocks on result retrieval.
 
@@ -87,9 +103,11 @@ class FutureAdapter(object):
 
 
 def reraise_errors(func):
+    # type: (F) -> F
 
     @wraps(func)
     def wrapper(self, *args, **kwargs):
+        # type: (typing.Any, typing.Any, typing.Any) -> typing.Any
         timeout_errors = tuple(self.future.timeout_errors or ())
         connection_errors = tuple(self.future.connection_errors or ())
 
@@ -100,10 +118,10 @@ def reraise_errors(func):
         except connection_errors as exception:
             self.future._raise_connection_error(exception)
 
-    return wrapper
+    return typing.cast(F, wrapper)
 
 
-class HttpFuture(object):
+class HttpFuture(typing.Generic[T]):
     """Wrapper for a :class:`FutureAdapter` that returns an HTTP response.
 
     :param future: The future object to wrap.
@@ -116,8 +134,14 @@ class HttpFuture(object):
         :data:`bravado.client.REQUEST_OPTIONS_DEFAULTS`
     """
 
-    def __init__(self, future, response_adapter, operation=None,
-                 request_config=None):
+    def __init__(
+        self,
+        future,  # type: FutureAdapter
+        response_adapter,  # type: typing.Type[IncomingResponse]
+        operation=None,  # type: typing.Optional[Operation]
+        request_config=None,  # type: typing.Optional[RequestConfig]
+    ):
+        # type: (...) -> None
         self._start_time = monotonic.monotonic()
         self.future = future
         self.response_adapter = response_adapter
@@ -127,7 +151,21 @@ class HttpFuture(object):
             also_return_response_default=False,
         )
 
-    def response(self, timeout=None, fallback_result=SENTINEL, exceptions_to_catch=FALLBACK_EXCEPTIONS):
+    @property
+    def _bravado_config(self):
+        # type: () -> BravadoConfig
+        if self.operation:
+            return self.operation.swagger_spec.config['bravado']
+        else:
+            return BravadoConfig.from_config_dict(CONFIG_DEFAULTS)
+
+    def response(
+        self,
+        timeout=None,  # type: typing.Optional[float]
+        fallback_result=SENTINEL,  # type: typing.Union[_SENTINEL, T, typing.Callable[[BaseException], T]]  # noqa
+        exceptions_to_catch=FALLBACK_EXCEPTIONS,  # type: typing.Tuple[typing.Type[BaseException], ...]
+    ):
+        # type: (...) -> BravadoResponse[T]
         """Blocking call to wait for the HTTP response.
 
         :param timeout: Number of seconds to wait for a response. Defaults to
@@ -135,15 +173,13 @@ class HttpFuture(object):
         :type timeout: float
         :param fallback_result: either the swagger result or a callable that accepts an exception as argument
             and returns the swagger result to use in case of errors
-        :type fallback_result: Optional[Union[Any, Callable[[Exception], Any]]]
         :param exceptions_to_catch: Exception classes to catch and call `fallback_result`
             with. Has no effect if `fallback_result` is not provided. By default, `fallback_result`
             will be called for read timeout and server errors (HTTP 5XX).
-        :type exceptions_to_catch: List/Tuple of Exception classes.
         :return: A BravadoResponse instance containing the swagger result and response metadata.
         """
         incoming_response = None
-        exc_info = None
+        exc_info = []  # type: typing.List[typing.Union[typing.Type[BaseException], BaseException, typing.Text]]
         request_end_time = None
         if self.request_config.force_fallback_result:
             exceptions_to_catch = tuple(chain(exceptions_to_catch, (ForcedFallbackResultError,)))
@@ -159,7 +195,7 @@ class HttpFuture(object):
 
             # Trigger fallback_result if the option is set
             if fallback_result is not SENTINEL and self.request_config.force_fallback_result:
-                if self.operation.swagger_spec.config['bravado'].disable_fallback_results:
+                if self._bravado_config.disable_fallback_results:
                     log.warning(
                         'force_fallback_result set in request options and disable_fallback_results '
                         'set in client config; not using fallback result.'
@@ -171,21 +207,29 @@ class HttpFuture(object):
         except exceptions_to_catch as e:
             if request_end_time is None:
                 request_end_time = monotonic.monotonic()
+            exc_info = []
+            exc_info.extend(typing.cast(
+                typing.List[typing.Union[typing.Type[BaseException], BaseException, typing.Text]],
+                sys.exc_info()[:2],
+            ))
             # the Python 2 documentation states that we shouldn't assign the traceback to a local variable,
             # as that would cause a circular reference. We'll store a string representation of the traceback
             # instead.
-            exc_info = list(sys.exc_info()[:2])
             exc_info.append(traceback.format_exc())
+
             if (
                 fallback_result is not SENTINEL and
                 self.operation and
                 not self.operation.swagger_spec.config['bravado'].disable_fallback_results
             ):
-                swagger_result = fallback_result(e) if callable(fallback_result) else fallback_result
+                if callable(fallback_result):
+                    swagger_result = fallback_result(e)
+                else:
+                    swagger_result = typing.cast(T, fallback_result)
             else:
                 six.reraise(*sys.exc_info())
 
-        metadata_class = self.operation.swagger_spec.config['bravado'].response_metadata_class
+        metadata_class = self._bravado_config.response_metadata_class
         response_metadata = metadata_class(
             incoming_response=incoming_response,
             swagger_result=swagger_result,
@@ -199,7 +243,11 @@ class HttpFuture(object):
             metadata=response_metadata,
         )
 
-    def result(self, timeout=None):
+    def result(
+        self,
+            timeout=None,  # type: typing.Optional[float]
+    ):
+        # type: (...) -> typing.Union[T, IncomingResponse, typing.Tuple[T, IncomingResponse]]
         """DEPRECATED: please use the `response()` method instead.
 
         Blocking call to wait for and return the unmarshalled swagger result.
@@ -225,12 +273,14 @@ class HttpFuture(object):
 
     @reraise_errors
     def _get_incoming_response(self, timeout=None):
+        # type: (typing.Optional[float]) -> IncomingResponse
         inner_response = self.future.result(timeout=timeout)
         incoming_response = self.response_adapter(inner_response)
         return incoming_response
 
     @reraise_errors  # unmarshal_response_inner calls response.json(), which might raise errors
     def _get_swagger_result(self, incoming_response):
+        # type: (IncomingResponse) -> typing.Optional[T]
         swagger_result = None
         if self.operation is not None:
             unmarshal_response(
@@ -238,12 +288,17 @@ class HttpFuture(object):
                 self.operation,
                 self.request_config.response_callbacks,
             )
-            swagger_result = incoming_response.swagger_result
+            swagger_result = typing.cast(T, incoming_response.swagger_result)
 
         return swagger_result
 
 
-def unmarshal_response(incoming_response, operation, response_callbacks=None):
+def unmarshal_response(
+    incoming_response,  # type: IncomingResponse
+    operation,  # type: Operation
+    response_callbacks=None,  # type: typing.Optional[typing.List[typing.Callable[[typing.Any, typing.Any], None]]]
+):
+    # type: (...) -> None
     """So the http_client is finished with its part of processing the response.
     This hands the response over to bravado_core for validation and
     unmarshalling and then runs any response callbacks. On success, the
@@ -284,7 +339,11 @@ def unmarshal_response(incoming_response, operation, response_callbacks=None):
     raise_on_expected(incoming_response)
 
 
-def unmarshal_response_inner(response, op):
+def unmarshal_response_inner(
+    response,  # type: IncomingResponse
+    op,  # type: Operation
+):
+    # type: (...) -> typing.Optional[T]
     """
     Unmarshal incoming http response into a value based on the
     response specification.
@@ -322,6 +381,7 @@ def unmarshal_response_inner(response, op):
 
 
 def raise_on_unexpected(http_response):
+    # type: (IncomingResponse) -> None
     """Raise an HTTPError if the response is 5XX.
 
     :param http_response: :class:`bravado_core.response.IncomingResponse`
@@ -332,6 +392,7 @@ def raise_on_unexpected(http_response):
 
 
 def raise_on_expected(http_response):
+    # type: (IncomingResponse) -> None
     """Raise an HTTPError if the response is non-2XX and matches a response
     in the swagger spec.
 

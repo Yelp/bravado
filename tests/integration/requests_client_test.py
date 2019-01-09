@@ -2,6 +2,7 @@
 import mock
 import pytest
 import requests.exceptions
+import typing  # noqa: F401
 
 from bravado.exception import BravadoTimeoutError
 from bravado.requests_client import RequestsClient
@@ -29,8 +30,8 @@ class TestServerRequestsClient(IntegrationTestsBaseClass):
 
 
 class FakeRequestsFutureAdapter(RequestsFutureAdapter):
-    timeout_errors = []
-    connection_errors = []
+    timeout_errors = ()
+    connection_errors = ()
 
 
 class FakeRequestsClient(RequestsClient):
@@ -47,7 +48,7 @@ class TestServerRequestsClientFake(IntegrationTestsBaseClass):
 
     http_client_type = FakeRequestsClient
     http_future_adapter_type = FakeRequestsFutureAdapter
-    connection_errors_exceptions = set()
+    connection_errors_exceptions = set()  # type: typing.Set[Exception]
 
     def test_timeout_error_not_throws_BravadoTimeoutError_if_no_timeout_errors_specified(self, swagger_http_server):
         try:

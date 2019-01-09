@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 import warnings
 
+import typing
+
+if typing.TYPE_CHECKING:  # Needed to avoid cyclic import.
+    from bravado.client import CallableOperation  # noqa: F401
+
 
 def warn_for_deprecated_op(op):
+    # type: (CallableOperation) -> None
     """Warn if requested operation has `deprecated` field flagged as True
 
     :param op: Operation object which contains operation id and operation spec

@@ -1,24 +1,38 @@
 # -*- coding: utf-8 -*-
 import monotonic
+import typing
+from bravado_core.response import IncomingResponse  # noqa: F401
+
+if typing.TYPE_CHECKING:  # Needed to avoid cyclic import.
+    from bravado.config import RequestConfig  # noqa: F401
 
 
-class BravadoResponse(object):
+T = typing.TypeVar('T')
+
+
+class BravadoResponse(typing.Generic[T]):
     """Bravado response object containing the swagger result as well as response metadata.
 
     :ivar result: Swagger result from the server
     :ivar BravadoResponseMetadata metadata: metadata for this response including HTTP response
     """
 
-    def __init__(self, result, metadata):
+    def __init__(
+        self,
+        result,  # type: typing.Optional[T]
+        metadata,  # type: 'BravadoResponseMetadata[T]'
+    ):
+        # type: (...) -> None
         self.result = result
         self.metadata = metadata
 
     @property
     def incoming_response(self):
+        # type: () -> IncomingResponse
         return self.metadata.incoming_response
 
 
-class BravadoResponseMetadata(object):
+class BravadoResponseMetadata(typing.Generic[T]):
     """HTTP response metadata.
 
     NOTE: The `elapsed_time` attribute might be slightly lower than the actual time spent since calling
@@ -35,13 +49,14 @@ class BravadoResponseMetadata(object):
 
     def __init__(
         self,
-        incoming_response,
-        swagger_result,
-        start_time,
-        request_end_time,
-        handled_exception_info,
-        request_config,
+        incoming_response,  # type: IncomingResponse
+        swagger_result,  # type: typing.Optional[T]
+        start_time,  # type: float
+        request_end_time,  # type: float
+        handled_exception_info,  # type: typing.List[typing.Union[typing.Type[BaseException], BaseException, typing.Text]]  # noqa
+        request_config,  # type: RequestConfig
     ):
+        # type: (...) -> None
         """
         :param incoming_response: a subclass of bravado_core.response.IncomingResponse.
         :param swagger_result: the unmarshalled result that is being returned to the user.
@@ -69,26 +84,32 @@ class BravadoResponseMetadata(object):
 
     @property
     def incoming_response(self):
+        # type: () -> IncomingResponse
         if not self._incoming_response:
             raise ValueError('No incoming_response present')
         return self._incoming_response
 
     @property
     def status_code(self):
+        # type: () -> int
         return self.incoming_response.status_code
 
     @property
     def headers(self):
+        # type: () -> typing.Mapping[typing.Text, typing.Text]
         return self.incoming_response.headers
 
     @property
     def is_fallback_result(self):
+        # type: () -> bool
         return self.handled_exception_info is not None
 
     @property
     def request_elapsed_time(self):
+        # type: () -> float
         return self.request_end_time - self.start_time
 
     @property
     def elapsed_time(self):
+        # type: () -> float
         return self.processing_end_time - self.start_time

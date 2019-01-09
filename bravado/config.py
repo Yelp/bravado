@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-from collections import namedtuple
 from importlib import import_module
 
 import typing  # noqa: F401
@@ -24,13 +23,18 @@ CONFIG_DEFAULTS = {
 
 
 class BravadoConfig(
-    namedtuple(
+    typing.NamedTuple(
         'BravadoConfig',
-        'also_return_response, disable_fallback_results, response_metadata_class',
+        (
+            ('also_return_response', bool),
+            ('disable_fallback_results', bool),
+            ('response_metadata_class', typing.Type[BravadoResponseMetadata]),
+        ),
     )
 ):
     @staticmethod
     def from_config_dict(config):
+        # type: (typing.Mapping[str, typing.Any]) -> 'BravadoConfig'
         if config is None:
             config = {}
         bravado_config = {key: value for key, value in config.items() if key in BravadoConfig._fields}
@@ -80,6 +84,8 @@ class RequestConfig(object):
 
 
 def _get_response_metadata_class(fully_qualified_class_str):
+    # type: (str) -> typing.Type[BravadoResponseMetadata]
+
     class_to_import = _import_class(fully_qualified_class_str)
     if not class_to_import:
         return BravadoResponseMetadata
@@ -96,6 +102,7 @@ def _get_response_metadata_class(fully_qualified_class_str):
 
 
 def _import_class(fully_qualified_class_str):
+    # type: (str) -> typing.Optional[typing.Type]
     try:
         module_name, class_name = fully_qualified_class_str.rsplit('.', 1)
         return getattr(import_module(module_name), class_name)

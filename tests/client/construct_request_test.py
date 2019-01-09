@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
+import mock
 import pytest
 from bravado_core.operation import Operation
 from bravado_core.request import IncomingRequest
 from bravado_core.request import unmarshal_request
 from bravado_core.spec import Spec
-from mock import mock
-from mock import patch
 
 from bravado.client import CallableOperation
 from bravado.client import construct_request
@@ -21,7 +20,7 @@ def build_swagger_spec(swagger_dict):
     ('timeout', 1),
     ('connect_timeout', 2),
 ])
-@patch('bravado.client.marshal_param')
+@mock.patch('bravado.client.marshal_param')
 def test_with_timeouts(
     mock_marshal_param, minimal_swagger_spec,
     getPetById_spec, request_dict, timeout_kv,

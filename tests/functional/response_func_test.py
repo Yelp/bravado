@@ -6,10 +6,10 @@ import datetime
 import functools
 
 import pytest
+import simplejson
 from jsonschema.exceptions import ValidationError
 
 from bravado.client import SwaggerClient
-from bravado.compat import json
 from bravado.exception import HTTPError
 from tests.functional.conftest import API_DOCS_URL
 from tests.functional.conftest import register_get
@@ -48,7 +48,7 @@ def test_primitive_types_returned_in_response(httprettified, swagger_dict):
     }
     for rtype, rvalue in rtypes.items():
         register_spec(swagger_dict, {'type': rtype})
-        register_test_http(body=json.dumps(rvalue))
+        register_test_http(body=simplejson.dumps(rvalue))
         assert_result(rvalue)
 
 
@@ -62,7 +62,7 @@ def test_invalid_primitive_types_in_response_raises_ValidationError(
     }
     for rtype, rvalue in rtypes.items():
         register_spec(swagger_dict, {'type': rtype})
-        register_test_http(body=json.dumps(rvalue))
+        register_test_http(body=simplejson.dumps(rvalue))
         assert_raises_and_matches(ValidationError, 'is not of type')
 
 
@@ -76,7 +76,7 @@ def test_unstructured_json_in_response(httprettified, swagger_dict):
 def test_date_format_in_reponse(httprettified, swagger_dict):
     response_spec = {'type': 'string', 'format': 'date'}
     register_spec(swagger_dict, response_spec)
-    register_test_http(body=json.dumps("2014-06-10"))
+    register_test_http(body=simplejson.dumps("2014-06-10"))
     assert_result(datetime.date(2014, 6, 10))
 
 
@@ -89,5 +89,5 @@ def test_array_in_response(httprettified, swagger_dict):
     }
     register_spec(swagger_dict, response_spec)
     expected_array = ['inky', 'dinky', 'doo']
-    register_test_http(body=json.dumps(expected_array))
+    register_test_http(body=simplejson.dumps(expected_array))
     assert_result(expected_array)

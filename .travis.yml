@@ -19,12 +19,14 @@ matrix:
   - env: TOXENV=cover
   - env: TOXENV=docs
   - env: TOXENV=pre-commit
+  - env: TOXENV=mypy
+    python: "3.6"
 
 install:
 - "pip install tox coveralls"
 script:
 - tox -e $TOXENV
 after_success:
-- coveralls
+- if [ "$TOXENV" == "cover" ]; then coveralls; fi
 # Faster runs on container based infrastucture
 sudo: false
