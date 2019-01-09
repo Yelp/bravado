@@ -264,7 +264,7 @@ class RequestsResponseAdapter(IncomingResponse):
 
     @property
     def raw_bytes(self):
-        # type: () -> typing.Union[bytes, str]
+        # type: () -> bytes
         return self._delegate.content
 
     @property
