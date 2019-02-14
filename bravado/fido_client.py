@@ -230,4 +230,5 @@ class FidoFutureAdapter(FutureAdapter[T]):
             )
 
     def cancel(self):
+        # type: () -> None
         self._eventual_result.cancel()
