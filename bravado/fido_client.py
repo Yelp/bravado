@@ -218,7 +218,7 @@ class FidoFutureAdapter(FutureAdapter[T]):
         try:
             return self._eventual_result.wait(timeout=timeout)
         except crochet.TimeoutError:
-            self._eventual_result.cancel()
+            self.cancel()
             six.reraise(
                 fido.exceptions.HTTPTimeoutError,
                 fido.exceptions.HTTPTimeoutError(
@@ -228,3 +228,6 @@ class FidoFutureAdapter(FutureAdapter[T]):
                 ),
                 sys.exc_info()[2],
             )
+
+    def cancel(self):
+        self._eventual_result.cancel()

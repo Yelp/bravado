@@ -22,6 +22,3 @@ class TestServerFidoClient(IntegrationTestsBaseClass):
     @classmethod
     def encode_expected_response(cls, response):
         return response
-
-    def cancel_http_future(self, http_future):
-        http_future.future._eventual_result.cancel()

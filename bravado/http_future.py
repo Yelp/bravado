@@ -101,6 +101,16 @@ class FutureAdapter(typing.Generic[T]):
             "FutureAdapter must implement 'result' method"
         )
 
+    def cancel(self):
+        # type: () -> None
+        """
+        Must implement a cancel method which terminates any ongoing network
+        request.
+        """
+        raise NotImplementedError(
+            "FutureAdapter must implement 'cancel' method"
+        )
+
 
 def reraise_errors(func):
     # type: (F) -> F
@@ -270,6 +280,10 @@ class HttpFuture(typing.Generic[T]):
             return incoming_response
 
         raise make_http_exception(response=incoming_response)
+
+    def cancel(self):
+        # type: () -> None
+        return self.future.cancel()
 
     @reraise_errors
     def _get_incoming_response(self, timeout=None):
