@@ -107,9 +107,7 @@ class FutureAdapter(typing.Generic[T]):
         Must implement a cancel method which terminates any ongoing network
         request.
         """
-        raise NotImplementedError(
-            "FutureAdapter must implement 'cancel' method"
-        )
+        log.warning('The FutureAdapter class of the HTTP client does not implement cancel(), ignoring the call.')
 
 
 def reraise_errors(func):
