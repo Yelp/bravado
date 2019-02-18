@@ -7,7 +7,9 @@ matrix:
   - env: TOXENV=py27-fido-requests2dot7
 
   - env: TOXENV=py35-default
-    python: "3.5"
+    # we'll use Python 3.5.0 here to make sure we don't use any typing
+    # features that break on older Python 3.5 releases.
+    python: "3.5.0"
   - env: TOXENV=py35-fido
     python: "3.5"
 
