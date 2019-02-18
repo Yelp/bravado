@@ -3,7 +3,7 @@ import monotonic
 import typing
 from bravado_core.response import IncomingResponse  # noqa: F401
 
-if typing.TYPE_CHECKING:  # Needed to avoid cyclic import.
+if getattr(typing, 'TYPE_CHECKING', False):  # Needed to avoid cyclic import.
     from bravado.config import RequestConfig  # noqa: F401
 
 

@@ -216,10 +216,10 @@ class HttpFuture(typing.Generic[T]):
             if request_end_time is None:
                 request_end_time = monotonic.monotonic()
             exc_info = []
-            exc_info.extend(typing.cast(
-                typing.List[typing.Union[typing.Type[BaseException], BaseException, typing.Text]],
-                sys.exc_info()[:2],
-            ))
+            # the return values of exc_info are annotated as Optional, but we know they are set in this case.
+            # additionally, we can't use a cast() since that caused a runtime exception on some older versions
+            # of Python 3.5.
+            exc_info.extend(sys.exc_info()[:2])  # type: ignore
             # the Python 2 documentation states that we shouldn't assign the traceback to a local variable,
             # as that would cause a circular reference. We'll store a string representation of the traceback
             # instead.

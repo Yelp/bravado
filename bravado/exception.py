@@ -19,7 +19,7 @@ except ImportError:
     base_timeout_error = OSError
 
 
-if typing.TYPE_CHECKING:
+if getattr(typing, 'TYPE_CHECKING', False):
     T = typing.TypeVar('T')
 
 

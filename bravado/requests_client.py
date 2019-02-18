@@ -18,7 +18,7 @@ from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
 
 
-if typing.TYPE_CHECKING:
+if getattr(typing, 'TYPE_CHECKING', False):
     T = typing.TypeVar('T')
 
 

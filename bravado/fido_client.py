@@ -20,7 +20,7 @@ from bravado.http_client import HttpClient
 from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
 
-if typing.TYPE_CHECKING:
+if getattr(typing, 'TYPE_CHECKING', False):
     class _FidoStub(typing.Protocol):
         code = None  # type: int
         body = None  # type: str
