@@ -323,9 +323,6 @@ class IntegrationTestingFixturesMixin(IntegrationTestingServicesAndClient):
         else:
             return str(response)  # pragma: no cover
 
-    def cancel_http_future(self, http_future):
-        pass
-
 
 class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
     def test_fetch_specs(self, swagger_http_server):
@@ -534,7 +531,7 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
                     'url': not_answering_http_server,
                     'params': {},
                 })
-                self.cancel_http_future(http_future)
+                http_future.cancel()
 
                 # Finding a way to force all the http clients to raise
                 # the expected exception while sending the real request is hard

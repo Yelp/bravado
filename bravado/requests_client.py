@@ -391,3 +391,7 @@ class RequestsFutureAdapter(FutureAdapter):
             **settings
         )
         return response
+
+    def cancel(self):
+        # type: () -> None
+        pass

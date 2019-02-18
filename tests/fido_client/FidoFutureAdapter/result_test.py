@@ -15,6 +15,14 @@ def test_eventual_result_not_cancelled():
     assert mock_eventual_result.cancel.called is False
 
 
+def test_cancel_calls_eventual_result():
+    mock_eventual_result = Mock()
+    adapter = FidoFutureAdapter(mock_eventual_result)
+
+    adapter.cancel()
+    assert mock_eventual_result.cancel.called is True
+
+
 def test_eventual_result_cancelled_on_exception():
     mock_eventual_result = Mock(wait=Mock(side_effect=crochet.TimeoutError()))
     adapter = FidoFutureAdapter(mock_eventual_result)
