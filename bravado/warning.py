@@ -4,7 +4,7 @@ import warnings
 import typing
 
 if getattr(typing, 'TYPE_CHECKING', False):  # Needed to avoid cyclic import.
-    from bravado.client import CallableOperation  # noqa: F401
+    from bravado.client import CallableOperation
 
 
 def warn_for_deprecated_op(op):

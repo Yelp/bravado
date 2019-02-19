@@ -8,7 +8,7 @@ import ephemeral_port_reserve
 import pytest
 import requests
 import requests.exceptions
-import typing  # noqa: F401
+import typing
 from bravado_core.content_type import APP_MSGPACK
 from msgpack import packb
 from msgpack import unpackb
@@ -16,8 +16,8 @@ from msgpack import unpackb
 from bravado.client import SwaggerClient
 from bravado.exception import BravadoConnectionError
 from bravado.exception import BravadoTimeoutError
-from bravado.http_client import HttpClient  # noqa: F401
-from bravado.http_future import FutureAdapter  # noqa: F401
+from bravado.http_client import HttpClient
+from bravado.http_future import FutureAdapter
 from bravado.swagger_model import Loader
 
 

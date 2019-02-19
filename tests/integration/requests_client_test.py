@@ -2,7 +2,7 @@
 import mock
 import pytest
 import requests.exceptions
-import typing  # noqa: F401
+import typing
 
 from bravado.exception import BravadoTimeoutError
 from bravado.requests_client import RequestsClient

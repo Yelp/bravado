@@ -11,11 +11,11 @@ import six
 import twisted.internet.error
 import twisted.web.client
 import typing
-from bravado_core.operation import Operation  # noqa: F401
+from bravado_core.operation import Operation
 from bravado_core.response import IncomingResponse
 from yelp_bytes import to_bytes
 
-from bravado.config import RequestConfig  # noqa: F401
+from bravado.config import RequestConfig
 from bravado.http_client import HttpClient
 from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
