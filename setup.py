@@ -47,6 +47,8 @@ setup(
     extras_require={
         'fido': ['fido >= 4.2.1'],
         ':python_version<"3.5"': ['typing'],
+        ':python_version=="3.5.1"': ['typing_extensions'],
+        ':python_version=="3.5.0"': ['typing_extensions'],
         'integration-tests': [
             'bottle',
             'ephemeral_port_reserve',

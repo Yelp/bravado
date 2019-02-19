@@ -8,6 +8,12 @@ from bravado_core.response import IncomingResponse  # noqa: F401
 
 from bravado.response import BravadoResponseMetadata
 
+try:
+    from typing import Type
+except ImportError:
+    # Python 3.5.0 / 3.5.1
+    from typing_extensions import Type
+
 
 log = logging.getLogger(__name__)
 
@@ -28,7 +34,7 @@ class BravadoConfig(
         (
             ('also_return_response', bool),
             ('disable_fallback_results', bool),
-            ('response_metadata_class', typing.Type[BravadoResponseMetadata]),
+            ('response_metadata_class', Type[BravadoResponseMetadata]),
         ),
     )
 ):
