@@ -28,16 +28,18 @@ CONFIG_DEFAULTS = {
 }
 
 
-class BravadoConfig(
-    typing.NamedTuple(
-        'BravadoConfig',
-        (
-            ('also_return_response', bool),
-            ('disable_fallback_results', bool),
-            ('response_metadata_class', Type[BravadoResponseMetadata]),
-        ),
-    )
-):
+_BravadoConfig = typing.NamedTuple(
+    '_BravadoConfig',
+    (
+        ('also_return_response', bool),
+        ('disable_fallback_results', bool),
+        ('response_metadata_class', Type[BravadoResponseMetadata]),
+    ),
+)
+
+
+class BravadoConfig(_BravadoConfig):
+
     @staticmethod
     def from_config_dict(config):
         # type: (typing.Mapping[str, typing.Any]) -> 'BravadoConfig'
