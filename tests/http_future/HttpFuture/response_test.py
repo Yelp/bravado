@@ -3,7 +3,7 @@ import mock
 import pytest
 from bravado_core.response import IncomingResponse
 
-from bravado.config import BravadoConfig
+from bravado.config import bravado_config_from_config_dict
 from bravado.config import RequestConfig
 from bravado.exception import BravadoTimeoutError
 from bravado.exception import ForcedFallbackResultError
@@ -48,7 +48,7 @@ def fallback_result():
 def test_fallback_result(fallback_result, mock_future_adapter, mock_operation, http_future):
     mock_future_adapter.result.side_effect = BravadoTimeoutError()
     mock_operation.swagger_spec.config = {
-        'bravado': BravadoConfig.from_config_dict({'disable_fallback_results': False})
+        'bravado': bravado_config_from_config_dict({'disable_fallback_results': False})
     }
 
     response = http_future.response(fallback_result=fallback_result)
@@ -60,7 +60,7 @@ def test_fallback_result(fallback_result, mock_future_adapter, mock_operation, h
 def test_fallback_result_callable(fallback_result, mock_future_adapter, mock_operation, http_future):
     mock_future_adapter.result.side_effect = BravadoTimeoutError()
     mock_operation.swagger_spec.config = {
-        'bravado': BravadoConfig.from_config_dict({'disable_fallback_results': False})
+        'bravado': bravado_config_from_config_dict({'disable_fallback_results': False})
     }
 
     response = http_future.response(fallback_result=lambda e: fallback_result)
@@ -90,7 +90,7 @@ def test_no_fallback_result_if_not_provided(mock_future_adapter, http_future):
 def test_no_fallback_result_if_config_disabled(mock_future_adapter, mock_operation, http_future):
     mock_future_adapter.result.side_effect = BravadoTimeoutError()
     mock_operation.swagger_spec.config = {
-        'bravado': BravadoConfig.from_config_dict({'disable_fallback_results': True})
+        'bravado': bravado_config_from_config_dict({'disable_fallback_results': True})
     }
 
     with pytest.raises(BravadoTimeoutError):
@@ -103,7 +103,7 @@ def test_force_fallback_result(mock_operation, fallback_result, http_future):
         also_return_response_default=False,
     )
     mock_operation.swagger_spec.config = {
-        'bravado': BravadoConfig.from_config_dict({})
+        'bravado': bravado_config_from_config_dict({})
     }
 
     with mock.patch('bravado.http_future.unmarshal_response', autospec=True):
@@ -120,7 +120,7 @@ def test_no_force_fallback_result_if_disabled(http_future, mock_operation, mock_
         also_return_response_default=False,
     )
     mock_operation.swagger_spec.config = {
-        'bravado': BravadoConfig.from_config_dict({'disable_fallback_results': True})
+        'bravado': bravado_config_from_config_dict({'disable_fallback_results': True})
     }
 
     with mock.patch('bravado.http_future.unmarshal_response', autospec=True):
@@ -131,7 +131,7 @@ def test_no_force_fallback_result_if_disabled(http_future, mock_operation, mock_
 
 def test_custom_response_metadata(mock_operation, http_future):
     mock_operation.swagger_spec.config = {
-        'bravado': BravadoConfig.from_config_dict(
+        'bravado': bravado_config_from_config_dict(
             {'response_metadata_class': 'tests.http_future.HttpFuture.response_test.ResponseMetadata'})
     }
 

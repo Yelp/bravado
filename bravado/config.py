@@ -28,8 +28,8 @@ CONFIG_DEFAULTS = {
 }
 
 
-_BravadoConfig = typing.NamedTuple(
-    '_BravadoConfig',
+BravadoConfig = typing.NamedTuple(
+    'BravadoConfig',
     (
         ('also_return_response', bool),
         ('disable_fallback_results', bool),
@@ -38,21 +38,18 @@ _BravadoConfig = typing.NamedTuple(
 )
 
 
-class BravadoConfig(_BravadoConfig):
-
-    @staticmethod
-    def from_config_dict(config):
-        # type: (typing.Mapping[str, typing.Any]) -> 'BravadoConfig'
-        if config is None:
-            config = {}
-        bravado_config = {key: value for key, value in config.items() if key in BravadoConfig._fields}
-        bravado_config = dict(CONFIG_DEFAULTS, **bravado_config)
-        bravado_config['response_metadata_class'] = _get_response_metadata_class(
-            bravado_config['response_metadata_class'],
-        )
-        return BravadoConfig(
-            **bravado_config
-        )
+def bravado_config_from_config_dict(config_dict):
+    # type: (typing.Mapping[str, typing.Any]) -> 'BravadoConfig'
+    if config_dict is None:
+        config_dict = {}
+    bravado_config = {key: value for key, value in config_dict.items() if key in BravadoConfig._fields}
+    bravado_config = dict(CONFIG_DEFAULTS, **bravado_config)
+    bravado_config['response_metadata_class'] = _get_response_metadata_class(
+        bravado_config['response_metadata_class'],
+    )
+    return BravadoConfig(
+        **bravado_config
+    )
 
 
 class RequestConfig(object):

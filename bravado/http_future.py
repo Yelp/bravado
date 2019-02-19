@@ -18,6 +18,7 @@ from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
 from msgpack import unpackb
 
+from bravado.config import bravado_config_from_config_dict
 from bravado.config import BravadoConfig
 from bravado.config import CONFIG_DEFAULTS
 from bravado.config import RequestConfig
@@ -165,7 +166,7 @@ class HttpFuture(typing.Generic[T]):
         if self.operation:
             return self.operation.swagger_spec.config['bravado']
         else:
-            return BravadoConfig.from_config_dict(CONFIG_DEFAULTS)
+            return bravado_config_from_config_dict(CONFIG_DEFAULTS)
 
     def response(
         self,

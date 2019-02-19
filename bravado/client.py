@@ -53,7 +53,7 @@ from bravado_core.spec import Spec
 from six import iteritems
 from six import itervalues
 
-from bravado.config import BravadoConfig
+from bravado.config import bravado_config_from_config_dict
 from bravado.config import RequestConfig
 from bravado.docstring_property import docstring_property
 from bravado.requests_client import RequestsClient
@@ -123,7 +123,7 @@ class SwaggerClient(object):
         config = config or {}
 
         # Apply bravado config defaults
-        bravado_config = BravadoConfig.from_config_dict(config)
+        bravado_config = bravado_config_from_config_dict(config)
         # remove bravado configs from config dict
         for key in set(bravado_config._fields).intersection(set(config)):
             del config[key]

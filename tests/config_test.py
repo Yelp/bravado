@@ -3,6 +3,7 @@ import mock
 import pytest
 
 from bravado.config import _get_response_metadata_class
+from bravado.config import bravado_config_from_config_dict
 from bravado.config import BravadoConfig
 from bravado.config import CONFIG_DEFAULTS
 from bravado.config import RequestConfig
@@ -28,7 +29,7 @@ def test_default_value_for_every_config():
 
 
 def test_empty_config_yields_default_config(processed_default_config):
-    assert BravadoConfig.from_config_dict({}) == processed_default_config
+    assert bravado_config_from_config_dict({}) == processed_default_config
 
 
 def test_config_overrides_default_config(mock_log):
@@ -40,13 +41,13 @@ def test_config_overrides_default_config(mock_log):
     expected_config_dict = config_dict.copy()
     expected_config_dict['response_metadata_class'] = ResponseMetadata
 
-    assert BravadoConfig.from_config_dict(config_dict)._asdict() == expected_config_dict
+    assert bravado_config_from_config_dict(config_dict)._asdict() == expected_config_dict
     assert mock_log.warning.call_count == 0
 
 
 def test_ignore_unknown_configs(processed_default_config):
     config_dict = {'validate_swagger_spec': False}
-    assert BravadoConfig.from_config_dict(config_dict) == processed_default_config
+    assert bravado_config_from_config_dict(config_dict) == processed_default_config
 
 
 def test_get_response_metadata_class_invalid_str(mock_log):
