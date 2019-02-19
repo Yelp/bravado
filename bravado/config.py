@@ -8,6 +8,12 @@ from bravado_core.response import IncomingResponse  # noqa: F401
 
 from bravado.response import BravadoResponseMetadata
 
+try:
+    from typing import Type
+except ImportError:
+    # Python 3.5.0 / 3.5.1
+    from typing_extensions import Type
+
 
 log = logging.getLogger(__name__)
 
@@ -22,29 +28,28 @@ CONFIG_DEFAULTS = {
 }
 
 
-class BravadoConfig(
-    typing.NamedTuple(
-        'BravadoConfig',
-        (
-            ('also_return_response', bool),
-            ('disable_fallback_results', bool),
-            ('response_metadata_class', typing.Type[BravadoResponseMetadata]),
-        ),
+BravadoConfig = typing.NamedTuple(
+    'BravadoConfig',
+    (
+        ('also_return_response', bool),
+        ('disable_fallback_results', bool),
+        ('response_metadata_class', Type[BravadoResponseMetadata]),
+    ),
+)
+
+
+def bravado_config_from_config_dict(config_dict):
+    # type: (typing.Mapping[str, typing.Any]) -> 'BravadoConfig'
+    if config_dict is None:
+        config_dict = {}
+    bravado_config = {key: value for key, value in config_dict.items() if key in BravadoConfig._fields}
+    bravado_config = dict(CONFIG_DEFAULTS, **bravado_config)
+    bravado_config['response_metadata_class'] = _get_response_metadata_class(
+        bravado_config['response_metadata_class'],
     )
-):
-    @staticmethod
-    def from_config_dict(config):
-        # type: (typing.Mapping[str, typing.Any]) -> 'BravadoConfig'
-        if config is None:
-            config = {}
-        bravado_config = {key: value for key, value in config.items() if key in BravadoConfig._fields}
-        bravado_config = dict(CONFIG_DEFAULTS, **bravado_config)
-        bravado_config['response_metadata_class'] = _get_response_metadata_class(
-            bravado_config['response_metadata_class'],
-        )
-        return BravadoConfig(
-            **bravado_config
-        )
+    return BravadoConfig(
+        **bravado_config
+    )
 
 
 class RequestConfig(object):

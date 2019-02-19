@@ -18,7 +18,7 @@ from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
 
 
-if typing.TYPE_CHECKING:
+if getattr(typing, 'TYPE_CHECKING', False):
     T = typing.TypeVar('T')
 
 
@@ -275,7 +275,8 @@ class RequestsResponseAdapter(IncomingResponse):
     @property
     def headers(self):
         # type: () -> typing.Mapping[typing.Text, typing.Text]
-        return typing.cast(typing.Mapping[typing.Text, typing.Text], self._delegate.headers)
+        # we don't use typing.cast here since that's broken on Python 3.5.1
+        return self._delegate.headers  # type: ignore
 
     def json(self, **kwargs):
         # type: (typing.Any) -> typing.Mapping[typing.Text, typing.Any]

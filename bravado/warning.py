@@ -3,7 +3,7 @@ import warnings
 
 import typing
 
-if typing.TYPE_CHECKING:  # Needed to avoid cyclic import.
+if getattr(typing, 'TYPE_CHECKING', False):  # Needed to avoid cyclic import.
     from bravado.client import CallableOperation  # noqa: F401
 
 
