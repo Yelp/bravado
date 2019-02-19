@@ -2,9 +2,9 @@
 import logging
 from importlib import import_module
 
-import typing  # noqa: F401
-from bravado_core.operation import Operation  # noqa: F401
-from bravado_core.response import IncomingResponse  # noqa: F401
+import typing
+from bravado_core.operation import Operation
+from bravado_core.response import IncomingResponse
 
 from bravado.response import BravadoResponseMetadata
 

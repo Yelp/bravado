@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import monotonic
 import typing
-from bravado_core.response import IncomingResponse  # noqa: F401
+from bravado_core.response import IncomingResponse
 
 if getattr(typing, 'TYPE_CHECKING', False):  # Needed to avoid cyclic import.
-    from bravado.config import RequestConfig  # noqa: F401
+    from bravado.config import RequestConfig
 
 
 T = typing.TypeVar('T')

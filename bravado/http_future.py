@@ -11,9 +11,9 @@ import typing
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
 from bravado_core.exception import MatchingResponseNotFound
-from bravado_core.operation import Operation  # noqa: F401
+from bravado_core.operation import Operation
 from bravado_core.response import get_response_spec
-from bravado_core.response import IncomingResponse  # noqa: F401
+from bravado_core.response import IncomingResponse
 from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
 from msgpack import unpackb
