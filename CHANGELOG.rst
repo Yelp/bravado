@@ -1,6 +1,12 @@
 Changelog
 =========
 
+10.3.0 (2019-02-20)
+-------------------
+- bravado is now fully type-annotated - PR #403
+- Add ability to cancel a HttpFuture. Third-party HTTP clients will need to implement ``cancel`` on their :class:`.bravado.http_future.FutureAdapter` class to support this - PR #406
+- The static method ``from_config_dict`` of :class:`.bravado.config.BravadoConfig` was removed due to compatibility issues with Python 3.5.0. This method was meant for internal use only; if you do happen to call it please switch to :func:`.bravado.config.bravado_config_from_config_dict` instead. - PR #407
+
 10.2.2 (2019-01-03)
 -------------------
 - Fix issue with default (requests) HTTP client if HTTP_PROXY environment variable is set - Issue #401, PR #402. Thanks Lourens Veen for the initial report!
