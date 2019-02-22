@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import mock
 import pytest
+from bravado_core.response import IncomingResponse
 
 from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
@@ -18,7 +19,10 @@ class MyFutureAdapter(FutureAdapter):
 
 def test_cancel():
     mock_future_adapter = mock.Mock()
-    future = HttpFuture(future=mock_future_adapter, response_adapter=None)
+    future = HttpFuture(
+        future=mock_future_adapter,
+        response_adapter=IncomingResponse(),
+    )  # type: HttpFuture[None]
     future.cancel()
 
     assert mock_future_adapter.cancel.call_count == 1
@@ -26,7 +30,10 @@ def test_cancel():
 
 def test_cancel_is_backwards_compatible(mock_log):
     future_adapter = MyFutureAdapter()
-    future = HttpFuture(future=future_adapter, response_adapter=None)
+    future = HttpFuture(
+        future=future_adapter,
+        response_adapter=IncomingResponse(),
+    )  # type: HttpFuture[None]
     future.cancel()
 
     assert mock_log.warning.call_count == 1

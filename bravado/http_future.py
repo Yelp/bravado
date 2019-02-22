@@ -188,7 +188,7 @@ class HttpFuture(typing.Generic[T]):
         :return: A BravadoResponse instance containing the swagger result and response metadata.
         """
         incoming_response = None
-        exc_info = []  # type: typing.List[typing.Union[typing.Type[BaseException], BaseException, typing.Text]]
+        exc_info = None  # type: typing.Optional[typing.List[typing.Union[typing.Type[BaseException], BaseException, typing.Text]]]  # noqa: E501
         request_end_time = None
         if self.request_config.force_fallback_result:
             exceptions_to_catch = tuple(chain(exceptions_to_catch, (ForcedFallbackResultError,)))

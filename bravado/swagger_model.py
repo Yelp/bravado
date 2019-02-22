@@ -4,6 +4,7 @@ import logging
 import os
 import os.path
 
+import typing
 import yaml
 try:
     from yaml import CSafeLoader as SafeLoader
@@ -34,7 +35,7 @@ class FileEventual(object):
 
         def __init__(self, data):
             self.text = data
-            self.headers = {}
+            self.headers = {}  # type: typing.Mapping[str, str]
 
         def json(self):
             return simplejson.loads(self.text.decode('utf-8'))

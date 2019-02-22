@@ -49,8 +49,8 @@ def test_also_return_response(mock_spec):
 @pytest.mark.xfail
 class SwaggerClientTest(unittest.TestCase):
 
-    def test_from_dict(self):
-        client_stub = SwaggerClient.from_dict(self.resource_listing)
+    def test_from_spec(self):
+        client_stub = SwaggerClient.from_spec(self.resource_listing)
         assert isinstance(client_stub, SwaggerClient)
 
     @httpretty.activate
@@ -79,7 +79,7 @@ class SwaggerClientTest(unittest.TestCase):
 
     @httpretty.activate
     def test_headers(self):
-        self.uut = SwaggerClient.from_resource_listing(self.resource_listing)
+        self.uut = SwaggerClient.from_spec(self.resource_listing)
         httpretty.register_uri(
             httpretty.GET, "http://swagger.py/swagger-test/pet",
             body='[]')
@@ -90,7 +90,7 @@ class SwaggerClientTest(unittest.TestCase):
 
     @httpretty.activate
     def test_multiple_headers(self):
-        self.uut = SwaggerClient.from_resource_listing(self.resource_listing)
+        self.uut = SwaggerClient.from_spec(self.resource_listing)
         httpretty.register_uri(
             httpretty.GET, "http://swagger.py/swagger-test/pet",
             body='[]')
@@ -287,7 +287,7 @@ class SwaggerClientTest(unittest.TestCase):
                 }
             ]
         }
-        self.uut = SwaggerClient.from_resource_listing(self.resource_listing)
+        self.uut = SwaggerClient.from_spec(self.resource_listing)
 
 
 if __name__ == '__main__':

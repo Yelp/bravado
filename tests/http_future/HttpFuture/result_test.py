@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
+import typing
 from bravado_core.operation import Operation
 from bravado_core.response import IncomingResponse
 from mock import Mock
@@ -15,7 +16,8 @@ def test_200_get_swagger_spec(mock_future_adapter):
     response_adapter_type = Mock(return_value=response_adapter_instance)
     http_future = HttpFuture(
         future=mock_future_adapter,
-        response_adapter=response_adapter_type)
+        response_adapter=response_adapter_type,
+    )  # type: HttpFuture[None]
 
     assert response_adapter_instance == http_future.result()
 
@@ -44,7 +46,8 @@ def test_200_service_call(_, mock_future_adapter):
     http_future = HttpFuture(
         future=mock_future_adapter,
         response_adapter=response_adapter_type,
-        operation=Mock(spec=Operation))
+        operation=Mock(spec=Operation),
+    )  # type: HttpFuture[None]
 
     assert 'hello world' == http_future.result()
 
@@ -61,7 +64,8 @@ def test_400_service_call(mock_unmarshal_response, mock_future_adapter):
     http_future = HttpFuture(
         future=mock_future_adapter,
         response_adapter=response_adapter_type,
-        operation=Mock(spec=Operation))
+        operation=Mock(spec=Operation),
+    )  # type: HttpFuture[None]
 
     with pytest.raises(HTTPError) as excinfo:
         http_future.result()
@@ -82,7 +86,8 @@ def test_also_return_response_true(_, mock_future_adapter):
         future=mock_future_adapter,
         response_adapter=response_adapter_type,
         operation=Mock(spec=Operation),
-        request_config=RequestConfig({}, also_return_response_default=True))
+        request_config=RequestConfig({}, also_return_response_default=True),
+    )  # type: HttpFuture[typing.Tuple[str, IncomingResponse]]
 
     swagger_result, http_response = http_future.result()
 

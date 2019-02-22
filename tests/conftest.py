@@ -23,7 +23,7 @@ def processed_default_config(**kwargs):
         'response_metadata_class': BravadoResponseMetadata,
     }
     config.update(**kwargs)
-    return BravadoConfig(**config)
+    return BravadoConfig(**config)  # type: ignore
 
 
 @pytest.fixture
