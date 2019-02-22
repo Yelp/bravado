@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import typing
 from bravado_core.response import IncomingResponse
+from typing_extensions import overload  # typing.overload won't work on Python 3.5.0/3.5.1
 
 from bravado.config import RequestConfig
 from bravado.exception import BravadoTimeoutError
@@ -81,7 +82,7 @@ class FallbackResultBravadoResponseMock(object):
                 request_config=RequestConfig({}, also_return_response_default=False),
             )
 
-    @typing.overload
+    @overload
     def __call__(
         self,
         timeout=None,  # type: typing.Optional[float]
@@ -91,7 +92,7 @@ class FallbackResultBravadoResponseMock(object):
         # type: (...) -> BravadoResponse[T]
         pass
 
-    @typing.overload
+    @overload  # noqa: F811
     def __call__(
         self,
         timeout=None,  # type: typing.Optional[float]
@@ -101,7 +102,7 @@ class FallbackResultBravadoResponseMock(object):
         # type: (...) -> BravadoResponse[T]
         pass
 
-    def __call__(
+    def __call__(  # noqa: F811
         self,
         timeout=None,  # type: typing.Optional[float]
         fallback_result=SENTINEL,  # type: typing.Union[_SENTINEL, T, typing.Callable[[BaseException], T]]  # noqa
