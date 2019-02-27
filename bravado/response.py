@@ -53,7 +53,7 @@ class BravadoResponseMetadata(typing.Generic[T]):
         swagger_result,  # type: typing.Optional[T]
         start_time,  # type: float
         request_end_time,  # type: float
-        handled_exception_info,  # type: typing.List[typing.Union[typing.Type[BaseException], BaseException, typing.Text]]  # noqa
+        handled_exception_info,  # type: typing.Optional[typing.List[typing.Union[typing.Type[BaseException], BaseException, typing.Text]]]  # noqa
         request_config,  # type: RequestConfig
     ):
         # type: (...) -> None
@@ -102,7 +102,7 @@ class BravadoResponseMetadata(typing.Generic[T]):
     @property
     def is_fallback_result(self):
         # type: () -> bool
-        return self.handled_exception_info is not None
+        return bool(self.handled_exception_info)
 
     @property
     def request_elapsed_time(self):

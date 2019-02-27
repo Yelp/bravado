@@ -43,13 +43,11 @@ setup(
         'six',
         'simplejson',
         'monotonic',
+        'typing_extensions',
     ],
     extras_require={
         'fido': ['fido >= 4.2.1'],
         ':python_version<"3.5"': ['typing'],
-        # only needed for Python 3.5.0 and 3.5.1, but =="3.5.0" evaluates
-        # to True for all Python 3.5 versions apparently
-        ':python_version=="3.5"': ['typing_extensions'],
         'integration-tests': [
             'bottle',
             'ephemeral_port_reserve',

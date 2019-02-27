@@ -3,7 +3,9 @@ import inspect
 
 import mock
 import pytest
+from bravado_core.response import IncomingResponse
 
+from bravado.config import RequestConfig
 from bravado.exception import HTTPServerError
 from bravado.http_future import HttpFuture
 from bravado.response import BravadoResponseMetadata
@@ -19,12 +21,12 @@ def mock_result():
 @pytest.fixture
 def mock_metadata():
     return BravadoResponseMetadata(
-        incoming_response=None,
+        incoming_response=IncomingResponse(),
         swagger_result=None,
         start_time=5,
         request_end_time=6,
         handled_exception_info=None,
-        request_config=None,
+        request_config=RequestConfig({}, also_return_response_default=False),
     )
 
 
@@ -53,6 +55,7 @@ def test_bravado_response_custom_metadata(mock_result, mock_metadata):
 
 
 def test_fallback_result_bravado_response(mock_result):
+    # type: (mock.NonCallableMagicMock) -> None
     response_mock = FallbackResultBravadoResponseMock()
     response = response_mock(fallback_result=mock_result)
 

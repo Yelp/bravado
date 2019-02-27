@@ -4,6 +4,7 @@ import json
 
 import httpretty
 import pytest
+import typing
 import yaml
 
 
@@ -19,7 +20,7 @@ def register_spec(swagger_dict, response_spec=None, spec_type='json'):
         response_specs['200']['schema'] = response_spec
 
     if spec_type == 'yaml':
-        serialize_function = yaml.dump
+        serialize_function = yaml.dump  # type: typing.Callable[[typing.Any], typing.Any]
         content_type = 'application/yaml'
     else:
         serialize_function = json.dumps
