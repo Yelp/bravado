@@ -1,6 +1,12 @@
 Changelog
 =========
 
+10.3.1 (2019-02-27)
+-------------------
+- Fix :attr:`.bravado.response.BravadoResponseMetadata.is_fallback_result`, it was always ``True`` in 10.3.0 - Issue #409, PR #410
+- :attr:`.bravado.response.BravadoResponseMetadata.handled_exception_info` is ``None`` again if no exception was handled - PR #410
+- :mod:`bravado.testing.response_mocks` is now type-annotated - PR #410
+
 10.3.0 (2019-02-20)
 -------------------
 - bravado is now fully type-annotated - PR #403
