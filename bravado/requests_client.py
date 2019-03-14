@@ -346,12 +346,12 @@ class RequestsFutureAdapter(FutureAdapter):
                 timeout = service_timeout
             else:
                 timeout = max(service_timeout, result_timeout)
-            log.warning(
-                "Two different timeouts have been passed: "
-                "_request_options['timeout'] = %s and "
-                "future.result(timeout=%s). Using timeout of %s.",
-                service_timeout, result_timeout, timeout,
-            )
+                log.warning(
+                    "Two different timeouts have been passed: "
+                    "_request_options['timeout'] = %s and "
+                    "future.result(timeout=%s). Using timeout of %s.",
+                    service_timeout, result_timeout, timeout,
+                )
 
         # Requests is weird in that if you want to specify a connect_timeout
         # and idle timeout, then the timeout is passed as a tuple
