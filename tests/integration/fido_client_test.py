@@ -18,7 +18,3 @@ class TestServerFidoClient(IntegrationTestsBaseClass):
         twisted.internet.error.DNSLookupError(),
         twisted.web.client.RequestNotSent(),
     }
-
-    @classmethod
-    def encode_expected_response(cls, response):
-        return response

@@ -23,7 +23,7 @@ from bravado.http_future import HttpFuture
 if getattr(typing, 'TYPE_CHECKING', False):
     class _FidoStub(typing.Protocol):
         code = None  # type: int
-        body = None  # type: str
+        body = None  # type: bytes
         reason = None  # type: typing.Text
         headers = None  # type: typing.Mapping[bytes, typing.List[bytes]]
 
@@ -56,7 +56,7 @@ class FidoResponseAdapter(IncomingResponse):
     @property
     def text(self):
         # type: () -> typing.Text
-        return self._delegate.body
+        return self._delegate.body.decode('utf-8')  # this is what _delegate.json() does as well
 
     @property
     def raw_bytes(self):
@@ -90,7 +90,6 @@ class FidoResponseAdapter(IncomingResponse):
 
     def json(self, **_):
         # type: (typing.Any) -> typing.Mapping[typing.Text, typing.Any]
-        # TODO: pass the kwargs downstream
         return self._delegate.json()
 
 
