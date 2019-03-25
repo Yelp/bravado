@@ -1,6 +1,11 @@
 Changelog
 =========
 
+10.3.2 (2019-03-25)
+-------------------
+- Do not warn about conflicting timeouts in requests HTTP client if only one was specified - PR #411. Thanks Pokey Rule for your contribution!
+- Fix bug in :class:`bravado.fido_client.FidoResponseAdapter`, it was not returning a unicode string for ``text`` - PR #412
+
 10.3.1 (2019-02-27)
 -------------------
 - Fix :attr:`.bravado.response.BravadoResponseMetadata.is_fallback_result`, it was always ``True`` in 10.3.0 - Issue #409, PR #410
