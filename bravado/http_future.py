@@ -383,14 +383,73 @@ def unmarshal_response_inner(
         if op.swagger_spec.config.get('validate_responses', False):
             validate_schema_object(op.swagger_spec, content_spec, content_value)
 
-        return unmarshal_schema_object(
+        result = unmarshal_schema_object(
             swagger_spec=op.swagger_spec,
             schema_object_spec=content_spec,
             value=content_value,
         )
 
+        if op.swagger_spec.config.get('add_fetch_link', False):
+            wrap_linked_objects_with_fetch(op, result, content_spec)
+
+        return result
     # TODO: Non-json response contents
     return response.text
+
+
+def wrap_linked_objects_with_fetch(op, result, content_spec):
+    """
+    Wraps any returned results that have a x-operationId property
+    with a wrapper that allows the object to be callable to retrieve
+    the linked resource.
+    You can use both obj() and obj._fetch_linked() to access
+    the http_request for the linked resource.
+    """
+
+    for key in result:
+        properties = content_spec['properties'].get(key)
+        linked_op_id = properties.get('x-operationId')
+        if (linked_op_id and result[key]
+            and properties.get('type') == 'string'
+                and properties.get('format') == 'url'):
+
+            linked_op = op.swagger_spec._client._get_operation(linked_op_id)
+
+            if linked_op:
+                result[key] = FetchLink(result[key], op=linked_op)
+            else:
+                # XXX find more appropriate exception
+                raise NotImplementedError("x-operationId: {} NOT FOUND".format(linked_op_id))
+
+
+class FetchLink(object):
+    """
+    This class makes an url object callable.
+
+    You can use both obj() and obj._fetch_linked() to access
+    the http_request for the linked resource.
+    """
+
+    def __init__(self, url, op):
+        self._url = str(url)
+        self._linked_operation = op
+
+    def __str__(self):
+        return self._url
+
+    def __repr__(self):
+        return "{}({},{})".format(self.__class__.__name__, self._url, str(self._linked_operation))
+
+    def __call__(self):
+        return self._fetch_linked()
+
+    def _fetch_linked(self):
+        op = self._linked_operation
+
+        http_client = op.swagger_spec.http_client
+        return http_client.request({'method': 'GET', 'url': str(self)},
+                                   operation=op,
+                                   also_return_response=op.swagger_spec.config.get('also_return_response'))
 
 
 def raise_on_unexpected(http_response):

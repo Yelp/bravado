@@ -72,6 +72,8 @@ class SwaggerClient(object):
     def __init__(self, swagger_spec, also_return_response=False):
         self.__also_return_response = also_return_response
         self.swagger_spec = swagger_spec
+        # provide a backref to the client from the spec
+        self.swagger_spec._client = self
 
     @classmethod
     def from_url(cls, spec_url, http_client=None, request_headers=None, config=None):
@@ -152,6 +154,16 @@ class SwaggerClient(object):
         # Wrap bravado-core's Resource and Operation objects in order to
         # execute a service call via the http_client.
         return ResourceDecorator(resource, self.__also_return_response)
+
+    def _get_operation(self, operation_id):
+        """ Find an operation by operationId """
+
+        # Find it in the resources, we could add a single dict to lookup
+        # operationId since it is required to be unique across the spec
+        for resource in self.swagger_spec.resources.values():
+            op = resource.operations.get(operation_id)
+            if op:
+                return op
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.swagger_spec.api_url)
