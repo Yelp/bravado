@@ -389,6 +389,9 @@ def unmarshal_response_inner(
             value=content_value,
         )
 
+    if content_type.startswith('application'):
+        return response.raw_bytes
+
     # TODO: Non-json response contents
     return response.text
 
