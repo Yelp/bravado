@@ -27,9 +27,9 @@ import swaggerpy.http_client
 class AsyncHttpClientTest(unittest.TestCase):
 
     def test_listify_headers(self):
-        headers = {b'a': b'foo', b'b': [b'bar', 42]}
+        headers = {b'a': b'foo', b'b': [b'bar', b'42']}
         resp = swaggerpy.async_http_client.listify_headers(headers)
-        self.assertEqual([(b'A', [b'foo']), (b'B', [b'bar', 42])],
+        self.assertEqual([(b'A', [b'foo']), (b'B', [b'bar', b'42'])],
                          sorted(list(resp.getAllRawHeaders())))
 
     def test_success_AsyncHTTP_response(self):
@@ -137,7 +137,7 @@ class HTTPBodyFetcherTest(unittest.TestCase):
 class AsyncResponseTest(unittest.TestCase):
 
     def test_build_async_response(self):
-        headers_orig = {b'a': b'foo', b'b': [b'bar', 42]}
+        headers_orig = {b'a': b'foo', b'b': [b'bar', b'42']}
         headers = swaggerpy.async_http_client.listify_headers(headers_orig)
         resp = Mock(**{'code': 200, 'headers': headers})
         req = Mock()
@@ -146,7 +146,7 @@ class AsyncResponseTest(unittest.TestCase):
         self.assertEqual(200, async_resp.status_code)
         self.assertEqual(req, async_resp.request)
         self.assertEqual(
-            {b'A': [b'foo'], b'B': [b'bar', 42]}, async_resp.headers,
+            {b'A': [b'foo'], b'B': [b'bar', b'42']}, async_resp.headers,
         )
         self.assertEqual({"valid": "json"}, async_resp.json())
 

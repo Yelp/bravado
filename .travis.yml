@@ -2,7 +2,7 @@ language: python
 matrix:
   include:
     - env: TOXENV=py27
-    - env: TOXENV=py34
+    - env: TOXENV=py35
     - env: TOXENV=cover
     - env: TOXENV=docs
     - env: TOXENV=flake8
