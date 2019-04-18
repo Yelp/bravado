@@ -2,8 +2,11 @@ language: python
 matrix:
   include:
     - env: TOXENV=py27
+      python: '2.7'
     - env: TOXENV=py35
+      python: '3.5'
     - env: TOXENV=cover
+      python: '2.7'
     - env: TOXENV=docs
     - env: TOXENV=flake8
 install:
