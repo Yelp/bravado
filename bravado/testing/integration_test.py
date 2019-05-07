@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import sys
 import time
 from multiprocessing import Process
 
@@ -234,6 +235,10 @@ def sleep_api():
     return sec_to_sleep
 
 
+@pytest.mark.skipif(
+    condition=sys.platform == 'win32',
+    reason='Integration tests fails on windows due to some bottle issue, let\'s ignore them for now',
+)
 class IntegrationTestingServicesAndClient:
     @pytest.fixture(scope='session')
     def swagger_http_server(self):
