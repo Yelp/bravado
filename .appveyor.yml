@@ -1,0 +1,34 @@
+version: '{build}'
+image: Visual Studio 2017
+
+environment:
+  matrix:
+  # Available python versions and their locations on https://www.appveyor.com/docs/build-environment/#python
+  - PYTHON: C:\Python27-x64
+    TOXENV: py27-default
+  - PYTHON: C:\Python35-x64
+    TOXENV: py35-default
+  - PYTHON: C:\Python36-x64
+    TOXENV: py36-default
+
+
+build: off
+
+install:
+- cmd: SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%
+- cmd: pip install tox
+
+before_test:
+- cmd: python --version
+- cmd: pip --version
+- cmd: tox --version
+
+test_script:
+- cmd: >-
+    tox
+
+# Uncomment the following block to enable remote desktop debugging (https://www.appveyor.com/docs/how-to/rdp-to-build-worker/)
+#init:
+#- ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#on_failure:
+#- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
