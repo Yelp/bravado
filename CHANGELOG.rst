@@ -1,6 +1,11 @@
 Changelog
 =========
 
+10.4.0 (2019-05-07)
+-------------------
+- Ensure that `bravado` supports Windows platform - PR #415
+- Ensure that responses with `application/.*` content type returns raw binary data - PR # 414. Thanks Greg Ruane for your contribution!
+
 10.3.2 (2019-03-25)
 -------------------
 - Do not warn about conflicting timeouts in requests HTTP client if only one was specified - PR #411. Thanks Pokey Rule for your contribution!
