@@ -89,6 +89,20 @@ def test_text_content(mock_get_response_spec, empty_swagger_spec, response_spec)
     assert 'Monday' == unmarshal_response_inner(response, op)
 
 
+def test_binary_content(mock_get_response_spec, empty_swagger_spec, response_spec):
+    response = mock.Mock(
+        spec=IncomingResponse,
+        status_code=200,
+        headers={'content-type': 'application/octet-stream'},
+        text='Monday',
+        raw_bytes='SomeBinaryData'
+    )
+
+    mock_get_response_spec.return_value = response_spec
+    op = mock.Mock(swagger_spec=empty_swagger_spec)
+    assert 'SomeBinaryData' == unmarshal_response_inner(response, op)
+
+
 def test_skips_validation(mock_validate_schema_object, mock_get_response_spec, empty_swagger_spec, response_spec):
     empty_swagger_spec.config['validate_responses'] = False
     response = mock.Mock(
