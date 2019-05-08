@@ -1,6 +1,10 @@
 Changelog
 =========
 
+10.4.1 (2019-05-08)
+-------------------
+- Fix and re-enable integration tests on Windows - PR #417
+
 10.4.0 (2019-05-07)
 -------------------
 - Ensure that `bravado` supports Windows platform - PR #415
