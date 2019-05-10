@@ -82,7 +82,6 @@ This is too fancy for me! I want a simple dict response!
 .. code-block:: python
 
         from bravado.client import SwaggerClient
-        from bravado.fido_client import FidoClient
 
         client = SwaggerClient.from_url(
             'http://petstore.swagger.io/v2/swagger.json',
