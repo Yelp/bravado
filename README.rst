@@ -41,7 +41,7 @@ Example Usage
 
     from bravado.client import SwaggerClient
     client = SwaggerClient.from_url('http://petstore.swagger.io/v2/swagger.json')
-    pet = client.pet.getPetById(petId=42).response().result
+    pet = client.pet.getPetById(petId=1).response().result
 
 Example with Basic Authentication
 ---------------------------------
@@ -60,7 +60,7 @@ Example with Basic Authentication
         'http://petstore.swagger.io/v2/swagger.json',
         http_client=http_client,
     )
-    pet = client.pet.getPetById(petId=42).response().result
+    pet = client.pet.getPetById(petId=1).response().result
 
 Example with Header Authentication
 ----------------------------------
@@ -79,7 +79,7 @@ Example with Header Authentication
         'http://petstore.swagger.io/v2/swagger.json',
         http_client=http_client,
     )
-    pet = client.pet.getPetById(petId=42).response().result
+    pet = client.pet.getPetById(petId=1).response().result
 
 Example with Fido Client (Async Http Client)
 --------------------------------------------
@@ -95,7 +95,7 @@ Example with Fido Client (Async Http Client)
         'http://petstore.swagger.io/v2/swagger.json',
         http_client=http_client,
     )
-    pet = client.pet.getPetById(petId=42).response().result
+    pet = client.pet.getPetById(petId=1).response().result
 
 Documentation
 -------------
