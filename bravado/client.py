@@ -88,7 +88,7 @@ class SwaggerClient(object):
             See CONFIG_DEFAULTS in :module:`bravado_core.spec`.
             See CONFIG_DEFAULTS in :module:`bravado.client`.
 
-        :rtype: :class:`bravado_core.spec.Spec`
+        :rtype: :class:`SwaggerClient`
         """
         log.debug(u"Loading from %s", spec_url)
         http_client = http_client or RequestsClient()
@@ -117,7 +117,7 @@ class SwaggerClient(object):
         :type  origin_url: str
         :param config: Configuration dict - see spec.CONFIG_DEFAULTS
 
-        :rtype: :class:`bravado_core.spec.Spec`
+        :rtype: :class:`SwaggerClient`
         """
         http_client = http_client or RequestsClient()
         config = config or {}
