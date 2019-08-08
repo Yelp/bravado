@@ -26,17 +26,28 @@ def assert_result(expected_result):
     assert expected_result == resource.testHTTP(test_param='foo').result()
 
 
+def _resource():
+    return SwaggerClient.from_url(API_DOCS_URL).api_test
+
+
 def assert_raises_and_matches(exc_type, match_str):
-    resource = SwaggerClient.from_url(API_DOCS_URL).api_test
     with pytest.raises(exc_type) as excinfo:
-        resource.testHTTP(test_param='foo').result()
+        _resource().testHTTP(test_param='foo').result()
     assert match_str in str(excinfo.value)
 
 
 def test_500_error_raises_HTTPError(httprettified, swagger_dict):
     register_spec(swagger_dict)
     register_get('http://localhost/test_http?test_param=foo', status=500)
-    assert_raises_and_matches(HTTPError, '500 Internal Server Error')
+
+    with pytest.raises(HTTPError) as excinfo:
+        _resource().testHTTP(test_param='foo').result()
+
+    match_str = '500 Internal Server Error'
+    assert match_str in str(excinfo.value)
+
+    response_text = '{"message": "HTTPretty :)"}'
+    assert response_text in str(excinfo.value)
 
 
 def test_primitive_types_returned_in_response(httprettified, swagger_dict):

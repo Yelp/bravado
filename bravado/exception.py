@@ -128,6 +128,18 @@ class HTTPClientError(HTTPError):
 class HTTPServerError(HTTPError):
     """5xx responses."""
 
+    def __str__(self):
+        # type: (...) -> str
+        # Try to surface the most useful/relevant information available
+        # since this is the first thing a developer sees when bad things
+        # happen.
+        status_and_reason = str(self.response)
+        message = ': ' + self.message if self.message else ''
+        text = ': ' + self.response.text if self.response.text else ''
+        result = ': {0}'.format(self.swagger_result) \
+            if self.swagger_result is not None else ''
+        return '{0}{1}{2}{3}'.format(status_and_reason, message, text, result)
+
 
 # The follow are based on the HTTP Status Code Registry at
 # http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
