@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import typing
 from bravado_core.operation import Operation
+from bravado_core.response import IncomingResponse
 
 from bravado.config import RequestConfig
+from bravado.http_future import FutureAdapter
 from bravado.http_future import HttpFuture
 
 APP_FORM = 'application/x-www-form-urlencoded'
@@ -13,6 +15,9 @@ class HttpClient(object):
     """Interface for a minimal HTTP client that can retrieve Swagger specs
     and perform HTTP calls to fulfill a Swagger operation.
     """
+
+    response_adapter_class = None  # type: typing.ClassVar[IncomingResponse]
+    future_adapter_class = None  # type: typing.ClassVar[typing.Type[FutureAdapter]]
 
     def request(
         self,
