@@ -133,9 +133,6 @@ class FidoFutureAdapter(FutureAdapter[T]):
         self._eventual_result.cancel()
 
 
-FidoFutureAdapterType = typing.NewType('FidoFutureAdapterType', FutureAdapter)
-
-
 class FidoClient(HttpClient):
     """Fido (Asynchronous) HTTP client implementation.
     """
@@ -166,7 +163,7 @@ class FidoClient(HttpClient):
 
         request_for_twisted = self.prepare_request_for_twisted(request_params)
 
-        future_adapter = self.future_adapter_class(fido.fetch(**request_for_twisted))  # type: FidoFutureAdapter
+        future_adapter = self.future_adapter_class(fido.fetch(**request_for_twisted))  # type: FidoFutureAdapter[T]
 
         return HttpFuture(future_adapter,
                           self.response_adapter_class,

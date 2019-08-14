@@ -35,7 +35,7 @@ class FakeRequestsFutureAdapter(RequestsFutureAdapter):
 
 
 class FakeRequestsClient(RequestsClient):
-    @mock.patch('bravado.requests_client.RequestsFutureAdapter', FakeRequestsFutureAdapter)
+    @mock.patch.object(RequestsClient, 'future_adapter_class', FakeRequestsFutureAdapter)
     def request(self, *args, **kwargs):
         return super(FakeRequestsClient, self).request(*args, **kwargs)
 
