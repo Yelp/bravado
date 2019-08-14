@@ -5,10 +5,10 @@ from requests.sessions import Session
 
 
 @pytest.fixture
-def request():
+def request_mock():
     return Mock(url='http://foo.com')
 
 
 @pytest.fixture
-def session():
+def session_mock():
     return Mock(spec=Session)
