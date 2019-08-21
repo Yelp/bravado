@@ -85,11 +85,17 @@ to the ``verify`` and ``cert`` options of the requests library; please check
 `their documentation <http://www.python-requests.org/en/master/user/advanced/#ssl-cert-verification>`_ for usage
 instructions. Note that bravado honors the ``REQUESTS_CA_BUNDLE`` environment variable as well.
 
+Also you can specify custom future adapter and response adapter classes through the ``future_adapter_class`` and
+``response_adapter_class`` arguments respectively.
+
 Using a different HTTP client
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can use other HTTP clients with bravado; the fido client ships with bravado (:class:`bravado.fido_client.FidoClient`).
 Currently the fido client doesn't support customizing SSL/TLS behavior.
+But the future adapter and response adapter classes could be specified in the same manner as for
+:class:`bravado.requests_client.RequestsClient` - through the ``future_adapter_class`` and
+``response_adapter_class`` arguments respectively.
 
 Another well-supported option is `bravado_asyncio <https://github.com/sjaensch/bravado-asyncio>`_, which requires
 Python 3.5+. It supports the same ssl options as the default requests client.

@@ -97,6 +97,21 @@ class FidoClient(HttpClient):
     """Fido (Asynchronous) HTTP client implementation.
     """
 
+    def __init__(
+        self,
+        future_adapter_class=None,  # type: typing.Optional[typing.Type[FidoFutureAdapter]]
+        response_adapter_class=None,  # type: typing.Optional[FidoResponseAdapter]
+    ):
+        # type: (...) -> None
+        """
+        :param future_adapter_class: Custom future adapter class,
+            should be a subclass of :class:`FidoFutureAdapter`
+        :param response_adapter_class: Custom response adapter class,
+            should be a subclass of :class:`FidoResponseAdapter`
+        """
+        self.future_adapter_class = future_adapter_class or FidoFutureAdapter
+        self.response_adapter_class = response_adapter_class or FidoResponseAdapter
+
     def request(
         self,
         request_params,  # type: typing.MutableMapping[str, typing.Any]

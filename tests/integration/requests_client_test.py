@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import mock
 import pytest
 import requests.exceptions
 import typing
@@ -35,9 +34,9 @@ class FakeRequestsFutureAdapter(RequestsFutureAdapter):
 
 
 class FakeRequestsClient(RequestsClient):
-    @mock.patch('bravado.requests_client.RequestsFutureAdapter', FakeRequestsFutureAdapter)
-    def request(self, *args, **kwargs):
-        return super(FakeRequestsClient, self).request(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        kwargs['future_adapter_class'] = FakeRequestsFutureAdapter
+        super(FakeRequestsClient, self).__init__(*args, **kwargs)
 
 
 class TestServerRequestsClientFake(IntegrationTestsBaseClass):
