@@ -1,8 +1,6 @@
 Changelog-Master
 ================
 
-*This file will contain the Changelog of the master branch.*
+.. _PR32: https://github.com/Yelp/bravado/pull/32
 
-*The content will be used to build the Changelog of the new bravado release.*
-
-Rename the `request` and `session` fixtures to prevent the `PytestDeprecationWarning` errors
+Show the response text when an unexpected 5xx response is returned. This fixes the regression for PR32_.
