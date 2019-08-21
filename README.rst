@@ -118,7 +118,7 @@ Development
 
 Code is documented using `Sphinx <http://sphinx-doc.org/>`__.
 
-`virtualenv <http://virtualenv.readthedocs.org/en/latest/virtualenv.html>`__. is
+`virtualenv <https://virtualenv.readthedocs.io/en/latest/>`__. is
 recommended to keep dependencies and libraries isolated.
 
 Setup
