@@ -127,7 +127,7 @@ class RequestsClient(HttpClient):
         ssl_verify=True,  # type: bool
         ssl_cert=None,  # type:  typing.Any
         future_adapter_class=None,  # type: typing.Optional[typing.Type[RequestsFutureAdapter]]
-        response_adapter_class=None,  # type: typing.Optional[RequestsResponseAdapter]
+        response_adapter_class=None,  # type: typing.Optional[typing.Type[RequestsResponseAdapter]]
     ):
         # type: (...) -> None
         """

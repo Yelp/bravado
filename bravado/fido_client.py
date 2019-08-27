@@ -100,7 +100,7 @@ class FidoClient(HttpClient):
     def __init__(
         self,
         future_adapter_class=None,  # type: typing.Optional[typing.Type[FidoFutureAdapter]]
-        response_adapter_class=None,  # type: typing.Optional[FidoResponseAdapter]
+        response_adapter_class=None,  # type: typing.Optional[typing.Type[FidoResponseAdapter]]
     ):
         # type: (...) -> None
         """
