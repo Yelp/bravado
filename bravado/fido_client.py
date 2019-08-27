@@ -93,14 +93,54 @@ class FidoResponseAdapter(IncomingResponse):
         return self._delegate.json()
 
 
+class FidoFutureAdapter(FutureAdapter[T]):
+    """
+    This is just a wrapper for an EventualResult object from crochet.
+    It implements the 'result' method which is needed by our HttpFuture to
+    retrieve results.
+    """
+
+    timeout_errors = (fido.exceptions.HTTPTimeoutError,)
+    connection_errors = (
+        fido.exceptions.TCPConnectionError,
+        twisted.internet.error.ConnectingCancelledError,
+        twisted.internet.error.DNSLookupError,
+        twisted.web.client.RequestNotSent,
+    )
+
+    def __init__(self, eventual_result):
+        # type: (typing.Any) -> None
+        self._eventual_result = eventual_result
+
+    def result(self, timeout=None):
+        # type: (typing.Optional[float]) -> T
+        try:
+            return self._eventual_result.wait(timeout=timeout)
+        except crochet.TimeoutError:
+            self.cancel()
+            six.reraise(
+                fido.exceptions.HTTPTimeoutError,
+                fido.exceptions.HTTPTimeoutError(
+                    'Connection was closed by fido after blocking for '
+                    'timeout={timeout} seconds waiting for the server to '
+                    'send the response'.format(timeout=timeout)
+                ),
+                sys.exc_info()[2],
+            )
+
+    def cancel(self):
+        # type: () -> None
+        self._eventual_result.cancel()
+
+
 class FidoClient(HttpClient):
     """Fido (Asynchronous) HTTP client implementation.
     """
 
     def __init__(
         self,
-        future_adapter_class=None,  # type: typing.Optional[typing.Type[FidoFutureAdapter]]
-        response_adapter_class=None,  # type: typing.Optional[typing.Type[FidoResponseAdapter]]
+        future_adapter_class=FidoFutureAdapter,  # type: typing.Optional[typing.Type[FidoFutureAdapter]]
+        response_adapter_class=FidoResponseAdapter,  # type: typing.Optional[typing.Type[FidoResponseAdapter]]
     ):
         # type: (...) -> None
         """
@@ -109,8 +149,8 @@ class FidoClient(HttpClient):
         :param response_adapter_class: Custom response adapter class,
             should be a subclass of :class:`FidoResponseAdapter`
         """
-        self.future_adapter_class = future_adapter_class or FidoFutureAdapter
-        self.response_adapter_class = response_adapter_class or FidoResponseAdapter
+        self.future_adapter_class = future_adapter_class
+        self.response_adapter_class = response_adapter_class
 
     def request(
         self,
@@ -204,43 +244,3 @@ class FidoClient(HttpClient):
                 request_for_twisted[fetch_kwarg] = request_params[fetch_kwarg]
 
         return request_for_twisted
-
-
-class FidoFutureAdapter(FutureAdapter[T]):
-    """
-    This is just a wrapper for an EventualResult object from crochet.
-    It implements the 'result' method which is needed by our HttpFuture to
-    retrieve results.
-    """
-
-    timeout_errors = (fido.exceptions.HTTPTimeoutError,)
-    connection_errors = (
-        fido.exceptions.TCPConnectionError,
-        twisted.internet.error.ConnectingCancelledError,
-        twisted.internet.error.DNSLookupError,
-        twisted.web.client.RequestNotSent,
-    )
-
-    def __init__(self, eventual_result):
-        # type: (typing.Any) -> None
-        self._eventual_result = eventual_result
-
-    def result(self, timeout=None):
-        # type: (typing.Optional[float]) -> T
-        try:
-            return self._eventual_result.wait(timeout=timeout)
-        except crochet.TimeoutError:
-            self.cancel()
-            six.reraise(
-                fido.exceptions.HTTPTimeoutError,
-                fido.exceptions.HTTPTimeoutError(
-                    'Connection was closed by fido after blocking for '
-                    'timeout={timeout} seconds waiting for the server to '
-                    'send the response'.format(timeout=timeout)
-                ),
-                sys.exc_info()[2],
-            )
-
-    def cancel(self):
-        # type: () -> None
-        self._eventual_result.cancel()
