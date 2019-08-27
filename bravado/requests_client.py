@@ -122,19 +122,31 @@ class RequestsClient(HttpClient):
     """Synchronous HTTP client implementation.
     """
 
-    def __init__(self, ssl_verify=True, ssl_cert=None):
-        # type: (bool, typing.Any) -> None
+    def __init__(
+        self,
+        ssl_verify=True,  # type: bool
+        ssl_cert=None,  # type:  typing.Any
+        future_adapter_class=None,  # type: typing.Optional[typing.Type[RequestsFutureAdapter]]
+        response_adapter_class=None,  # type: typing.Optional[typing.Type[RequestsResponseAdapter]]
+    ):
+        # type: (...) -> None
         """
         :param ssl_verify: Set to False to disable SSL certificate validation. Provide the path to a
             CA bundle if you need to use a custom one.
         :param ssl_cert: Provide a client-side certificate to use. Either a sequence of strings pointing
             to the certificate (1) and the private key (2), or a string pointing to the combined certificate
             and key.
+        :param future_adapter_class: Custom future adapter class,
+            should be a subclass of :class:`RequestsFutureAdapter`
+        :param response_adapter_class: Custom response adapter class,
+            should be a subclass of :class:`RequestsResponseAdapter`
         """
         self.session = requests.Session()
         self.authenticator = None  # type: typing.Optional[Authenticator]
         self.ssl_verify = ssl_verify
         self.ssl_cert = ssl_cert
+        self.future_adapter_class = future_adapter_class or RequestsFutureAdapter
+        self.response_adapter_class = response_adapter_class or RequestsResponseAdapter
 
     def separate_params(
         self,
@@ -188,7 +200,7 @@ class RequestsClient(HttpClient):
         """
         sanitized_params, misc_options = self.separate_params(request_params)
 
-        requests_future = RequestsFutureAdapter(
+        requests_future = self.future_adapter_class(
             self.session,
             self.authenticated_request(sanitized_params),
             misc_options,
@@ -196,7 +208,7 @@ class RequestsClient(HttpClient):
 
         return HttpFuture(
             requests_future,
-            RequestsResponseAdapter,
+            self.response_adapter_class,
             operation,
             request_config,
         )
