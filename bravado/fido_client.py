@@ -139,8 +139,8 @@ class FidoClient(HttpClient):
 
     def __init__(
         self,
-        future_adapter_class=FidoFutureAdapter,  # type: typing.Optional[typing.Type[FidoFutureAdapter]]
-        response_adapter_class=FidoResponseAdapter,  # type: typing.Optional[typing.Type[FidoResponseAdapter]]
+        future_adapter_class=FidoFutureAdapter,  # type: typing.Type[FidoFutureAdapter]
+        response_adapter_class=FidoResponseAdapter,  # type: typing.Type[FidoResponseAdapter]
     ):
         # type: (...) -> None
         """
@@ -175,10 +175,10 @@ class FidoClient(HttpClient):
 
         request_for_twisted = self.prepare_request_for_twisted(request_params)
 
-        future_adapter = FidoFutureAdapter(fido.fetch(**request_for_twisted))  # type: FidoFutureAdapter[T]
+        future_adapter = self.future_adapter_class(fido.fetch(**request_for_twisted))  # type: FidoFutureAdapter[T]
 
         return HttpFuture(future_adapter,
-                          FidoResponseAdapter,
+                          self.response_adapter_class,
                           operation,
                           request_config)
 

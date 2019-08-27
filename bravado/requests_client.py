@@ -283,8 +283,8 @@ class RequestsClient(HttpClient):
         self,
         ssl_verify=True,  # type: bool
         ssl_cert=None,  # type:  typing.Any
-        future_adapter_class=RequestsFutureAdapter,  # type: typing.Optional[typing.Type[RequestsFutureAdapter]]
-        response_adapter_class=RequestsResponseAdapter,  # type: typing.Optional[typing.Type[RequestsResponseAdapter]]
+        future_adapter_class=RequestsFutureAdapter,  # type: typing.Type[RequestsFutureAdapter]
+        response_adapter_class=RequestsResponseAdapter,  # type: typing.Type[RequestsResponseAdapter]
     ):
         # type: (...) -> None
         """
