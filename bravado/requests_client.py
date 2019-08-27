@@ -118,141 +118,6 @@ class BasicAuthenticator(Authenticator):
         return request
 
 
-class RequestsClient(HttpClient):
-    """Synchronous HTTP client implementation.
-    """
-
-    def __init__(
-        self,
-        ssl_verify=True,  # type: bool
-        ssl_cert=None,  # type:  typing.Any
-        future_adapter_class=None,  # type: typing.Optional[typing.Type[RequestsFutureAdapter]]
-        response_adapter_class=None,  # type: typing.Optional[typing.Type[RequestsResponseAdapter]]
-    ):
-        # type: (...) -> None
-        """
-        :param ssl_verify: Set to False to disable SSL certificate validation. Provide the path to a
-            CA bundle if you need to use a custom one.
-        :param ssl_cert: Provide a client-side certificate to use. Either a sequence of strings pointing
-            to the certificate (1) and the private key (2), or a string pointing to the combined certificate
-            and key.
-        :param future_adapter_class: Custom future adapter class,
-            should be a subclass of :class:`RequestsFutureAdapter`
-        :param response_adapter_class: Custom response adapter class,
-            should be a subclass of :class:`RequestsResponseAdapter`
-        """
-        self.session = requests.Session()
-        self.authenticator = None  # type: typing.Optional[Authenticator]
-        self.ssl_verify = ssl_verify
-        self.ssl_cert = ssl_cert
-        self.future_adapter_class = future_adapter_class or RequestsFutureAdapter
-        self.response_adapter_class = response_adapter_class or RequestsResponseAdapter
-
-    def separate_params(
-        self,
-        request_params,  # type: typing.MutableMapping[str, typing.Any]
-    ):
-        # type: (...) -> typing.Tuple[typing.Mapping[str, typing.Any], typing.Mapping[str, typing.Any]]
-        """Splits the passed in dict of request_params into two buckets.
-
-        - sanitized_params are valid kwargs for constructing a
-          requests.Request(..)
-        - misc_options are things like timeouts which can't be communicated
-          to the Requests library via the requests.Request(...) constructor.
-
-        :param request_params: kitchen sink of request params. Treated as a
-            read-only dict.
-        :returns: tuple(sanitized_params, misc_options)
-        """
-        sanitized_params = copy.copy(request_params)
-        misc_options = {
-            'ssl_verify': self.ssl_verify,
-            'ssl_cert': self.ssl_cert,
-        }
-
-        if 'connect_timeout' in sanitized_params:
-            misc_options['connect_timeout'] = \
-                sanitized_params.pop('connect_timeout')
-
-        if 'timeout' in sanitized_params:
-            misc_options['timeout'] = sanitized_params.pop('timeout')
-
-        return sanitized_params, misc_options
-
-    def request(
-        self,
-        request_params,  # type: typing.MutableMapping[str, typing.Any]
-        operation=None,  # type: typing.Optional[Operation]
-        request_config=None,  # type: typing.Optional[RequestConfig]
-    ):
-        # type: (...) -> HttpFuture[T]
-        """
-        :param request_params: complete request data.
-        :type request_params: dict
-        :param operation: operation that this http request is for. Defaults
-            to None - in which case, we're obviously just retrieving a Swagger
-            Spec.
-        :type operation: :class:`bravado_core.operation.Operation`
-        :param RequestConfig request_config: per-request configuration
-
-        :returns: HTTP Future object
-        :rtype: :class: `bravado_core.http_future.HttpFuture`
-        """
-        sanitized_params, misc_options = self.separate_params(request_params)
-
-        requests_future = self.future_adapter_class(
-            self.session,
-            self.authenticated_request(sanitized_params),
-            misc_options,
-        )
-
-        return HttpFuture(
-            requests_future,
-            self.response_adapter_class,
-            operation,
-            request_config,
-        )
-
-    def set_basic_auth(
-        self,
-        host,  # type: str
-        username,  # type: typing.Union[bytes, str]
-        password,  # type: typing.Union[bytes, str]
-    ):
-        # type: (...) -> None
-        self.authenticator = BasicAuthenticator(
-            host=host,
-            username=username,
-            password=password,
-        )
-
-    def set_api_key(
-        self,
-        host,  # type: str
-        api_key,  # type: typing.Text
-        param_name=u'api_key',  # type: typing.Text
-        param_in=u'query',  # type: typing.Text
-    ):
-        # type: (...) -> None
-        self.authenticator = ApiKeyAuthenticator(
-            host=host,
-            api_key=api_key,
-            param_name=param_name,
-            param_in=param_in,
-        )
-
-    def authenticated_request(self, request_params):
-        # type: (typing.Mapping[str, typing.Any]) -> requests.Request
-        return self.apply_authentication(requests.Request(**request_params))
-
-    def apply_authentication(self, request):
-        # type: (requests.Request) -> requests.Request
-        if self.authenticator and self.authenticator.matches(request.url):
-            return self.authenticator.apply(request)
-
-        return request
-
-
 class RequestsResponseAdapter(IncomingResponse):
     """Wraps a requests.models.Response object to provide a uniform interface
     to the response innards.
@@ -408,3 +273,138 @@ class RequestsFutureAdapter(FutureAdapter):
     def cancel(self):
         # type: () -> None
         pass
+
+
+class RequestsClient(HttpClient):
+    """Synchronous HTTP client implementation.
+    """
+
+    def __init__(
+        self,
+        ssl_verify=True,  # type: bool
+        ssl_cert=None,  # type:  typing.Any
+        future_adapter_class=RequestsFutureAdapter,  # type: typing.Type[RequestsFutureAdapter]
+        response_adapter_class=RequestsResponseAdapter,  # type: typing.Type[RequestsResponseAdapter]
+    ):
+        # type: (...) -> None
+        """
+        :param ssl_verify: Set to False to disable SSL certificate validation. Provide the path to a
+            CA bundle if you need to use a custom one.
+        :param ssl_cert: Provide a client-side certificate to use. Either a sequence of strings pointing
+            to the certificate (1) and the private key (2), or a string pointing to the combined certificate
+            and key.
+        :param future_adapter_class: Custom future adapter class,
+            should be a subclass of :class:`RequestsFutureAdapter`
+        :param response_adapter_class: Custom response adapter class,
+            should be a subclass of :class:`RequestsResponseAdapter`
+        """
+        self.session = requests.Session()
+        self.authenticator = None  # type: typing.Optional[Authenticator]
+        self.ssl_verify = ssl_verify
+        self.ssl_cert = ssl_cert
+        self.future_adapter_class = future_adapter_class
+        self.response_adapter_class = response_adapter_class
+
+    def separate_params(
+        self,
+        request_params,  # type: typing.MutableMapping[str, typing.Any]
+    ):
+        # type: (...) -> typing.Tuple[typing.Mapping[str, typing.Any], typing.Mapping[str, typing.Any]]
+        """Splits the passed in dict of request_params into two buckets.
+
+        - sanitized_params are valid kwargs for constructing a
+          requests.Request(..)
+        - misc_options are things like timeouts which can't be communicated
+          to the Requests library via the requests.Request(...) constructor.
+
+        :param request_params: kitchen sink of request params. Treated as a
+            read-only dict.
+        :returns: tuple(sanitized_params, misc_options)
+        """
+        sanitized_params = copy.copy(request_params)
+        misc_options = {
+            'ssl_verify': self.ssl_verify,
+            'ssl_cert': self.ssl_cert,
+        }
+
+        if 'connect_timeout' in sanitized_params:
+            misc_options['connect_timeout'] = \
+                sanitized_params.pop('connect_timeout')
+
+        if 'timeout' in sanitized_params:
+            misc_options['timeout'] = sanitized_params.pop('timeout')
+
+        return sanitized_params, misc_options
+
+    def request(
+        self,
+        request_params,  # type: typing.MutableMapping[str, typing.Any]
+        operation=None,  # type: typing.Optional[Operation]
+        request_config=None,  # type: typing.Optional[RequestConfig]
+    ):
+        # type: (...) -> HttpFuture[T]
+        """
+        :param request_params: complete request data.
+        :type request_params: dict
+        :param operation: operation that this http request is for. Defaults
+            to None - in which case, we're obviously just retrieving a Swagger
+            Spec.
+        :type operation: :class:`bravado_core.operation.Operation`
+        :param RequestConfig request_config: per-request configuration
+
+        :returns: HTTP Future object
+        :rtype: :class: `bravado_core.http_future.HttpFuture`
+        """
+        sanitized_params, misc_options = self.separate_params(request_params)
+
+        requests_future = self.future_adapter_class(
+            self.session,
+            self.authenticated_request(sanitized_params),
+            misc_options,
+        )
+
+        return HttpFuture(
+            requests_future,
+            self.response_adapter_class,
+            operation,
+            request_config,
+        )
+
+    def set_basic_auth(
+        self,
+        host,  # type: str
+        username,  # type: typing.Union[bytes, str]
+        password,  # type: typing.Union[bytes, str]
+    ):
+        # type: (...) -> None
+        self.authenticator = BasicAuthenticator(
+            host=host,
+            username=username,
+            password=password,
+        )
+
+    def set_api_key(
+        self,
+        host,  # type: str
+        api_key,  # type: typing.Text
+        param_name=u'api_key',  # type: typing.Text
+        param_in=u'query',  # type: typing.Text
+    ):
+        # type: (...) -> None
+        self.authenticator = ApiKeyAuthenticator(
+            host=host,
+            api_key=api_key,
+            param_name=param_name,
+            param_in=param_in,
+        )
+
+    def authenticated_request(self, request_params):
+        # type: (typing.Mapping[str, typing.Any]) -> requests.Request
+        return self.apply_authentication(requests.Request(**request_params))
+
+    def apply_authentication(self, request):
+        # type: (requests.Request) -> requests.Request
+        if self.authenticator and self.authenticator.matches(request.url):
+            return self.authenticator.apply(request)
+
+        return request
