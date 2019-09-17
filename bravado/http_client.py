@@ -26,7 +26,7 @@ class HttpClient(object):
         :rtype: :class: `bravado_core.http_future.HttpFuture`
         """
         raise NotImplementedError(
-            u"%s: Method not implemented", self.__class__.__name__)
+            "%s: Method not implemented", self.__class__.__name__)
 
     def __repr__(self):
         return "{0}()".format(type(self))

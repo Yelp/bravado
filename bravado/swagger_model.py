@@ -6,8 +6,8 @@ import os.path
 import yaml
 
 from bravado_core.spec import is_yaml
-from six.moves import urllib
-from six.moves.urllib import parse as urlparse
+import urllib
+from urllib.parse import urlparse
 
 from bravado.compat import json
 from bravado.requests_client import RequestsClient
@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 def is_file_scheme_uri(url):
-    return urlparse.urlparse(url).scheme == u'file'
+    return urlparse.urlparse(url).scheme == 'file'
 
 
 class FileEventual(object):
@@ -139,10 +139,10 @@ def load_file(spec_file, http_client=None):
     :raise: IOError: On error reading swagger.json.
     """
     file_path = os.path.abspath(spec_file)
-    url = urlparse.urljoin(u'file:', urllib.request.pathname2url(file_path))
+    url = urlparse.urljoin('file:', urllib.request.pathname2url(file_path))
     # When loading from files, everything is relative to the spec file
     dir_path = os.path.dirname(file_path)
-    base_url = urlparse.urljoin(u'file:', urllib.request.pathname2url(dir_path))
+    base_url = urlparse.urljoin('file:', urllib.request.pathname2url(dir_path))
     return load_url(url, http_client=http_client, base_url=base_url)
 
 

@@ -4,7 +4,7 @@ import logging
 from bravado_core.response import IncomingResponse
 import requests
 import requests.auth
-from six.moves.urllib import parse as urlparse
+from urllib.parse import urlparse
 
 from bravado.http_client import HttpClient
 from bravado.http_future import FutureAdapter
@@ -24,7 +24,7 @@ class Authenticator(object):
         self.host = host
 
     def __repr__(self):
-        return u"%s(%s)" % (self.__class__.__name__, self.host)
+        return "%s(%s)" % (self.__class__.__name__, self.host)
 
     def matches(self, url):
         """Returns true if this authenticator applies to the given url.
@@ -40,7 +40,7 @@ class Authenticator(object):
 
         :param request: Request to add authentication information to.
         """
-        raise NotImplementedError(u"%s: Method not implemented",
+        raise NotImplementedError("%s: Method not implemented",
                                   self.__class__.__name__)
 
 
@@ -55,7 +55,7 @@ class ApiKeyAuthenticator(Authenticator):
     :param param_name: Query parameter specifying the API key.
     """
 
-    def __init__(self, host, api_key, param_name=u'api_key'):
+    def __init__(self, host, api_key, param_name='api_key'):
         super(ApiKeyAuthenticator, self).__init__(host)
         self.param_name = param_name
         self.api_key = api_key
@@ -151,7 +151,7 @@ class RequestsClient(HttpClient):
         self.authenticator = BasicAuthenticator(
             host=host, username=username, password=password)
 
-    def set_api_key(self, host, api_key, param_name=u'api_key'):
+    def set_api_key(self, host, api_key, param_name='api_key'):
         self.authenticator = ApiKeyAuthenticator(
             host=host, api_key=api_key, param_name=param_name)
 
