@@ -25,7 +25,7 @@ class HTTPErrorType(type):
         return new_class
 
 
-class HTTPError(metaclass=(HTTPErrorType, IOError)):
+class HTTPError(IOError, metaclass=HTTPErrorType):
     """Unified HTTPError used across all http_client implementations.
     """
 

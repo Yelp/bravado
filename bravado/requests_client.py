@@ -4,7 +4,7 @@ import logging
 from bravado_core.response import IncomingResponse
 import requests
 import requests.auth
-from urllib.parse import urlparse
+from urllib.parse import urlsplit
 
 from bravado.http_client import HttpClient
 from bravado.http_future import FutureAdapter
@@ -32,7 +32,7 @@ class Authenticator(object):
         :param url: URL to check.
         :return: True if matches host, port and scheme, False otherwise.
         """
-        split = urlparse.urlsplit(url)
+        split = urlsplit(url)
         return self.host == split.hostname
 
     def apply(self, request):

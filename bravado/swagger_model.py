@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 def is_file_scheme_uri(url):
-    return urlparse.urlparse(url).scheme == 'file'
+    return urlparse(url).scheme == 'file'
 
 
 class FileEventual(object):
