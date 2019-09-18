@@ -6,7 +6,7 @@ import os.path
 import yaml
 
 from bravado_core.spec import is_yaml
-import urllib
+import urllib.request, urllib.parse, urllib.error
 from urllib.parse import urlparse
 
 from bravado.compat import json
@@ -115,13 +115,13 @@ class Loader(object):
         :raise: yaml.parser.ParserError: If the text is not valid YAML.
         """
         data = yaml.safe_load(text)
-        for path, methods in iter(data.get('paths', {}).items()):
-            for method, operation in iter(methods.items()):
+        for path, methods in iter(list(data.get('paths', {}).items())):
+            for method, operation in iter(list(methods.items())):
                 if 'responses' in operation:
                     operation['responses'] = dict(
                         (str(code), response)
                         for code, response in iter(
-                            operation['responses'].items()
+                            list(operation['responses'].items())
                         )
                     )
 

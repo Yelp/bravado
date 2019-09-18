@@ -68,7 +68,7 @@ class ClientTest(unittest.TestCase):
             body=open('test-data/1.2/simple/simple1.json', 'r').read())
 
         # Default handlers for all swagger.py access
-        self.client = SwaggerClient.from_url(u'http://localhost/api-docs')
+        self.client = SwaggerClient.from_url('http://localhost/api-docs')
 
 
 if __name__ == '__main__':

@@ -44,13 +44,13 @@ class RequestsClientTestCase(unittest.TestCase):
 
         client = RequestsClient()
         params = self._default_params()
-        params['params'] = {'foo': u'酒場'}
+        params['params'] = {'foo': '酒場'}
 
         resp = client.request(params).result()
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
-        self.assertEqual({'foo': [u'酒場']},
+        self.assertEqual({'foo': ['酒場']},
                          httpretty.last_request().querystring)
 
     @httpretty.activate

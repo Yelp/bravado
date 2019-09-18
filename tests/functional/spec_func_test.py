@@ -58,7 +58,7 @@ def test_hostname_if_passed_overrides_origin_url(httprettified, swagger_dict):
 def test_correct_route_with_basePath_no_slash(httprettified, swagger_dict):
     register_get(
         "http://localhost/lame/test/test_http?test_param=foo",
-        body=u'""')
+        body='""')
     swagger_dict["basePath"] = "/lame/test"
     register_spec(swagger_dict)
     resource = SwaggerClient.from_url(API_DOCS_URL).api_test
