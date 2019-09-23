@@ -6,8 +6,8 @@ import os.path
 import yaml
 
 from bravado_core.spec import is_yaml
-import urllib.request, urllib.parse, urllib.error
 from urllib.parse import urlparse
+from urllib import request as urlrequest
 
 from bravado.compat import json
 from bravado.requests_client import RequestsClient
@@ -43,7 +43,7 @@ class FileEventual(object):
         return self.path
 
     def wait(self, timeout=None):
-        with contextlib.closing(urllib.request.urlopen(self.get_path())) as fp:
+        with contextlib.closing(urlrequest.urlopen(self.get_path())) as fp:
             content = fp.read()
             return self.FileResponse(content)
 
@@ -115,15 +115,12 @@ class Loader(object):
         :raise: yaml.parser.ParserError: If the text is not valid YAML.
         """
         data = yaml.safe_load(text)
-        for path, methods in iter(list(data.get('paths', {}).items())):
-            for method, operation in iter(list(methods.items())):
+        for path, methods in iter(data.get('paths', {}).items()):
+            for method, operation in iter(methods.items()):
                 if 'responses' in operation:
                     operation['responses'] = dict(
                         (str(code), response)
-                        for code, response in iter(
-                            list(operation['responses'].items())
-                        )
-                    )
+                        for code, response in iter(operation['responses'].items()))
 
         return data
 
@@ -139,10 +136,10 @@ def load_file(spec_file, http_client=None):
     :raise: IOError: On error reading swagger.json.
     """
     file_path = os.path.abspath(spec_file)
-    url = urlparse.urljoin('file:', urllib.request.pathname2url(file_path))
+    url = urlparse.urljoin('file:', urlrequest.pathname2url(file_path))
     # When loading from files, everything is relative to the spec file
     dir_path = os.path.dirname(file_path)
-    base_url = urlparse.urljoin('file:', urllib.request.pathname2url(dir_path))
+    base_url = urlparse.urljoin('file:', urlrequest.pathname2url(dir_path))
     return load_url(url, http_client=http_client, base_url=base_url)
 
 
