@@ -312,7 +312,7 @@ def construct_params(operation, request, op_kwargs):
         marshal_param(param, param_value, request)
 
     # Check required params and non-required params with a 'default' value
-    for remaining_value, remaining_param in current_params.items():
+    for remaining_param in current_params.values():
         if remaining_param.location == 'header' and remaining_param.name in request['headers']:
             marshal_param(remaining_param, request['headers'][remaining_param.name], request)
         else:
