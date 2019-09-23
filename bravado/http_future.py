@@ -117,10 +117,8 @@ def unmarshal_response(incoming_response, operation, response_callbacks=None):
             response=incoming_response,
             message=str(e)
         )
-        raise(
-            type(exception),
-            exception,
-            sys.exc_info()[2])
+        raise exception.with_traceback(sys.exc_info()[2])
+
     finally:
         # Always run the callbacks regardless of success/failure
         for response_callback in response_callbacks:
