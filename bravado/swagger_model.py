@@ -115,12 +115,12 @@ class Loader(object):
         :raise: yaml.parser.ParserError: If the text is not valid YAML.
         """
         data = yaml.safe_load(text)
-        for path, methods in iter(data.get('paths', {}).items()):
-            for method, operation in iter(methods.items()):
+        for path, methods in data.get('paths', {}).items():
+            for method, operation in methods.items():
                 if 'responses' in operation:
                     operation['responses'] = dict(
                         (str(code), response)
-                        for code, response in iter(operation['responses'].items()))
+                        for code, response in operation['responses'].items())
 
         return data
 

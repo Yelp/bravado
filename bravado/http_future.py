@@ -3,7 +3,6 @@ import sys
 
 import bravado_core
 from bravado_core.exception import MatchingResponseNotFound
-import six
 
 from bravado.exception import make_http_exception
 
@@ -118,7 +117,7 @@ def unmarshal_response(incoming_response, operation, response_callbacks=None):
             response=incoming_response,
             message=str(e)
         )
-        six.reraise(
+        raise(
             type(exception),
             exception,
             sys.exc_info()[2])

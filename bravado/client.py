@@ -50,7 +50,6 @@ from bravado_core.exception import SwaggerMappingError
 from bravado_core.formatter import SwaggerFormat  # noqa
 from bravado_core.param import marshal_param
 from bravado_core.spec import Spec
-from six import iteritems, itervalues
 
 from bravado.docstring_property import docstring_property
 from bravado.requests_client import RequestsClient
@@ -304,7 +303,7 @@ def construct_params(operation, request, op_kwargs):
         parameter is not supplied.
     """
     current_params = operation.params.copy()
-    for param_name, param_value in iteritems(op_kwargs):
+    for param_name, param_value in op_kwargs.items():
         param = current_params.pop(param_name, None)
         if param is None:
             raise SwaggerMappingError(
@@ -313,7 +312,7 @@ def construct_params(operation, request, op_kwargs):
         marshal_param(param, param_value, request)
 
     # Check required params and non-required params with a 'default' value
-    for remaining_param in itervalues(current_params):
+    for remaining_value, remaining_param in current_params.items():
         if remaining_param.location == 'header' and remaining_param.name in request['headers']:
             marshal_param(remaining_param, request['headers'][remaining_param.name], request)
         else:
