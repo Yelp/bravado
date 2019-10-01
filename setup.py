@@ -32,11 +32,11 @@ setup(
     ],
     install_requires=[
         "bravado-core >= 4.2.2",
-        "yelp_bytes",
-        "python-dateutil",
+        "yelp-bytes==0.3.0",
+        "python-dateutil==2.8.0",
         "pyyaml",
-        "requests",
-        "six",
+        "requests==2.10.0",
+        "six==1.12.0",
     ],
     extras_require={
     },
