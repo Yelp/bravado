@@ -37,12 +37,16 @@ def _register_exception(exception_class):
     status_map[exception_class.status_code] = exception_class
 
 
+if getattr(typing, 'TYPE_CHECKING', False):
+    T2 = typing.TypeVar('T2', bound=type)
+
+
 class HTTPErrorType(type):
     """A metaclass for registering HTTPError subclasses."""
 
     def __new__(cls, *args, **kwargs):
-        # type: (typing.Type[type], typing.Any, typing.Any) -> type
-        new_class = super(HTTPErrorType, cls).__new__(cls, *args, **kwargs)
+        # type: (typing.Type[T2], typing.Any, typing.Any) -> T2
+        new_class = typing.cast('T2', type.__new__(cls, *args, **kwargs))
         if hasattr(new_class, 'status_code'):
             _register_exception(new_class)
         return new_class
