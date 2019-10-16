@@ -1,6 +1,12 @@
 Changelog
 =========
 
+10.4.2 (2019-10-16)
+-------------------
+- Show the response text when an unexpected 5xx response is returned. This fixes a regression introduced in PR #32 - PR #425. Thanks Kevin Coleman for your contribution!
+- Allow custom future and response adapter classes in both ``RequestsClient`` and ``FidoClient`` - PR #430, #431. Thanks Andrii Stepaniuk for your contribution!
+- Fix ``HttpErrorType`` type annotations - PR #433
+
 10.4.1 (2019-05-08)
 -------------------
 - Fix and re-enable integration tests on Windows - PR #417
