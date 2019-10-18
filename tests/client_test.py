@@ -56,7 +56,7 @@ class SwaggerClientTest(unittest.TestCase):
     @httpretty.activate
     def test_bad_operation(self):
         try:
-            self.uut.pet.doesNotExist()
+            self.uut.pet.doesNotExist()  # type: ignore
             self.fail("Expected attribute error")
         except AttributeError:
             pass
@@ -64,7 +64,7 @@ class SwaggerClientTest(unittest.TestCase):
     @httpretty.activate
     def test_bad_param(self):
         try:
-            self.uut.pet.listPets(doesNotExist='asdf')
+            self.uut.pet.listPets(doesNotExist='asdf')  # type: ignore
             self.fail("Expected type error")
         except TypeError:
             pass
@@ -72,7 +72,7 @@ class SwaggerClientTest(unittest.TestCase):
     @httpretty.activate
     def test_missing_required(self):
         try:
-            self.uut.pet.createPet()
+            self.uut.pet.createPet()  # type: ignore
             self.fail("Expected type error")
         except TypeError:
             pass
