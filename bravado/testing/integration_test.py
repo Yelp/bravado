@@ -10,6 +10,7 @@ import requests
 import requests.exceptions
 import typing
 from bravado_core.content_type import APP_MSGPACK
+from bravado_core.response import IncomingResponse
 from msgpack import packb
 from msgpack import unpackb
 
@@ -271,15 +272,6 @@ class IntegrationTestingServicesAndClient:
     def not_answering_http_server(self):
         yield 'http://localhost:{}'.format(ephemeral_port_reserve.reserve())
 
-    @pytest.fixture
-    def swagger_client(self, swagger_http_server):
-        return SwaggerClient.from_url(
-            spec_url='{server_address}/swagger.json'.format(
-                server_address=swagger_http_server),
-            http_client=self.http_client,
-            config={'use_models': False, 'also_return_response': True}
-        )
-
     @pytest.fixture(params=['result', 'response'])
     def result_getter(self, request):
         if request.param == 'result':
@@ -299,6 +291,7 @@ class IntegrationTestingFixturesMixin(IntegrationTestingServicesAndClient):
     Generic class to run integration tests with the different HTTP clients definitions
     """
 
+    http_client = None   # type: HttpClient
     http_client_type = None  # type: typing.Type[HttpClient]
     http_future_adapter_type = None  # type: typing.Type[FutureAdapter]
     connection_errors_exceptions = None  # type: typing.Set[Exception]
@@ -320,6 +313,15 @@ class IntegrationTestingFixturesMixin(IntegrationTestingServicesAndClient):
                 ),
             )
         cls.http_client = cls.http_client_type()
+
+    @pytest.fixture
+    def swagger_client(self, swagger_http_server):
+        return SwaggerClient.from_url(
+            spec_url='{server_address}/swagger.json'.format(
+                server_address=swagger_http_server),
+            http_client=self.http_client,
+            config={'use_models': False, 'also_return_response': True}
+        )
 
     @classmethod
     def encode_expected_response(cls, response):
@@ -413,8 +415,8 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
 
         http_future_1 = self.http_client.request(request_one_params)
         http_future_2 = self.http_client.request(request_two_params)
-        resp_one = http_future_1.result(timeout=1)
-        resp_two = http_future_2.result(timeout=1)
+        resp_one = http_future_1.result(timeout=1)  # type: IncomingResponse
+        resp_two = http_future_2.result(timeout=1)  # type: IncomingResponse
 
         assert resp_one.text == self.encode_expected_response(ROUTE_1_RESPONSE)
         assert resp_two.text == self.encode_expected_response(ROUTE_2_RESPONSE)
@@ -429,7 +431,7 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
         }
 
         http_future = self.http_client.request(request_args)
-        resp = http_future.result(timeout=1)
+        resp = http_future.result(timeout=1)  # type: IncomingResponse
 
         assert resp.text == self.encode_expected_response(b'6')
 
@@ -444,7 +446,7 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
             'headers': headers,
             'url': '{server_address}/headers'.format(server_address=swagger_http_server),
             'params': {},
-        }).result(timeout=1)
+        }).result(timeout=1)  # type: IncomingResponse
 
         expected_header_representations = {
             'Header-Boolean': repr('True'),
@@ -467,7 +469,7 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
             'headers': {
                 'Accept': APP_MSGPACK,
             },
-        }).result(timeout=1)
+        }).result(timeout=1)  # type: IncomingResponse
 
         assert response.headers['Content-Type'] == APP_MSGPACK
         assert unpackb(response.raw_bytes, encoding='utf-8') == API_RESPONSE
@@ -545,7 +547,7 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
                 # with the original exception type too
                 def raise_expected_exception(*args, **kwargs):
                     raise expected_exception
-                http_future.future.result = raise_expected_exception
+                http_future.future.result = raise_expected_exception  # type: ignore
 
                 http_future.result(timeout=0.1)
 
