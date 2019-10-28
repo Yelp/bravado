@@ -49,7 +49,7 @@ class BravadoResponseMetadata(typing.Generic[T]):
 
     def __init__(
         self,
-        incoming_response,  # type: IncomingResponse
+        incoming_response,  # type: typing.Optional[IncomingResponse]
         swagger_result,  # type: typing.Optional[T]
         start_time,  # type: float
         request_end_time,  # type: float

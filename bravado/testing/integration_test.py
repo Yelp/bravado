@@ -415,8 +415,8 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
 
         http_future_1 = self.http_client.request(request_one_params)
         http_future_2 = self.http_client.request(request_two_params)
-        resp_one = http_future_1.result(timeout=1)  # type: IncomingResponse
-        resp_two = http_future_2.result(timeout=1)  # type: IncomingResponse
+        resp_one = typing.cast(IncomingResponse, http_future_1.result(timeout=1))
+        resp_two = typing.cast(IncomingResponse, http_future_2.result(timeout=1))
 
         assert resp_one.text == self.encode_expected_response(ROUTE_1_RESPONSE)
         assert resp_two.text == self.encode_expected_response(ROUTE_2_RESPONSE)
@@ -431,7 +431,7 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
         }
 
         http_future = self.http_client.request(request_args)
-        resp = http_future.result(timeout=1)  # type: IncomingResponse
+        resp = typing.cast(IncomingResponse, http_future.result(timeout=1))
 
         assert resp.text == self.encode_expected_response(b'6')
 
@@ -441,12 +441,12 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
             'Header-Integer': 1,
             'Header-Bytes': b'0',
         }
-        response = self.http_client.request({
+        response = typing.cast(IncomingResponse, self.http_client.request({
             'method': 'GET',
             'headers': headers,
             'url': '{server_address}/headers'.format(server_address=swagger_http_server),
             'params': {},
-        }).result(timeout=1)  # type: IncomingResponse
+        }).result(timeout=1))
 
         expected_header_representations = {
             'Header-Boolean': repr('True'),
@@ -462,14 +462,14 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
         } == response.json()
 
     def test_msgpack_support(self, swagger_http_server):
-        response = self.http_client.request({
+        response = typing.cast(IncomingResponse, self.http_client.request({
             'method': 'GET',
             'url': '{server_address}/json_or_msgpack'.format(server_address=swagger_http_server),
             'params': {},
             'headers': {
                 'Accept': APP_MSGPACK,
             },
-        }).result(timeout=1)  # type: IncomingResponse
+        }).result(timeout=1))
 
         assert response.headers['Content-Type'] == APP_MSGPACK
         assert unpackb(response.raw_bytes, encoding='utf-8') == API_RESPONSE

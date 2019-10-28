@@ -6,6 +6,7 @@ import httpretty
 import mock
 import pytest
 import requests
+import typing
 from bravado_core.response import IncomingResponse
 
 from bravado.requests_client import RequestsClient
@@ -30,7 +31,7 @@ class RequestsClientTestCase(unittest.TestCase):
         params = self._default_params()
         params['params'] = {'foo': 'bar'}
 
-        resp = client.request(params).result()  # type: IncomingResponse
+        resp = typing.cast(IncomingResponse, client.request(params).result())
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -47,7 +48,7 @@ class RequestsClientTestCase(unittest.TestCase):
         params = self._default_params()
         params['params'] = {'foo': u'酒場'}
 
-        resp = client.request(params).result()  # type: IncomingResponse
+        resp = typing.cast(IncomingResponse, client.request(params).result())
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -65,7 +66,7 @@ class RequestsClientTestCase(unittest.TestCase):
         params['data'] = {'foo': 'bar'}
         params['method'] = 'POST'
 
-        resp = client.request(params).result()  # type: IncomingResponse
+        resp = typing.cast(IncomingResponse, client.request(params).result())
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -86,7 +87,7 @@ class RequestsClientTestCase(unittest.TestCase):
         params = self._default_params()
         params['params'] = {'foo': 'bar'}
 
-        resp = client.request(params).result()  # type: IncomingResponse
+        resp = typing.cast(IncomingResponse, client.request(params).result())
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -107,7 +108,7 @@ class RequestsClientTestCase(unittest.TestCase):
         params = self._default_params()
         params['params'] = {'foo': 'bar'}
 
-        resp = client.request(params).result()  # type: IncomingResponse
+        resp = typing.cast(IncomingResponse, client.request(params).result())
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -127,7 +128,7 @@ class RequestsClientTestCase(unittest.TestCase):
         params = self._default_params()
         params['params'] = {'foo': 'bar'}
 
-        resp = client.request(params).result()  # type: IncomingResponse
+        resp = typing.cast(IncomingResponse, client.request(params).result())
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -148,7 +149,7 @@ class RequestsClientTestCase(unittest.TestCase):
         params['params'] = {'foo': 'bar'}
         params['headers'] = {'Key': 'def456'}
 
-        resp = client.request(params).result()  # type: IncomingResponse
+        resp = typing.cast(IncomingResponse, client.request(params).result())
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)
@@ -168,7 +169,7 @@ class RequestsClientTestCase(unittest.TestCase):
         params['params'] = {'foo': 'bar'}
         params['url'] = 'http://hackerz.py'
 
-        resp = client.request(params).result()  # type: IncomingResponse
+        resp = typing.cast(IncomingResponse, client.request(params).result())
 
         self.assertEqual(200, resp.status_code)
         self.assertEqual('expected', resp.text)

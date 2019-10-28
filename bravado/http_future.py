@@ -271,6 +271,7 @@ class HttpFuture(typing.Generic[T]):
         swagger_result = self._get_swagger_result(incoming_response)
 
         if self.operation is not None:
+            swagger_result = typing.cast(T, swagger_result)
             if self.request_config.also_return_response:
                 return swagger_result, incoming_response
             return swagger_result
@@ -331,7 +332,7 @@ def unmarshal_response(
 
     try:
         raise_on_unexpected(incoming_response)
-        incoming_response.swagger_result = unmarshal_response_inner(
+        incoming_response.swagger_result = unmarshal_response_inner(  # type: ignore
             response=incoming_response,
             op=operation,
         )

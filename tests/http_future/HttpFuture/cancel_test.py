@@ -21,7 +21,7 @@ def test_cancel():
     mock_future_adapter = mock.Mock()
     future = HttpFuture(
         future=mock_future_adapter,
-        response_adapter=IncomingResponse(),
+        response_adapter=lambda x: IncomingResponse(),
     )  # type: HttpFuture[None]
     future.cancel()
 
@@ -32,7 +32,7 @@ def test_cancel_is_backwards_compatible(mock_log):
     future_adapter = MyFutureAdapter()
     future = HttpFuture(
         future=future_adapter,
-        response_adapter=IncomingResponse(),
+        response_adapter=lambda x: IncomingResponse(),
     )  # type: HttpFuture[None]
     future.cancel()
 
