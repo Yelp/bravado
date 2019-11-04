@@ -108,11 +108,17 @@ def test_use_msgpack(
             getPetById_spec
         )
     )
+    request_options = {
+        'use_msgpack': True,
+        'headers': {'Some-Header': 'header-value'}
+    }
     request = construct_request(
         op,
-        request_options={
-            'use_msgpack': True,
-        },
+        request_options=request_options,
         petId=1,
     )
     assert request['headers']['Accept'] == 'application/msgpack'
+    assert request['headers']['Some-Header'] == 'header-value', \
+        "Requested header should be present"
+    assert 'Accept' not in request_options['headers'], \
+        "Original request options should not be modified"

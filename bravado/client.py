@@ -271,7 +271,9 @@ def construct_request(operation, request_options, **op_kwargs):
         'method': str(operation.http_method.upper()),
         'url': url,
         'params': {},  # filled in downstream
-        'headers': request_options.get('headers', {}),
+        # Create shallow copy to avoid modifying input
+        'headers': (request_options['headers'].copy()
+                    if 'headers' in request_options else {}),
     }
     # Adds Accept header to request for msgpack response if specified
     if request_options.get('use_msgpack', False):
