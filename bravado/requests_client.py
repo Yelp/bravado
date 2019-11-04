@@ -2,7 +2,6 @@
 import copy
 import logging
 
-import requests
 import requests.auth
 import requests.exceptions
 import six

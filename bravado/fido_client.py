@@ -3,9 +3,7 @@ import logging
 import sys
 
 import crochet
-import fido
 import fido.exceptions
-import requests
 import requests.structures
 import six
 import twisted.internet.error
