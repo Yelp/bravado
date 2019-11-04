@@ -1,6 +1,10 @@
 Changelog
 =========
 
+10.4.3 (2019-11-04)
+-------------------
+- Some type annotation fixes and improvements, in particular for the response_adapter argument to ``HttpFuture`` - PR #436
+
 10.4.2 (2019-10-16)
 -------------------
 - Show the response text when an unexpected 5xx response is returned. This fixes a regression introduced in PR #32 - PR #425. Thanks Kevin Coleman for your contribution!
