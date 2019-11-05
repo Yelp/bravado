@@ -5,7 +5,8 @@ from bravado_core.operation import Operation
 from bravado_core.request import IncomingRequest
 from bravado_core.request import unmarshal_request
 from bravado_core.spec import Spec
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
 
 from bravado.client import CallableOperation
 from bravado.client import construct_request
