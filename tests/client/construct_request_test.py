@@ -5,6 +5,7 @@ from bravado_core.operation import Operation
 from bravado_core.request import IncomingRequest
 from bravado_core.request import unmarshal_request
 from bravado_core.spec import Spec
+from typing import Any, Dict
 
 from bravado.client import CallableOperation
 from bravado.client import construct_request
@@ -111,7 +112,7 @@ def test_use_msgpack(
     request_options = {
         'use_msgpack': True,
         'headers': {'Some-Header': 'header-value'}
-    }
+    }  # type: Dict[str, Any]
     request = construct_request(
         op,
         request_options=request_options,
