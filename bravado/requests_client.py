@@ -307,7 +307,7 @@ class RequestsClient(HttpClient):
 
     def separate_params(
         self,
-        request_params,  # type: typing.MutableMapping[str, typing.Any]
+        request_params,  # type: typing.Mapping[str, typing.Any]
     ):
         # type: (...) -> typing.Tuple[typing.Mapping[str, typing.Any], typing.Mapping[str, typing.Any]]
         """Splits the passed in dict of request_params into two buckets.
@@ -321,7 +321,7 @@ class RequestsClient(HttpClient):
             read-only dict.
         :returns: tuple(sanitized_params, misc_options)
         """
-        sanitized_params = copy.copy(request_params)
+        sanitized_params = dict(request_params)
         misc_options = {
             'ssl_verify': self.ssl_verify,
             'ssl_cert': self.ssl_cert,
@@ -338,7 +338,7 @@ class RequestsClient(HttpClient):
 
     def request(
         self,
-        request_params,  # type: typing.MutableMapping[str, typing.Any]
+        request_params,  # type: typing.Mapping[str, typing.Any]
         operation=None,  # type: typing.Optional[Operation]
         request_config=None,  # type: typing.Optional[RequestConfig]
     ):

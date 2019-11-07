@@ -154,7 +154,7 @@ class FidoClient(HttpClient):
 
     def request(
         self,
-        request_params,  # type: typing.MutableMapping[str, typing.Any]
+        request_params,  # type: typing.Mapping[str, typing.Any]
         operation=None,  # type: typing.Optional[Operation]
         request_config=None,  # type: typing.Optional[RequestConfig]
     ):
@@ -184,7 +184,7 @@ class FidoClient(HttpClient):
 
     @staticmethod
     def prepare_request_for_twisted(request_params):
-        # type: (typing.MutableMapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]
+        # type: (typing.Mapping[str, typing.Any]) -> typing.Mapping[str, typing.Any]
         """
         Uses the python package 'requests' to prepare the data as per twisted
         needs. requests.PreparedRequest.prepare is able to compute the body and
@@ -207,13 +207,13 @@ class FidoClient(HttpClient):
 
         # Ensure that all the headers are converted to strings.
         # This is need to workaround https://github.com/requests/requests/issues/3491
-        request_params['headers'] = {
+        string_headers = {
             k: v if isinstance(v, six.binary_type) else str(v)
             for k, v in six.iteritems(request_params.get('headers', {}))
         }
 
         prepared_request.prepare(
-            headers=request_params.get('headers'),
+            headers=string_headers,
             data=request_params.get('data'),
             params=request_params.get('params'),
             files=request_params.get('files'),

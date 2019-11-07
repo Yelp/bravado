@@ -16,7 +16,7 @@ class HttpClient(object):
 
     def request(
         self,
-        request_params,  # type: typing.MutableMapping[str, typing.Any]
+        request_params,  # type: typing.Mapping[str, typing.Any]
         operation=None,  # type: typing.Optional[Operation]
         request_config=None,  # type: typing.Optional[RequestConfig]
     ):
