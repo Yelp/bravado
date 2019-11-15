@@ -1,6 +1,6 @@
 repos:
 -   repo: git://github.com/pre-commit/pre-commit-hooks
-    sha: v1.2.0
+    rev: v2.4.0
     hooks:
     -   id: check-json
     -   id: check-yaml
@@ -12,21 +12,21 @@ repos:
     -   id: requirements-txt-fixer
         files: requirements-dev.txt
 -   repo: git://github.com/pre-commit/mirrors-autopep8
-    rev: v1.4.3
+    rev: v1.4.4
     hooks:
     -   id: autopep8
         args: ['-i', '--ignore=E309,E501']
 -   repo: https://gitlab.com/pycqa/flake8.git
-    rev: 3.7.6
+    rev: 3.7.9
     hooks:
     -   id: flake8
         exclude: ^docs
 -   repo: git://github.com/asottile/reorder_python_imports
-    sha: v1.0.1
+    rev: v1.8.0
     hooks:
     -   id: reorder-python-imports
 -   repo: git://github.com/Yelp/detect-secrets
-    sha: 0.9.1
+    rev: v0.13.0
     hooks:
     -   id: detect-secrets
         args: ['--baseline', '.secrets.baseline']

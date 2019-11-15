@@ -6,7 +6,6 @@ from multiprocessing import Process
 import bottle
 import ephemeral_port_reserve
 import pytest
-import requests
 import requests.exceptions
 import typing
 from bravado_core.content_type import APP_MSGPACK
