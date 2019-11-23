@@ -2,14 +2,27 @@
 import datetime
 import tempfile
 import unittest
+from copy import deepcopy
 
 import httpretty
 import mock
 import pytest
 import requests
+import typing
 
 from bravado.client import SwaggerClient
 from bravado.config import CONFIG_DEFAULTS
+from bravado.http_client import HttpClient
+from bravado.requests_client import RequestsClient
+from bravado.swagger_model import load_file
+
+
+_HTTP_CLIENTS = [None, RequestsClient()]  # type: typing.List[typing.Optional[HttpClient]]
+try:
+    from bravado.fido_client import FidoClient
+    _HTTP_CLIENTS.append(FidoClient())
+except ImportError:
+    pass
 
 
 @pytest.fixture
@@ -44,6 +57,32 @@ def test_also_return_response(mock_spec):
         mock_spec.from_dict.return_value,
         also_return_response=True,
     )
+
+
+@pytest.fixture(
+    params=_HTTP_CLIENTS,
+    ids=[type(http_client).__name__ for http_client in _HTTP_CLIENTS],
+)
+def swagger_client(request):
+    return SwaggerClient.from_spec(
+        spec_dict=load_file('test-data/2.0/simple/swagger.json'),
+        http_client=request.param,
+    )
+
+
+def test_swagger_client_id_deep_copiable(swagger_client):
+    """
+    The goal of the test is to ensure that the SwaggerClient is deepcopiable
+    The test should be considered successful if calling deepcopy on a
+    SwaggerClient instance does not raise exceptions.
+    """
+    swagger_client_copy = deepcopy(swagger_client)
+
+    assert swagger_client.is_equal(swagger_client_copy)
+    assert id(swagger_client) != id(swagger_client_copy)
+    # NOTE: client.__also_return_response is not tested because its type is immutable (bool),
+    #       so deepcopy would return the same instance
+    assert id(swagger_client.swagger_spec) != id(swagger_client_copy.swagger_spec)
 
 
 @pytest.mark.xfail
