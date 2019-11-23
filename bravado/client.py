@@ -44,6 +44,7 @@ To get a client
     client = bravado.client.SwaggerClient.from_url(swagger_spec_url)
 """
 import logging
+from copy import deepcopy
 
 import typing
 from bravado_core.docstring import create_operation_docstring
@@ -153,6 +154,14 @@ class SwaggerClient(object):
         # Wrap bravado-core's Resource and Operation objects in order to
         # execute a service call via the http_client.
         return ResourceDecorator(resource, self.__also_return_response)
+
+    def __deepcopy__(self, memo=None):
+        if memo is None:
+            memo = {}
+        return self.__class__(
+            swagger_spec=deepcopy(self.swagger_spec, memo=memo),
+            also_return_response=deepcopy(self.__also_return_response, memo=memo),
+        )
 
     def __repr__(self):
         return u"%s(%s)" % (self.__class__.__name__, self.swagger_spec.api_url)
