@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 class Authenticator(object):
     """Authenticates requests.
 
-    :param host: Host to authenticate for.
+    :param host: Host to authenticate for. In some case
     """
 
     def __init__(self, host):
@@ -43,10 +43,11 @@ class Authenticator(object):
         """Returns true if this authenticator applies to the given url.
 
         :param url: URL to check.
-        :return: True if matches host, port and scheme, False otherwise.
+        :return: True if matches host, False otherwise.
         """
+        host_without_port = self.host.split(':')[0]
         split = urlparse.urlsplit(url)
-        return self.host == split.hostname
+        return host_without_port == split.hostname
 
     def apply(self, request):
         # type: (requests.Request) -> requests.Request
