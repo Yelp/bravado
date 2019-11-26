@@ -46,7 +46,7 @@ class Authenticator(object):
         :return: True if matches host, port and scheme, False otherwise.
         """
         split = urlparse.urlsplit(url)
-        return self.host == split.hostname
+        return self.host == split.netloc
 
     def apply(self, request):
         # type: (requests.Request) -> requests.Request
