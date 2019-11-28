@@ -39,7 +39,7 @@ setup(
         'msgpack-python',
         'python-dateutil',
         'pyyaml',
-        'requests >= 2.4',
+        'requests >= 2.17',
         'six',
         'simplejson',
         'monotonic',

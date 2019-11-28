@@ -4,7 +4,7 @@ matrix:
   include:
   - env: TOXENV=py27-default
   - env: TOXENV=py27-fido
-  - env: TOXENV=py27-fido-requests2dot7
+  - env: TOXENV=py27-fido-requests2dot17
 
   - env: TOXENV=py35-default
     # we'll use Python 3.5.0 here to make sure we don't use any typing
