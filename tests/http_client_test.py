@@ -9,6 +9,7 @@ import requests
 import typing
 from bravado_core.response import IncomingResponse
 
+from bravado.requests_client import Authenticator
 from bravado.requests_client import RequestsClient
 
 
@@ -177,6 +178,15 @@ class RequestsClientTestCase(unittest.TestCase):
                          httpretty.last_request().querystring)
         self.assertTrue(
             httpretty.last_request().headers.get('Authorization') is None)
+
+
+class AuthenticatorTestCase(unittest.TestCase):
+
+    def test_matches(self):
+        authenticator = Authenticator("test.com:8080")
+        self.assertTrue(authenticator.matches("https://test.com:8080/"))
+        self.assertFalse(authenticator.matches("https://test.com:80/"))
+        self.assertFalse(authenticator.matches("https://test.net:8080/"))
 
 
 @pytest.fixture
