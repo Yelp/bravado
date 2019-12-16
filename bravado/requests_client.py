@@ -43,7 +43,7 @@ class Authenticator(object):
         """Returns true if this authenticator applies to the given url.
 
         :param url: URL to check.
-        :return: True if matches host, port and scheme, False otherwise.
+        :return: True if matches host and port, False otherwise.
         """
         split = urlparse.urlsplit(url)
         return self.host == split.netloc
