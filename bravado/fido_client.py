@@ -114,6 +114,8 @@ class FidoFutureAdapter(FutureAdapter[T]):
         # type: (typing.Optional[float]) -> T
         try:
             return self._eventual_result.wait(timeout=timeout)
+        except fido.exceptions.HTTPTimeoutError:
+            raise  # Don't modify original exception
         except crochet.TimeoutError:
             self.cancel()
             six.reraise(
