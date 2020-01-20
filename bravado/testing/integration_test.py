@@ -484,6 +484,18 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
                 'params': {},
             }).result(timeout=0.01)
 
+    def test_request_timeout_errors_are_thrown_as_BravadoTimeoutError(self, swagger_http_server):
+        if not self.http_future_adapter_type.timeout_errors:
+            pytest.skip('{} does NOT defines timeout_errors'.format(self.http_future_adapter_type))
+
+        with pytest.raises(BravadoTimeoutError):
+            self.http_client.request({
+                'method': 'GET',
+                'url': '{server_address}/sleep?sec=0.1'.format(server_address=swagger_http_server),
+                'params': {},
+                'timeout': 0.01,
+            }).result()
+
     def test_swagger_client_timeout_errors_are_thrown_as_BravadoTimeoutError(
         self, swagger_client, result_getter,
     ):
