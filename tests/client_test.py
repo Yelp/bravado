@@ -85,6 +85,22 @@ def test_swagger_client_id_deep_copiable(swagger_client):
     assert id(swagger_client.swagger_spec) != id(swagger_client_copy.swagger_spec)
 
 
+def test_equality_of_the_same_swagger_client(swagger_client):
+    assert swagger_client.is_equal(swagger_client)
+
+
+def test_equality_of_different_swagger_clients(swagger_client):
+    assert not swagger_client.is_equal(
+        SwaggerClient.from_spec(spec_dict=load_file('test-data/2.0/petstore/swagger.json')),
+    )
+
+
+def test_swagger_client_hashability(swagger_client):
+    # The test wants to ensure that the SwaggertClient instance is hashable.
+    # If calling hash does not throw an exception than we've validated the assumption
+    hash(swagger_client)
+
+
 @pytest.mark.xfail
 class SwaggerClientTest(unittest.TestCase):
 

@@ -45,6 +45,7 @@ To get a client
 """
 import logging
 
+import typing
 from bravado_core.docstring import create_operation_docstring
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.formatter import SwaggerFormat  # noqa
@@ -161,6 +162,21 @@ class SwaggerClient(object):
 
     def __dir__(self):
         return self.swagger_spec.resources.keys()
+
+    def is_equal(self, other):
+        # type: (typing.Any) -> bool
+        # Not implemented as __eq__ otherwise we would need to implement __hash__ to preserve
+        # hashability of the class and it would not necessarily be performance effective
+        if not isinstance(other, SwaggerClient):
+            return False
+
+        if not self.swagger_spec.is_equal(other.swagger_spec):
+            return False
+
+        if self.__also_return_response != other.__also_return_response:
+            return False
+
+        return True
 
 
 def inject_headers_for_remote_refs(request_callable, request_headers):
