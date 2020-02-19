@@ -13,6 +13,7 @@ from bravado_core.operation import Operation
 from bravado_core.response import IncomingResponse
 from yelp_bytes import to_bytes
 
+from bravado._equality_util import are_objects_equal as _are_objects_equal
 from bravado.config import RequestConfig
 from bravado.http_client import HttpClient
 from bravado.http_future import FutureAdapter
@@ -149,6 +150,18 @@ class FidoClient(HttpClient):
         """
         self.future_adapter_class = future_adapter_class
         self.response_adapter_class = response_adapter_class
+
+    def __hash__(self):
+        # type: () -> int
+        return hash((self.future_adapter_class, self.response_adapter_class))
+
+    def __ne__(self, other):
+        # type: (typing.Any) -> bool
+        return not (self == other)
+
+    def __eq__(self, other):
+        # type: (typing.Any) -> bool
+        return _are_objects_equal(self, other)
 
     def request(
         self,

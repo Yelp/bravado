@@ -11,6 +11,7 @@ from bravado_core.response import IncomingResponse
 from six import iteritems
 from six.moves.urllib import parse as urlparse
 
+from bravado._equality_util import are_objects_equal as _are_objects_equal
 from bravado.config import RequestConfig
 from bravado.http_client import HttpClient
 from bravado.http_future import FutureAdapter
@@ -303,6 +304,41 @@ class RequestsClient(HttpClient):
         self.ssl_cert = ssl_cert
         self.future_adapter_class = future_adapter_class
         self.response_adapter_class = response_adapter_class
+
+    def __hash__(self):
+        # type: () -> int
+        return hash((
+            self.session,
+            self.authenticator,
+            self.ssl_verify,
+            self.ssl_cert,
+            self.future_adapter_class,
+            self.response_adapter_class,
+        ))
+
+    def __ne__(self, other):
+        # type: (typing.Any) -> bool
+        return not (self == other)
+
+    def __eq__(self, other):
+        # type: (typing.Any) -> bool
+        return (
+            _are_objects_equal(
+                self, other,
+                # requests.Session does not define equality methods
+                attributes_to_ignore={'session'},
+            ) and
+            # We're checking for requests.Session to be mostly the same as custom
+            # configurations (ie. max_redirects, proxies, SSL verification, etc.)
+            # might be possible.
+            _are_objects_equal(
+                self.session, other.session,
+                attributes_to_ignore={
+                    'adapters',  # requests.adapters.HTTPAdapter do not define equality
+                    'prefetch',  # attribute present in requests.Session.__attrs__ but never initialised or used
+                },
+            )
+        )
 
     def separate_params(
         self,
