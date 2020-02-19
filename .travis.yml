@@ -19,11 +19,16 @@ matrix:
   - env: TOXENV=py36-fido
     python: "3.6"
 
+  - env: TOXENV=py37-default
+    python: "3.7"
+  - env: TOXENV=py37-fido
+    python: "3.7"
+
   - env: TOXENV=cover
   - env: TOXENV=docs
   - env: TOXENV=pre-commit
   - env: TOXENV=mypy
-    python: "3.6"
+    python: "3.7"
 
 install:
 - "pip install tox coveralls"
