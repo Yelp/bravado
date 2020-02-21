@@ -113,8 +113,23 @@ class FidoFutureAdapter(FutureAdapter[T]):
 
     def result(self, timeout=None):
         # type: (typing.Optional[float]) -> T
+
+        # Note: There are two kinds of timeouts that can occur here.
+        #
+        # 1. Fido request fails with a `fido.exceptions.HttpTimeoutError` due
+        # to the configured request timeout. In this case we don't want to
+        # modify the original exception.
+        #
+        # 2. The `EventualResult` is not completed within the specified wait
+        # timeout. In this case we cancel the request and transform the
+        # `crochet.TimeoutError` into a `fido.exceptions.HttpTimeoutError`.
         try:
             return self._eventual_result.wait(timeout=timeout)
+        except fido.exceptions.HTTPTimeoutError:
+            # Since `fido.exceptions.HttpTimeoutError` is a subclass of
+            # `crochet.TimeoutError` we catch and re-throw the exception to
+            # exclude it from the `except` block below.
+            raise
         except crochet.TimeoutError:
             self.cancel()
             six.reraise(
