@@ -4,5 +4,5 @@ httpretty
 mock
 pip>=9.0.1 # workaround to https://github.com/pypa/pip/issues/3903
 pre-commit
-pytest<5.1  # fix typing issue with pytest on Python 3.5.0
+pytest
 u-msgpack-python

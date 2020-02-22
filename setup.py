@@ -27,19 +27,19 @@ setup(
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     package_data={
         'bravado': ['py.typed'],
     },
     install_requires=[
-        'bravado-core >= 5.0.1',
+        'bravado-core >= 5.16.1',
         'msgpack-python',
         'python-dateutil',
         'pyyaml',
-        'requests >= 2.4',
+        'requests >= 2.17',
         'six',
         'simplejson',
         'monotonic',
@@ -52,6 +52,7 @@ setup(
             'bottle',
             'ephemeral_port_reserve',
             'pytest',
-        ]
+        ],
     },
+    python_requires='!=3.0,!=3.1,!=3.2,!=3.3,!=3.4,!=3.5.0',
 )
