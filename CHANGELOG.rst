@@ -1,6 +1,14 @@
 Changelog
 =========
 
+10.5.0 (2020-02-24)
+-------------------
+- Ensure that ``requst_options`` headers are not modified while constructing request - PR #440. Thanks Nick Gaya for your contribution!
+- Fix header authentication for ``host:port`` type - PR #444. Thanks sanda87 for your contribution!
+- Reraise fido ``HttpTimeoutError`` without modification - PR #447. Thanks Nick Gaya for your contribution!
+- Documentation updates - PR #442 and PR #448. Thanks Colin Dunklau for your contribution!
+- Ensure that bravado.client.SwaggerSpec is deep copyable - PR #445
+
 10.4.3 (2019-11-04)
 -------------------
 - Some type annotation fixes and improvements, in particular for the response_adapter argument to ``HttpFuture`` - PR #436
