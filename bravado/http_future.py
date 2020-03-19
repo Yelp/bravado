@@ -410,13 +410,13 @@ def raise_on_unexpected(http_response):
 
 def raise_on_expected(http_response):
     # type: (IncomingResponse) -> None
-    """Raise an HTTPError if the response is non-2XX and matches a response
-    in the swagger spec.
+    """Raise an HTTPError if the response is non-2XX and non-3XX and matches
+    a response in the swagger spec.
 
     :param http_response: :class:`bravado_core.response.IncomingResponse`
     :raises: HTTPError
     """
-    if not 200 <= http_response.status_code < 300:
+    if not 200 <= http_response.status_code < 400:
         raise make_http_exception(
             response=http_response,
             swagger_result=http_response.swagger_result)
