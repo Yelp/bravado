@@ -159,6 +159,17 @@ SWAGGER_SPEC_DICT = {
                 },
             },
         },
+        '/redirect': {
+            'get': {
+                'operationId': 'redirect_test',
+                'produces': ['application/json'],
+                'responses': {
+                    '301': {
+                        'description': 'HTTP/301',
+                    },
+                },
+            },
+        },
     },
 }
 
@@ -232,6 +243,14 @@ def sleep_api():
     sec_to_sleep = float(bottle.request.GET.get('sec', '1'))
     time.sleep(sec_to_sleep)
     return sec_to_sleep
+
+
+@bottle.get('/redirect')
+def redirect_test():
+    return bottle.HTTPResponse(
+        status=301,
+        headers={'Location': '/json'},
+    )
 
 
 def run_bottle_server(port):
@@ -472,6 +491,15 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
 
         assert response.headers['Content-Type'] == APP_MSGPACK
         assert unpackb(response.raw_bytes, encoding='utf-8') == API_RESPONSE
+
+    def test_redirects_are_not_followed(self, swagger_http_server):
+        response = self.http_client.request({
+            'method': 'GET',
+            'url': '{server_address}/redirect'.format(server_address=swagger_http_server),
+            'params': {},
+        }).result(timeout=1)
+
+        assert response.headers['Location'] == '/json'
 
     def test_timeout_errors_are_thrown_as_BravadoTimeoutError(self, swagger_http_server):
         if not self.http_future_adapter_type.timeout_errors:
