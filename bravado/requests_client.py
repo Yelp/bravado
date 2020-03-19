@@ -286,7 +286,6 @@ class RequestsClient(HttpClient):
         ssl_cert=None,  # type:  typing.Any
         future_adapter_class=RequestsFutureAdapter,  # type: typing.Type[RequestsFutureAdapter]
         response_adapter_class=RequestsResponseAdapter,  # type: typing.Type[RequestsResponseAdapter]
-        allow_redirects=False  # type: bool
     ):
         # type: (...) -> None
         """
@@ -306,7 +305,6 @@ class RequestsClient(HttpClient):
         self.ssl_cert = ssl_cert
         self.future_adapter_class = future_adapter_class
         self.response_adapter_class = response_adapter_class
-        self.allow_redirects = allow_redirects
 
     def __hash__(self):
         # type: () -> int
@@ -363,7 +361,6 @@ class RequestsClient(HttpClient):
         misc_options = {
             'ssl_verify': self.ssl_verify,
             'ssl_cert': self.ssl_cert,
-            'allow_redirects': self.allow_redirects,
         }
 
         if 'connect_timeout' in sanitized_params:
@@ -372,6 +369,9 @@ class RequestsClient(HttpClient):
 
         if 'timeout' in sanitized_params:
             misc_options['timeout'] = sanitized_params.pop('timeout')
+
+        misc_options['allow_redirects'] = sanitized_params.pop('allow_redirects', False)
+        logging.warning("misc_options: %r", misc_options)
 
         return sanitized_params, misc_options
 

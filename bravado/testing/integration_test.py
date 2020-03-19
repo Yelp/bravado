@@ -19,6 +19,7 @@ from bravado.exception import BravadoTimeoutError
 from bravado.exception import HTTPMovedPermanently
 from bravado.http_client import HttpClient
 from bravado.http_future import FutureAdapter
+from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
 
 
@@ -494,19 +495,19 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
         assert unpackb(response.raw_bytes, encoding='utf-8') == API_RESPONSE
 
     def test_following_redirects(self, swagger_http_server):
-        # allow redirects for the purpose of this test
-        self.http_client.allow_redirects = True
+        # the FidoClient doesn't have a way to turn off redirects being followed
+        # so limit thi test to the RequestsClient instead
+        if not isinstance(self.http_client, RequestsClient):
+            pytest.skip('Following redirects is only supported in the RequestsClient')
 
         response = self.http_client.request({
             'method': 'GET',
             'url': '{server_address}/redirect'.format(server_address=swagger_http_server),
             'params': {},
+            'allow_redirects': True,
         }).result(timeout=1)
 
         assert isinstance(response, IncomingResponse) and response.status_code == 200
-
-        # change the behaviour back again afterwards
-        self.http_client.allow_redirects = False
 
     def test_redirects_are_not_followed(self, swagger_http_server):
         try:
