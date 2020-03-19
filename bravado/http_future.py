@@ -199,7 +199,7 @@ class HttpFuture(typing.Generic[T]):
 
             swagger_result = self._get_swagger_result(incoming_response)
 
-            if self.operation is None and incoming_response.status_code >= 300:
+            if self.operation is None and incoming_response.status_code >= 400:
                 raise make_http_exception(response=incoming_response)
 
             # Trigger fallback_result if the option is set
@@ -276,7 +276,7 @@ class HttpFuture(typing.Generic[T]):
                 return swagger_result, incoming_response
             return swagger_result
 
-        if 200 <= incoming_response.status_code < 300:
+        if 200 <= incoming_response.status_code < 400:
             return incoming_response
 
         raise make_http_exception(response=incoming_response)

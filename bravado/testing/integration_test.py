@@ -499,6 +499,7 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
             'params': {},
         }).result(timeout=1)
 
+        assert response.status_code == 301
         assert response.headers['Location'] == '/json'
 
     def test_timeout_errors_are_thrown_as_BravadoTimeoutError(self, swagger_http_server):
