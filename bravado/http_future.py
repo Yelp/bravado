@@ -199,7 +199,7 @@ class HttpFuture(typing.Generic[T]):
 
             swagger_result = self._get_swagger_result(incoming_response)
 
-            if self.operation is None and incoming_response.status_code >= 400:
+            if self.operation is None and incoming_response.status_code >= 300:
                 raise make_http_exception(response=incoming_response)
 
             # Trigger fallback_result if the option is set
@@ -276,7 +276,7 @@ class HttpFuture(typing.Generic[T]):
                 return swagger_result, incoming_response
             return swagger_result
 
-        if 200 <= incoming_response.status_code < 400:
+        if 200 <= incoming_response.status_code < 300:
             return incoming_response
 
         raise make_http_exception(response=incoming_response)
@@ -416,7 +416,7 @@ def raise_on_expected(http_response):
     :param http_response: :class:`bravado_core.response.IncomingResponse`
     :raises: HTTPError
     """
-    if not 200 <= http_response.status_code < 400:
+    if not 200 <= http_response.status_code < 300:
         raise make_http_exception(
             response=http_response,
             swagger_result=http_response.swagger_result)

@@ -16,6 +16,7 @@ from msgpack import unpackb
 from bravado.client import SwaggerClient
 from bravado.exception import BravadoConnectionError
 from bravado.exception import BravadoTimeoutError
+from bravado.exception import HTTPMovedPermanently
 from bravado.http_client import HttpClient
 from bravado.http_future import FutureAdapter
 from bravado.swagger_model import Loader
@@ -492,15 +493,33 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
         assert response.headers['Content-Type'] == APP_MSGPACK
         assert unpackb(response.raw_bytes, encoding='utf-8') == API_RESPONSE
 
-    def test_redirects_are_not_followed(self, swagger_http_server):
+    def test_following_redirects(self, swagger_http_server):
+        # allow redirects for the purpose of this test
+        self.http_client.allow_redirects = True
+
         response = self.http_client.request({
             'method': 'GET',
             'url': '{server_address}/redirect'.format(server_address=swagger_http_server),
             'params': {},
         }).result(timeout=1)
 
-        assert response.status_code == 301
-        assert response.headers['Location'] == '/json'
+        assert isinstance(response, IncomingResponse) and response.status_code == 200
+
+        # change the behaviour back again afterwards
+        self.http_client.allow_redirects = False
+
+    def test_redirects_are_not_followed(self, swagger_http_server):
+        try:
+            response = self.http_client.request({
+                'method': 'GET',
+                'url': '{server_address}/redirect'.format(server_address=swagger_http_server),
+                'params': {},
+            }).result(timeout=1)
+        except HTTPMovedPermanently as exc:
+            assert isinstance(exc.response, IncomingResponse) and exc.response.status_code == 301
+            assert isinstance(exc.response, IncomingResponse) and exc.response.headers['Location'] == '/json'
+        else:
+            pytest.fail("Expected exception was not raised")
 
     def test_timeout_errors_are_thrown_as_BravadoTimeoutError(self, swagger_http_server):
         if not self.http_future_adapter_type.timeout_errors:
