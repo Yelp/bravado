@@ -511,7 +511,7 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
 
     def test_redirects_are_not_followed(self, swagger_http_server):
         try:
-            response = self.http_client.request({
+            self.http_client.request({
                 'method': 'GET',
                 'url': '{server_address}/redirect'.format(server_address=swagger_http_server),
                 'params': {},
