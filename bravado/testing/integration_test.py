@@ -496,7 +496,7 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
 
     def test_following_redirects(self, swagger_http_server):
         # the FidoClient doesn't have a way to turn off redirects being followed
-        # so limit thi test to the RequestsClient instead
+        # so limit this test to the RequestsClient instead
         if not isinstance(self.http_client, RequestsClient):
             pytest.skip('Following redirects is only supported in the RequestsClient')
 

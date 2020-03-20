@@ -361,6 +361,7 @@ class RequestsClient(HttpClient):
         misc_options = {
             'ssl_verify': self.ssl_verify,
             'ssl_cert': self.ssl_cert,
+            'allow_redirects': sanitized_params.pop('allow_redirects', False),
         }
 
         if 'connect_timeout' in sanitized_params:
@@ -369,9 +370,6 @@ class RequestsClient(HttpClient):
 
         if 'timeout' in sanitized_params:
             misc_options['timeout'] = sanitized_params.pop('timeout')
-
-        misc_options['allow_redirects'] = sanitized_params.pop('allow_redirects', False)
-        logging.warning("misc_options: %r", misc_options)
 
         return sanitized_params, misc_options
 
