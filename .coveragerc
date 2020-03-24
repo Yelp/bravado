@@ -7,4 +7,3 @@ exclude_lines =
     if getattr(typing, 'TYPE_CHECKING', False):
     pragma: no cover
     @bottle.(get|post|route)
-    pytest.fail

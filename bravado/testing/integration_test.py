@@ -510,17 +510,17 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
         assert isinstance(response, IncomingResponse) and response.status_code == 200
 
     def test_redirects_are_not_followed(self, swagger_http_server):
-        try:
+        with pytest.raises(HTTPMovedPermanently) as excinfo:
             self.http_client.request({
                 'method': 'GET',
                 'url': '{server_address}/redirect'.format(server_address=swagger_http_server),
                 'params': {},
             }).result(timeout=1)
-        except HTTPMovedPermanently as exc:
-            assert isinstance(exc.response, IncomingResponse) and exc.response.status_code == 301
-            assert isinstance(exc.response, IncomingResponse) and exc.response.headers['Location'] == '/json'
-        else:
-            pytest.fail("Expected exception was not raised")
+
+        exc = excinfo.value
+
+        assert isinstance(exc.response, IncomingResponse) and exc.response.status_code == 301
+        assert isinstance(exc.response, IncomingResponse) and exc.response.headers['Location'] == '/json'
 
     def test_timeout_errors_are_thrown_as_BravadoTimeoutError(self, swagger_http_server):
         if not self.http_future_adapter_type.timeout_errors:
