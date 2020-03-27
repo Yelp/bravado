@@ -5,7 +5,15 @@ from bravado.requests_client import RequestsFutureAdapter
 def test_result_header_values_are_bytes(session_mock, request_mock):
     session_mock.merge_environment_settings.return_value = {}
     request_mock.headers = {b'X-Foo': b'hi'}
-    RequestsFutureAdapter(session_mock, request_mock, misc_options={'ssl_verify': True, 'ssl_cert': None}).result()
+    RequestsFutureAdapter(
+        session_mock,
+        request_mock,
+        misc_options={
+            'ssl_verify': True,
+            'ssl_cert': None,
+            'allow_redirects': False
+        },
+    ).result()
 
     # prepare_request should be called with a request containing correctly
     # casted headers (bytestrings should be preserved)

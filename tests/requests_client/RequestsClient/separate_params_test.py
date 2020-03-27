@@ -14,5 +14,6 @@ def test_separate_params():
         'connect_timeout': 1,
         'ssl_cert': None,
         'ssl_verify': True,
+        'allow_redirects': False,
         'timeout': 2,
     }

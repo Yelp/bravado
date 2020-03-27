@@ -226,6 +226,7 @@ class FidoClient(HttpClient):
                 'url': string,
                 'timeout': float,  # optional
                 'connect_timeout': float,  # optional
+                'allow_redirects': bool,  # optional
             }
         """
 
@@ -244,7 +245,7 @@ class FidoClient(HttpClient):
             params=request_params.get('params'),
             files=request_params.get('files'),
             url=request_params.get('url'),
-            method=request_params.get('method')
+            method=request_params.get('method'),
         )
 
         # content-length was computed by 'requests' based on the current body
