@@ -19,7 +19,6 @@ from bravado.exception import BravadoTimeoutError
 from bravado.exception import HTTPMovedPermanently
 from bravado.http_client import HttpClient
 from bravado.http_future import FutureAdapter
-from bravado.requests_client import RequestsClient
 from bravado.swagger_model import Loader
 
 
@@ -495,10 +494,19 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
         assert unpackb(response.raw_bytes, encoding='utf-8') == API_RESPONSE
 
     def test_following_redirects(self, swagger_http_server):
-        # the FidoClient doesn't have a way to turn off redirects being followed
-        # so limit this test to the RequestsClient instead
-        if not isinstance(self.http_client, RequestsClient):
-            pytest.skip('Following redirects is only supported in the RequestsClient')
+        try:
+            # if running the default tests, the fido dependencies aren't loaded
+            # so rather than load dependencies unnecessarily, skip the test if that's not the case
+            # the coverage test incorrectly marks the exception handling as uncovered
+            # hence the pragma usage
+            from bravado.fido_client import FidoClient
+        except ImportError:  # pragma: no cover
+            pytest.skip('Fido dependencies have not been loaded, skipping test')  # pragma: no cover
+        else:
+            # the FidoClient doesn't have a way to turn off redirects being followed
+            # so limit this test to the RequestsClient instead
+            if isinstance(self.http_client, FidoClient):
+                pytest.skip('Following redirects is not supported in the FidoClient')
 
         response = self.http_client.request({
             'method': 'GET',
