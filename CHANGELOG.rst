@@ -1,6 +1,11 @@
 Changelog
 =========
 
+10.6.0 (2020-03-30)
+-------------------
+- | Make following redirects configurable, and off by default, in the default requests-based HTTP client - Issue #449, PR #454, #457. Thanks Matthew Dowdell for your contribution!
+  | Note that this bugfix is a behavior change of the default HTTP client, which used to always follow redirects.
+
 10.5.0 (2020-02-24)
 -------------------
 - Ensure that ``requst_options`` headers are not modified while constructing request - PR #440. Thanks Nick Gaya for your contribution!
