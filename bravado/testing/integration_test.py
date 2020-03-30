@@ -512,7 +512,7 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
             'method': 'GET',
             'url': '{server_address}/redirect'.format(server_address=swagger_http_server),
             'params': {},
-            'allow_redirects': True,
+            'follow_redirects': True,
         }).result(timeout=1)
 
         assert isinstance(response, IncomingResponse) and response.status_code == 200

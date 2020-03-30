@@ -266,7 +266,7 @@ class RequestsFutureAdapter(FutureAdapter):
         response = self.session.send(
             prepared_request,
             timeout=self.build_timeout(timeout),
-            allow_redirects=self.misc_options['allow_redirects'],
+            follow_redirects=self.misc_options['follow_redirects'],
             **settings
         )
         return response
@@ -361,7 +361,7 @@ class RequestsClient(HttpClient):
         misc_options = {
             'ssl_verify': self.ssl_verify,
             'ssl_cert': self.ssl_cert,
-            'allow_redirects': sanitized_params.pop('allow_redirects', False),
+            'follow_redirects': sanitized_params.pop('follow_redirects', False),
         }
 
         if 'connect_timeout' in sanitized_params:
