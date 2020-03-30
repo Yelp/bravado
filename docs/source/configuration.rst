@@ -113,26 +113,42 @@ Configuration can also be applied on a per-request basis by passing in
     request_options = { ... }
     client.pet.getPetById(petId=42, _request_options=request_options).response().result
 
-========================= =============== =========  ===============================================================
-Config key                Type            Default    Description
-------------------------- --------------- ---------  ---------------------------------------------------------------
-*connect_timeout*         float           N/A        | TCP connect timeout in seconds. This is passed along to the
-                                                     | http_client when making a service call.
-*headers*                 dict            N/A        | Dict of http headers to to send with the outgoing request.
-*response_callbacks*      list of         []         | List of callables that are invoked after the incoming
-                          callables                  | response has been validated and unmarshalled but before being
-                                                     | returned to the calling client. This is useful for client
-                                                     | decorators that would like to hook into the post-receive
-                                                     | event. The callables are executed in the order they appear
-                                                     | in the list.
-                                                     | Two parameters are passed to each callable:
-                                                     | - ``incoming_response`` of type ``bravado_core.response.IncomingResponse``
-                                                     | - ``operation`` of type ``bravado_core.operation.Operation``
-*timeout*                 float           N/A        | TCP idle timeout in seconds. This is passed along to the
-                                                     | http_client when making a service call.
-*use_msgpack*             boolean         False      | If a msgpack serialization is desired for the response. This
-                                                     | will add a Accept: application/msgpack header to the request.
-*force_fallback_result*   boolean         False      | Whether a potentially provided fallback result should always
-                                                     | be returned, regardless of whether the request succeeded.
-                                                     | Mainly useful for manual and automated testing.
-========================= =============== =========  ===============================================================
+========================= ========= =======  ===============================================
+Config key                Type      Default  Description
+------------------------- --------- -------  -----------------------------------------------
+*connect_timeout*         float     N/A      | TCP connect timeout in seconds. This is
+                                             | passed along to the http_client when
+                                             | making a service call.
+*headers*                 dict      N/A      | Dict of http headers to to send with
+                                             | the outgoing request.
+*response_callbacks*      list of   []       | List of callables that are invoked after
+                          callables          | the incoming response has been validated
+                                             | and unmarshalled but before being
+                                             | returned to the calling client. This is
+                                             | useful for client decorators that would
+                                             | like to hook into the post-receive event.
+                                             | The callables are executed in the order
+                                             | they appear in the list.
+                                             | Two parameters are passed to each callable:
+                                             | - ``incoming_response`` of type
+                                             |   ``bravado_core.response.IncomingResponse``
+                                             | - ``operation`` of type
+                                             |   ``bravado_core.operation.Operation``
+*timeout*                 float     N/A      | TCP idle timeout in seconds. This is passed
+                                             | along to the http_client when making a
+                                             | service call.
+*use_msgpack*             boolean   False    | If a msgpack serialization is desired for
+                                             | the response. This will add a Accept:
+                                             | application/msgpack header to the request.
+*force_fallback_result*   boolean   False    | Whether a potentially provided fallback
+                                             | result should always be returned,
+                                             | regardless of whether the request
+                                             | succeeded.
+                                             | Mainly useful for manual and automated
+                                             | testing.
+*follow_redirects*        boolean   False    | Whether redirects returned by the server
+                                             | are followed, or returned as-is.
+                                             | **Note:** Currently, the fido HTTP client
+                                             | does not support following redirects, and
+                                             | will ignore this option.
+========================= ========= =======  ===============================================
