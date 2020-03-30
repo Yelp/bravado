@@ -149,7 +149,6 @@ Config key                Type      Default  Description
 *follow_redirects*        boolean   False    | Whether redirects returned by the server
                                              | are followed, or returned as-is.
                                              | **Note:** Currently, the fido HTTP client
-                                             | does not support returning redirect
-                                             | responses directly, and will always follow
-                                             | redirects.
+                                             | does not support following redirects, and
+                                             | will ignore this option.
 ========================= ========= =======  ===============================================

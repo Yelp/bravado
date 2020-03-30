@@ -226,7 +226,6 @@ class FidoClient(HttpClient):
                 'url': string,
                 'timeout': float,  # optional
                 'connect_timeout': float,  # optional
-                'follow_redirects': bool,  # optional
             }
         """
 

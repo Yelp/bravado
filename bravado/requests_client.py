@@ -266,7 +266,7 @@ class RequestsFutureAdapter(FutureAdapter):
         response = self.session.send(
             prepared_request,
             timeout=self.build_timeout(timeout),
-            follow_redirects=self.misc_options['follow_redirects'],
+            allow_redirects=self.misc_options['follow_redirects'],
             **settings
         )
         return response
