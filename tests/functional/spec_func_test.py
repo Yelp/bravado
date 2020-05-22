@@ -51,7 +51,7 @@ def test_headers_sendable_with_api_doc_request(httprettified, swagger_dict):
 
 
 def test_hostname_if_passed_overrides_origin_url(httprettified, swagger_dict):
-    register_get("http://foo/test_http?", body='')
+    register_get("http://foo/test_http?", body='{}')
     swagger_dict['host'] = 'foo'
     register_spec(swagger_dict)
     resource = SwaggerClient.from_url(API_DOCS_URL).api_test
