@@ -1,6 +1,10 @@
 Changelog
 =========
 
+10.6.2 (2020-05-26)
+-------------------
+- Revert the changes from 10.6.1, since those affected the swagger result of the response, which we should only set when there is a schema defined for the response. Fixes an issue with bravado crashing when an endpoint has no schema and sends no response body.
+
 10.6.1 (2020-05-22)
 -------------------
 - Return the raw JSON for a response for which there is no schema, if ``use_models`` is set to ``False`` - PR #456. Thanks Terence Honles for your contribution!
