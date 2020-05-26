@@ -366,31 +366,21 @@ def unmarshal_response_inner(
     :returns: value where type(value) matches response_spec['schema']['type']
         if it exists, None otherwise.
     """
+    deref = op.swagger_spec.deref
+    response_spec = get_response_spec(status_code=response.status_code, op=op)
+
+    if 'schema' not in response_spec:
+        return None
 
     content_type = response.headers.get('content-type', '').lower()
+
     if content_type.startswith(APP_JSON) or content_type.startswith(APP_MSGPACK):
-        use_models = op.swagger_spec.config.get('use_models', True)
+        content_spec = deref(response_spec['schema'])
         if content_type.startswith(APP_JSON):
             content_value = response.json()
         else:
             content_value = unpackb(response.raw_bytes, encoding='utf-8')
 
-        try:
-            response_spec = get_response_spec(
-                status_code=response.status_code, op=op)
-        except MatchingResponseNotFound:
-            if not use_models:
-                return content_value
-
-            six.reraise(*sys.exc_info())
-
-        if 'schema' not in response_spec:
-            if not use_models:
-                return content_value
-
-            return None
-
-        content_spec = op.swagger_spec.deref(response_spec['schema'])
         if op.swagger_spec.config.get('validate_responses', False):
             validate_schema_object(op.swagger_spec, content_spec, content_value)
 
