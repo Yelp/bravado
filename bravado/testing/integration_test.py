@@ -491,7 +491,7 @@ class IntegrationTestsBaseClass(IntegrationTestingFixturesMixin):
         }).result(timeout=1))
 
         assert response.headers['Content-Type'] == APP_MSGPACK
-        assert unpackb(response.raw_bytes, encoding='utf-8') == API_RESPONSE
+        assert unpackb(response.raw_bytes) == API_RESPONSE
 
     def test_following_redirects(self, swagger_http_server):
         try:

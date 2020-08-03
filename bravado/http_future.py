@@ -379,7 +379,7 @@ def unmarshal_response_inner(
         if content_type.startswith(APP_JSON):
             content_value = response.json()
         else:
-            content_value = unpackb(response.raw_bytes, encoding='utf-8')
+            content_value = unpackb(response.raw_bytes)
 
         if op.swagger_spec.config.get('validate_responses', False):
             validate_schema_object(op.swagger_spec, content_spec, content_value)
