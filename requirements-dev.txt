@@ -4,5 +4,5 @@ httpretty
 mock
 pip>=9.0.1 # workaround to https://github.com/pypa/pip/issues/3903
 pre-commit
-pytest
+pytest<4.7  # need support for Python 2.7, see https://docs.pytest.org/en/latest/py27-py34-deprecation.html
 u-msgpack-python
