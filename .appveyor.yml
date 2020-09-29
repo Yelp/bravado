@@ -6,8 +6,6 @@ environment:
   # Available python versions and their locations on https://www.appveyor.com/docs/build-environment/#python
   - PYTHON: C:\Python27-x64
     TOXENV: py27-default
-  - PYTHON: C:\Python35-x64
-    TOXENV: py35-default
   - PYTHON: C:\Python36-x64
     TOXENV: py36-default
 

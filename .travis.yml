@@ -9,11 +9,6 @@ matrix:
   - env: TOXENV=py27-fido-requests2dot17
     python: "2.7"
 
-  - env: TOXENV=py35-default
-    python: "3.5"
-  - env: TOXENV=py35-fido
-    python: "3.5"
-
   - env: TOXENV=py36-default
     python: "3.6"
   - env: TOXENV=py36-fido
