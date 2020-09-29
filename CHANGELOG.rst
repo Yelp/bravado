@@ -1,5 +1,8 @@
 Changelog
 =========
+10.6.3 (2020-09-29)
+-------------------
+- Switch from msgpack-python, which is deprecated, to msgpack - PR #462. Thanks Erik Cederstrand for your contribution!
 
 10.6.2 (2020-05-26)
 -------------------
