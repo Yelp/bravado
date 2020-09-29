@@ -1,5 +1,9 @@
 Changelog
 =========
+11.0.0 (2020-09-29)
+-------------------
+- Drop support for Python 3.5 which is EOL end of Sept 2020.
+
 10.6.3 (2020-09-29)
 -------------------
 - Switch from msgpack-python, which is deprecated, to msgpack - PR #462. Thanks Erik Cederstrand for your contribution!
