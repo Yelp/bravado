@@ -1,5 +1,9 @@
 Changelog
 =========
+11.0.1 (2020-10-05)
+-------------------
+- Use IPv4 addresses instead of ``localhost`` for integration tests - PR #468.
+
 11.0.0 (2020-09-29)
 -------------------
 - Drop support for Python 3.5 which is EOL end of Sept 2020.
