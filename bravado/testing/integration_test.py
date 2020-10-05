@@ -256,7 +256,7 @@ def redirect_test():
 
 def run_bottle_server(port):
     """Wrapper function for bottle.run so that the child Python interpreter finds the bottle routes on Windows."""
-    bottle.run(quiet=True, host='localhost', port=port)
+    bottle.run(quiet=True, host='127.0.0.1', port=port)
 
 
 class IntegrationTestingServicesAndClient:
@@ -281,7 +281,7 @@ class IntegrationTestingServicesAndClient:
         )
         try:
             web_service_process.start()
-            server_address = 'http://localhost:{port}'.format(port=port)
+            server_address = 'http://127.0.0.1:{port}'.format(port=port)
             wait_unit_service_starts(server_address, 10)
             yield server_address
         finally:
@@ -289,7 +289,7 @@ class IntegrationTestingServicesAndClient:
 
     @pytest.fixture(scope='session')
     def not_answering_http_server(self):
-        yield 'http://localhost:{}'.format(ephemeral_port_reserve.reserve())
+        yield 'http://127.0.0.1:{}'.format(ephemeral_port_reserve.reserve())
 
     @pytest.fixture(params=['result', 'response'])
     def result_getter(self, request):
