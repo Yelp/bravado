@@ -122,10 +122,10 @@ def reraise_errors(func):
 
         try:
             return func(self, *args, **kwargs)
-        except timeout_errors as exception:
-            self.future._raise_timeout_error(exception)
         except connection_errors as exception:
             self.future._raise_connection_error(exception)
+        except timeout_errors as exception:
+            self.future._raise_timeout_error(exception)
 
     return typing.cast(F, wrapper)
 
