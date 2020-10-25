@@ -237,7 +237,7 @@ class RequestsFutureAdapter(FutureAdapter):
         return timeout
 
     def result(self, timeout=None):
-        # type: (typing.Optional[float]) -> T
+        # type: (typing.Optional[float]) -> requests.Response
         """Blocking call to wait for API response
 
         :param timeout: timeout in seconds to wait for response. Defaults to
