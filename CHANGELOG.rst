@@ -1,5 +1,9 @@
 Changelog
 =========
+11.0.2 (2020-10-27)
+-------------------
+- When catching and converting exceptions, handle connection errors first - PR #469.
+
 11.0.1 (2020-10-05)
 -------------------
 - Use IPv4 addresses instead of ``localhost`` for integration tests - PR #468.
