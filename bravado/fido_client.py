@@ -7,7 +7,7 @@ import fido.exceptions
 import requests.structures
 import six
 import twisted.internet.error
-import twisted.web.client
+from twisted.web._newclient import RequestNotSent
 import typing
 from bravado_core.operation import Operation
 from bravado_core.response import IncomingResponse
@@ -104,7 +104,7 @@ class FidoFutureAdapter(FutureAdapter[T]):
         fido.exceptions.TCPConnectionError,
         twisted.internet.error.ConnectingCancelledError,
         twisted.internet.error.DNSLookupError,
-        twisted.web.client.RequestNotSent,
+        RequestNotSent,
     )
 
     def __init__(self, eventual_result):
