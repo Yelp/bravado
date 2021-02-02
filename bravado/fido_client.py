@@ -11,7 +11,6 @@ import typing
 from bravado_core.operation import Operation
 from bravado_core.response import IncomingResponse
 from twisted.web._newclient import RequestNotSent
-from twisted.web._newclient import RequestNotSent
 from yelp_bytes import to_bytes
 
 from bravado._equality_util import are_objects_equal as _are_objects_equal
