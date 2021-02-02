@@ -7,10 +7,10 @@ import fido.exceptions
 import requests.structures
 import six
 import twisted.internet.error
-from twisted.web._newclient import RequestNotSent
 import typing
 from bravado_core.operation import Operation
 from bravado_core.response import IncomingResponse
+from twisted.web._newclient import RequestNotSent
 from twisted.web._newclient import RequestNotSent
 from yelp_bytes import to_bytes
 
