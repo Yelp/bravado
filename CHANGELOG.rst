@@ -1,5 +1,9 @@
 Changelog
 =========
+11.0.3 (2021-03-02)
+-------------------
+- Fix performance degradation in uWSGI preforking mode - PR #474.  Thanks Jiri Horky for your contribution!
+
 11.0.2 (2020-10-27)
 -------------------
 - When catching and converting exceptions, handle connection errors first - PR #469.

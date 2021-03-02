@@ -142,11 +142,15 @@ Contributing
 5. Push to the branch (``git push origin my-new-feature``)
 6. Create new Pull Request
 
+Releasing a new version (Yelpers only)
+--------------------------------------
+See https://yelpwiki.yelpcorp.com/pages/viewpage.action?pageId=19022447
+
 License
 -------
 
 Copyright (c) 2013, Digium, Inc. All rights reserved.
-Copyright (c) 2014-2015, Yelp, Inc. All rights reserved.
+Copyright (c) 2014-2021, Yelp, Inc. All rights reserved.
 
 Bravado is licensed with a `BSD 3-Clause
 License <http://opensource.org/licenses/BSD-3-Clause>`__.
