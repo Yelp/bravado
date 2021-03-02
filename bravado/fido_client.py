@@ -7,10 +7,10 @@ import fido.exceptions
 import requests.structures
 import six
 import twisted.internet.error
-import twisted.web.client
 import typing
 from bravado_core.operation import Operation
 from bravado_core.response import IncomingResponse
+from twisted.web._newclient import RequestNotSent
 from yelp_bytes import to_bytes
 
 from bravado._equality_util import are_objects_equal as _are_objects_equal
@@ -104,7 +104,7 @@ class FidoFutureAdapter(FutureAdapter[T]):
         fido.exceptions.TCPConnectionError,
         twisted.internet.error.ConnectingCancelledError,
         twisted.internet.error.DNSLookupError,
-        twisted.web.client.RequestNotSent,
+        RequestNotSent,
     )
 
     def __init__(self, eventual_result):
