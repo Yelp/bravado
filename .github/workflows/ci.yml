@@ -1,6 +1,6 @@
 ---
 name: build
-on: push
+on: [push, pull_request]
 jobs:
   tox:
     runs-on: ubuntu-18.04
@@ -8,9 +8,11 @@ jobs:
       fail-fast: false
       matrix:
         python:
-          - py27
-          - py36
-          - py37
+          - '2.7'
+          - '3.6'
+          - '3.7'
+          - '3.8'
+          - '3.9'
         httplib:
           - default
           - fido
@@ -19,9 +21,9 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: ${{ matrix.python }}
       - run: pip install tox
-      - run: tox -e ${{ matrix.python }}-${{ matrix.httplib }}
+      - run: tox -e py$(tr -d . <<<${{ matrix.python }})-${{ matrix.httplib }}
 
   misc:
     runs-on: ubuntu-18.04
@@ -35,6 +37,6 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: 3.9
       - run: pip install tox
       - run: tox -e ${{ matrix.tox }}
