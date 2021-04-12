@@ -27,12 +27,16 @@ jobs:
 
   misc:
     runs-on: ubuntu-18.04
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
         tox:
-          - mypy
           - pre-commit
+        experimental: [false]
+        include:
+          - tox: mypy
+            experimental: true
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
