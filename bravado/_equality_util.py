@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
+import typing
 from itertools import chain
 
-import typing
 from six import iterkeys
 
 

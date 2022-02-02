@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import json
 import time
+import typing
 from multiprocessing import Process
 
 import bottle
 import ephemeral_port_reserve
 import pytest
 import requests.exceptions
-import typing
 from bravado_core.content_type import APP_MSGPACK
 from bravado_core.response import IncomingResponse
 from msgpack import packb

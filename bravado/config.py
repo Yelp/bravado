@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
+import typing
 from importlib import import_module
 
-import typing
 from bravado_core.operation import Operation
 from bravado_core.response import IncomingResponse
 

@@ -2,12 +2,12 @@
 import logging
 import sys
 import traceback
+import typing
 from functools import wraps
 from itertools import chain
 
 import monotonic
 import six
-import typing
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
 from bravado_core.exception import MatchingResponseNotFound

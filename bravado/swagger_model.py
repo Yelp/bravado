@@ -2,8 +2,8 @@
 import contextlib
 import logging
 import os.path
-
 import typing
+
 import yaml
 try:
     from yaml import CSafeLoader as SafeLoader

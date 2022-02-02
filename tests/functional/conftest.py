@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import functools
 import json
+import typing
 
 import httpretty
 import pytest
-import typing
 import yaml
 
 
