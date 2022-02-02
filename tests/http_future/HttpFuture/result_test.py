@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-import pytest
 import typing
+
+import pytest
 from bravado_core.operation import Operation
 from bravado_core.response import IncomingResponse
 from mock import Mock

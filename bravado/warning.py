@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-import warnings
-
 import typing
+import warnings
 
 if getattr(typing, 'TYPE_CHECKING', False):  # Needed to avoid cyclic import.
     from bravado.client import CallableOperation

@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import base64
+import typing
 import unittest
 
 import httpretty
 import mock
 import pytest
 import requests
-import typing
 from bravado_core.response import IncomingResponse
 
 from bravado.requests_client import Authenticator

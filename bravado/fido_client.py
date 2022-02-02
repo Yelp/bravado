@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
 import sys
+import typing
 
 import crochet
 import fido.exceptions
 import requests.structures
 import six
 import twisted.internet.error
-import typing
 from bravado_core.operation import Operation
 from bravado_core.response import IncomingResponse
 from twisted.web._newclient import RequestNotSent
