@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+import typing
+
 import pytest
 import requests.exceptions
-import typing
 
 from bravado.exception import BravadoTimeoutError
 from bravado.requests_client import RequestsClient

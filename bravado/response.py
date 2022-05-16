@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-import monotonic
 import typing
+
+import monotonic
 from bravado_core.response import IncomingResponse
 
 if getattr(typing, 'TYPE_CHECKING', False):  # Needed to avoid cyclic import.

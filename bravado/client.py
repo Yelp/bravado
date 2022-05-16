@@ -44,9 +44,9 @@ To get a client
     client = bravado.client.SwaggerClient.from_url(swagger_spec_url)
 """
 import logging
+import typing
 from copy import deepcopy
 
-import typing
 from bravado_core.docstring import create_operation_docstring
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.formatter import SwaggerFormat  # noqa

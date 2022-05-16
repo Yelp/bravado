@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import typing
+
 from bravado_core.operation import Operation
 
 from bravado.config import RequestConfig

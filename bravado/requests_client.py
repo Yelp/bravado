@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import copy
 import logging
+import typing
 
 import requests.auth
 import requests.exceptions
 import six
-import typing
 from bravado_core.operation import Operation
 from bravado_core.response import IncomingResponse
 from six import iteritems

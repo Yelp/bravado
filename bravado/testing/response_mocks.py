@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import typing
+
 from bravado_core.response import IncomingResponse
 from typing_extensions import overload  # typing.overload won't work on Python 3.5.0/3.5.1
 

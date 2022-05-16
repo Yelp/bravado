@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
+import typing
 from copy import deepcopy
 
 import mock
 import pytest
-import typing
 
 from bravado.client import SwaggerClient
 from bravado.config import CONFIG_DEFAULTS
