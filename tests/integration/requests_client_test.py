@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import typing
+import json
 
 import pytest
 import requests.exceptions
 
+import bravado.testing.integration_test
 from bravado.exception import BravadoTimeoutError
 from bravado.requests_client import RequestsClient
 from bravado.requests_client import RequestsFutureAdapter
@@ -27,6 +29,29 @@ class TestServerRequestsClient(IntegrationTestsBaseClass):
                     server_address=swagger_http_server),
                 'params': {},
             }).result(timeout=0.01)
+
+
+class TestServerRequestsFollowRedirect(IntegrationTestsBaseClass):
+    http_client_type = RequestsClient
+    http_future_adapter_type = RequestsFutureAdapter
+    connection_errors_exceptions = {
+        requests.exceptions.ConnectionError(),
+    }
+    def test_swagger_client_follow_redirects(
+            self, swagger_http_server, swagger_client, result_getter,
+    ):
+        swagger_client.swagger_spec.api_url = swagger_http_server
+        marshaled_response, raw_response = result_getter(
+            swagger_client.redirect.redirect_test(
+                _request_options={
+                    'follow_redirects': True,
+                }
+            ),
+            timeout=0.1,
+        )
+
+        assert marshaled_response == bravado.testing.integration_test.API_RESPONSE
+        assert raw_response.raw_bytes == json.dumps(bravado.testing.integration_test.API_RESPONSE).encode('utf-8')
 
 
 class FakeRequestsFutureAdapter(RequestsFutureAdapter):

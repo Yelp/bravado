@@ -305,7 +305,7 @@ def construct_request(operation, request_options, **op_kwargs):
         request['headers']['Accept'] = 'application/msgpack'
 
     # Copy over optional request options
-    for request_option in ('connect_timeout', 'timeout'):
+    for request_option in ('connect_timeout', 'timeout', 'follow_redirects'):
         if request_option in request_options:
             request[request_option] = request_options[request_option]
 
