@@ -5,7 +5,6 @@ repos:
     -   id: check-json
     -   id: check-yaml
         additional_dependencies: ["ruamel.yaml==0.16.12"]
-    -   id: fix-encoding-pragma
     -   id: debug-statements
     -   id: end-of-file-fixer
     -   id: name-tests-test

@@ -3,14 +3,13 @@ name: build
 on: push
 jobs:
   tox:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
         python:
-          - py27
-          - py36
           - py37
+          - py38
         httplib:
           - default
           - fido
@@ -24,7 +23,7 @@ jobs:
       - run: tox -e ${{ matrix.python }}-${{ matrix.httplib }}
 
   misc:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:

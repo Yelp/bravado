@@ -26,9 +26,8 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     package_data={
         'bravado': ['py.typed'],
@@ -53,5 +52,5 @@ setup(
             'pytest',
         ],
     },
-    python_requires='!=3.0,!=3.1,!=3.2,!=3.3,!=3.4,!=3.5.0',
+    python_requires='>=3.7',
 )
