@@ -2,7 +2,10 @@
 import crochet
 import fido.exceptions
 import pytest
-from mock import Mock
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
 
 from bravado.fido_client import FidoFutureAdapter
 

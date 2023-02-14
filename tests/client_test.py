@@ -2,7 +2,10 @@
 import typing
 from copy import deepcopy
 
-import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 import pytest
 
 from bravado.client import SwaggerClient

@@ -4,7 +4,10 @@ import typing
 import unittest
 
 import httpretty
-import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 import pytest
 import requests
 from bravado_core.response import IncomingResponse
