@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-import inspect
+try:
+    from inspect import getfullargspec as getargspec
+except ImportError:
+    from inspect import getargspec
 
 import mock
 import pytest
@@ -32,10 +35,10 @@ def mock_metadata():
 
 def test_response_mock_signatures():
     """Make sure the mocks' __call__ methods have the same signature as HttpFuture.response"""
-    response_signature = inspect.getargspec(HttpFuture.response)
+    response_signature = getargspec(HttpFuture.response)
 
-    assert inspect.getargspec(BravadoResponseMock.__call__) == response_signature
-    assert inspect.getargspec(FallbackResultBravadoResponseMock.__call__) == response_signature
+    assert getargspec(BravadoResponseMock.__call__) == response_signature
+    assert getargspec(FallbackResultBravadoResponseMock.__call__) == response_signature
 
 
 def test_bravado_response(mock_result):
