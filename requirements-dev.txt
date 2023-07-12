@@ -4,3 +4,5 @@ httpretty
 mock
 pre-commit
 pytest
+crochet
+fido
