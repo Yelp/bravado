@@ -8,8 +8,6 @@ jobs:
       fail-fast: false
       matrix:
         python:
-          - py27
-          - py36
           - py37
         httplib:
           - default
