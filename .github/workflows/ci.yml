@@ -3,7 +3,7 @@ name: build
 on: push
 jobs:
   tox:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -24,7 +24,7 @@ jobs:
       - run: tox -e ${{ matrix.python }}-${{ matrix.httplib }}
 
   misc:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
