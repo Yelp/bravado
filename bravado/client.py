@@ -256,12 +256,32 @@ class CallableOperation(object):
         """
         return getattr(self.operation, name)
 
+    def _sanitize_kwargs_for_logging(self, op_kwargs):
+        """Creates copy of operation arguments removing sensitive headers"""
+        # trying to do the minimal amount of copying to be able to modify
+        # headers but not affect passed object references
+        op_kwargs = op_kwargs.copy()
+        request_options = op_kwargs.get('_request_options', {}).copy()
+        headers = request_options.get('headers', {}).copy()
+        if not headers:
+            return op_kwargs
+        for header in self.operation.swagger_spec.config.get('sensitive_headers', []):
+            if header in headers:
+                headers[header] = '*redacted*'
+        request_options['headers'] = headers
+        op_kwargs['_request_options'] = request_options
+        return op_kwargs
+
     def __call__(self, **op_kwargs):
         """Invoke the actual HTTP request and return a future.
 
         :rtype: :class:`bravado.http_future.HTTPFuture`
         """
-        log.debug(u'%s(%s)', self.operation.operation_id, op_kwargs)
+        log.debug(
+            u'%s(%s)',
+            self.operation.operation_id,
+            self._sanitize_kwargs_for_logging(op_kwargs),
+        )
         warn_for_deprecated_op(self.operation)
 
         # Get per-request config
