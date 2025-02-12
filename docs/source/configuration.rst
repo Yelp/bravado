@@ -72,7 +72,8 @@ Config key                 Type            Description
 
                                            Default: ``False``
 *sensitive_headers*        list            | Determines which headers are to be considered sensitive and
-                                           | filtered from debug logging.
+                                           | has them filtered from debug logging by replacing them with
+                                           | ``*redacted*``.
 
                                            Default: ``['Authorization']``
 ========================== =============== ===============================================================

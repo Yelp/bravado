@@ -265,9 +265,9 @@ class CallableOperation(object):
         headers = request_options.get('headers', {}).copy()
         if not headers:
             return op_kwargs
-        for header in self.operation.swagger_spec.config.get('sensitive_headers', []):
-            if header in headers:
-                headers[header] = '*redacted*'
+        for sensitive_header in self.operation.swagger_spec.config.get('sensitive_headers', []):
+            if sensitive_header in headers:
+                headers[sensitive_header] = '*redacted*'
         request_options['headers'] = headers
         op_kwargs['_request_options'] = request_options
         return op_kwargs

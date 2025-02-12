@@ -37,6 +37,7 @@ def test_config_overrides_default_config(mock_log):
         'also_return_response': True,
         'disable_fallback_results': True,
         'response_metadata_class': 'tests.config_test.ResponseMetadata',
+        'sensitive_headers': ['Authorization'],
     }
     expected_config_dict = config_dict.copy()
     expected_config_dict['response_metadata_class'] = ResponseMetadata
