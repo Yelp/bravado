@@ -5,6 +5,7 @@ from copy import deepcopy
 import mock
 import pytest
 
+from bravado.client import CallableOperation
 from bravado.client import SwaggerClient
 from bravado.config import CONFIG_DEFAULTS
 from bravado.http_client import HttpClient
@@ -94,3 +95,75 @@ def test_swagger_client_hashability(swagger_client):
     # The test wants to ensure that the SwaggertClient instance is hashable.
     # If calling hash does not throw an exception than we've validated the assumption
     hash(swagger_client)
+
+
+def test_sanitize_kwargs_for_logging(mock_spec):
+    mock_operation = mock.MagicMock()
+    mock_operation.swagger_spec.config = CONFIG_DEFAULTS.copy()
+    operation = CallableOperation(mock_operation)
+    mock_args = {
+        'foo': 'bar',
+        '_request_options': {
+            'headers': {
+                'User-Agent': 'something',
+                'Authorization': 'verysecret',
+            },
+        },
+    }
+    assert operation._sanitize_kwargs_for_logging(mock_args) == {
+        'foo': 'bar',
+        '_request_options': {
+            'headers': {
+                'User-Agent': 'something',
+                'Authorization': '*redacted*',
+            },
+        },
+    }
+    # checking original args dict did not get modified
+    assert mock_args == {
+        'foo': 'bar',
+        '_request_options': {
+            'headers': {
+                'User-Agent': 'something',
+                'Authorization': 'verysecret',
+            },
+        },
+    }
+
+
+def test_sanitize_kwargs_for_logging_multiple(mock_spec):
+    mock_operation = mock.MagicMock()
+    mock_operation.swagger_spec.config = CONFIG_DEFAULTS.copy()
+    mock_operation.swagger_spec.config['sensitive_headers'] = ['Authorization', 'X-Whatever-Auth']
+    operation = CallableOperation(mock_operation)
+    mock_args = {
+        'foo': 'bar',
+        '_request_options': {
+            'headers': {
+                'User-Agent': 'something',
+                'Authorization': 'verysecret',
+                'X-Whatever-Auth': 'alsosecret',
+            },
+        },
+    }
+    assert operation._sanitize_kwargs_for_logging(mock_args) == {
+        'foo': 'bar',
+        '_request_options': {
+            'headers': {
+                'User-Agent': 'something',
+                'Authorization': '*redacted*',
+                'X-Whatever-Auth': '*redacted*',
+            },
+        },
+    }
+    # checking original args dict did not get modified
+    assert mock_args == {
+        'foo': 'bar',
+        '_request_options': {
+            'headers': {
+                'User-Agent': 'something',
+                'Authorization': 'verysecret',
+                'X-Whatever-Auth': 'alsosecret',
+            },
+        },
+    }

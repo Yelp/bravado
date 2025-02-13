@@ -1,5 +1,9 @@
 Changelog
 =========
+11.1.0 (2025-02-11)
+-------------------
+- Add option to filter headers from debug logging
+
 11.0.3 (2021-03-02)
 -------------------
 - Fix performance degradation in uWSGI preforking mode - PR #474.  Thanks Jiri Horky for your contribution!

@@ -25,6 +25,8 @@ CONFIG_DEFAULTS = {
     # Kill switch to disable returning fallback results even if provided.
     'disable_fallback_results': False,
     'response_metadata_class': 'bravado.response.BravadoResponseMetadata',
+    # Headers excluded from debug logs
+    'sensitive_headers': ['Authorization'],
 }
 
 
@@ -34,6 +36,7 @@ BravadoConfig = typing.NamedTuple(
         ('also_return_response', bool),
         ('disable_fallback_results', bool),
         ('response_metadata_class', Type[BravadoResponseMetadata]),
+        ('sensitive_headers', list),
     ),
 )
 

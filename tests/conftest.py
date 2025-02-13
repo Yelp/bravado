@@ -21,6 +21,7 @@ def processed_default_config(**kwargs):
         'also_return_response': False,
         'disable_fallback_results': False,
         'response_metadata_class': BravadoResponseMetadata,
+        'sensitive_headers': ['Authorization'],
     }
     config.update(**kwargs)
     return BravadoConfig(**config)  # type: ignore

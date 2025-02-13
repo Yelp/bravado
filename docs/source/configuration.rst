@@ -71,6 +71,11 @@ Config key                 Type            Description
                                            | See :ref:`getting_access_to_the_http_response`.
 
                                            Default: ``False``
+*sensitive_headers*        list            | Determines which headers are to be considered sensitive and
+                                           | has them filtered from debug logging by replacing them with
+                                           | ``*redacted*``.
+
+                                           Default: ``['Authorization']``
 ========================== =============== ===============================================================
 
 Customizing the HTTP client
