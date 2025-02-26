@@ -168,6 +168,10 @@ SWAGGER_SPEC_DICT = {
                     '301': {
                         'description': 'HTTP/301',
                     },
+                    '200': {
+                        'description': 'HTTP/200',
+                        'schema': {'$ref': '#/definitions/api_response'},
+                    },
                 },
             },
         },
