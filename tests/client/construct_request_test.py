@@ -2,7 +2,10 @@
 from typing import Any
 from typing import Dict
 
-import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 import pytest
 from bravado_core.operation import Operation
 from bravado_core.request import IncomingRequest

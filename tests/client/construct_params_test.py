@@ -2,7 +2,10 @@
 import pytest
 from bravado_core.exception import SwaggerMappingError
 from bravado_core.operation import Operation
-from mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 from bravado.client import CallableOperation
 from bravado.client import construct_params

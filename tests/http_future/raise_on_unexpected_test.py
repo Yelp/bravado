@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import pytest
 from bravado_core.response import IncomingResponse
-from mock import Mock
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
 
 from bravado.exception import HTTPError
 from bravado.http_future import raise_on_unexpected

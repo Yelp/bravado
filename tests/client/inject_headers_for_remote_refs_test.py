@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from bravado_core.operation import Operation
-from mock import Mock
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
 
 from bravado.client import inject_headers_for_remote_refs
 
