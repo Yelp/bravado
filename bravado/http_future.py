@@ -90,6 +90,11 @@ class FutureAdapter(typing.Generic[T]):
         # type: (BaseException) -> typing.NoReturn
         self._raise_error(BravadoConnectionError, 'ConnectionError', exception)
 
+    def cleanup(self):
+        # type: () -> None
+        """Perform any cleanup necessary to avoid resource leaks."""
+        pass
+
     def result(self, timeout=None):
         # type: (typing.Optional[float]) -> T
         """
@@ -284,6 +289,10 @@ class HttpFuture(typing.Generic[T]):
     def cancel(self):
         # type: () -> None
         return self.future.cancel()
+
+    def __del__(self):
+        # type: () -> None
+        self.future.cleanup()
 
     @reraise_errors
     def _get_incoming_response(self, timeout=None):
