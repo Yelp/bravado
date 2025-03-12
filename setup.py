@@ -34,7 +34,7 @@ setup(
         "bravado-core==5.17.1",
         "yelp-bytes==0.4.4",
         "python-dateutil==2.8.2",
-        "PyYAML==6.0",
+        # "PyYAML==6.0",
         "requests==2.31.0",
         "six==1.16.0",
     ],
