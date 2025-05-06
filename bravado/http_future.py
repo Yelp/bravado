@@ -87,7 +87,7 @@ class FutureAdapter(typing.Generic[T]):
 
         # CORESERV-13799
         # In py3.11, concurrent.future.TimeoutError is aliased to TimeoutError
-        # If a future adapter throws TimeoutError, we can directly raise BravadoTimeError
+        # If a future adapter throws TimeoutError, we can directly raise BravadoTimeoutError
         if isinstance(exception, TimeoutError):
             raise BravadoTimeoutError()
         self._raise_error(BravadoTimeoutError, 'Timeout', exception)
