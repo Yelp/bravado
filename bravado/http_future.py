@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
 import sys
+import time
 import traceback
 import typing
 from functools import wraps
 from itertools import chain
 
-import monotonic
 import six
 from bravado_core.content_type import APP_JSON
 from bravado_core.content_type import APP_MSGPACK
@@ -151,7 +151,7 @@ class HttpFuture(typing.Generic[T]):
         request_config=None,  # type: typing.Optional[RequestConfig]
     ):
         # type: (...) -> None
-        self._start_time = monotonic.monotonic()
+        self._start_time = time.monotonic()
         self.future = future
         self.response_adapter = response_adapter
         self.operation = operation
@@ -195,7 +195,7 @@ class HttpFuture(typing.Generic[T]):
 
         try:
             incoming_response = self._get_incoming_response(timeout)
-            request_end_time = monotonic.monotonic()
+            request_end_time = time.monotonic()
 
             swagger_result = self._get_swagger_result(incoming_response)
 
@@ -215,7 +215,7 @@ class HttpFuture(typing.Generic[T]):
 
         except exceptions_to_catch as e:
             if request_end_time is None:
-                request_end_time = monotonic.monotonic()
+                request_end_time = time.monotonic()
             exc_info = []
             # the return values of exc_info are annotated as Optional, but we know they are set in this case.
             # additionally, we can't use a cast() since that caused a runtime exception on some older versions
