@@ -32,10 +32,10 @@ def mock_metadata():
 
 def test_response_mock_signatures():
     """Make sure the mocks' __call__ methods have the same signature as HttpFuture.response"""
-    response_signature = inspect.getargspec(HttpFuture.response)
+    response_signature = inspect.getfullargspec(HttpFuture.response)
 
-    assert inspect.getargspec(BravadoResponseMock.__call__) == response_signature
-    assert inspect.getargspec(FallbackResultBravadoResponseMock.__call__) == response_signature
+    assert inspect.getfullargspec(BravadoResponseMock.__call__) == response_signature
+    assert inspect.getfullargspec(FallbackResultBravadoResponseMock.__call__) == response_signature
 
 
 def test_bravado_response(mock_result):

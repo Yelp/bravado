@@ -4,22 +4,6 @@ import typing
 from bravado_core.response import IncomingResponse
 from six import with_metaclass
 
-try:
-    # ignored type ConnectionError is introduced in python3.3+ (mypy runs as 2.7)
-    from builtins import ConnectionError as base_connection_error  # type: ignore
-except ImportError:
-    # ConnectionError was introduced in python 3.3+
-    base_connection_error = OSError
-
-
-try:
-    # ignored type TimeoutError is introduced in python3.3+ (mypy runs as 2.7)
-    from builtins import TimeoutError as base_timeout_error  # type: ignore
-except ImportError:
-    # TimeoutError was introduced in python 3.3+
-    base_timeout_error = OSError
-
-
 if getattr(typing, 'TYPE_CHECKING', False):
     T = typing.TypeVar('T')
 
@@ -378,11 +362,11 @@ class HTTPNetworkAuthenticationRequired(HTTPServerError):
     status_code = 511
 
 
-class BravadoTimeoutError(base_timeout_error):
+class BravadoTimeoutError(TimeoutError):
     pass
 
 
-class BravadoConnectionError(base_connection_error):
+class BravadoConnectionError(ConnectionError):
     pass
 
 

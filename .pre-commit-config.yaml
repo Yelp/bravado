@@ -18,7 +18,7 @@ repos:
     -   id: autopep8
         args: ['-i', '--ignore=E309,E501']
 -   repo: https://github.com/pycqa/flake8.git
-    rev: 3.7.9
+    rev: 5.0.4
     hooks:
     -   id: flake8
         exclude: ^docs
