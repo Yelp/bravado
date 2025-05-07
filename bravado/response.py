@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
+import time
 import typing
 
-import monotonic
 from bravado_core.response import IncomingResponse
 
 if getattr(typing, 'TYPE_CHECKING', False):  # Needed to avoid cyclic import.
@@ -75,7 +75,7 @@ class BravadoResponseMetadata(typing.Generic[T]):
         self._incoming_response = incoming_response
         self.start_time = start_time
         self.request_end_time = request_end_time
-        self.processing_end_time = monotonic.monotonic()
+        self.processing_end_time = time.monotonic()
         self.handled_exception_info = handled_exception_info
         self.request_config = request_config
 
