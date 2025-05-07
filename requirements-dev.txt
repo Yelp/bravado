@@ -5,5 +5,5 @@ mock
 mypy==0.790
 pip>=9.0.1 # workaround to https://github.com/pypa/pip/issues/3903
 pre-commit
-pytest<4.7  # need support for Python 2.7, see https://docs.pytest.org/en/latest/py27-py34-deprecation.html
+pytest==7.4.4
 u-msgpack-python
