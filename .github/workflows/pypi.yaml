@@ -1,0 +1,43 @@
+name: pypi
+
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python:
+        - env: py38
+          version: '3.8'
+        - env: py310
+          version: '3.10'
+        - env: py311
+          version: '3.11'
+        httplib:
+          - default
+          - fido
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python.version }}
+    - run: pip install tox
+    - run: tox -e ${{ matrix.python.env }}-${{ matrix.httplib }}
+  pypi:
+    needs: test
+    runs-on: ubuntu-22.04
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+      - run: python setup.py sdist
+      - uses: pypa/gh-action-pypi-publish@v1.10.3
