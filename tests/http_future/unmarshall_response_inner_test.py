@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 import msgpack
 import pytest
 from bravado_core.content_type import APP_JSON

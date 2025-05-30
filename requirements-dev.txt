@@ -1,7 +1,7 @@
 bottle
 ephemeral_port_reserve
 httpretty
-mock
+mock; python_version<'3.3'
 pip>=9.0.1 # workaround to https://github.com/pypa/pip/issues/3903
 pre-commit
 pytest==7.4.4
