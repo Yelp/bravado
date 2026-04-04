@@ -17,6 +17,7 @@ from bravado_core.response import IncomingResponse
 from bravado_core.unmarshal import unmarshal_schema_object
 from bravado_core.validate import validate_schema_object
 from msgpack import unpackb
+from threading import TIMEOUT_MAX
 
 from bravado.config import bravado_config_from_config_dict
 from bravado.config import BravadoConfig
@@ -96,13 +97,12 @@ class FutureAdapter(typing.Generic[T]):
         # type: (BaseException) -> typing.NoReturn
         self._raise_error(BravadoConnectionError, 'ConnectionError', exception)
 
-    def result(self, timeout=None):
+    def result(self, timeout=TIMEOUT_MAX):
         # type: (typing.Optional[float]) -> T
         """
         Must implement a result method which blocks on result retrieval.
 
-        :param timeout: maximum time to wait on result retrieval. Defaults to
-            None which means blocking undefinitely.
+        :param timeout: maximum time to wait on result retrieval.
         """
         raise NotImplementedError(
             "FutureAdapter must implement 'result' method"
@@ -176,15 +176,14 @@ class HttpFuture(typing.Generic[T]):
 
     def response(
         self,
-        timeout=None,  # type: typing.Optional[float]
+        timeout=TIMEOUT_MAX,  # type: typing.Optional[float]
         fallback_result=SENTINEL,  # type: typing.Union[_SENTINEL, T, typing.Callable[[BaseException], T]]  # noqa
         exceptions_to_catch=FALLBACK_EXCEPTIONS,  # type: typing.Tuple[typing.Type[BaseException], ...]
     ):
         # type: (...) -> BravadoResponse[T]
         """Blocking call to wait for the HTTP response.
 
-        :param timeout: Number of seconds to wait for a response. Defaults to
-            None which means wait indefinitely.
+        :param timeout: Number of seconds to wait for a response.
         :type timeout: float
         :param fallback_result: either the swagger result or a callable that accepts an exception as argument
             and returns the swagger result to use in case of errors
@@ -260,15 +259,14 @@ class HttpFuture(typing.Generic[T]):
 
     def result(
         self,
-            timeout=None,  # type: typing.Optional[float]
+        timeout=TIMEOUT_MAX,  # type: typing.Optional[float]
     ):
         # type: (...) -> typing.Union[T, IncomingResponse, typing.Tuple[T, IncomingResponse]]
         """DEPRECATED: please use the `response()` method instead.
 
         Blocking call to wait for and return the unmarshalled swagger result.
 
-        :param timeout: Number of seconds to wait for a response. Defaults to
-            None which means wait indefinitely.
+        :param timeout: Number of seconds to wait for a response.
         :type timeout: float
         :return: Depends on the value of also_return_response sent in
             to the constructor.
@@ -292,7 +290,7 @@ class HttpFuture(typing.Generic[T]):
         return self.future.cancel()
 
     @reraise_errors
-    def _get_incoming_response(self, timeout=None):
+    def _get_incoming_response(self, timeout=TIMEOUT_MAX):
         # type: (typing.Optional[float]) -> IncomingResponse
         inner_response = self.future.result(timeout=timeout)
         incoming_response = self.response_adapter(inner_response)
