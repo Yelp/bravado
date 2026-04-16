@@ -6,7 +6,7 @@ from bravado.response import BravadoResponseMetadata
 
 
 def test_response_metadata_times():
-    with mock.patch('monotonic.monotonic', return_value=11):
+    with mock.patch('time.monotonic', return_value=11):
         metadata = BravadoResponseMetadata(
             incoming_response=None,
             swagger_result=None,

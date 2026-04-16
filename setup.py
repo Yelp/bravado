@@ -41,7 +41,6 @@ setup(
         'requests >= 2.17',
         'six',
         'simplejson',
-        'monotonic',
         'typing_extensions',
     ],
     extras_require={
