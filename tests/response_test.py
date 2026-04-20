@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 from bravado.config import RequestConfig
 from bravado.response import BravadoResponseMetadata

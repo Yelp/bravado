@@ -30,7 +30,7 @@ First of all, in order to make sure your code doesn't do any network requests, y
 
 .. code-block:: python
 
-    import mock
+    from unittest import mock
     import pytest
 
     from bravado.client import SwaggerClient
@@ -46,7 +46,7 @@ Now we can mock out that call to ``findPetsByStatus`` by using the
 
 .. code-block:: python
 
-    import mock
+    from unittest import mock
 
     from bravado.testing.response_mocks import BravadoResponseMock
 

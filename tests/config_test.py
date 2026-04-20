@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-import mock
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 import pytest
 
 from bravado.config import _get_response_metadata_class

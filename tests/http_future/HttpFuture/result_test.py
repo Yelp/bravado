@@ -4,8 +4,10 @@ import typing
 import pytest
 from bravado_core.operation import Operation
 from bravado_core.response import IncomingResponse
-from mock import Mock
-from mock import patch
+try:
+    from unittest.mock import Mock, patch
+except ImportError:
+    from mock import Mock, patch
 
 from bravado.config import RequestConfig
 from bravado.exception import HTTPError
