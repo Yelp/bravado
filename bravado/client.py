@@ -45,6 +45,7 @@ To get a client
 """
 import logging
 import typing
+import warnings
 from copy import deepcopy
 
 from bravado_core.docstring import create_operation_docstring
@@ -322,6 +323,12 @@ def construct_request(operation, request_options, **op_kwargs):
     }
     # Adds Accept header to request for msgpack response if specified
     if request_options.get('use_msgpack', False):
+        warnings.warn(
+            "use_msgpack is deprecated. Use headers={'Accept': 'application/msgpack'} "
+            "in _request_options instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         request['headers']['Accept'] = 'application/msgpack'
 
     # Copy over optional request options
