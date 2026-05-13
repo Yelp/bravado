@@ -324,8 +324,8 @@ def construct_request(operation, request_options, **op_kwargs):
     # Adds Accept header to request for msgpack response if specified
     if request_options.get('use_msgpack', False):
         warnings.warn(
-            "use_msgpack is deprecated. Use headers={'Accept': 'application/msgpack'} "
-            "in _request_options instead.",
+            "use_msgpack is deprecated. Set the request headers "
+            "{'Accept': 'application/msgpack'}",
             DeprecationWarning,
             stacklevel=2,
         )
