@@ -115,11 +115,17 @@ def test_use_msgpack(
         'use_msgpack': True,
         'headers': {'Some-Header': 'header-value'}
     }  # type: Dict[str, Any]
-    request = construct_request(
-        op,
-        request_options=request_options,
-        petId=1,
-    )
+    import warnings
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        request = construct_request(
+            op,
+            request_options=request_options,
+            petId=1,
+        )
+        assert len(w) == 1
+        assert issubclass(w[0].category, DeprecationWarning)
+        assert "use_msgpack is deprecated" in str(w[0].message)
     assert request['headers']['Accept'] == 'application/msgpack'
     assert request['headers']['Some-Header'] == 'header-value', \
         "Requested header should be present"
