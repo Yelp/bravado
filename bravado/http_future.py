@@ -50,6 +50,34 @@ class _SENTINEL(object):
 SENTINEL = _SENTINEL()
 
 
+def _make_adapter_error(
+    exception_class,  # type: typing.Type[BaseException]
+    base_exception_class,  # type: typing.Type[BaseException]
+    class_name,  # type: typing.Text
+    attributes,  # type: typing.Dict[str, typing.Any]
+):
+    # type: (...) -> BaseException
+    # Rebuild dynamic exception types through an importable function when unpickling.
+    def reduce_error(error):
+        # type: (BaseException) -> typing.Tuple[typing.Any, ...]
+        return (
+            _make_adapter_error,
+            (exception_class, base_exception_class, class_name, attributes),
+            error.__dict__,
+        )
+
+    return type(
+        class_name,
+        (exception_class, base_exception_class),
+        dict(
+            # Do not call transport-specific constructors that require extra arguments.
+            attributes,
+            __init__=lambda *args, **kwargs: None,
+            __reduce__=reduce_error,
+        ),
+    )()
+
+
 class FutureAdapter(typing.Generic[T]):
     """
     Mimics a :class:`concurrent.futures.Future` regardless of which client is
@@ -66,15 +94,11 @@ class FutureAdapter(typing.Generic[T]):
 
     def _raise_error(self, base_exception_class, class_name_suffix, exception):
         # type: (typing.Type[BaseException], typing.Text, BaseException) -> typing.NoReturn
-        error = type(
+        error = _make_adapter_error(
+            exception.__class__, base_exception_class,
             '{}{}'.format(self.__class__.__name__, class_name_suffix),
-            (exception.__class__, base_exception_class),
-            dict(
-                # Small hack to allow all exceptions to be generated even if they have parameters in the signature
-                exception.__dict__,
-                __init__=lambda *args, **kwargs: None,
-            ),
-        )()
+            exception.__dict__,
+        )
 
         six.reraise(
             error.__class__,
